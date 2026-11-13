@@ -116,7 +116,30 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "domain": "CHESS",
+      "title": "Puzzle",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607316468-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607316468-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607316468"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
