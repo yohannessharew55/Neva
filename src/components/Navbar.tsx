@@ -5,7 +5,8 @@ import {
   MoreHorizontal, Swords, Palette, Music, Building2, 
   TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
   PlusCircle, CalendarDays, BellRing, Plus, Sparkles, Database, Cloud, Star,
-  Languages, Globe, SquarePen, StickyNote, User, LogOut
+  Languages, Globe, SquarePen, StickyNote, User, LogOut,
+  PieChart
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { PlanningModal } from './PlanningModal';
@@ -71,6 +72,7 @@ export const Navbar: React.FC = () => {
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: t('navFocusTimer'), icon: Timer },
+    { id: 'triple-eight', label: language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance', icon: PieChart },
   ];
 
   const handleSelectCategory = (categoryId: string) => {
@@ -448,6 +450,24 @@ export const Navbar: React.FC = () => {
 
                   <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
+                  {/* 24h Triple-8 Life Balance View */}
+                  <button
+                    onClick={() => {
+                      setSelectedCategoryId(null);
+                      setActiveTab('triple-eight');
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer font-bold text-xs"
+                  >
+                    <span className="flex items-center gap-2">
+                      <PieChart size={14} className="text-[#0082ff]" />
+                      <span>{language === 'am' ? 'የ24 ሰዓት ሚዛን (8/8/8)' : '24h Triple-8 Balance'}</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950/80 text-[#0082ff]">
+                      8/8/8
+                    </span>
+                  </button>
+
                   <button
                     onClick={() => {
                       exportDataJson();
@@ -585,21 +605,6 @@ export const Navbar: React.FC = () => {
                 </div>
                 <ChevronRight size={14} className="text-slate-400 shrink-0" />
               </div>
-
-              {currentUser && (
-                <button
-                  onClick={() => {
-                    setDrawerOpen(false);
-                    if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe.`)) {
-                      logoutUser();
-                    }
-                  }}
-                  className="w-full py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
-                >
-                  <LogOut size={13} />
-                  <span>{language === 'am' ? 'ከአካውንት ውጣ' : 'Sign Out'} (@{currentUser.username})</span>
-                </button>
-              )}
 
               {/* Main Categories Section */}
               <div className="space-y-1.5">

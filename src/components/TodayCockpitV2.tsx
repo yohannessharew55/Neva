@@ -5,7 +5,7 @@ import {
   Palette, Music, Swords, Building2, TrendingUp,
   Shield, Calendar, ChevronRight, SlidersHorizontal, ChevronDown, ChevronUp,
   ExternalLink, Dumbbell, BookOpen, Sparkles, Flame, SquarePen,
-  AlarmClock, BellRing
+  AlarmClock, BellRing, PieChart
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -381,6 +381,40 @@ export const TodayCockpitV2: React.FC = () => {
             <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Sync Reminders'}</span>
           </button>
         </div>
+      </div>
+
+      {/* 3. 24-Hour Triple-8 Life Balance (8/8/8) Preview Card */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-indigo-200/80 dark:border-indigo-900/50 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/25">
+            <PieChart size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                {language === 'am' ? 'የ24 ሰዓት ህግ (8/8/8)' : '24h Triple-8 Life Balance'}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                8h • 8h • 8h
+              </span>
+            </div>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              {language === 'am' ? 'እንቅልፍ (8h) • ስራ (8h) • የግል ህይወትና ቼስ፣ ሙዚቃ (8h)' : 'Sleep (8h) • Career (8h) • Living & Hobbies (8h)'}
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {language === 'am' ? 'የዛሬውን የ24 ሰዓት የፓይ ቻርት ክፍፍልና ሚዛን በግራፊክስ ይመልከቱ' : 'Interactive 24-hour circular pie chart and daily life balance dial'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setActiveTab('triple-eight')}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer shrink-0"
+        >
+          <PieChart size={14} />
+          <span>{language === 'am' ? 'የ24 ሰዓት ቻርት ክፈት' : 'Open 24h Balance Wheel'}</span>
+          <ChevronRight size={14} />
+        </button>
       </div>
 
       {/* Up Next Task for Today (when no active timer is running and tasks exist) */}

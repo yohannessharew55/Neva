@@ -11,6 +11,7 @@ import { CategoryDetailView } from './components/CategoryDetailView';
 import { IntegratedCalendarView } from './components/IntegratedCalendarView';
 import { DailyStickyNotesGalleryView } from './components/DailyStickyNotesGalleryView';
 import { IosNotesAppView } from './components/IosNotesAppView';
+import { TripleEightLifeBalanceView } from './components/TripleEightLifeBalanceView';
 import { IosBottomTabBar } from './components/IosBottomTabBar';
 import { DeviceSyncModal } from './components/DeviceSyncModal';
 import { SplashMotionIntro } from './components/SplashMotionIntro';
@@ -96,6 +97,8 @@ const MainContent: React.FC = () => {
         return <PracticeFlowView />;
       case 'notes':
         return <IosNotesAppView />;
+      case 'triple-eight':
+        return <TripleEightLifeBalanceView />;
       case 'cockpit':
       default:
         return <TodayCockpitV2 />;
