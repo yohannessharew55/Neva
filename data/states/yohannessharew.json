@@ -1,0 +1,498 @@
+{
+  "user": {
+    "id": "a0000000-0000-0000-0000-000000000001",
+    "email": "mastery@neva.app",
+    "fullName": "Neva Practitioner",
+    "timezone": "UTC",
+    "targetFatsGrams": 65,
+    "targetCarbsGrams": 200,
+    "targetProteinGrams": 150,
+    "targetDailyCalories": 2000
+  },
+  "domains": [
+    {
+      "id": "dom-1",
+      "title": "Physical Fitness & Conditioning",
+      "config": {
+        "split": "Custom Split",
+        "default_gym_duration": 60
+      },
+      "domainType": "PHYSICAL_FITNESS",
+      "accentColor": "#EF4444",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    },
+    {
+      "id": "dom-2",
+      "title": "Precision Nutrition & Meal Timing",
+      "config": {
+        "fats_g": 65,
+        "carbs_g": 200,
+        "protein_g": 150,
+        "daily_calories": 2000
+      },
+      "domainType": "NUTRITION_MEALS",
+      "accentColor": "#10B981",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 3
+    },
+    {
+      "id": "dom-3",
+      "title": "Devotion & Spiritual Anchor",
+      "config": {
+        "scripture_plan": "",
+        "prayer_duration_min": 30
+      },
+      "domainType": "DEVOTION_PRAYER",
+      "accentColor": "#A855F7",
+      "currentTier": "Spiritual Core",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    },
+    {
+      "id": "dom-4",
+      "title": "Forex Trading",
+      "config": {
+        "pairs": [],
+        "sessions": []
+      },
+      "domainType": "FOREX_TRADING",
+      "accentColor": "#059669",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    },
+    {
+      "id": "dom-5",
+      "title": "Architectural Design",
+      "config": {
+        "cad_tools": [],
+        "focus_deliverable": ""
+      },
+      "domainType": "ARCHITECTURE_DESIGN",
+      "accentColor": "#3B82F6",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 10
+    },
+    {
+      "id": "dom-6",
+      "title": "Chess Mastery",
+      "config": {
+        "focus": ""
+      },
+      "domainType": "CHESS",
+      "accentColor": "#8B5CF6",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    },
+    {
+      "id": "dom-7",
+      "title": "Guitar & Music Practice",
+      "config": {
+        "focus": "",
+        "bpm_target": ""
+      },
+      "domainType": "GUITAR",
+      "accentColor": "#EC4899",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    },
+    {
+      "id": "dom-8",
+      "title": "Oil Painting & Fine Art",
+      "config": {
+        "subject": "",
+        "technique": ""
+      },
+      "domainType": "OIL_PAINTING",
+      "accentColor": "#E11D48",
+      "currentTier": "Starting Tier",
+      "currentHours": 0,
+      "weeklyTargetHours": 5
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1794424084348",
+      "badge": "Music",
+      "color": "#ec4899",
+      "title": "warmup",
+      "domain": "GUITAR",
+      "checklist": [
+        {
+          "id": "c-1794424084348-1",
+          "done": false,
+          "text": "Warm-up & context immersion"
+        },
+        {
+          "id": "c-1794424084348-2",
+          "done": false,
+          "text": "Deliberate high-focus execution"
+        }
+      ],
+      "completed": false,
+      "startTime": "10:00 PM",
+      "durationMin": 45,
+      "soundProfile": "SOLFEGGIO_432"
+    }
+  ],
+  "workouts": [
+    {
+      "id": "wo-1",
+      "dayOfWeek": 1,
+      "workoutName": "Monday: Workout Routine",
+      "exerciseType": "STRENGTH_COMPOUND",
+      "movementList": [],
+      "targetDurationMinutes": 60
+    },
+    {
+      "id": "wo-2",
+      "dayOfWeek": 2,
+      "workoutName": "Tuesday: Workout Routine",
+      "exerciseType": "STRENGTH_COMPOUND",
+      "movementList": [],
+      "targetDurationMinutes": 60
+    },
+    {
+      "id": "wo-3",
+      "dayOfWeek": 3,
+      "workoutName": "Wednesday: Cardio & Mobility",
+      "exerciseType": "ZONE_2_CARDIO",
+      "movementList": [],
+      "targetDurationMinutes": 45
+    },
+    {
+      "id": "wo-4",
+      "dayOfWeek": 4,
+      "workoutName": "Thursday: Workout Routine",
+      "exerciseType": "HYPERTROPHY",
+      "movementList": [],
+      "targetDurationMinutes": 60
+    },
+    {
+      "id": "wo-5",
+      "dayOfWeek": 5,
+      "workoutName": "Friday: Workout Routine",
+      "exerciseType": "HYPERTROPHY",
+      "movementList": [],
+      "targetDurationMinutes": 60
+    },
+    {
+      "id": "wo-6",
+      "dayOfWeek": 6,
+      "workoutName": "Saturday: Conditioning & Active",
+      "exerciseType": "HIIT",
+      "movementList": [],
+      "targetDurationMinutes": 45
+    },
+    {
+      "id": "wo-7",
+      "dayOfWeek": 7,
+      "workoutName": "Sunday: Rest & Recovery",
+      "exerciseType": "ACTIVE_RECOVERY",
+      "movementList": [],
+      "targetDurationMinutes": 30
+    }
+  ],
+  "meals": [],
+  "goals": [
+    {
+      "id": "goal-1794429877677",
+      "year": 2026,
+      "title": "Ship N e v a v2.0 Architecture & Complete Core Mastery Modules",
+      "endDate": "2026-12-31",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "category": "architecture",
+      "startDate": "2026-10-01",
+      "milestones": [
+        {
+          "id": "ms-1",
+          "title": "Complete Mobile Navigation & Touch Refactor",
+          "targetDate": "2026-10-25",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-2",
+          "title": "Implement Devotion & Spiritual Protocol View",
+          "targetDate": "2026-11-11",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-3",
+          "title": "Deploy Focus Timer with Tomato / Pomodoro System",
+          "targetDate": "2026-11-15",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-4",
+          "title": "Real-time schedule based quarterly & yearly goals",
+          "targetDate": "2026-12-01",
+          "isCompleted": false
+        }
+      ],
+      "isCompleted": false,
+      "targetMetric": "100% Core Modules Shipped",
+      "progressPercentage": 75
+    },
+    {
+      "id": "goal-1794429877678",
+      "year": 2026,
+      "title": "Log 50h of Deep Focus Practice in Q4",
+      "endDate": "2026-12-31",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "category": "devotion",
+      "startDate": "2026-10-01",
+      "milestones": [
+        {
+          "id": "ms-20",
+          "title": "Reach 20h logged by end of October",
+          "targetDate": "2026-10-31",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-21",
+          "title": "Reach 35h logged by mid November",
+          "targetDate": "2026-11-15",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-22",
+          "title": "Reach 50h total logged by December 31",
+          "targetDate": "2026-12-31",
+          "isCompleted": false
+        }
+      ],
+      "isCompleted": false,
+      "targetMetric": "50h Deep Work Logged",
+      "progressPercentage": 60
+    },
+    {
+      "id": "goal-1794429877678",
+      "year": 2026,
+      "title": "Master Forex & Algorithmic Trading Execution Engine",
+      "endDate": "2026-12-31",
+      "horizon": "YEARLY",
+      "category": "trading",
+      "startDate": "2026-01-01",
+      "milestones": [
+        {
+          "id": "ms-30",
+          "title": "Formulate backtested statistical arbitrage model",
+          "targetDate": "2026-03-31",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-31",
+          "title": "Deploy paper-trading execution pipeline",
+          "targetDate": "2026-06-30",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-32",
+          "title": "Live execution with automated risk controls",
+          "targetDate": "2026-12-31",
+          "isCompleted": false
+        }
+      ],
+      "isCompleted": false,
+      "targetMetric": "15% Annual Alpha on Capital",
+      "progressPercentage": 70
+    },
+    {
+      "id": "goal-1794429877678",
+      "year": 2026,
+      "title": "Produce 10 Master Oil Painting Works & Studio Portfolio",
+      "endDate": "2026-12-31",
+      "horizon": "YEARLY",
+      "category": "art",
+      "startDate": "2026-01-01",
+      "milestones": [
+        {
+          "id": "ms-40",
+          "title": "Anatomy and chiaroscuro value studies (4 canvases)",
+          "targetDate": "2026-05-30",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-41",
+          "title": "Master portrait & composition collection (4 canvases)",
+          "targetDate": "2026-09-30",
+          "isCompleted": true
+        },
+        {
+          "id": "ms-42",
+          "title": "Exhibition centerpiece work (2 large canvases)",
+          "targetDate": "2026-12-20",
+          "isCompleted": false
+        }
+      ],
+      "isCompleted": false,
+      "targetMetric": "10 Completed Canvases",
+      "progressPercentage": 80
+    }
+  ],
+  "sessions": [],
+  "reviews": [],
+  "categoryPlans": {
+    "art": {
+      "id": "art",
+      "color": "#e11d48",
+      "title": "Art & Painting",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "peach",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "chess": {
+      "id": "chess",
+      "color": "#8b5cf6",
+      "title": "Chess",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "yellow",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "music": {
+      "id": "music",
+      "color": "#ec4899",
+      "title": "Music & Guitar",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "rose",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "buffer": {
+      "id": "buffer",
+      "color": "#64748b",
+      "title": "Rest & Buffer",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "mint",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "trading": {
+      "id": "trading",
+      "color": "#10b981",
+      "title": "Trading",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "mint",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "devotion": {
+      "id": "devotion",
+      "color": "#a855f7",
+      "title": "Devotion & Prayer",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "lavender",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "exercise": {
+      "id": "exercise",
+      "color": "#ef4444",
+      "title": "Exercise & Fitness",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "peach",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 20,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    },
+    "architecture": {
+      "id": "architecture",
+      "color": "#0082ff",
+      "title": "Architecture & Design",
+      "dailyPlans": [],
+      "achievedItems": [],
+      "upcomingItems": [],
+      "baseWeeklyHours": 0,
+      "inProgressItems": [],
+      "monthlyProgress": 0,
+      "stickyNoteColor": "cyan",
+      "baseMonthlyHours": 0,
+      "monthlyGoalTitle": "",
+      "weeklyTargetHours": 10,
+      "currentWeeklyHours": 0,
+      "monthlyTargetHours": 40,
+      "monthlyTargetMetric": "",
+      "weeklyScheduleSummary": []
+    }
+  },
+  "dailyStickyNotes": []
+}
