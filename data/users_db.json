@@ -16,6 +16,17 @@
       "passwordHash": "de2972c09be15d086e39761943c1d06fc049fa00c98590be469c8ec82ba21ae127a9db076a1fc85aad077a778c06e5d30d1079f400302c479724de56328c5935",
       "createdAt": "2026-11-13T16:26:37.656Z",
       "lastLoginAt": "2026-11-13T16:26:37.657Z"
+    },
+    "john": {
+      "id": "usr_john_1794589233463",
+      "username": "john",
+      "name": "JohnVII",
+      "email": null,
+      "avatarColor": "#0082ff",
+      "salt": "1c5b2bb76fca8129161009b4988d0327",
+      "passwordHash": "c2017a549523c655c973c2a711c03080460da032350cd4a0152b48c2b6b04eb1277422610ae71c9c8d83648cbdcf3b3a2bf6e49f0747b2aa8a5a7b126063e90a",
+      "createdAt": "2026-11-13T17:00:33.463Z",
+      "lastLoginAt": "2026-11-13T17:00:33.463Z"
     }
   }
 }
