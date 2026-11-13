@@ -13,6 +13,7 @@ import { PlanningModal } from './PlanningModal';
 import { ReminderCenterModal } from './ReminderCenterModal';
 import { NewCategoryModal } from './NewCategoryModal';
 import { QuickScratchModal } from './QuickScratchModal';
+import { ClearScratchPasswordModal } from './ClearScratchPasswordModal';
 import { syncStateToCloud } from '../utils/cloudSync';
 
 export const Navbar: React.FC = () => {
@@ -47,6 +48,7 @@ export const Navbar: React.FC = () => {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [showScratchModal, setShowScratchModal] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalCount = tasks.length;
@@ -460,10 +462,10 @@ export const Navbar: React.FC = () => {
                     className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer font-bold text-xs"
                   >
                     <span className="flex items-center gap-2">
-                      <PieChart size={14} className="text-[#0082ff]" />
-                      <span>{language === 'am' ? 'የ24 ሰዓት ሚዛን (8/8/8)' : '24h Triple-8 Balance'}</span>
+                      <PieChart size={14} className="text-indigo-600 dark:text-indigo-400" />
+                      <span>{language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance'}</span>
                     </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950/80 text-[#0082ff]">
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 font-bold">
                       8/8/8
                     </span>
                   </button>
@@ -515,14 +517,18 @@ export const Navbar: React.FC = () => {
                   <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
                   <button
                     onClick={() => {
-                      if (confirm(language === 'am' ? 'ሁሉንም ዳታ አጥፍተው ከመጀመሪያ መጀመር ይፈልጋሉ?' : 'Clear all data and start completely from scratch?')) {
-                        resetAllData();
-                        setShowMoreMenu(false);
-                      }
+                      setShowMoreMenu(false);
+                      setShowClearModal(true);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer font-bold text-xs transition"
                   >
-                    <RotateCcw size={14} /> {t('resetAllDefaults')}
+                    <span className="flex items-center gap-2">
+                      <RotateCcw size={14} className="text-rose-500" />
+                      <span>{language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All'}</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-rose-50 dark:bg-rose-950 text-rose-600 font-semibold">
+                      Scratch
+                    </span>
                   </button>
                 </div>
               )}
@@ -675,13 +681,39 @@ export const Navbar: React.FC = () => {
                         setActiveTab(item.id);
                         setDrawerOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 flex items-center gap-2.5 cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 flex items-center justify-between cursor-pointer"
                     >
-                      <Icon size={15} className="text-slate-400" />
-                      <span>{item.label}</span>
+                      <span className="flex items-center gap-2.5">
+                        <Icon size={15} className={item.id === 'triple-eight' ? 'text-indigo-500' : 'text-slate-400'} />
+                        <span>{item.label}</span>
+                      </span>
+                      {item.id === 'triple-eight' && (
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold">
+                          8/8/8
+                        </span>
+                      )}
                     </button>
                   );
                 })}
+
+                {/* Clear All / Start From Scratch with Password */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      setShowClearModal(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <RotateCcw size={14} className="text-rose-500" />
+                      <span>{language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All'}</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-rose-50 dark:bg-rose-950 text-rose-600 font-semibold">
+                      Scratch
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -714,6 +746,12 @@ export const Navbar: React.FC = () => {
 
       {/* Add Mainstream Category Modal */}
       <NewCategoryModal />
+
+      {/* Clear All Data Password Verification Modal */}
+      <ClearScratchPasswordModal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+      />
     </>
   );
 };

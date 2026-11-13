@@ -11,7 +11,8 @@ import {
   authenticateUserAccount, 
   updateUserAccountProfile,
   isDeviceOffline,
-  UserAccountProfile 
+  UserAccountProfile,
+  cacheAccountPasswordVerifier
 } from '../utils/cloudSync';
 import { iosNativeBridge } from '../utils/iosNativeBridge';
 
@@ -252,6 +253,10 @@ export const DeviceSyncModal: React.FC = () => {
       if (res.success && res.user) {
         setCurrentUser(res.user);
         setSyncKey(res.user.username);
+        // Cache verifier sha for offline password actions
+        if (password) {
+          cacheAccountPasswordVerifier(res.user.username, password);
+        }
 
         if (authMode === 'login' && res.state) {
           hydrateCloudState(res.state);
@@ -343,6 +348,7 @@ export const DeviceSyncModal: React.FC = () => {
       });
 
       if (res.success) {
+        cacheAccountPasswordVerifier(currentUser.username, newPassword);
         await iosNativeBridge.haptic('success');
         showFeedback('Password changed successfully!');
         setCurrentPassword('');

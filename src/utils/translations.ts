@@ -369,7 +369,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     backupData: 'Backup Data',
     restoreData: 'Restore Data',
     syncPostgres: 'Sync PostgreSQL',
-    resetAllDefaults: 'Clear All & Start From Scratch',
+    resetAllDefaults: 'Clear All (Scratch)',
     dataRestoredSuccess: 'Data restored successfully!',
     dataRestoreInvalid: 'Invalid backup JSON file.',
   },
@@ -544,7 +544,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     backupData: 'ምትኬ ዳታ አስቀምጥ',
     restoreData: 'ምትኬ መልስ',
     syncPostgres: 'PostgreSQL ክላውድ አመሳስል',
-    resetAllDefaults: 'ሁሉንም አጥፋና ከባዶ ጀምር (Clear All)',
+    resetAllDefaults: 'ሁሉንም አጥፋ (Scratch)',
     dataRestoredSuccess: 'ዳታው በተሳካ ሁኔታ ተመልሷል!',
     dataRestoreInvalid: 'ትክክለኛ ያልሆነ የJSON ፋይል ነው።',
   }

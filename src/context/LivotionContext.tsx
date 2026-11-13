@@ -1304,7 +1304,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     stopTimer();
     try {
       Object.keys(localStorage).forEach((key) => {
-        if ((key.startsWith('livotion_') || key.startsWith('neva_')) && !key.includes('theme') && !key.includes('language') && !key.includes('sync_key')) {
+        if ((key.startsWith('livotion_') || key.startsWith('neva_')) && 
+            !key.includes('theme') && 
+            !key.includes('language') && 
+            !key.includes('sync_key') && 
+            !key.includes('user_account') && 
+            !key.includes('pwd_sha')) {
           localStorage.removeItem(key);
         }
       });

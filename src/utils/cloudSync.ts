@@ -383,3 +383,77 @@ export const clearStoredUserAccount = (): void => {
     localStorage.removeItem('neva_user_account_v1');
   } catch (e) {}
 };
+
+// SHA-256 helper for client-side password verification and caching
+export const hashPasswordSha256 = async (text: string): Promise<string> => {
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    try {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {}
+  }
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+  return String(hash);
+};
+
+export const cacheAccountPasswordVerifier = async (username: string, password: string): Promise<void> => {
+  try {
+    const clean = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const hash = await hashPasswordSha256(password);
+    localStorage.setItem(`neva_pwd_sha_${clean}`, hash);
+  } catch (e) {}
+};
+
+// Verify main account password for security-sensitive actions (e.g. Clear All & Start from Scratch)
+export const verifyMainAccountPassword = async (
+  username: string,
+  password: string
+): Promise<{ success: boolean; message?: string }> => {
+  if (!password) {
+    return { success: false, message: 'Please enter your password.' };
+  }
+
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!cleanUsername) {
+    return { success: false, message: 'Invalid username.' };
+  }
+
+  // 1. Verify online with /api/auth if device is online
+  if (!isDeviceOffline()) {
+    try {
+      const res = await authenticateUserAccount('login', {
+        username: cleanUsername,
+        password: password
+      });
+      if (res.success) {
+        await cacheAccountPasswordVerifier(cleanUsername, password);
+        return { success: true };
+      } else {
+        return { success: false, message: res.message || 'Incorrect password.' };
+      }
+    } catch (err: any) {
+      // Fall through to offline cache check
+    }
+  }
+
+  // 2. Offline fallback check against cached SHA-256 verifier
+  try {
+    const cachedHash = localStorage.getItem(`neva_pwd_sha_${cleanUsername}`);
+    if (cachedHash) {
+      const inputHash = await hashPasswordSha256(password);
+      if (inputHash === cachedHash) {
+        return { success: true };
+      }
+      return { success: false, message: 'Incorrect password.' };
+    }
+  } catch (e) {}
+
+  return { success: false, message: 'Unable to verify password while offline without prior cached login.' };
+};
+
