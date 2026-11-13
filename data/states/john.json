@@ -176,7 +176,75 @@
     }
   ],
   "meals": [],
-  "goals": [],
+  "goals": [
+    {
+      "title": "Ship N e v a Architecture & Core Modules",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "architecture",
+      "targetMetric": "100% Core Modules",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 75,
+      "isCompleted": false,
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": true
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": true
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ],
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "50h Deep Focus Practice in Q4",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "devotion",
+      "targetMetric": "50h Practice Logged",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 60,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "Master Forex & Algorithmic Trading Execution",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "trading",
+      "targetMetric": "15% Alpha",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 70,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "10 Master Oil Paintings & Studio Portfolio",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "art",
+      "targetMetric": "10 Canvases",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 80,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    }
+  ],
   "sessions": [],
   "reviews": [],
   "categoryPlans": {
