@@ -239,9 +239,6 @@ export const TodayCockpitV2: React.FC = () => {
               <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                 {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Mobile Phone Alarms & Apple Reminders'}
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                iOS 16 Ready
-              </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {language === 'am' ? 'የስልክ ማንቂያ ያዘጋጁ፣ በድምጽ ያስደውሉ ወይም ወደ አፕል አስታዋሽ ይላኩ' : 'Arm phone focus alarms, countdown timers & sync to iPhone Reminders app'}

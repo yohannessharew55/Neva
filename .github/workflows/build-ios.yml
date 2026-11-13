@@ -83,10 +83,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.2
-          name: "NEVA iOS 16+ Production Build v1.0.2 (Alarms & Online Account Sync)"
+          tag_name: v1.0.3
+          name: "NEVA iOS 16+ Production Build v1.0.3 (Live Auto-Updating)"
           body: |
-            ### 📱 NEVA Standalone iOS App v1.0.2
+            ### 📱 NEVA iOS App v1.0.3 (Live Auto-Updating Edition)
+            - **Live Over-The-Air (OTA) Updates**:
+              - Automatically reflects all website code, design, and feature updates instantly!
+              - Never requires reinstalling or sideloading ever again!
             - **Mobile Reminder & Alarm System**:
               - Native Time-Sensitive Phone Alarms (UNUserNotificationCenter)
               - 1-Tap Export to Apple Reminders (EventKit)
