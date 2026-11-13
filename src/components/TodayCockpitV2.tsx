@@ -4,7 +4,8 @@ import {
   RotateCcw, Plus,
   Palette, Music, Swords, Building2, TrendingUp,
   Shield, Calendar, ChevronRight, SlidersHorizontal,
-  ExternalLink, Dumbbell, BookOpen, Sparkles, Flame, SquarePen
+  ExternalLink, Dumbbell, BookOpen, Sparkles, Flame, SquarePen,
+  AlarmClock, BellRing
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -12,6 +13,7 @@ import { PlanningModal } from './PlanningModal';
 import { BigDailyActivitiesStickyNote } from './BigDailyActivitiesStickyNote';
 import { DayCloseoutModal } from './DayCloseoutModal';
 import { QuickScratchpadCard } from './QuickScratchpadCard';
+import { ReminderCenterModal } from './ReminderCenterModal';
 import { gregorianToEthiopian, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 
 export const TodayCockpitV2: React.FC = () => {
@@ -34,6 +36,7 @@ export const TodayCockpitV2: React.FC = () => {
 
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showCloseoutModal, setShowCloseoutModal] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
 
   const getDomainTypesForCat = (catId: string): DomainType[] => {
     switch (catId) {
@@ -225,6 +228,46 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Alarms & Apple Reminders Action Hub */}
+      <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/80 dark:border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#0082ff] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+            <AlarmClock size={19} className="animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Mobile Phone Alarms & Apple Reminders'}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                iOS 16 Ready
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {language === 'am' ? 'የስልክ ማንቂያ ያዘጋጁ፣ በድምጽ ያስደውሉ ወይም ወደ አፕል አስታዋሽ ይላኩ' : 'Arm phone focus alarms, countdown timers & sync to iPhone Reminders app'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 shrink-0">
+          <button
+            onClick={() => setShowReminderModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-xs shrink-0"
+          >
+            <AlarmClock size={14} />
+            <span>{language === 'am' ? 'ማንቂያ አዘጋጅ' : 'Set Phone Alarm'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowReminderModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs shrink-0"
+          >
+            <BellRing size={14} className="text-[#0082ff]" />
+            <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Sync Reminders'}</span>
+          </button>
+        </div>
+      </div>
+
       {/* 2. Hero: Active Focus Timer or Up Next Task for Today */}
       <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs transition-all">
         {activeTask ? (
@@ -362,6 +405,12 @@ export const TodayCockpitV2: React.FC = () => {
         isOpen={showCloseoutModal}
         onClose={() => setShowCloseoutModal(false)}
         onNavigateToGallery={() => setActiveTab('notes-gallery')}
+      />
+
+      {/* Mobile Alarms & Reminders Hub Modal */}
+      <ReminderCenterModal
+        isOpen={showReminderModal}
+        onClose={() => setShowReminderModal(false)}
       />
     </div>
   );

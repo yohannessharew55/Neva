@@ -163,11 +163,11 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Icons - Uncluttered on mobile, secondary actions moved under hamburger drawer */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Schedule Reminders Button - hidden on mobile, placed inside Hamburger Drawer */}
+            {/* Schedule Reminders & Alarms Button - Always accessible on mobile & desktop */}
             <button
               onClick={() => setShowReminderModal(true)}
-              className="hidden sm:flex p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer relative active:scale-90 min-w-[40px] min-h-[40px] items-center justify-center"
-              title={t('reminders')}
+              className="flex p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer relative active:scale-90 min-w-[40px] min-h-[40px] items-center justify-center shadow-2xs"
+              title={language === 'am' ? 'አስታዋሾች እና የማንቂያ ደወል (Reminders & Alarms)' : 'Reminders & Alarms Hub'}
             >
               <BellRing size={18} className="text-[#0082ff]" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />

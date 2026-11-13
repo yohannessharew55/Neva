@@ -83,18 +83,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.0
-          name: "NEVA iOS 16+ Production Build v1.0.0"
+          tag_name: v1.0.2
+          name: "NEVA iOS 16+ Production Build v1.0.2 (Alarms & Online Account Sync)"
           body: |
-            ### 📱 NEVA Standalone iOS App (Native IPA)
-            - **Target Devices**: iPhone X and all devices running iOS 16.0+
-            - **Architecture**: ARM64 Mach-O Native App
-            - **Features**:
-              - Native Apple Reminders & EventKit sync
+            ### 📱 NEVA Standalone iOS App v1.0.2
+            - **Mobile Reminder & Alarm System**:
               - Native Time-Sensitive Phone Alarms (UNUserNotificationCenter)
-              - 10 Acoustic Focus Soundscapes (Tibetan bowls, 432Hz waves, temple bells)
-              - Complete offline functionality
-            - **Installation**: Drag & drop `NEVA.ipa` into **Sideloadly**, **AltStore**, or **TrollStore** with your Apple ID.
+              - 1-Tap Export to Apple Reminders (EventKit)
+              - Quick Focus Alarm Presets (15m, 25m, 45m, 60m, 90m) with Acoustic Sounds
+            - **100% Standalone Offline & Cloud Sync**:
+              - Operates completely offline with local device persistence
+              - Online Account Sign Up & Log In with automated cloud backup
+              - Cross-device sync between iPhone X and PC/Mac
+            - **Official "N" App Icon & Splash Branding**:
+              - High-resolution Retina App Icon & Launch Screens
           files: ios/App/NEVA.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

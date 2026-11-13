@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Bell, BellRing, Clock, Calendar, Target, Check, 
   Trash2, Plus, Volume2, VolumeX, X, AlertCircle, 
-  ChevronRight, Sparkles, Flame, ShieldAlert
+  ChevronRight, Sparkles, Flame, ShieldAlert, Smartphone,
+  Play, Timer, AlarmClock, RotateCcw, CheckCircle2, Shield
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
-import { soundEngine } from '../utils/audio';
+import { soundEngine, AlarmSoundType } from '../utils/audio';
+import { iosNativeBridge } from '../utils/iosNativeBridge';
 
 export interface ScheduleReminder {
   id: string;
@@ -16,7 +18,14 @@ export interface ScheduleReminder {
   timeOrCadence: string;
   details?: string;
   dismissed?: boolean;
-  snoozedUntil?: number; // timestamp
+}
+
+export interface ActiveAlarmItem {
+  id: string;
+  title: string;
+  fireTime: number; // timestamp in ms
+  sound: AlarmSoundType;
+  durationLabel: string;
 }
 
 interface ReminderCenterModalProps {
@@ -24,55 +33,224 @@ interface ReminderCenterModalProps {
   onClose: () => void;
 }
 
+const SOUND_LABELS: Record<AlarmSoundType, { name: string; desc: string }> = {
+  tibetan_bowl: { name: 'Tibetan Singing Bowl', desc: '528Hz healing resonance' },
+  temple_bell: { name: 'Sacred Temple Bell', desc: '432Hz harmonic acoustic' },
+  zen_gong: { name: 'Zen Bronze Gong', desc: '108Hz grounding sub-bass' },
+  sacred_chimes: { name: 'Sacred Triad Chimes', desc: 'Pythagorean triad' },
+  gentle_harp: { name: 'Gentle Harp Chords', desc: 'Acoustic plucked strings' },
+  digital_alert: { name: 'Digital Crisp Alert', desc: 'High-contrast ping' },
+  none: { name: 'Silent / Vibrate Only', desc: 'Haptic feedback only' }
+};
+
 export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen, onClose }) => {
   const { 
     tasks, 
     categoryPlans, 
     getCategoryLiveMetrics, 
-    triggerAlarmSound,
     setSelectedCategoryId,
-    setActiveTab 
+    language
   } = useLivotion();
 
+  const [activeTab, setActiveTabMode] = useState<'alarms' | 'reminders' | 'cadence'>('alarms');
+  const [selectedSound, setSelectedSound] = useState<AlarmSoundType>('tibetan_bowl');
+  const [notificationStatus, setNotificationStatus] = useState<string>('checking');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Active scheduled alarms in localStorage
+  const [activeAlarms, setActiveAlarms] = useState<ActiveAlarmItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_active_alarms_v1');
+      if (saved) {
+        const parsed: ActiveAlarmItem[] = JSON.parse(saved);
+        // filter out expired alarms (> 10s past fireTime)
+        const now = Date.now();
+        return parsed.filter(a => a.fireTime > now - 10000);
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  // Custom Alarm state
+  const [customMinutes, setCustomMinutes] = useState<number>(25);
+  const [customAlarmTitle, setCustomAlarmTitle] = useState<string>('Deep Focus Session');
+  const [alarmTimeInput, setAlarmTimeInput] = useState<string>('');
+  const [alarmMode, setAlarmMode] = useState<'countdown' | 'time'>('countdown');
+
+  // Apple Reminders state
+  const [newReminderTitle, setNewReminderTitle] = useState<string>('');
+  const [newReminderMinutes, setNewReminderMinutes] = useState<number>(30);
+  const [newReminderNotes, setNewReminderNotes] = useState<string>('Scheduled via NEVA OS');
+  const [isSyncingTasks, setIsSyncingTasks] = useState<boolean>(false);
+
+  // Cadence filter & dismissals
   const [filterType, setFilterType] = useState<'all' | 'daily' | 'weekly' | 'monthly'>('all');
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('neva_dismissed_reminders');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Custom reminders state
-  const [customReminders, setCustomReminders] = useState<ScheduleReminder[]>(() => {
-    const saved = localStorage.getItem('neva_custom_reminders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Check notification permission on mount
+  useEffect(() => {
+    if (iosNativeBridge.isNativeApp()) {
+      setNotificationStatus('granted');
+    } else if ('Notification' in window) {
+      setNotificationStatus(Notification.permission);
+    }
+  }, [isOpen]);
 
-  // New reminder form state
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newType, setNewType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [newTime, setNewTime] = useState('06:00 PM');
-  const [newCategory, setNewCategory] = useState('chess');
+  // Save active alarms & dismissed
+  useEffect(() => {
+    localStorage.setItem('neva_active_alarms_v1', JSON.stringify(activeAlarms));
+  }, [activeAlarms]);
 
   useEffect(() => {
     localStorage.setItem('neva_dismissed_reminders', JSON.stringify(dismissedIds));
   }, [dismissedIds]);
 
+  // Live countdown ticker
+  const [, setTicker] = useState<number>(0);
   useEffect(() => {
-    localStorage.setItem('neva_custom_reminders', JSON.stringify(customReminders));
-  }, [customReminders]);
+    if (!isOpen || activeAlarms.length === 0) return;
+    const interval = setInterval(() => {
+      setTicker(t => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isOpen, activeAlarms.length]);
 
   if (!isOpen) return null;
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3200);
+  };
+
+  // Test iPhone Alarm & Taptic
+  const handleTestAlarm = async () => {
+    await iosNativeBridge.haptic('heavy');
+    soundEngine.playAlarm(selectedSound);
+    showToast(`🔔 Test Alarm Sounding: ${SOUND_LABELS[selectedSound].name}`);
+  };
+
+  // Request Permissions
+  const handleRequestPermissions = async () => {
+    await iosNativeBridge.haptic('medium');
+    const res = await iosNativeBridge.requestAllPermissions();
+    if (res.notifications) {
+      setNotificationStatus('granted');
+      showToast('✓ iPhone Notifications & Alarm permissions granted!');
+    } else {
+      showToast('Notice: Please allow notifications in iPhone Settings.');
+    }
+  };
+
+  // Arm an Alarm
+  const handleArmAlarm = async (minutes: number, title: string) => {
+    if (minutes <= 0) return;
+    const seconds = Math.round(minutes * 60);
+    const fireTime = Date.now() + seconds * 1000;
+    const alarmId = `alarm-${Date.now()}`;
+
+    await iosNativeBridge.haptic('success');
+    await iosNativeBridge.scheduleFocusAlarm(
+      alarmId,
+      `⏰ ${title} Complete!`,
+      `Your ${minutes}m focus block in NEVA has concluded. Return to cockpit.`,
+      seconds,
+      selectedSound
+    );
+
+    const newAlarm: ActiveAlarmItem = {
+      id: alarmId,
+      title,
+      fireTime,
+      sound: selectedSound,
+      durationLabel: `${minutes}m`
+    };
+
+    setActiveAlarms(prev => [...prev, newAlarm]);
+    const fireTimeString = new Date(fireTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    showToast(`✓ Phone Alarm Armed for ${fireTimeString}! Rings through lockscreen.`);
+  };
+
+  // Arm Specific Time Alarm
+  const handleArmTimeAlarm = async () => {
+    if (!alarmTimeInput) return;
+    const [hrs, mins] = alarmTimeInput.split(':').map(Number);
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hrs, mins, 0, 0);
+
+    // If time is earlier today, set for tomorrow
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+
+    const seconds = Math.round((target.getTime() - now.getTime()) / 1000);
+    const minutes = Math.round(seconds / 60);
+    await handleArmAlarm(minutes, customAlarmTitle || 'Scheduled Alarm');
+  };
+
+  // Cancel Alarm
+  const handleCancelAlarm = async (id: string) => {
+    await iosNativeBridge.haptic('light');
+    await iosNativeBridge.cancelAlarm(id);
+    setActiveAlarms(prev => prev.filter(a => a.id !== id));
+    showToast('Alarm cancelled.');
+  };
+
+  // Sync All Today's Tasks to Apple Reminders
+  const handleSyncTodayTasksToReminders = async () => {
+    if (tasks.length === 0) {
+      showToast('No tasks scheduled today to sync.');
+      return;
+    }
+
+    setIsSyncingTasks(true);
+    await iosNativeBridge.haptic('success');
+
+    const items = tasks.map((t, idx) => ({
+      title: `${t.title} (${t.durationMin}m)`,
+      notes: `NEVA Mastery OS • ${t.domain} block at ${t.startTime}`,
+      dueMinutes: (idx + 1) * 35
+    }));
+
+    try {
+      const savedCount = await iosNativeBridge.syncTasksToReminders(items);
+      showToast(`✓ Synced ${savedCount} tasks to iPhone Reminders app!`);
+    } catch (e) {
+      showToast('Generated reminder calendar file for iPhone.');
+    } finally {
+      setIsSyncingTasks(false);
+    }
+  };
+
+  // Add Single Custom Reminder
+  const handleAddCustomReminder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReminderTitle.trim()) return;
+
+    await iosNativeBridge.haptic('medium');
+    const success = await iosNativeBridge.addReminder(
+      newReminderTitle.trim(),
+      newReminderNotes,
+      newReminderMinutes
+    );
+
+    if (success) {
+      showToast(`✓ Added to iPhone Reminders (Due in ${newReminderMinutes}m)`);
+      setNewReminderTitle('');
+    }
+  };
+
+  // Cadence Alerts Generation
   const today = new Date();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayName = dayNames[today.getDay()];
   const todayShort = todayName.slice(0, 3);
 
-  // Generate dynamic reminders from Daily, Weekly, and Monthly schedules
   const generatedReminders: ScheduleReminder[] = [];
 
-  // 1. Daily Schedule Reminders (from tasks)
   tasks.forEach((t) => {
     const matchedCat = Object.values(categoryPlans).find((c) => 
       t.domain.toLowerCase().includes(c.id.toLowerCase())
@@ -90,11 +268,8 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
     });
   });
 
-  // 2. Weekly Schedule Reminders (cadence matching today or pacing)
   Object.values(categoryPlans).forEach((cat) => {
     const metrics = getCategoryLiveMetrics(cat.id);
-    
-    // Find slot matching today
     const matchingSlot = cat.weeklyScheduleSummary.find((s) => 
       s.toLowerCase().includes(todayShort.toLowerCase()) || s.toLowerCase().includes('daily')
     );
@@ -111,343 +286,521 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
         dismissed: dismissedIds.includes(`weekly-cadence-${cat.id}`),
       });
     }
-
-    // Weekly pacing alert if behind schedule
-    if (metrics.weeklyPercentile < 50 && metrics.weeklyTargetHours > 5) {
-      generatedReminders.push({
-        id: `weekly-pacing-${cat.id}`,
-        type: 'weekly',
-        title: `${cat.title} Weekly Pacing Check`,
-        categoryTitle: cat.title,
-        categoryColor: cat.color,
-        timeOrCadence: 'Mid-Week Pacing',
-        details: `${Math.max(0, metrics.weeklyTargetHours - metrics.currentWeeklyHours).toFixed(1)}h remaining to hit ${metrics.weeklyTargetHours}h goal`,
-        dismissed: dismissedIds.includes(`weekly-pacing-${cat.id}`),
-      });
-    }
   });
 
-  // 3. Monthly Deliverable Reminders
-  Object.values(categoryPlans).forEach((cat) => {
-    const metrics = getCategoryLiveMetrics(cat.id);
-    generatedReminders.push({
-      id: `monthly-goal-${cat.id}`,
-      type: 'monthly',
-      title: cat.monthlyGoalTitle,
-      categoryTitle: cat.title,
-      categoryColor: cat.color,
-      timeOrCadence: `Target: ${metrics.monthlyTargetHours}h / month`,
-      details: `${metrics.monthlyPercentile.toFixed(1)}% achieved (${metrics.currentMonthlyHours.toFixed(1)} / ${metrics.monthlyTargetHours}h logged) • ${cat.monthlyTargetMetric}`,
-      dismissed: dismissedIds.includes(`monthly-goal-${cat.id}`),
-    });
-  });
-
-  // Combined reminders
-  const allReminders = [...customReminders, ...generatedReminders];
-
-  const filteredReminders = allReminders.filter((r) => {
-    if (filterType !== 'all' && r.type !== filterType) return false;
-    return true;
-  });
-
-  const activeReminders = filteredReminders.filter((r) => !r.dismissed);
-  const dismissedReminders = filteredReminders.filter((r) => r.dismissed);
-
-  const handleDismiss = (id: string) => {
-    if (!dismissedIds.includes(id)) {
-      setDismissedIds([...dismissedIds, id]);
-    }
-  };
-
-  const handleRestore = (id: string) => {
-    setDismissedIds(dismissedIds.filter((item) => item !== id));
-  };
-
-  const handleAddCustom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    const cat = categoryPlans[newCategory] || categoryPlans['chess'];
-    const newRem: ScheduleReminder = {
-      id: `custom-${Date.now()}`,
-      type: newType,
-      title: newTitle.trim(),
-      categoryTitle: cat.title,
-      categoryColor: cat.color,
-      timeOrCadence: newTime,
-      details: `Custom reminder for ${cat.title}`,
-      dismissed: false,
-    };
-
-    setCustomReminders([newRem, ...customReminders]);
-    if (soundEnabled) {
-      triggerAlarmSound('CHIME_MEDITATION');
-    }
-    setNewTitle('');
-    setShowAddForm(false);
-  };
+  const activeReminders = generatedReminders.filter((r) => !r.dismissed && (filterType === 'all' || r.type === filterType));
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 w-full max-w-2xl rounded-3xl p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
-        
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+      <div 
+        className="w-full sm:max-w-xl max-h-[92vh] sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0c121e] border border-slate-200/80 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-800 dark:text-slate-100"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
+      >
+        {/* iOS Drag Handle on Mobile */}
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#0082ff] text-white flex items-center justify-center shadow-xs">
-              <BellRing size={18} />
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-[#0f172a]/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0082ff] to-[#0055d4] flex items-center justify-center text-white shadow-md shadow-blue-500/25 shrink-0">
+              <AlarmClock size={20} className="animate-pulse" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-                Schedule Reminders & Alerts
-              </h3>
-              <p className="text-xs text-slate-500">
-                Synchronized with Daily blocks, Weekly cadence, and Monthly deliverables.
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white tracking-tight">
+                  {language === 'am' ? 'የማንቂያ ደወል እና አስታዋሾች' : 'Reminders & Phone Alarms'}
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <Smartphone size={10} />
+                  <span>iOS 16+ UNUserNotification</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ ማስተካከያ' : 'Phone alarms, countdown timers & Apple Reminders sync'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition"
-              title={soundEnabled ? 'Chime sound enabled' : 'Muted'}
-            >
-              {soundEnabled ? <Volume2 size={16} className="text-[#0082ff]" /> : <VolumeX size={16} className="text-slate-400" />}
-            </button>
-            <button 
-              onClick={onClose} 
-              className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              title="Close modal"
             >
               <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* Top Filter Buttons & Quick Add */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl text-xs font-bold">
-            <button
-              onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
-                filterType === 'all'
-                  ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              All ({allReminders.length})
-            </button>
-            <button
-              onClick={() => setFilterType('daily')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                filterType === 'daily'
-                  ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Clock size={12} /> Daily
-            </button>
-            <button
-              onClick={() => setFilterType('weekly')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                filterType === 'weekly'
-                  ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Calendar size={12} /> Weekly
-            </button>
-            <button
-              onClick={() => setFilterType('monthly')}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                filterType === 'monthly'
-                  ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Target size={12} /> Monthly
+        {/* Global Toast Alert */}
+        {toastMessage && (
+          <div className="mx-4 mt-3 px-3.5 py-2.5 rounded-2xl bg-[#0082ff] text-white text-xs font-bold shadow-lg flex items-center justify-between gap-2 animate-slide-down">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} />
+              <span>{toastMessage}</span>
+            </div>
+            <button onClick={() => setToastMessage(null)} className="p-0.5 opacity-80 hover:opacity-100">
+              <X size={14} />
             </button>
           </div>
-
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-3.5 py-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-          >
-            <Plus size={13} /> {showAddForm ? 'Close Form' : 'Custom Alert'}
-          </button>
-        </div>
-
-        {/* Custom Reminder Creation Drawer */}
-        {showAddForm && (
-          <form onSubmit={handleAddCustom} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
-            <h4 className="font-bold text-slate-900 dark:text-white">Create Custom Schedule Reminder</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-slate-500 font-semibold block mb-1">Reminder Title</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. 15m Tactics Rush, Form check..."
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-semibold block mb-1">Horizon Type</label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-bold"
-                >
-                  <option value="daily">Daily Schedule</option>
-                  <option value="weekly">Weekly Routine</option>
-                  <option value="monthly">Monthly Milestone</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-semibold block mb-1">Pillar Category</label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-bold"
-                >
-                  {Object.values(categoryPlans).map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-semibold block mb-1">Scheduled Time / Cadence</label>
-                <input
-                  type="text"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  placeholder="06:00 PM / Mon-Fri"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 bg-[#0082ff] text-white rounded-xl font-bold flex items-center gap-1"
-              >
-                <Plus size={13} /> Add Reminder
-              </button>
-            </div>
-          </form>
         )}
 
-        {/* Reminders List */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-            <span>Active Schedule Alerts ({activeReminders.length})</span>
-            {dismissedReminders.length > 0 && (
-              <button
-                onClick={() => setDismissedIds([])}
-                className="text-[#0082ff] hover:underline cursor-pointer lowercase font-medium"
-              >
-                Restore all ({dismissedReminders.length} dismissed)
-              </button>
-            )}
+        {/* Permission Banner if not granted on Web */}
+        {notificationStatus === 'default' && (
+          <div className="mx-4 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <ShieldAlert size={16} className="text-amber-500 shrink-0" />
+              <span>Enable phone notifications for alarms when screen is locked.</span>
+            </div>
+            <button
+              onClick={handleRequestPermissions}
+              className="px-3 py-1 bg-amber-500 text-white rounded-xl font-bold text-xs shrink-0 active:scale-95 transition"
+            >
+              Enable
+            </button>
           </div>
+        )}
 
-          <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
-            {activeReminders.map((rem) => (
-              <div
-                key={rem.id}
-                className="p-4 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300 transition flex items-start justify-between gap-3 group"
-              >
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div 
-                    className="w-2 h-10 rounded-full shrink-0 mt-0.5" 
-                    style={{ backgroundColor: rem.categoryColor }} 
-                  />
+        {/* Tab Switcher */}
+        <div className="px-4 pt-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/30 dark:bg-[#0a0f18]/30">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <button
+              onClick={() => { setActiveTabMode('alarms'); iosNativeBridge.haptic('light'); }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
+                activeTab === 'alarms'
+                  ? 'bg-[#0082ff] text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <AlarmClock size={15} />
+              <span>{language === 'am' ? 'የስልክ ማንቂያ' : 'Phone Alarms'}</span>
+              {activeAlarms.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-white text-[#0082ff] text-[10px] flex items-center justify-center font-black">
+                  {activeAlarms.length}
+                </span>
+              )}
+            </button>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span 
-                        className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider"
-                        style={{ backgroundColor: `${rem.categoryColor}15`, color: rem.categoryColor }}
-                      >
-                        {rem.categoryTitle}
-                      </span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
-                      <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                        <Clock size={11} className="text-[#0082ff]" /> {rem.timeOrCadence}
-                      </span>
-                      <span className="text-slate-300 dark:text-slate-700">•</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {rem.type} alert
-                      </span>
-                    </div>
+            <button
+              onClick={() => { setActiveTabMode('reminders'); iosNativeBridge.haptic('light'); }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
+                activeTab === 'reminders'
+                  ? 'bg-[#0082ff] text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <BellRing size={15} />
+              <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Apple Reminders'}</span>
+            </button>
 
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                      {rem.title}
-                    </h4>
+            <button
+              onClick={() => { setActiveTabMode('cadence'); iosNativeBridge.haptic('light'); }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
+                activeTab === 'cadence'
+                  ? 'bg-[#0082ff] text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <Calendar size={15} />
+              <span>{language === 'am' ? 'ዕለታዊ መርሐግብር' : 'Daily Cadence'}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-700 text-[10px] text-slate-700 dark:text-slate-300">
+                {activeReminders.length}
+              </span>
+            </button>
+          </div>
+        </div>
 
-                    {rem.details && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {rem.details}
-                      </p>
-                    )}
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+
+          {/* TAB 1: PHONE ALARMS */}
+          {activeTab === 'alarms' && (
+            <div className="space-y-5">
+              
+              {/* Sound Chooser & Test Strip */}
+              <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                    <Volume2 size={16} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alarm Acoustic Sound</span>
+                    <select
+                      value={selectedSound}
+                      onChange={(e) => setSelectedSound(e.target.value as AlarmSoundType)}
+                      className="block text-xs font-bold text-slate-900 dark:text-white bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                    >
+                      {Object.entries(SOUND_LABELS).map(([k, v]) => (
+                        <option key={k} value={k} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                          {v.name} ({v.desc})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1.5 shrink-0 self-center">
-                  <button
-                    onClick={() => {
-                      const matchedKey = Object.keys(categoryPlans).find((k) => 
-                        categoryPlans[k].title.toLowerCase() === rem.categoryTitle.toLowerCase()
-                      );
-                      if (matchedKey) {
-                        setSelectedCategoryId(matchedKey);
-                        onClose();
-                      }
-                    }}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                    title="Open Plan"
-                  >
-                    <span>View</span>
-                    <ChevronRight size={13} />
-                  </button>
+                <button
+                  onClick={handleTestAlarm}
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
+                  title="Test sound through iPhone speakers and Taptic motor"
+                >
+                  <Play size={12} className="text-emerald-500 fill-emerald-500" />
+                  <span>Test Sound & Taptic</span>
+                </button>
+              </div>
 
-                  <button
-                    onClick={() => handleDismiss(rem.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                    title="Dismiss alert"
-                  >
-                    <Check size={15} />
-                  </button>
+              {/* Quick Preset Alarms */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">
+                  {language === 'am' ? 'ፈጣን የማንቂያ ደወል ቅንብሮች' : 'Quick Focus Alarm Presets (1-Tap Arm)'}
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { min: 15, label: '15m Sprint', desc: 'Power focus burst' },
+                    { min: 25, label: '25m Pomodoro', desc: 'Standard flow cycle' },
+                    { min: 45, label: '45m Deep Work', desc: 'Core deliberate mastery' },
+                    { min: 60, label: '60m Mastery', desc: 'Complete workout/study' },
+                    { min: 90, label: '90m Ultradian', desc: 'Deep biological wave' },
+                    { min: 10, label: '10m Reset', desc: 'Quick break & recharge' },
+                  ].map(preset => (
+                    <button
+                      key={preset.min}
+                      onClick={() => handleArmAlarm(preset.min, preset.label)}
+                      className="p-3 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 hover:border-[#0082ff] dark:hover:border-[#0082ff] text-left transition cursor-pointer active:scale-95 group shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-[#0082ff] transition-colors">
+                          {preset.label}
+                        </span>
+                        <Timer size={14} className="text-slate-400 group-hover:text-[#0082ff] transition-colors" />
+                      </div>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {preset.desc}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
 
-            {activeReminders.length === 0 && (
-              <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl space-y-2">
-                <Bell size={24} className="mx-auto text-slate-400" />
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                  All schedule reminders cleared for now!
-                </p>
-                <p className="text-xs text-slate-400">
-                  New alerts will trigger as daily focus blocks and weekly cadence times arrive.
-                </p>
+              {/* Custom Alarm Config */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Clock size={14} className="text-[#0082ff]" />
+                    <span>Custom Alarm & Reminder</span>
+                  </span>
+                  <div className="flex items-center bg-slate-200/70 dark:bg-slate-700/60 p-0.5 rounded-lg text-[10px] font-bold">
+                    <button
+                      onClick={() => setAlarmMode('countdown')}
+                      className={`px-2 py-0.5 rounded-md transition ${alarmMode === 'countdown' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500'}`}
+                    >
+                      In Minutes
+                    </button>
+                    <button
+                      onClick={() => setAlarmMode('time')}
+                      className={`px-2 py-0.5 rounded-md transition ${alarmMode === 'time' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500'}`}
+                    >
+                      Exact Time
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <input
+                    type="text"
+                    value={customAlarmTitle}
+                    onChange={(e) => setCustomAlarmTitle(e.target.value)}
+                    placeholder="Alarm title (e.g. Chess Tactics, Prayer)"
+                    className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0082ff]"
+                  />
+
+                  {alarmMode === 'countdown' ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="360"
+                        value={customMinutes}
+                        onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-24 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
+                      />
+                      <span className="text-xs text-slate-500 dark:text-slate-400">minutes</span>
+                      <button
+                        onClick={() => handleArmAlarm(customMinutes, customAlarmTitle)}
+                        className="flex-1 py-2 px-3 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition active:scale-95 cursor-pointer text-center"
+                      >
+                        Arm Alarm
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={alarmTimeInput}
+                        onChange={(e) => setAlarmTimeInput(e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
+                      />
+                      <button
+                        onClick={handleArmTimeAlarm}
+                        disabled={!alarmTimeInput}
+                        className="py-2 px-4 rounded-xl bg-[#0082ff] hover:bg-[#0070df] disabled:opacity-50 text-white text-xs font-bold transition active:scale-95 cursor-pointer shrink-0"
+                      >
+                        Set Alarm
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* Active Alarms List */}
+              {activeAlarms.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+                    <span>Armed Phone Alarms ({activeAlarms.length})</span>
+                    <button
+                      onClick={() => {
+                        activeAlarms.forEach(a => iosNativeBridge.cancelAlarm(a.id));
+                        setActiveAlarms([]);
+                        showToast('All alarms cancelled.');
+                      }}
+                      className="text-rose-500 hover:underline cursor-pointer lowercase font-medium"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {activeAlarms.map((alarm) => {
+                      const now = Date.now();
+                      const secondsLeft = Math.max(0, Math.round((alarm.fireTime - now) / 1000));
+                      const minsLeft = Math.floor(secondsLeft / 60);
+                      const secsLeft = secondsLeft % 60;
+                      const timeString = new Date(alarm.fireTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                      return (
+                        <div 
+                          key={alarm.id}
+                          className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-white to-white dark:via-[#121927] dark:to-[#121927] border border-blue-200 dark:border-blue-900/60 shadow-2xs flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-[#0082ff]/10 text-[#0082ff] flex items-center justify-center shrink-0">
+                              <AlarmClock size={16} className="animate-bounce" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                                  {alarm.title}
+                                </h5>
+                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950/80 text-[#0082ff] font-bold">
+                                  {timeString}
+                                </span>
+                              </div>
+                              <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                {minsLeft > 0 ? `${minsLeft}m ${secsLeft}s remaining` : `${secsLeft}s remaining`}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleCancelAlarm(alarm.id)}
+                            className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                            title="Cancel this alarm"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* TAB 2: APPLE REMINDERS */}
+          {activeTab === 'reminders' && (
+            <div className="space-y-5">
+              
+              {/* Sync Today's Schedule Card */}
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/80 dark:border-blue-800/80 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#0082ff] text-white flex items-center justify-center shrink-0 shadow-md">
+                      <Smartphone size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                        {language === 'am' ? 'የዛሬን ተግባራት ወደ አፕል አስታዋሽ ላክ' : 'Sync Today’s Flow to Apple Reminders'}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tasks.length} {language === 'am' ? 'ተግባራት ተዘጋጅተዋል' : 'blocks ready to export to iOS Reminders list'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSyncTodayTasksToReminders}
+                  disabled={isSyncingTasks || tasks.length === 0}
+                  className="w-full py-3 px-4 rounded-2xl bg-[#0082ff] hover:bg-[#0070df] disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 active:scale-98 transition cursor-pointer"
+                >
+                  <BellRing size={15} />
+                  <span>
+                    {isSyncingTasks ? 'Exporting to iPhone EventKit...' : `Export All ${tasks.length} Tasks to Apple Reminders`}
+                  </span>
+                </button>
+              </div>
+
+              {/* Add Custom Apple Reminder Form */}
+              <form onSubmit={handleAddCustomReminder} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                  Add Quick Item to Apple Reminders
+                </span>
+
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={newReminderTitle}
+                    onChange={(e) => setNewReminderTitle(e.target.value)}
+                    placeholder="Reminder title (e.g. Call Client, Read Scripture, Gym)"
+                    required
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0082ff]"
+                  />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 block mb-1">Due in minutes</label>
+                      <input
+                        type="number"
+                        min="5"
+                        step="5"
+                        value={newReminderMinutes}
+                        onChange={(e) => setNewReminderMinutes(parseInt(e.target.value) || 15)}
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 block mb-1">List Target</label>
+                      <input
+                        type="text"
+                        readOnly
+                        value="NEVA Flow (iOS)"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold transition active:scale-95 cursor-pointer mt-1"
+                  >
+                    + Save to iPhone Reminders
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          )}
+
+          {/* TAB 3: DAILY CADENCE ALERTS */}
+          {activeTab === 'cadence' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+                <span>Active Schedule Alerts ({activeReminders.length})</span>
+                {dismissedIds.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setDismissedIds([]);
+                      showToast('Restored all dismissed alerts.');
+                    }}
+                    className="text-[#0082ff] hover:underline cursor-pointer lowercase font-medium"
+                  >
+                    Restore all ({dismissedIds.length} dismissed)
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {activeReminders.map((rem) => (
+                  <div
+                    key={rem.id}
+                    className="p-3.5 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300 transition flex items-start justify-between gap-3 group"
+                  >
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div 
+                        className="w-2 h-10 rounded-full shrink-0 mt-0.5" 
+                        style={{ backgroundColor: rem.categoryColor }} 
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span 
+                            className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider"
+                            style={{ backgroundColor: `${rem.categoryColor}15`, color: rem.categoryColor }}
+                          >
+                            {rem.categoryTitle}
+                          </span>
+                          <span className="text-slate-300 dark:text-slate-700">•</span>
+                          <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                            <Clock size={11} className="text-[#0082ff]" /> {rem.timeOrCadence}
+                          </span>
+                        </div>
+
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                          {rem.title}
+                        </h4>
+
+                        {rem.details && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            {rem.details}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0 self-center">
+                      <button
+                        onClick={() => {
+                          handleArmAlarm(30, rem.title);
+                        }}
+                        className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-[#0082ff] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                        title="Arm phone alarm for this block"
+                      >
+                        <AlarmClock size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setDismissedIds(prev => [...prev, rem.id]);
+                          iosNativeBridge.haptic('light');
+                        }}
+                        className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                        title="Dismiss alert"
+                      >
+                        <Check size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {activeReminders.length === 0 && (
+                  <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl space-y-2">
+                    <Bell size={24} className="mx-auto text-slate-400" />
+                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      All schedule reminders cleared for now!
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      New alerts will trigger as daily focus blocks and weekly cadence times arrive.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
