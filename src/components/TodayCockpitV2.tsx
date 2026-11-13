@@ -228,46 +228,12 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Alarms & Apple Reminders Action Hub */}
-      <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/80 dark:border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#0082ff] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
-            <AlarmClock size={19} className="animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Mobile Phone Alarms & Apple Reminders'}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {language === 'am' ? 'የስልክ ማንቂያ ያዘጋጁ፣ በድምጽ ያስደውሉ ወይም ወደ አፕል አስታዋሽ ይላኩ' : 'Arm phone focus alarms, countdown timers & sync to iPhone Reminders app'}
-            </p>
-          </div>
-        </div>
+      {/* 1. The Stationary Sticky Note: Central Hub & First Impression for Today's Execution */}
+      <BigDailyActivitiesStickyNote />
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 shrink-0">
-          <button
-            onClick={() => setShowReminderModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-xs shrink-0"
-          >
-            <AlarmClock size={14} />
-            <span>{language === 'am' ? 'ማንቂያ አዘጋጅ' : 'Set Phone Alarm'}</span>
-          </button>
-
-          <button
-            onClick={() => setShowReminderModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs shrink-0"
-          >
-            <BellRing size={14} className="text-[#0082ff]" />
-            <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Sync Reminders'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Hero: Active Focus Timer or Up Next Task for Today */}
-      <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs transition-all">
-        {activeTask ? (
+      {/* Active Focus Session Timer (if currently running) */}
+      {activeTask && (
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs transition-all">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-mono font-bold uppercase text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-900 inline-flex items-center gap-1">
@@ -305,38 +271,71 @@ export const TodayCockpitV2: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : (
+        </div>
+      )}
+
+      {/* 2. Mobile Alarms & Apple Reminders Action Hub (Positioned under the Sticky Note) */}
+      <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/80 dark:border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#0082ff] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+            <AlarmClock size={19} className="animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Mobile Phone Alarms & Apple Reminders'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {language === 'am' ? 'የስልክ ማንቂያ ያዘጋጁ፣ በድምጽ ያስደውሉ ወይም ወደ አፕል አስታዋሽ ይላኩ' : 'Arm phone focus alarms, countdown timers & sync to iPhone Reminders app'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 shrink-0">
+          <button
+            onClick={() => setShowReminderModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-xs shrink-0"
+          >
+            <AlarmClock size={14} />
+            <span>{language === 'am' ? 'ማንቂያ አዘጋጅ' : 'Set Phone Alarm'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowReminderModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs shrink-0"
+          >
+            <BellRing size={14} className="text-[#0082ff]" />
+            <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Sync Reminders'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Up Next Task for Today (when no active timer is running and tasks exist) */}
+      {!activeTask && nextTask && (
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block font-mono">
                 {language === 'am' ? 'ቀጣይ የትኩረት ክፍለ-ጊዜ' : 'Up Next Today'}
               </span>
               <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-0.5">
-                {nextTask?.title || (tasks.length === 0 
-                  ? (language === 'am' ? 'ምንም የተመዘገበ ተግባር የለም' : 'No activities scheduled for today') 
-                  : (language === 'am' ? 'የዛሬ ተግባራት በሙሉ ተጠናቀዋል! 🎉' : 'All tasks completed for today! 🎉'))}
+                {nextTask.title}
               </h2>
-              {nextTask && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                  <Clock size={11} /> {nextTask.startTime} • {nextTask.durationMin} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
-                </p>
-              )}
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                <Clock size={11} /> {nextTask.startTime} • {nextTask.durationMin} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
+              </p>
             </div>
 
-            {nextTask && (
-              <button
-                onClick={() => startTask(nextTask)}
-                className="px-4 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer self-start sm:self-auto active:scale-95"
-              >
-                <Play size={13} fill="currentColor" /> {language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}
-              </button>
-            )}
+            <button
+              onClick={() => startTask(nextTask)}
+              className="px-4 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer self-start sm:self-auto active:scale-95"
+            >
+              <Play size={13} fill="currentColor" /> {language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* 3. The Stationary Sticky Note: Central Hub for Today's Execution */}
-      <BigDailyActivitiesStickyNote />
+        </div>
+      )}
 
       {/* Option 4: Quick Scratchpad / "Parking Lot" Micro-Sticky */}
       <QuickScratchpadCard onOpenAppleNotes={() => setActiveTab('notes')} />

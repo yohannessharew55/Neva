@@ -5,7 +5,7 @@ import {
   MoreHorizontal, Swords, Palette, Music, Building2, 
   TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
   PlusCircle, CalendarDays, BellRing, Plus, Sparkles, Database, Cloud, Star,
-  Languages, Globe, SquarePen, StickyNote, User
+  Languages, Globe, SquarePen, StickyNote, User, LogOut
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { PlanningModal } from './PlanningModal';
@@ -37,6 +37,7 @@ export const Navbar: React.FC = () => {
     cloudDatabase,
     syncKey,
     currentUser,
+    logoutUser,
     syncNow
   } = useLivotion();
 
@@ -316,18 +317,31 @@ export const Navbar: React.FC = () => {
                             className="flex-1 py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95"
                           >
                             <User size={12} className="text-[#0082ff]" />
-                            <span>Profile & Cloud</span>
+                            <span>Profile</span>
                           </button>
                           <button
                             onClick={async () => {
                               setShowMoreMenu(false);
                               await syncNow();
                             }}
-                            className="py-1.5 px-2.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                            className="py-1.5 px-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
                             title="Sync all data to cloud"
                           >
                             <Cloud size={12} className={cloudSyncStatus === 'syncing' ? 'animate-spin' : ''} />
                             <span>{cloudSyncStatus === 'syncing' ? 'Syncing' : 'Sync'}</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowMoreMenu(false);
+                              if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe.`)) {
+                                logoutUser();
+                              }
+                            }}
+                            className="py-1.5 px-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                            title="Sign out of account"
+                          >
+                            <LogOut size={12} />
+                            <span>Sign Out</span>
                           </button>
                         </div>
                       </div>
@@ -459,6 +473,25 @@ export const Navbar: React.FC = () => {
                     </span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   </button>
+                  {currentUser && (
+                    <>
+                      <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                      <button
+                        onClick={() => {
+                          setShowMoreMenu(false);
+                          if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe on this device.`)) {
+                            logoutUser();
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer font-bold"
+                      >
+                        <span className="flex items-center gap-2">
+                          <LogOut size={14} /> {language === 'am' ? 'ከአካውንት ውጣ' : 'Sign Out'}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 font-normal">@{currentUser.username}</span>
+                      </button>
+                    </>
+                  )}
                   <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
                   <button
                     onClick={() => {
@@ -552,6 +585,21 @@ export const Navbar: React.FC = () => {
                 </div>
                 <ChevronRight size={14} className="text-slate-400 shrink-0" />
               </div>
+
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe.`)) {
+                      logoutUser();
+                    }
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <LogOut size={13} />
+                  <span>{language === 'am' ? 'ከአካውንት ውጣ' : 'Sign Out'} (@{currentUser.username})</span>
+                </button>
+              )}
 
               {/* Main Categories Section */}
               <div className="space-y-1.5">

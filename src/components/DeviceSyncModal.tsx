@@ -513,12 +513,25 @@ export const DeviceSyncModal: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={closeSyncModal}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {currentUser && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95"
+                title="Sign out of account"
+              >
+                <LogOut size={13} />
+                <span>Log Out</span>
+              </button>
+            )}
+            <button
+              onClick={closeSyncModal}
+              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Global Feedback Banner */}
@@ -655,13 +668,24 @@ export const DeviceSyncModal: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => setProfileTab('edit')}
-                      className="px-2.5 py-1.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1 shadow-2xs hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer"
-                    >
-                      <Edit3 size={12} className="text-[#0082ff]" />
-                      <span>Edit</span>
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => setProfileTab('edit')}
+                        className="px-2.5 py-1.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1 shadow-2xs hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer"
+                      >
+                        <Edit3 size={12} className="text-[#0082ff]" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1 transition cursor-pointer active:scale-95"
+                        title="Sign out of account"
+                      >
+                        <LogOut size={12} />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Personal Creed / Motto Card */}
@@ -815,6 +839,21 @@ export const DeviceSyncModal: React.FC = () => {
                   </div>
                   <p className="text-[11px] text-slate-400">
                     Open this link on your iPhone, PC or Mac to automatically pair and access your profile data.
+                  </p>
+                </div>
+
+                {/* Direct Sign Out Action Card on Overview */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-98"
+                  >
+                    <LogOut size={14} />
+                    <span>Sign Out of @{currentUser.username}</span>
+                  </button>
+                  <p className="text-[10px] text-slate-400 text-center mt-1">
+                    Your local tasks and devotions will remain safe on this device.
                   </p>
                 </div>
               </div>

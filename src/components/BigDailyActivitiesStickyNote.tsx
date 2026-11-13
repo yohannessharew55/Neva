@@ -405,10 +405,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         </span>
       </div>
 
-      {/* 2. Pushpin on Top Right (Fixed) */}
+      {/* 2. Pushpin on Top Right */}
       <div 
         className="absolute top-1.5 right-4 sm:right-6 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95"
-        title="Fixed Pinned Desk Note"
+        title="Pinned Desk Note"
       >
         <span className="text-lg sm:text-xl">📌</span>
       </div>
@@ -452,15 +452,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </h2>
             </div>
 
-            {/* Status & Palette Controls */}
+            {/* Palette Controls */}
             <div className="flex items-center gap-1.5">
-              <span 
-                className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 select-none opacity-70"
-                title="Fixed Sticky Note"
-              >
-                {language === 'am' ? 'የተሰካ' : 'Fixed'}
-              </span>
-
               <div className="relative">
                 <button
                   type="button"
