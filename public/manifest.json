@@ -1,0 +1,42 @@
+{
+  "name": "N e v a | Mastery Cockpit",
+  "short_name": "Neva",
+  "description": "Minimalist Daily Focus & Categorized Mastery Operating System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#0082ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Today Cockpit",
+      "url": "/?tab=cockpit",
+      "description": "Open Daily Focus Cockpit"
+    },
+    {
+      "name": "Ethiopian Calendar",
+      "url": "/?tab=calendar",
+      "description": "Open Integrated Calendar"
+    },
+    {
+      "name": "Workouts",
+      "url": "/?tab=fitness",
+      "description": "Open Fitness Protocols"
+    }
+  ]
+}
