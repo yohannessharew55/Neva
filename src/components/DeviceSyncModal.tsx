@@ -676,15 +676,6 @@ export const DeviceSyncModal: React.FC = () => {
                         <Edit3 size={12} className="text-[#0082ff]" />
                         <span>Edit</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleSignOut}
-                        className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1 transition cursor-pointer active:scale-95"
-                        title="Sign out of account"
-                      >
-                        <LogOut size={12} />
-                        <span>Sign Out</span>
-                      </button>
                     </div>
                   </div>
 
