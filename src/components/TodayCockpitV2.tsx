@@ -3,7 +3,7 @@ import {
   Play, Pause, CheckCircle2, Clock, 
   RotateCcw, Plus,
   Palette, Music, Swords, Building2, TrendingUp,
-  Shield, Calendar, ChevronRight, SlidersHorizontal,
+  Shield, Calendar, ChevronRight, SlidersHorizontal, ChevronDown, ChevronUp,
   ExternalLink, Dumbbell, BookOpen, Sparkles, Flame, SquarePen,
   AlarmClock, BellRing
 } from 'lucide-react';
@@ -37,6 +37,24 @@ export const TodayCockpitV2: React.FC = () => {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showCloseoutModal, setShowCloseoutModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('neva_today_header_expanded');
+      return saved === 'true'; // Default is false (hidden / collapsed)
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleHeaderExpanded = () => {
+    setIsHeaderExpanded(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_today_header_expanded', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const getDomainTypesForCat = (catId: string): DomainType[] => {
     switch (catId) {
@@ -130,103 +148,157 @@ export const TodayCockpitV2: React.FC = () => {
   return (
     <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-3.5 sm:py-6 space-y-4 sm:space-y-6 max-w-full overflow-x-clip">
       
-      {/* 1. Header: Focused on That Specific Day */}
-      <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0082ff]/10 text-[#0082ff] uppercase tracking-wider">
-                {language === 'am' ? 'የዛሬ እቅድ' : 'TODAY'}
-              </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {todayDateDisplay}
-              </span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
-              {language === 'am' ? 'የዛሬ ትኩረትና ተግባራት' : "Today's Focus & Execution"}
-            </h1>
+      {/* 1. Header: Minimal Collapsed Date Strip OR Full Expanded Summary (Hidden by default, seen on expand) */}
+      {!isHeaderExpanded ? (
+        <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 px-3.5 sm:px-4 shadow-2xs flex items-center justify-between gap-2 transition-all">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#0082ff]/10 text-[#0082ff] uppercase tracking-wider shrink-0">
+              {language === 'am' ? 'የዛሬ እቅድ' : 'TODAY'}
+            </span>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+              {todayDateDisplay}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+              • {completedCount}/{totalCount} {language === 'am' ? 'ተጠናቋል' : 'Done'} ({progressPercent}%)
+            </span>
           </div>
 
-          {/* Today's Live Metric Pills & Action */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="text-left sm:text-right">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono">
-                  {completedCount}/{totalCount} {language === 'am' ? 'ተጠናቋል' : 'Done'} ({progressPercent}%)
-                </span>
-                <span className="text-[11px] font-mono text-slate-400">
-                  • {remainingHours}h {language === 'am' ? 'ቀሪ' : 'left'}
-                </span>
-              </div>
-              <div className="w-36 sm:w-44 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">
-                <div 
-                  className="bg-[#0082ff] h-full transition-all duration-300 rounded-full" 
-                  style={{ width: `${progressPercent}%` }} 
-                />
-              </div>
-            </div>
-
-            {/* Option 2: 60-Second Day Closeout Button */}
-            <button
-              onClick={() => setShowCloseoutModal(true)}
-              className="p-2 sm:px-3 sm:py-2 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 text-[#0082ff] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
-              title={language === 'am' ? 'የቀኑን ስራ ዝጋና ማጠቃለያ አስቀምጥ' : 'Close out today with evening receipt'}
-            >
-              <Sparkles size={14} className="text-[#0082ff]" />
-              <span className="hidden sm:inline">{language === 'am' ? 'ማጠቃለያ' : 'Close Out'}</span>
-            </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-900/60 flex items-center gap-1">
+              <Flame size={11} className="text-amber-500 fill-amber-500" />
+              <span>{activeDaysCount}/7</span>
+            </span>
 
             <button
-              onClick={() => setShowPlanningModal(true)}
-              className="p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-              title={language === 'am' ? 'መርሐግብር አዘጋጅ' : 'Open Planner'}
+              onClick={toggleHeaderExpanded}
+              className="p-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-2xs"
+              title={language === 'am' ? 'ማጠቃለያውን ዘርጋ' : "Expand Today's Summary & Momentum"}
             >
-              <SlidersHorizontal size={14} />
-              <span className="hidden sm:inline">{language === 'am' ? 'መርሐግብር' : 'Planner'}</span>
+              <span className="text-[10px] sm:text-xs font-semibold">{language === 'am' ? 'ዘርጋ' : 'Expand'}</span>
+              <ChevronDown size={14} className="text-[#0082ff]" />
             </button>
           </div>
         </div>
-
-        {/* Option 3: 7-Day Consistency Dot Matrix (Minimalist Momentum Tracker) */}
-        <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-              {language === 'am' ? 'ሳምንታዊ ፍሰት' : 'Week Momentum'}:
-            </span>
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              {weeklyMomentum.map((d) => (
-                <div 
-                  key={d.key} 
-                  className="flex flex-col items-center gap-0.5"
-                  title={`${d.labelEn} - ${d.isCompleted ? 'Active Flow' : d.isToday ? 'Today' : 'Upcoming'}`}
-                >
-                  <span className={`text-[9px] font-mono font-bold ${
-                    d.isToday ? 'text-[#0082ff]' : 'text-slate-400'
-                  }`}>
-                    {language === 'am' ? d.labelAm : d.labelEn}
+      ) : (
+        <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xs space-y-3 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start justify-between sm:block">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0082ff]/10 text-[#0082ff] uppercase tracking-wider">
+                    {language === 'am' ? 'የዛሬ እቅድ' : 'TODAY'}
                   </span>
-                  <div className={`w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
-                    d.isCompleted
-                      ? 'bg-[#0082ff] text-white shadow-xs'
-                      : d.isToday
-                      ? 'border-2 border-[#0082ff] text-[#0082ff] bg-blue-50/50 dark:bg-blue-950/30'
-                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-300 dark:text-slate-600'
-                  }`}>
-                    {d.isCompleted ? '✓' : ''}
-                  </div>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    {todayDateDisplay}
+                  </span>
                 </div>
-              ))}
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
+                  {language === 'am' ? 'የዛሬ ትኩረትና ተግባራት' : "Today's Focus & Execution"}
+                </h1>
+              </div>
+
+              {/* Mobile Collapse Button */}
+              <button
+                onClick={toggleHeaderExpanded}
+                className="sm:hidden p-1.5 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                title="Collapse"
+              >
+                <span className="text-[10px]">{language === 'am' ? 'አሳንስ' : 'Collapse'}</span>
+                <ChevronUp size={13} className="text-[#0082ff]" />
+              </button>
+            </div>
+
+            {/* Today's Live Metric Pills & Action */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="text-left sm:text-right">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono">
+                    {completedCount}/{totalCount} {language === 'am' ? 'ተጠናቋል' : 'Done'} ({progressPercent}%)
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    • {remainingHours}h {language === 'am' ? 'ቀሪ' : 'left'}
+                  </span>
+                </div>
+                <div className="w-36 sm:w-44 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">
+                  <div 
+                    className="bg-[#0082ff] h-full transition-all duration-300 rounded-full" 
+                    style={{ width: `${progressPercent}%` }} 
+                  />
+                </div>
+              </div>
+
+              {/* Option 2: 60-Second Day Closeout Button */}
+              <button
+                onClick={() => setShowCloseoutModal(true)}
+                className="p-2 sm:px-3 sm:py-2 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 text-[#0082ff] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
+                title={language === 'am' ? 'የቀኑን ስራ ዝጋና ማጠቃለያ አስቀምጥ' : 'Close out today with evening receipt'}
+              >
+                <Sparkles size={14} className="text-[#0082ff]" />
+                <span className="hidden sm:inline">{language === 'am' ? 'ማጠቃለያ' : 'Close Out'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowPlanningModal(true)}
+                className="p-2 sm:px-3 sm:py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                title={language === 'am' ? 'መርሐግብር አዘጋጅ' : 'Open Planner'}
+              >
+                <SlidersHorizontal size={14} />
+                <span className="hidden sm:inline">{language === 'am' ? 'መርሐግብር' : 'Planner'}</span>
+              </button>
+
+              {/* Desktop Collapse Button */}
+              <button
+                onClick={toggleHeaderExpanded}
+                className="hidden sm:flex p-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl text-xs font-bold items-center gap-1 transition cursor-pointer active:scale-95"
+                title="Collapse summary"
+              >
+                <span>{language === 'am' ? 'አሳንስ' : 'Collapse'}</span>
+                <ChevronUp size={14} className="text-[#0082ff]" />
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 flex items-center gap-1">
-              <Flame size={12} className="text-amber-500 fill-amber-500" />
-              <span>{activeDaysCount}/7 {language === 'am' ? 'ቀናት' : 'Active'}</span>
-            </span>
+          {/* Option 3: 7-Day Consistency Dot Matrix (Minimalist Momentum Tracker) */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                {language === 'am' ? 'ሳምንታዊ ፍሰት' : 'Week Momentum'}:
+              </span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                {weeklyMomentum.map((d) => (
+                  <div 
+                    key={d.key} 
+                    className="flex flex-col items-center gap-0.5"
+                    title={`${d.labelEn} - ${d.isCompleted ? 'Active Flow' : d.isToday ? 'Today' : 'Upcoming'}`}
+                  >
+                    <span className={`text-[9px] font-mono font-bold ${
+                      d.isToday ? 'text-[#0082ff]' : 'text-slate-400'
+                    }`}>
+                      {language === 'am' ? d.labelAm : d.labelEn}
+                    </span>
+                    <div className={`w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                      d.isCompleted
+                        ? 'bg-[#0082ff] text-white shadow-xs'
+                        : d.isToday
+                        ? 'border-2 border-[#0082ff] text-[#0082ff] bg-blue-50/50 dark:bg-blue-950/30'
+                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-300 dark:text-slate-600'
+                    }`}>
+                      {d.isCompleted ? '✓' : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 flex items-center gap-1">
+                <Flame size={12} className="text-amber-500 fill-amber-500" />
+                <span>{activeDaysCount}/7 {language === 'am' ? 'ቀናት' : 'Active'}</span>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 1. The Stationary Sticky Note: Central Hub & First Impression for Today's Execution */}
       <BigDailyActivitiesStickyNote />
