@@ -1,0 +1,10 @@
+{
+  "users": {
+    "testuser": {
+      "username": "testuser",
+      "name": "Test User",
+      "avatarColor": "#0082ff",
+      "updatedAt": "2026-11-13T16:24:54.663Z"
+    }
+  }
+}
