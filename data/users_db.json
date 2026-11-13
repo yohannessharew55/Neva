@@ -5,6 +5,17 @@
       "name": "Test User",
       "avatarColor": "#0082ff",
       "updatedAt": "2026-11-13T16:25:05.246Z"
+    },
+    "demouser99": {
+      "id": "usr_demouser99_1794587197656",
+      "username": "demouser99",
+      "name": "Demo User",
+      "email": null,
+      "avatarColor": "#10b981",
+      "salt": "ba3d03d1a20e260d102473c4fbba7120",
+      "passwordHash": "de2972c09be15d086e39761943c1d06fc049fa00c98590be469c8ec82ba21ae127a9db076a1fc85aad077a778c06e5d30d1079f400302c479724de56328c5935",
+      "createdAt": "2026-11-13T16:26:37.656Z",
+      "lastLoginAt": "2026-11-13T16:26:37.657Z"
     }
   }
 }
