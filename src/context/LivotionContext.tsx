@@ -26,7 +26,14 @@ import {
   initialDailyStickyNotes
 } from '../data/seedData';
 import { soundEngine } from '../utils/audio';
-import { syncStateToCloud, fetchStateFromCloud } from '../utils/cloudSync';
+import { 
+  syncStateToCloud, 
+  fetchStateFromCloud, 
+  UserAccountProfile, 
+  getStoredUserAccount, 
+  saveAccountToStorage, 
+  clearStoredUserAccount 
+} from '../utils/cloudSync';
 import { 
   Language, 
   Translations, 
@@ -326,6 +333,10 @@ interface LivotionContextType {
   isSyncModalOpen: boolean;
   openSyncModal: () => void;
   closeSyncModal: () => void;
+  currentUser: UserAccountProfile | null;
+  setCurrentUser: (user: UserAccountProfile | null) => void;
+  hydrateCloudState: (data: any) => void;
+  logoutUser: () => void;
 }
 
 const LivotionContext = createContext<LivotionContextType | undefined>(undefined);
@@ -473,7 +484,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // Cross-Device Cloud Sync State (Neon PostgreSQL)
+  // Cross-Device Cloud Sync State & User Account
+  const [currentUser, setCurrentUserState] = useState<UserAccountProfile | null>(() => getStoredUserAccount());
+
   const [syncKey, setSyncKeyState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -484,8 +497,42 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return clean;
       }
     }
+    const savedUser = getStoredUserAccount();
+    if (savedUser && savedUser.username) {
+      return savedUser.username;
+    }
     return localStorage.getItem(`${STORAGE_KEY}_sync_key`) || 'default_user';
   });
+
+  const setCurrentUser = (account: UserAccountProfile | null) => {
+    setCurrentUserState(account);
+    if (account) {
+      saveAccountToStorage(account);
+      setSyncKey(account.username);
+    } else {
+      clearStoredUserAccount();
+    }
+  };
+
+  const logoutUser = () => {
+    setCurrentUserState(null);
+    clearStoredUserAccount();
+    setSyncKey('default_user');
+  };
+
+  const hydrateCloudState = (d: any) => {
+    if (!d) return;
+    if (d.user) setUser(d.user);
+    if (d.domains) setDomains(d.domains);
+    if (d.tasks) setTasks(d.tasks);
+    if (d.workouts) setWorkouts(d.workouts);
+    if (d.meals) setMeals(d.meals);
+    if (d.goals) setGoals(d.goals);
+    if (d.sessions) setSessions(d.sessions);
+    if (d.reviews) setReviews(d.reviews);
+    if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
+    if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
+  };
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error' | 'initial_pull'>('initial_pull');
   const [cloudDatabase, setCloudDatabase] = useState<string>('PostgreSQL (Neon)');
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
@@ -1411,6 +1458,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isSyncModalOpen,
         openSyncModal,
         closeSyncModal,
+        currentUser,
+        setCurrentUser,
+        hydrateCloudState,
+        logoutUser,
       }}
     >
       {children}

@@ -5,7 +5,7 @@ import {
   MoreHorizontal, Swords, Palette, Music, Building2, 
   TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
   PlusCircle, CalendarDays, BellRing, Plus, Sparkles, Database, Cloud, Star,
-  Languages, Globe, SquarePen, StickyNote
+  Languages, Globe, SquarePen, StickyNote, User
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { PlanningModal } from './PlanningModal';
@@ -35,7 +35,9 @@ export const Navbar: React.FC = () => {
     openSyncModal,
     cloudSyncStatus,
     cloudDatabase,
-    syncKey
+    syncKey,
+    currentUser,
+    syncNow
   } = useLivotion();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -235,18 +237,105 @@ export const Navbar: React.FC = () => {
               )}
             </button>
 
-            {/* More Dropdown (Backup & Reset) */}
+            {/* More Dropdown (Account, Options & Backup) */}
             <div className="relative">
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center"
-                title={t('options')}
+                className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
+                title={currentUser ? `@${currentUser.username} (${t('options')})` : t('options')}
               >
-                <MoreHorizontal size={18} />
+                {currentUser ? (
+                  <div 
+                    className="w-5 h-5 rounded-md text-white font-black text-[10px] flex items-center justify-center shadow-xs"
+                    style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
+                  >
+                    {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
+                  </div>
+                ) : (
+                  <MoreHorizontal size={18} />
+                )}
+                {/* Active indicator dot */}
+                <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${currentUser ? 'bg-emerald-500 animate-pulse' : 'bg-transparent'}`} />
               </button>
 
               {showMoreMenu && (
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-2 z-50 text-xs font-medium space-y-2">
+                <div className="absolute right-0 mt-2 w-72 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2.5 z-50 text-xs font-medium space-y-2.5 animate-scale-in">
+                  
+                  {/* Personal Account / Profile Section (Requested: profile symbol and staffs seen under 3dots for mobile) */}
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-50 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-800/80 border border-blue-200/80 dark:border-blue-800/80 shadow-2xs">
+                    {currentUser ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2.5">
+                          <div 
+                            className="w-9 h-9 rounded-xl text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0"
+                            style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
+                          >
+                            {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                              <span className="truncate">{currentUser.name}</span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" title="Cloud Active" />
+                            </div>
+                            <div className="text-[10px] font-mono text-[#0082ff] font-bold truncate">
+                              @{currentUser.username}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Account Staffs & Actions Bar */}
+                        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                          <button
+                            onClick={() => {
+                              setShowMoreMenu(false);
+                              openSyncModal();
+                            }}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95"
+                          >
+                            <User size={12} className="text-[#0082ff]" />
+                            <span>Profile & Cloud</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setShowMoreMenu(false);
+                              await syncNow();
+                            }}
+                            className="py-1.5 px-2.5 rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                            title="Sync all data to cloud"
+                          >
+                            <Cloud size={12} className={cloudSyncStatus === 'syncing' ? 'animate-spin' : ''} />
+                            <span>{cloudSyncStatus === 'syncing' ? 'Syncing' : 'Sync'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-[#0082ff]/10 text-[#0082ff] border border-[#0082ff]/20 flex items-center justify-center shrink-0">
+                            <User size={17} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                              Personal Profile
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              Sign in to sync across devices
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowMoreMenu(false);
+                            openSyncModal();
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-extrabold text-[11px] shadow-xs shrink-0 transition cursor-pointer active:scale-95 flex items-center gap-1"
+                        >
+                          <Sparkles size={11} />
+                          <span>Sign In</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Language Selection Bar (Moved from Hamburger Drawer) */}
                   <div className="p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl flex items-center gap-1 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">

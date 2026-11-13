@@ -10,8 +10,11 @@ export interface CloudSyncResult {
 
 export interface UserAccountProfile {
   id: string;
-  email: string;
+  username: string;
   name: string;
+  email?: string | null;
+  avatarColor?: string;
+  createdAt?: string;
   lastSyncedAt?: string;
   isOnlineAccount: boolean;
 }
@@ -37,15 +40,17 @@ export const isDeviceOffline = (): boolean => {
 
 // Sync State to Cloud (or gracefully mirror locally if offline)
 export const syncStateToCloud = async (stateData: any, syncId: string = 'default_user'): Promise<CloudSyncResult> => {
+  const cleanSyncId = syncId.trim() || 'default_user';
+
   // If offline, save locally without network delay
   if (isDeviceOffline()) {
     try {
-      localStorage.setItem(`neva_local_mirror_${syncId}`, JSON.stringify(stateData));
+      localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(stateData));
     } catch (e) {}
     return {
       success: true,
       database: 'Local Mirror (100% Offline)',
-      syncId,
+      syncId: cleanSyncId,
       message: 'Persisted to local device storage while offline.',
       updatedAt: new Date().toISOString()
     };
@@ -55,7 +60,7 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
     const response = await fetch(`${baseUrl}/api/sync`, {
       method: 'POST',
@@ -63,7 +68,7 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        syncId,
+        syncId: cleanSyncId,
         payload: stateData,
       }),
       signal: controller.signal
@@ -77,37 +82,41 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
 
     const result = await response.json();
     return {
-      success: result.status === 'success' || result.status === 'persisted_locally',
-      database: result.database || 'PostgreSQL (Neon Cloud)',
-      syncId: result.syncId || syncId,
+      success: result.status === 'success',
+      database: result.database || 'NEVA Cloud Storage',
+      syncId: result.syncId || cleanSyncId,
       message: result.message,
       updatedAt: result.updatedAt || new Date().toISOString(),
     };
   } catch (error: any) {
     // Offline or network error - fall back to local storage
     try {
-      localStorage.setItem(`neva_local_mirror_${syncId}`, JSON.stringify(stateData));
+      localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(stateData));
     } catch (e) {}
 
     return {
       success: false,
       database: 'Local Mirror (Offline Ready)',
-      syncId,
+      syncId: cleanSyncId,
       message: error.message || 'Saved locally in offline mode.',
       updatedAt: new Date().toISOString()
     };
   }
 };
 
-// Fetch State from Cloud
-export const fetchStateFromCloud = async (
-  syncId: string = 'default_user'
-): Promise<{ data: any; updatedAt?: string; database?: string } | null> => {
+// Retrieve State from Cloud (or local mirror if offline)
+export const fetchStateFromCloud = async (syncId: string = 'default_user'): Promise<{ data: any; database: string; updatedAt?: string } | null> => {
+  const cleanSyncId = syncId.trim() || 'default_user';
+
+  // Check offline first
   if (isDeviceOffline()) {
     try {
-      const local = localStorage.getItem(`neva_local_mirror_${syncId}`);
+      const local = localStorage.getItem(`neva_local_mirror_${cleanSyncId}`);
       if (local) {
-        return { data: JSON.parse(local), updatedAt: new Date().toISOString(), database: 'Local Mirror (Offline)' };
+        return {
+          data: JSON.parse(local),
+          database: 'Local Mirror (Offline)'
+        };
       }
     } catch (e) {}
     return null;
@@ -117,81 +126,13 @@ export const fetchStateFromCloud = async (
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(syncId)}`, {
+    const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(cleanSyncId)}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return null;
-    const result = await response.json();
-    if (result && result.data) {
-      return {
-        data: result.data,
-        updatedAt: result.updatedAt,
-        database: result.database,
-      };
-    }
-    return null;
-  } catch (error) {
-    // Fall back to local mirror
-    try {
-      const local = localStorage.getItem(`neva_local_mirror_${syncId}`);
-      if (local) {
-        return { data: JSON.parse(local), updatedAt: new Date().toISOString(), database: 'Local Mirror (Offline)' };
-      }
-    } catch (e) {}
-    return null;
-  }
-};
-
-// Account Authentication: Sign Up or Log In
-export const authenticateUserAccount = async (
-  action: 'signup' | 'login',
-  email: string,
-  name?: string,
-  password?: string
-): Promise<{ success: boolean; user?: UserAccountProfile; message?: string }> => {
-  const baseUrl = getApiBaseUrl();
-  const cleanEmail = email.trim().toLowerCase();
-  const userName = name || cleanEmail.split('@')[0];
-
-  // If offline, create local user account immediately
-  if (isDeviceOffline()) {
-    const offlineUser: UserAccountProfile = {
-      id: cleanEmail.replace(/[^a-z0-9_]/g, '_'),
-      email: cleanEmail,
-      name: userName,
-      lastSyncedAt: new Date().toISOString(),
-      isOnlineAccount: false
-    };
-    saveAccountToStorage(offlineUser);
-    return {
-      success: true,
-      user: offlineUser,
-      message: 'Account created in Offline Standalone Mode. All data stored safely on this device.'
-    };
-  }
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-    const response = await fetch(`${baseUrl}/api/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action,
-        email: cleanEmail,
-        name: userName,
-        password: password || 'default_pw'
-      }),
       signal: controller.signal
     });
 
@@ -201,38 +142,129 @@ export const authenticateUserAccount = async (
       throw new Error(`HTTP ${response.status}`);
     }
 
+    const result = await response.json();
+    if (result.data) {
+      // Mirror locally in case device goes offline later
+      try {
+        localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(result.data));
+      } catch (e) {}
+
+      return {
+        data: result.data,
+        database: result.database || 'NEVA Cloud Storage',
+        updatedAt: result.updatedAt
+      };
+    }
+    return null;
+  } catch (error: any) {
+    // Fallback to local mirror on fetch failure
+    try {
+      const local = localStorage.getItem(`neva_local_mirror_${cleanSyncId}`);
+      if (local) {
+        return {
+          data: JSON.parse(local),
+          database: 'Local Mirror (Cached)'
+        };
+      }
+    } catch (e) {}
+    return null;
+  }
+};
+
+// Account Authentication: Sign Up or Log In
+export const authenticateUserAccount = async (
+  action: 'signup' | 'login',
+  params: {
+    username: string;
+    password?: string;
+    name?: string;
+    email?: string;
+    avatarColor?: string;
+    initialPayload?: any;
+  }
+): Promise<{ success: boolean; user?: UserAccountProfile; state?: any; message?: string }> => {
+  const baseUrl = getApiBaseUrl();
+  const cleanUsername = params.username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const displayName = params.name?.trim() || cleanUsername;
+
+  // If completely offline
+  if (isDeviceOffline()) {
+    const offlineUser: UserAccountProfile = {
+      id: `usr_${cleanUsername}_offline`,
+      username: cleanUsername,
+      name: displayName,
+      email: params.email?.trim() || null,
+      avatarColor: params.avatarColor || '#0082ff',
+      createdAt: new Date().toISOString(),
+      lastSyncedAt: new Date().toISOString(),
+      isOnlineAccount: false
+    };
+    saveAccountToStorage(offlineUser);
+    return {
+      success: true,
+      user: offlineUser,
+      message: 'Offline profile created. Data will sync automatically when back online.'
+    };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${baseUrl}/api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        username: cleanUsername,
+        name: displayName,
+        email: params.email?.trim() || undefined,
+        password: params.password,
+        avatarColor: params.avatarColor || '#0082ff',
+        initialPayload: params.initialPayload
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
     const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.error || `Authentication failed (HTTP ${response.status})`
+      };
+    }
+
     if (data.user) {
       const profile: UserAccountProfile = {
-        id: data.user.id || cleanEmail,
-        email: data.user.email || cleanEmail,
-        name: data.user.name || userName,
-        lastSyncedAt: new Date().toISOString(),
+        id: data.user.id || cleanUsername,
+        username: data.user.username || cleanUsername,
+        name: data.user.name || displayName,
+        email: data.user.email || null,
+        avatarColor: data.user.avatarColor || '#0082ff',
+        createdAt: data.user.createdAt,
+        lastSyncedAt: data.user.lastSyncedAt || new Date().toISOString(),
         isOnlineAccount: true
       };
       saveAccountToStorage(profile);
       return {
         success: true,
         user: profile,
+        state: data.state,
         message: data.message || 'Connected to NEVA Cloud Account!'
       };
     }
 
-    throw new Error(data.error || 'Authentication failed');
-  } catch (err: any) {
-    // Graceful offline fallback
-    const fallbackUser: UserAccountProfile = {
-      id: cleanEmail.replace(/[^a-z0-9_]/g, '_'),
-      email: cleanEmail,
-      name: userName,
-      lastSyncedAt: new Date().toISOString(),
-      isOnlineAccount: true
-    };
-    saveAccountToStorage(fallbackUser);
     return {
-      success: true,
-      user: fallbackUser,
-      message: 'Logged in! Offline mode enabled with cloud sync queued.'
+      success: false,
+      message: data.error || 'Authentication failed.'
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'Network error during authentication.'
     };
   }
 };
@@ -240,20 +272,38 @@ export const authenticateUserAccount = async (
 // Local storage account persistence
 export const getStoredUserAccount = (): UserAccountProfile | null => {
   try {
-    const saved = localStorage.getItem('neva_user_account_v1');
+    const saved = localStorage.getItem('neva_user_account_v2');
     if (saved) return JSON.parse(saved);
+    // Legacy migration check
+    const legacy = localStorage.getItem('neva_user_account_v1');
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      const migrated: UserAccountProfile = {
+        id: parsed.id || 'usr_default',
+        username: parsed.email ? parsed.email.split('@')[0].replace(/[^a-z0-9_]/g, '') : 'user',
+        name: parsed.name || 'User',
+        email: parsed.email || null,
+        avatarColor: '#0082ff',
+        createdAt: new Date().toISOString(),
+        lastSyncedAt: parsed.lastSyncedAt,
+        isOnlineAccount: parsed.isOnlineAccount ?? true
+      };
+      localStorage.setItem('neva_user_account_v2', JSON.stringify(migrated));
+      return migrated;
+    }
   } catch (e) {}
   return null;
 };
 
 export const saveAccountToStorage = (user: UserAccountProfile): void => {
   try {
-    localStorage.setItem('neva_user_account_v1', JSON.stringify(user));
+    localStorage.setItem('neva_user_account_v2', JSON.stringify(user));
   } catch (e) {}
 };
 
 export const clearStoredUserAccount = (): void => {
   try {
+    localStorage.removeItem('neva_user_account_v2');
     localStorage.removeItem('neva_user_account_v1');
   } catch (e) {}
 };

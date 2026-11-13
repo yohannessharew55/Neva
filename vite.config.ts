@@ -18,7 +18,40 @@ export default defineConfig(({ mode }) => {
         name: 'dev-api-serverless-middleware',
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {
-            if (req.url?.startsWith('/api/sync')) {
+            if (req.url?.startsWith('/api/auth')) {
+              try {
+                const apiModule = await server.ssrLoadModule('/api/auth.js');
+                const handler = apiModule.default;
+                const originalEnd = res.end.bind(res);
+                (res as any).status = function (code: number) {
+                  this.statusCode = code;
+                  return this;
+                };
+                (res as any).json = function (data: any) {
+                  this.setHeader('Content-Type', 'application/json');
+                  return originalEnd(JSON.stringify(data));
+                };
+
+                if (req.method === 'POST') {
+                  let body = '';
+                  req.on('data', chunk => { body += chunk; });
+                  req.on('end', async () => {
+                    try {
+                      (req as any).body = body ? JSON.parse(body) : {};
+                    } catch (e) {
+                      (req as any).body = body;
+                    }
+                    await handler(req, res);
+                  });
+                } else {
+                  await handler(req, res);
+                }
+              } catch (err: any) {
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: err.message }));
+              }
+            } else if (req.url?.startsWith('/api/sync')) {
               try {
                 const apiModule = await server.ssrLoadModule('/api/sync.js');
                 const handler = apiModule.default;
