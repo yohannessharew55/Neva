@@ -502,29 +502,22 @@ export const DeviceSyncModal: React.FC = () => {
             <div>
               <h2 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{currentUser ? 'Executive Profile' : 'NEVA Cloud Account'}</span>
+              </h2>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span>{currentUser ? `@${currentUser.username}` : 'Create your personal account to sync data across all platforms'}</span>
                 {currentUser && (
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-blue-500/10 text-[#0082ff] border border-blue-500/20">
-                    {masteryTier.tierName}
+                  <span title={isOffline ? 'Offline Standalone Mode' : 'Cloud Sync & Offline Protected'} className="inline-flex items-center">
+                    {isOffline ? (
+                      <WifiOff size={13} className="text-amber-500" />
+                    ) : (
+                      <ShieldCheck size={13} className="text-emerald-500" />
+                    )}
                   </span>
                 )}
-              </h2>
-              <p className="text-xs text-slate-400">
-                {currentUser ? `@${currentUser.username} · Multi-Device Cloud Sync` : 'Create your personal account to sync data across all platforms'}
-              </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            {currentUser && (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95"
-                title="Sign out of account"
-              >
-                <LogOut size={13} />
-                <span>Log Out</span>
-              </button>
-            )}
             <button
               onClick={closeSyncModal}
               className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
@@ -549,28 +542,6 @@ export const DeviceSyncModal: React.FC = () => {
             <span>{errorMessage}</span>
           </div>
         )}
-
-        {/* Standalone 100% Offline Notice Card */}
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              {isOffline ? <WifiOff size={16} /> : <ShieldCheck size={16} />}
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                  {isOffline ? 'Offline Standalone Mode' : 'Cloud Sync & Offline Protected'}
-                </span>
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                  Ready
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Works 100% offline. Automatically syncs to your personal profile when connected.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* LOGGED IN USER PROFILE MANAGEMENT */}
         {currentUser && authMode === 'profile' ? (
@@ -778,59 +749,47 @@ export const DeviceSyncModal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Cloud Sync Status & Instant Sync */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Database Engine:</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      NEVA Cloud DB · High Availability
+                {/* Cloud Sync Status & Quick Action */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">Cloud Synced</span>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Last Synced:</span>
-                    <span className="font-mono text-slate-500">
-                      {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'Up to date'}
-                    </span>
-                  </div>
-
                   <button
                     onClick={handleManualSync}
                     disabled={isSubmitting}
-                    className="w-full py-2.5 px-4 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 active:scale-98 transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
                   >
-                    <RefreshCw size={14} className={isSubmitting ? 'animate-spin' : ''} />
-                    <span>{isSubmitting ? 'Syncing with Cloud...' : 'Instant Cloud Backup & Sync'}</span>
+                    <RefreshCw size={12} className={isSubmitting ? 'animate-spin' : ''} />
+                    <span>{isSubmitting ? 'Syncing...' : 'Sync'}</span>
                   </button>
                 </div>
 
-                {/* Instant Cross-Device Link */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Smartphone size={14} className="text-[#0082ff]" />
-                      <span>Instant Device Pairing Link</span>
-                    </span>
-                    <button
-                      onClick={handleCopyLink}
-                      className="text-xs font-bold text-[#0082ff] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={12} className="text-emerald-500" />
-                          <span className="text-emerald-500">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} />
-                          <span>Copy Link</span>
-                        </>
-                      )}
-                    </button>
+                {/* Device Pairing Link */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+                  <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
+                    <Smartphone size={15} className="text-[#0082ff]" />
+                    <span>Pair Other Devices</span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Open this link on your iPhone, PC or Mac to automatically pair and access your profile data.
-                  </p>
+                  <button
+                    onClick={handleCopyLink}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-2xs"
+                  >
+                    {copied ? (
+                      <>
+                        <Check size={12} className="text-emerald-500" />
+                        <span className="text-emerald-500">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={12} />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Direct Sign Out Action Card on Overview */}

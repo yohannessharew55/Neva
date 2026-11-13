@@ -34,13 +34,13 @@ interface ReminderCenterModalProps {
 }
 
 const SOUND_LABELS: Record<AlarmSoundType, { name: string; desc: string }> = {
-  tibetan_bowl: { name: 'Tibetan Singing Bowl', desc: '528Hz healing resonance' },
-  temple_bell: { name: 'Sacred Temple Bell', desc: '432Hz harmonic acoustic' },
-  zen_gong: { name: 'Zen Bronze Gong', desc: '108Hz grounding sub-bass' },
-  sacred_chimes: { name: 'Sacred Triad Chimes', desc: 'Pythagorean triad' },
-  gentle_harp: { name: 'Gentle Harp Chords', desc: 'Acoustic plucked strings' },
-  digital_alert: { name: 'Digital Crisp Alert', desc: 'High-contrast ping' },
-  none: { name: 'Silent / Vibrate Only', desc: 'Haptic feedback only' }
+  tibetan_bowl: { name: 'Tibetan Bowl', desc: 'Resonance' },
+  temple_bell: { name: 'Temple Bell', desc: 'Harmonic' },
+  zen_gong: { name: 'Zen Gong', desc: 'Grounding' },
+  sacred_chimes: { name: 'Chimes', desc: 'Triad' },
+  gentle_harp: { name: 'Gentle Harp', desc: 'Acoustic' },
+  digital_alert: { name: 'Crisp Alert', desc: 'Digital' },
+  none: { name: 'Vibrate Only', desc: 'Silent' }
 };
 
 export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen, onClose }) => {
@@ -300,14 +300,14 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
         <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-[#0f172a]/50">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0082ff] to-[#0055d4] flex items-center justify-center text-white shadow-md shadow-blue-500/25 shrink-0">
-              <AlarmClock size={20} className="animate-pulse" />
+              <AlarmClock size={20} />
             </div>
             <div className="min-w-0">
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white tracking-tight truncate">
-                {language === 'am' ? 'የማንቂያ ደወል እና አስታዋሾች' : 'Reminders & Phone Alarms'}
+                {language === 'am' ? 'ማንቂያ እና አስታዋሾች' : 'Alarms & Reminders'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Phone alarms & Apple Reminders sync'}
+                {language === 'am' ? 'ፈጣን የማንቂያ ደወል እና አፕል አስታዋሽ' : 'Quick timers & Apple Reminders sync'}
               </p>
             </div>
           </div>
@@ -341,7 +341,7 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
           <div className="mx-4 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 min-w-0">
               <ShieldAlert size={16} className="text-amber-500 shrink-0" />
-              <span className="truncate">Enable notifications for alarms when screen is locked.</span>
+              <span className="truncate">Enable phone notifications for alarms when locked.</span>
             </div>
             <button
               onClick={handleRequestPermissions}
@@ -352,12 +352,12 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
           </div>
         )}
 
-        {/* Tab Switcher - Responsive 3-Column Grid without horizontal overflow */}
+        {/* Tab Switcher - Simple & User-Friendly */}
         <div className="px-3 sm:px-5 pt-3 pb-2.5 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/30 dark:bg-[#0a0f18]/30">
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             <button
               onClick={() => { setActiveTabMode('alarms'); iosNativeBridge.haptic('light'); }}
-              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer min-w-0 ${
+              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
                 activeTab === 'alarms'
                   ? 'bg-[#0082ff] text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -374,7 +374,7 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
 
             <button
               onClick={() => { setActiveTabMode('reminders'); iosNativeBridge.haptic('light'); }}
-              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer min-w-0 ${
+              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
                 activeTab === 'reminders'
                   ? 'bg-[#0082ff] text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -386,17 +386,19 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
 
             <button
               onClick={() => { setActiveTabMode('cadence'); iosNativeBridge.haptic('light'); }}
-              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer min-w-0 ${
+              className={`py-2 px-1.5 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
                 activeTab === 'cadence'
                   ? 'bg-[#0082ff] text-white shadow-xs'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
               <Calendar size={14} className="shrink-0" />
-              <span className="truncate">{language === 'am' ? 'መርሐግብር' : 'Cadence'}</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-200/80 dark:bg-slate-700/80 text-[9px] text-slate-700 dark:text-slate-300 shrink-0">
-                {activeReminders.length}
-              </span>
+              <span className="truncate">{language === 'am' ? 'መርሐግብር' : 'Schedule'}</span>
+              {activeReminders.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-200/80 dark:bg-slate-700/80 text-[9px] text-slate-700 dark:text-slate-300 shrink-0">
+                  {activeReminders.length}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -408,22 +410,22 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
           {activeTab === 'alarms' && (
             <div className="space-y-4">
               
-              {/* Sound Chooser & Test Strip */}
-              <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 flex flex-col gap-2.5">
+              {/* Sound Chooser: Clean Single Row with Test Button */}
+              <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
                     <Volume2 size={16} />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Alarm Acoustic Sound</span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sound</span>
                     <select
                       value={selectedSound}
                       onChange={(e) => setSelectedSound(e.target.value as AlarmSoundType)}
-                      className="w-full text-xs font-bold text-slate-900 dark:text-white bg-transparent border-none p-0 focus:ring-0 cursor-pointer truncate"
+                      className="text-xs font-bold text-slate-900 dark:text-white bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none"
                     >
                       {Object.entries(SOUND_LABELS).map(([k, v]) => (
                         <option key={k} value={k} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                          {v.name} ({v.desc})
+                          {v.name}
                         </option>
                       ))}
                     </select>
@@ -432,40 +434,40 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
 
                 <button
                   onClick={handleTestAlarm}
-                  className="w-full py-2 px-3 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
-                  title="Test sound through iPhone speakers and Taptic motor"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs shrink-0"
+                  title="Test sound"
                 >
-                  <Play size={12} className="text-emerald-500 fill-emerald-500" />
-                  <span>Test Sound & Taptic</span>
+                  <Play size={11} className="text-emerald-500 fill-emerald-500" />
+                  <span>Test</span>
                 </button>
               </div>
 
-              {/* Quick Preset Alarms */}
+              {/* Quick Timers Grid */}
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">
-                  {language === 'am' ? 'ፈጣን የማንቂያ ደወል ቅንብሮች' : 'Quick Focus Alarm Presets (1-Tap Arm)'}
+                  {language === 'am' ? 'ፈጣን የማንቂያ ጊዜያት' : 'Quick Timers'}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
-                    { min: 15, label: '15m Sprint', desc: 'Power focus burst' },
-                    { min: 25, label: '25m Pomodoro', desc: 'Standard flow cycle' },
-                    { min: 45, label: '45m Deep Work', desc: 'Core deliberate mastery' },
-                    { min: 60, label: '60m Mastery', desc: 'Complete workout/study' },
-                    { min: 90, label: '90m Ultradian', desc: 'Deep biological wave' },
-                    { min: 10, label: '10m Reset', desc: 'Quick break & recharge' },
+                    { min: 10, label: '10 min', desc: language === 'am' ? 'ዕረፍት' : 'Quick Break' },
+                    { min: 15, label: '15 min', desc: language === 'am' ? 'ፈጣን ትኩረት' : 'Sprint' },
+                    { min: 25, label: '25 min', desc: language === 'am' ? 'ፖሞዶሮ' : 'Pomodoro' },
+                    { min: 45, label: '45 min', desc: language === 'am' ? 'ጥልቅ ትኩረት' : 'Deep Focus' },
+                    { min: 60, label: '60 min', desc: language === 'am' ? '1 ሰዓት' : '1 Hour' },
+                    { min: 90, label: '90 min', desc: language === 'am' ? 'ረጅም ዙር' : 'Deep Work' },
                   ].map(preset => (
                     <button
                       key={preset.min}
-                      onClick={() => handleArmAlarm(preset.min, preset.label)}
+                      onClick={() => handleArmAlarm(preset.min, preset.desc)}
                       className="p-3 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 hover:border-[#0082ff] dark:hover:border-[#0082ff] text-left transition cursor-pointer active:scale-95 group shadow-2xs min-w-0"
                     >
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-[#0082ff] transition-colors truncate">
+                        <span className="text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-[#0082ff] transition-colors truncate">
                           {preset.label}
                         </span>
                         <Timer size={13} className="text-slate-400 group-hover:text-[#0082ff] transition-colors shrink-0" />
                       </div>
-                      <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
+                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mt-0.5 truncate">
                         {preset.desc}
                       </span>
                     </button>
@@ -473,74 +475,74 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
                 </div>
               </div>
 
-              {/* Custom Alarm Config */}
+              {/* Custom Timer / Alarm */}
               <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Clock size={14} className="text-[#0082ff] shrink-0" />
-                    <span className="truncate">Custom Alarm & Reminder</span>
+                    <span>{language === 'am' ? 'የግል ማንቂያ' : 'Custom Timer'}</span>
                   </span>
-                  <div className="flex items-center bg-slate-200/70 dark:bg-slate-700/60 p-0.5 rounded-lg text-[10px] font-bold shrink-0">
+                  <div className="flex items-center bg-slate-200/70 dark:bg-slate-700/60 p-0.5 rounded-xl text-[10px] font-bold shrink-0">
                     <button
                       onClick={() => setAlarmMode('countdown')}
-                      className={`px-2 py-0.5 rounded-md transition ${alarmMode === 'countdown' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500'}`}
+                      className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${alarmMode === 'countdown' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}
                     >
-                      In Minutes
+                      {language === 'am' ? 'በደቂቃዎች' : 'Minutes'}
                     </button>
                     <button
                       onClick={() => setAlarmMode('time')}
-                      className={`px-2 py-0.5 rounded-md transition ${alarmMode === 'time' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500'}`}
+                      className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${alarmMode === 'time' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}
                     >
-                      Exact Time
+                      {language === 'am' ? 'በሰዓት' : 'Exact Time'}
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <input
-                    type="text"
-                    value={customAlarmTitle}
-                    onChange={(e) => setCustomAlarmTitle(e.target.value)}
-                    placeholder="Alarm title (e.g. Chess Tactics, Prayer)"
-                    className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0082ff]"
-                  />
+                <input
+                  type="text"
+                  value={customAlarmTitle}
+                  onChange={(e) => setCustomAlarmTitle(e.target.value)}
+                  placeholder={language === 'am' ? 'የማንቂያ ስም (ለምሳሌ፡ ትኩረት፣ ጸሎት)' : 'Session title (optional)'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0082ff]"
+                />
 
-                  {alarmMode === 'countdown' ? (
-                    <div className="flex items-center gap-2">
+                {alarmMode === 'countdown' ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                       <input
                         type="number"
                         min="1"
                         max="360"
                         value={customMinutes}
                         onChange={(e) => setCustomMinutes(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-24 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
+                        className="w-14 text-sm font-bold font-mono text-slate-900 dark:text-white outline-none bg-transparent"
                       />
-                      <span className="text-xs text-slate-500 dark:text-slate-400">minutes</span>
-                      <button
-                        onClick={() => handleArmAlarm(customMinutes, customAlarmTitle)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition active:scale-95 cursor-pointer text-center"
-                      >
-                        Arm Alarm
-                      </button>
+                      <span className="text-xs text-slate-400 font-medium">min</span>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        value={alarmTimeInput}
-                        onChange={(e) => setAlarmTimeInput(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
-                      />
-                      <button
-                        onClick={handleArmTimeAlarm}
-                        disabled={!alarmTimeInput}
-                        className="py-2 px-4 rounded-xl bg-[#0082ff] hover:bg-[#0070df] disabled:opacity-50 text-white text-xs font-bold transition active:scale-95 cursor-pointer shrink-0"
-                      >
-                        Set Alarm
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    <button
+                      onClick={() => handleArmAlarm(customMinutes, customAlarmTitle)}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition active:scale-95 cursor-pointer shadow-xs text-center"
+                    >
+                      {language === 'am' ? 'ማንቂያ ጀምር' : 'Start Timer'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={alarmTimeInput}
+                      onChange={(e) => setAlarmTimeInput(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold font-mono text-slate-900 dark:text-white"
+                    />
+                    <button
+                      onClick={handleArmTimeAlarm}
+                      disabled={!alarmTimeInput}
+                      className="py-2.5 px-5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] disabled:opacity-50 text-white text-xs font-bold transition active:scale-95 cursor-pointer shadow-xs shrink-0"
+                    >
+                      {language === 'am' ? 'ሰዓት አዘጋጅ' : 'Set Alarm'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Active Alarms List */}

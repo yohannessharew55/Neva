@@ -4,7 +4,7 @@ import {
   Trash2, ChevronDown, ChevronUp, Palette,
   Dumbbell, Swords, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
-  ExternalLink, Cloud
+  ExternalLink
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -169,10 +169,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setSelectedCategoryId,
     getCategoryTitleTranslated,
     language,
-    t,
-    openSyncModal,
-    cloudSyncStatus,
-    cloudDatabase
+    t
   } = useLivotion();
 
   const [colorTheme, setColorTheme] = useState<StickyColorTheme>('canary');
@@ -515,7 +512,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               }}
             />
 
-            {/* Sticker Top Bar: Sticker Title & Cross-Device Cloud Sync Button */}
+            {/* Sticker Top Bar: Sticker Title */}
             <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5 border-b border-amber-200/80 dark:border-slate-700/80">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs">🏷️</span>
@@ -523,22 +520,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   {language === 'am' ? 'የዕለት ማጠቃለያ ስቲከር' : 'TODAY EXECUTION STICKER'}
                 </span>
               </div>
-
-              {/* Cross-Device Database Sync Status Button on Sticker */}
-              <button
-                type="button"
-                onClick={openSyncModal}
-                className="px-2 py-0.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-amber-300/70 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                title={language === 'am' ? `የዳታቤዝ ማመሳሰያ (${cloudDatabase})` : `Cross-Device Database Sync (${cloudDatabase})`}
-              >
-                <Cloud size={12} className={cloudSyncStatus === 'syncing' ? 'animate-pulse text-[#0082ff]' : 'text-[#0082ff]'} />
-                <span className={`w-1.5 h-1.5 rounded-full ${cloudSyncStatus === 'synced' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                <span className="text-[9px] font-mono font-bold tracking-tight">
-                  {cloudSyncStatus === 'syncing' 
-                    ? (language === 'am' ? 'በማመሳሰል...' : 'Syncing...') 
-                    : (language === 'am' ? 'ተገናኝቷል' : 'Synced')}
-                </span>
-              </button>
             </div>
 
             {/* Metrics summary & Filter Pills */}
