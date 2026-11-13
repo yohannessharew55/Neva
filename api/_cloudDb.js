@@ -109,7 +109,7 @@ export async function findUser(identifier) {
 }
 
 // Create new user
-export async function createUser({ username, name, email, password, avatarColor }) {
+export async function createUser({ username, name, email, password, avatarColor, avatarPhoto, motto, role, location }) {
   const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   const { db, sha } = await getUsersDb();
 
@@ -134,6 +134,10 @@ export async function createUser({ username, name, email, password, avatarColor 
     name: name?.trim() || cleanUsername,
     email: email?.trim().toLowerCase() || null,
     avatarColor: avatarColor || '#0082ff',
+    avatarPhoto: avatarPhoto || null,
+    motto: motto?.trim() || null,
+    role: role?.trim() || null,
+    location: location?.trim() || null,
     salt,
     passwordHash: hash,
     createdAt: new Date().toISOString(),
@@ -153,7 +157,59 @@ export async function createUser({ username, name, email, password, avatarColor 
     name: newUser.name,
     email: newUser.email,
     avatarColor: newUser.avatarColor,
+    avatarPhoto: newUser.avatarPhoto,
+    motto: newUser.motto,
+    role: newUser.role,
+    location: newUser.location,
     createdAt: newUser.createdAt
+  };
+}
+
+// Update existing user profile
+export async function updateUserProfile(username, updates) {
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const { db, sha } = await getUsersDb();
+
+  const user = db.users[cleanUsername];
+  if (!user) {
+    throw new Error('User not found.');
+  }
+
+  // Update allowed profile fields
+  if (updates.name !== undefined) user.name = updates.name.trim() || cleanUsername;
+  if (updates.email !== undefined) user.email = updates.email?.trim().toLowerCase() || null;
+  if (updates.avatarColor !== undefined) user.avatarColor = updates.avatarColor;
+  if (updates.avatarPhoto !== undefined) user.avatarPhoto = updates.avatarPhoto; // Base64 data URL or null
+  if (updates.motto !== undefined) user.motto = updates.motto.trim();
+  if (updates.role !== undefined) user.role = updates.role.trim();
+  if (updates.location !== undefined) user.location = updates.location.trim();
+
+  // If password update requested
+  if (updates.newPassword) {
+    const { hash, salt } = hashPassword(updates.newPassword);
+    user.passwordHash = hash;
+    user.salt = salt;
+  }
+
+  user.updatedAt = new Date().toISOString();
+
+  const saved = await saveUsersDb(db, sha);
+  if (!saved) {
+    throw new Error('Failed to save profile updates to Cloud DB.');
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    email: user.email,
+    avatarColor: user.avatarColor,
+    avatarPhoto: user.avatarPhoto || null,
+    motto: user.motto || null,
+    role: user.role || null,
+    location: user.location || null,
+    createdAt: user.createdAt,
+    lastSyncedAt: new Date().toISOString()
   };
 }
 

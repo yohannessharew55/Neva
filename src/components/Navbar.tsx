@@ -241,16 +241,24 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
                 title={currentUser ? `@${currentUser.username} (${t('options')})` : t('options')}
               >
                 {currentUser ? (
-                  <div 
-                    className="w-5 h-5 rounded-md text-white font-black text-[10px] flex items-center justify-center shadow-xs"
-                    style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
-                  >
-                    {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
-                  </div>
+                  currentUser.avatarPhoto ? (
+                    <img 
+                      src={currentUser.avatarPhoto} 
+                      alt={currentUser.name} 
+                      className="w-6 h-6 rounded-full object-cover ring-2 ring-[#0082ff]/60 shadow-xs" 
+                    />
+                  ) : (
+                    <div 
+                      className="w-5 h-5 rounded-md text-white font-black text-[10px] flex items-center justify-center shadow-xs"
+                      style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
+                    >
+                      {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
+                    </div>
+                  )
                 ) : (
                   <MoreHorizontal size={18} />
                 )}
@@ -259,18 +267,22 @@ export const Navbar: React.FC = () => {
               </button>
 
               {showMoreMenu && (
-                <div className="absolute right-0 mt-2 w-72 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2.5 z-50 text-xs font-medium space-y-2.5 animate-scale-in">
+                <div className="absolute right-0 mt-2 w-76 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2.5 z-50 text-xs font-medium space-y-2.5 animate-scale-in">
                   
-                  {/* Personal Account / Profile Section (Requested: profile symbol and staffs seen under 3dots for mobile) */}
+                  {/* Personal Account / Profile Section */}
                   <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-50 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-800/80 border border-blue-200/80 dark:border-blue-800/80 shadow-2xs">
                     {currentUser ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2.5">
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-3">
                           <div 
-                            className="w-9 h-9 rounded-xl text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0"
+                            className="w-11 h-11 rounded-2xl overflow-hidden text-white font-black text-lg flex items-center justify-center shadow-md ring-2 ring-blue-500/30 shrink-0"
                             style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
                           >
-                            {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
+                            {currentUser.avatarPhoto ? (
+                              <img src={currentUser.avatarPhoto} alt={currentUser.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}</span>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 font-extrabold text-xs text-slate-900 dark:text-white truncate">
@@ -280,8 +292,19 @@ export const Navbar: React.FC = () => {
                             <div className="text-[10px] font-mono text-[#0082ff] font-bold truncate">
                               @{currentUser.username}
                             </div>
+                            {currentUser.role && (
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">
+                                {currentUser.role}
+                              </div>
+                            )}
                           </div>
                         </div>
+
+                        {currentUser.motto && (
+                          <div className="text-[10px] italic text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-900/70 p-2 rounded-xl border border-slate-200/50 dark:border-slate-800 line-clamp-2">
+                            "{currentUser.motto}"
+                          </div>
+                        )}
 
                         {/* Account Staffs & Actions Bar */}
                         <div className="flex items-center gap-1.5 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
@@ -290,7 +313,7 @@ export const Navbar: React.FC = () => {
                               setShowMoreMenu(false);
                               openSyncModal();
                             }}
-                            className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95"
+                            className="flex-1 py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95"
                           >
                             <User size={12} className="text-[#0082ff]" />
                             <span>Profile & Cloud</span>
@@ -300,7 +323,7 @@ export const Navbar: React.FC = () => {
                               setShowMoreMenu(false);
                               await syncNow();
                             }}
-                            className="py-1.5 px-2.5 rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                            className="py-1.5 px-2.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
                             title="Sync all data to cloud"
                           >
                             <Cloud size={12} className={cloudSyncStatus === 'syncing' ? 'animate-spin' : ''} />
@@ -328,10 +351,9 @@ export const Navbar: React.FC = () => {
                             setShowMoreMenu(false);
                             openSyncModal();
                           }}
-                          className="px-2.5 py-1.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-extrabold text-[11px] shadow-xs shrink-0 transition cursor-pointer active:scale-95 flex items-center gap-1"
+                          className="px-2.5 py-1.5 rounded-xl bg-[#0082ff] text-white font-bold text-[10px] shadow-2xs hover:bg-[#0070df] transition cursor-pointer active:scale-95 shrink-0"
                         >
-                          <Sparkles size={11} />
-                          <span>Sign In</span>
+                          Sign In
                         </button>
                       </div>
                     )}
@@ -493,6 +515,42 @@ export const Navbar: React.FC = () => {
                 >
                   <X size={18} />
                 </button>
+              </div>
+
+              {/* Drawer Personal Profile Card */}
+              <div 
+                onClick={() => {
+                  setDrawerOpen(false);
+                  openSyncModal();
+                }}
+                className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-50 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-800/80 border border-blue-200/80 dark:border-blue-800/80 flex items-center justify-between gap-2.5 cursor-pointer hover:border-[#0082ff] transition shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div 
+                    className="w-10 h-10 rounded-xl overflow-hidden text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0"
+                    style={{ backgroundColor: currentUser?.avatarColor || '#0082ff' }}
+                  >
+                    {currentUser ? (
+                      currentUser.avatarPhoto ? (
+                        <img src={currentUser.avatarPhoto} alt={currentUser.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}</span>
+                      )
+                    ) : (
+                      <User size={18} />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                      <span className="truncate">{currentUser ? currentUser.name : 'Personal Profile'}</span>
+                      {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />}
+                    </div>
+                    <div className="text-[10px] font-mono text-[#0082ff] font-bold truncate">
+                      {currentUser ? `@${currentUser.username}` : 'Sign in & Cloud Sync'}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight size={14} className="text-slate-400 shrink-0" />
               </div>
 
               {/* Main Categories Section */}

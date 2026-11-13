@@ -1,4 +1,4 @@
-import { findUser, createUser, verifyPassword, getUserState, saveUserState } from './_cloudDb.js';
+import { findUser, createUser, updateUserProfile, verifyPassword, getUserState, saveUserState } from './_cloudDb.js';
 
 export default async function handler(req, res) {
   // CORS configuration for Web and Capacitor iOS/Android
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
   }
 
-  const { action, username, password, name, email, avatarColor, initialPayload } = body || {};
+  const { action, username, password, name, email, avatarColor, avatarPhoto, motto, role, location, initialPayload } = body || {};
 
   try {
     // 1. SIGN UP
@@ -45,7 +45,11 @@ export default async function handler(req, res) {
         name: name || cleanUsername,
         email: email || null,
         password,
-        avatarColor: avatarColor || '#0082ff'
+        avatarColor: avatarColor || '#0082ff',
+        avatarPhoto: avatarPhoto || null,
+        motto: motto || null,
+        role: role || null,
+        location: location || null
       });
 
       // If initial local state was provided on signup, save it immediately to cloud
@@ -93,6 +97,10 @@ export default async function handler(req, res) {
         name: userRecord.name,
         email: userRecord.email,
         avatarColor: userRecord.avatarColor || '#0082ff',
+        avatarPhoto: userRecord.avatarPhoto || null,
+        motto: userRecord.motto || null,
+        role: userRecord.role || null,
+        location: userRecord.location || null,
         createdAt: userRecord.createdAt,
         lastSyncedAt: updatedAt || new Date().toISOString()
       };
@@ -105,7 +113,42 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. CHECK USER PROFILE
+    // 3. UPDATE PROFILE
+    if (action === 'update_profile') {
+      if (!username) return res.status(400).json({ error: 'Username required' });
+      const userRecord = await findUser(username);
+      if (!userRecord) return res.status(404).json({ error: 'User not found' });
+
+      // If new password requested, verify current password
+      if (body.newPassword) {
+        if (!body.currentPassword) {
+          return res.status(400).json({ error: 'Current password is required to change password' });
+        }
+        const isValid = verifyPassword(body.currentPassword, userRecord.salt, userRecord.passwordHash);
+        if (!isValid) {
+          return res.status(401).json({ error: 'Current password does not match' });
+        }
+      }
+
+      const updated = await updateUserProfile(username, {
+        name: body.name,
+        email: body.email,
+        avatarColor: body.avatarColor,
+        avatarPhoto: body.avatarPhoto,
+        motto: body.motto,
+        role: body.role,
+        location: body.location,
+        newPassword: body.newPassword
+      });
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Profile updated successfully!',
+        user: updated
+      });
+    }
+
+    // 4. CHECK USER PROFILE
     if (action === 'get_profile') {
       if (!username) return res.status(400).json({ error: 'Username required' });
       const userRecord = await findUser(username);
@@ -118,6 +161,10 @@ export default async function handler(req, res) {
           name: userRecord.name,
           email: userRecord.email,
           avatarColor: userRecord.avatarColor || '#0082ff',
+          avatarPhoto: userRecord.avatarPhoto || null,
+          motto: userRecord.motto || null,
+          role: userRecord.role || null,
+          location: userRecord.location || null,
           createdAt: userRecord.createdAt
         }
       });

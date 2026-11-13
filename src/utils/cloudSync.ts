@@ -14,6 +14,11 @@ export interface UserAccountProfile {
   name: string;
   email?: string | null;
   avatarColor?: string;
+  avatarPhoto?: string | null;
+  motto?: string | null;
+  role?: string | null;
+  location?: string | null;
+  tier?: string;
   createdAt?: string;
   lastSyncedAt?: string;
   isOnlineAccount: boolean;
@@ -244,6 +249,10 @@ export const authenticateUserAccount = async (
         name: data.user.name || displayName,
         email: data.user.email || null,
         avatarColor: data.user.avatarColor || '#0082ff',
+        avatarPhoto: data.user.avatarPhoto || null,
+        motto: data.user.motto || null,
+        role: data.user.role || null,
+        location: data.user.location || null,
         createdAt: data.user.createdAt,
         lastSyncedAt: data.user.lastSyncedAt || new Date().toISOString(),
         isOnlineAccount: true
@@ -266,6 +275,73 @@ export const authenticateUserAccount = async (
       success: false,
       message: err.message || 'Network error during authentication.'
     };
+  }
+};
+
+// Update User Account Profile (photo, motto, role, theme color, etc.)
+export const updateUserAccountProfile = async (
+  username: string,
+  updates: {
+    name?: string;
+    email?: string;
+    avatarColor?: string;
+    avatarPhoto?: string | null;
+    motto?: string;
+    role?: string;
+    location?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }
+): Promise<{ success: boolean; user?: UserAccountProfile; message?: string }> => {
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+  if (isDeviceOffline()) {
+    const current = getStoredUserAccount();
+    if (current && current.username === cleanUsername) {
+      const merged: UserAccountProfile = {
+        ...current,
+        name: updates.name !== undefined ? (updates.name.trim() || current.name) : current.name,
+        email: updates.email !== undefined ? updates.email : current.email,
+        avatarColor: updates.avatarColor !== undefined ? updates.avatarColor : current.avatarColor,
+        avatarPhoto: updates.avatarPhoto !== undefined ? updates.avatarPhoto : current.avatarPhoto,
+        motto: updates.motto !== undefined ? updates.motto : current.motto,
+        role: updates.role !== undefined ? updates.role : current.role,
+        location: updates.location !== undefined ? updates.location : current.location,
+        lastSyncedAt: new Date().toISOString()
+      };
+      saveAccountToStorage(merged);
+      return { success: true, user: merged, message: 'Profile updated locally (offline).' };
+    }
+  }
+
+  const baseUrl = getApiBaseUrl();
+  try {
+    const response = await fetch(`${baseUrl}/api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update_profile',
+        username: cleanUsername,
+        ...updates
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, message: data.error || 'Failed to update profile' };
+    }
+
+    if (data.user) {
+      const updatedProfile: UserAccountProfile = {
+        ...data.user,
+        isOnlineAccount: true
+      };
+      saveAccountToStorage(updatedProfile);
+      return { success: true, user: updatedProfile, message: 'Profile updated successfully!' };
+    }
+    return { success: false, message: 'Failed to update profile.' };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Network error updating profile.' };
   }
 };
 
