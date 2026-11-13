@@ -5,10 +5,13 @@ on:
   push:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+
 jobs:
   build-ios:
     name: Build iOS 16+ App (.ipa)
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -28,34 +31,70 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Select Xcode Version
-        run: sudo xcode-select -switch /Applications/Xcode_15.4.app/Contents/Developer
+      - name: Show Xcode Version
+        run: xcodebuild -version
 
-      - name: Build Xcode Archive
+      - name: Compile Native iOS Application
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath build/App.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            archive
+          if [ -d "App.xcworkspace" ]; then
+            xcodebuild -workspace App.xcworkspace \
+              -scheme App \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination 'generic/platform=iOS' \
+              -derivedDataPath build \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          else
+            xcodebuild -project App.xcodeproj \
+              -scheme App \
+              -configuration Release \
+              -sdk iphoneos \
+              -destination 'generic/platform=iOS' \
+              -derivedDataPath build \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          fi
 
-      - name: Package Unsigned IPA
+      - name: Package Unsigned IPA for Sideloading
         run: |
           cd ios/App
-          mkdir -p build/Payload
-          cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
-          cd build
-          zip -r NEVA.ipa Payload
-          echo "IPA Package generated at ios/App/build/NEVA.ipa"
+          APP_PATH=$(find build -name "App.app" -type d | head -n 1)
+          echo "Found app bundle at: $APP_PATH"
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -qr NEVA.ipa Payload
+          ls -lh NEVA.ipa
+          echo "IPA Size:" $(du -h NEVA.ipa)
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: NEVA-iOS16-App
-          path: ios/App/build/NEVA.ipa
+          path: ios/App/NEVA.ipa
           retention-days: 14
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.0.0
+          name: "NEVA iOS 16+ Production Build v1.0.0"
+          body: |
+            ### 📱 NEVA Standalone iOS App (Native IPA)
+            - **Target Devices**: iPhone X and all devices running iOS 16.0+
+            - **Architecture**: ARM64 Mach-O Native App
+            - **Features**:
+              - Native Apple Reminders & EventKit sync
+              - Native Time-Sensitive Phone Alarms (UNUserNotificationCenter)
+              - 10 Acoustic Focus Soundscapes (Tibetan bowls, 432Hz waves, temple bells)
+              - Complete offline functionality
+            - **Installation**: Drag & drop `NEVA.ipa` into **Sideloadly**, **AltStore**, or **TrollStore** with your Apple ID.
+          files: ios/App/NEVA.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
