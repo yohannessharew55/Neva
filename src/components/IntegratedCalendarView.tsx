@@ -3,7 +3,7 @@ import {
   Calendar as CalendarIcon, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, 
   Clock, Plus, CheckCircle2, Play, Filter, Globe, Sparkles, Check, Trash2, Edit3,
   Dumbbell, Swords, Palette, Music, Building2, TrendingUp, BookOpen, Shield,
-  ArrowRight, X, ListChecks, CheckSquare, Square, Target, Award, Flame, Zap
+  ArrowRight, X, ListChecks, CheckSquare, Square, Target, Award, Flame, Zap, Settings
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { 
@@ -15,6 +15,7 @@ import {
   formatDualDate 
 } from '../utils/ethiopianCalendar';
 import { BigDailyActivitiesStickyNote } from './BigDailyActivitiesStickyNote';
+import { DayDefaultsModal } from './DayDefaultsModal';
 import { DomainType, PriorityLevel, ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 
@@ -68,8 +69,15 @@ export const IntegratedCalendarView: React.FC = () => {
     setActiveTab,
     language,
     t,
-    getCategoryTitleTranslated
+    getCategoryTitleTranslated,
+    getDaySchedule,
+    materializeDaySchedule,
+    resetDayScheduleToDefault,
+    saveDayAsWeekdayDefault,
+    getWeekdayDefaultTasks,
   } = useLivotion();
+
+  const [showDefaultsModal, setShowDefaultsModal] = useState(false);
 
   const today = new Date();
   const todayEth = gregorianToEthiopian(today);
@@ -277,41 +285,25 @@ export const IntegratedCalendarView: React.FC = () => {
 
   const weekDays = getWeekDays(selectedDate);
 
-  // Filter Tasks for a given Date
+  // Filter Tasks for a given Date using centralized getDaySchedule (Unique vs Default Routine)
   const getTasksForDate = (date: Date) => {
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    const nowObj = new Date();
-    const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
-    const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
-    
-    return tasks.filter((t) => {
-      // Stream filter
-      if (selectedCategoryFilter !== 'all') {
-        const cat = categoryPlans[selectedCategoryFilter];
-        if (cat) {
-          const catId = cat.id.toLowerCase();
+    const sched = getDaySchedule(date);
+    let dayTasks = sched.tasks;
+
+    if (selectedCategoryFilter !== 'all') {
+      const cat = categoryPlans[selectedCategoryFilter];
+      if (cat) {
+        const catId = cat.id.toLowerCase();
+        dayTasks = dayTasks.filter((t) => {
           const domStr = String(t.domain || '').toLowerCase();
           const badgeStr = String(t.badge || '').toLowerCase();
           const titleStr = String(t.title || '').toLowerCase();
-          if (!domStr.includes(catId) && !badgeStr.includes(catId) && !titleStr.includes(catId)) {
-            return false;
-          }
-        }
+          return domStr.includes(catId) || badgeStr.includes(catId) || titleStr.includes(catId);
+        });
       }
+    }
 
-      // If specific date attached, must match
-      if (t.date) {
-        return t.date === dateStr;
-      }
-
-      // If dayOfWeek attached without a date, match only that recurring day of week
-      if (t.dayOfWeek) {
-        return t.dayOfWeek === dayOfWeek;
-      }
-
-      // Undated legacy tasks: only show on today's date, preventing duplication across all days of month
-      return dateStr === todayStr;
-    }).sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+    return [...dayTasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
   };
 
   // Day Navigation handlers
@@ -385,6 +377,11 @@ export const IntegratedCalendarView: React.FC = () => {
     const cat = categoryPlans[blockCategory] || categoryList[0];
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (selectedDate.getDay() + 6) % 7 + 1;
+
+    const sched = getDaySchedule(selectedDate);
+    if (!sched.isCustom) {
+      materializeDaySchedule(dateStr);
+    }
 
     addTask({
       domain: getDomainForCat(cat.id),
@@ -531,6 +528,16 @@ export const IntegratedCalendarView: React.FC = () => {
           >
             <Plus size={14} />
             <span>{language === 'am' ? '+ አዲስ ዕቅድ / ብሎክ' : '+ Add Plan / Block'}</span>
+          </button>
+
+          {/* Manage Day Defaults Templates Button */}
+          <button
+            onClick={() => setShowDefaultsModal(true)}
+            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            title="Configure weekday routine templates"
+          >
+            <Settings size={14} />
+            <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
           </button>
         </div>
       </div>
@@ -1094,7 +1101,9 @@ export const IntegratedCalendarView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
               {weekDays.map((dayDate, idx) => {
+                const daySched = getDaySchedule(dayDate);
                 const dayTasks = getTasksForDate(dayDate);
+                const isCustom = daySched.isCustom;
                 const dayMinutes = dayTasks.reduce((acc, t) => acc + (t.durationMin || 0), 0);
                 const isDayToday = dayDate.toDateString() === today.toDateString();
                 const isSelected = dayDate.toDateString() === selectedDate.toDateString();
@@ -1135,11 +1144,19 @@ export const IntegratedCalendarView: React.FC = () => {
                           <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">
                             Today
                           </span>
+                        ) : isCustom ? (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            ⭐ Custom
+                          </span>
                         ) : isSunday ? (
                           <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
                             🌿 {language === 'am' ? 'እረፍት' : 'Rest'}
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-500">
+                            Default
+                          </span>
+                        )}
                       </div>
 
                       {/* Scheduled Blocks */}
@@ -1445,7 +1462,9 @@ export const IntegratedCalendarView: React.FC = () => {
                   dayItem.gregDate.getMonth() === selectedDate.getMonth() &&
                   dayItem.gregDate.getDate() === selectedDate.getDate();
 
+                const daySched = getDaySchedule(dayItem.gregDate);
                 const dayTasks = getTasksForDate(dayItem.gregDate);
+                const isCustom = daySched.isCustom;
                 const gregShortStr = dayItem.gregDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                 return (
@@ -1464,11 +1483,18 @@ export const IntegratedCalendarView: React.FC = () => {
                   >
                     {/* Day Header */}
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm sm:text-base font-extrabold font-mono ${
-                        isSelected ? 'text-[#0082ff]' : isToday ? 'text-[#0082ff]' : 'text-slate-900 dark:text-white'
-                      }`}>
-                        {dayItem.ethDay}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-sm sm:text-base font-extrabold font-mono ${
+                          isSelected ? 'text-[#0082ff]' : isToday ? 'text-[#0082ff]' : 'text-slate-900 dark:text-white'
+                        }`}>
+                          {dayItem.ethDay}
+                        </span>
+                        {isCustom && (
+                          <span className="text-[10px] text-amber-500 font-bold" title="Unique custom schedule for this day">
+                            ⭐
+                          </span>
+                        )}
+                      </div>
 
                       {(mode === 'dual' || mode === 'gregorian') && (
                         <span className="text-[10px] text-slate-400 font-mono">
@@ -1969,6 +1995,13 @@ export const IntegratedCalendarView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Weekday Defaults Routine Manager Modal */}
+      <DayDefaultsModal
+        isOpen={showDefaultsModal}
+        onClose={() => setShowDefaultsModal(false)}
+        initialDayOfWeek={(selectedDate.getDay() + 6) % 7 + 1}
+      />
     </div>
   );
 };

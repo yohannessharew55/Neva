@@ -4,12 +4,14 @@ import {
   Trash2, ChevronDown, ChevronUp, Palette,
   Dumbbell, Swords, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
-  ExternalLink, GripVertical
+  ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { soundEngine } from '../utils/audio';
+import { DayDefaultsModal } from './DayDefaultsModal';
+import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
 
@@ -169,15 +171,25 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setSelectedCategoryId,
     getCategoryTitleTranslated,
     language,
-    t
+    t,
+    getDaySchedule,
+    materializeDaySchedule,
+    resetDayScheduleToDefault,
+    saveDayAsWeekdayDefault,
+    applyDayScheduleToDates,
+    getWeekdayDefaultTasks,
   } = useLivotion();
 
   const [colorTheme, setColorTheme] = useState<StickyColorTheme>('canary');
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
-  // Main Stream Subject sub-tasks expansion state
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
+
+  // Day Defaults & Multi-Day Apply Modals
+  const [showDefaultsModal, setShowDefaultsModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const toggleSubjectExpand = (subjectId: string) => {
     setExpandedSubjects((prev) => ({
@@ -193,7 +205,13 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [editDurationMin, setEditDurationMin] = useState(30);
 
   const startEditTask = (task: ScheduleTask) => {
-    setEditingTaskId(task.id);
+    let targetTaskId = task.id;
+    if (!isCustomDay) {
+      const materialized = materializeDaySchedule(activeDateStr);
+      const match = materialized.find((m) => m.title === task.title) || materialized[0];
+      if (match) targetTaskId = match.id;
+    }
+    setEditingTaskId(targetTaskId);
     setEditTitle(task.title);
     setEditStartTime(task.startTime || '06:00 PM');
     setEditDurationMin(task.durationMin || 30);
@@ -316,17 +334,79 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   const touchActiveId = useRef<string | null>(null);
 
-  // Filter tasks strictly for this day so each day's blocks are completely independent
-  const dayTasks = tasks.filter((t) => {
-    if (t.date) {
-      return t.date === activeDateStr;
+  // Resolve Day Schedule (Unique vs Default Routine)
+  const daySchedule = getDaySchedule(today);
+  const dayTasks = daySchedule.tasks;
+  const isCustomDay = daySchedule.isCustom;
+
+  const handleCustomizeDay = () => {
+    materializeDaySchedule(activeDateStr);
+    setToastMessage(language === 'am' ? 'ይህ ቀን ራሱን ችሎ ተለይቷል!' : 'Day customized independently!');
+    setTimeout(() => setToastMessage(null), 3000);
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const handleResetDayToDefault = () => {
+    if (window.confirm(language === 'am' 
+      ? 'የዚህን ቀን ልዩ ለውጦች በማጥፋት ወደ መደበኛው ነባሪ የጊዜ ሰሌዳ መመለስ ይፈልጋሉ?' 
+      : `Reset ${dayName}'s schedule back to the default routine template? Custom blocks for this date will be cleared.`
+    )) {
+      resetDayScheduleToDefault(activeDateStr);
+      setToastMessage(language === 'am' ? 'ወደ ነባሪ ዕቅድ ተመልሷል!' : 'Reverted to default template!');
+      setTimeout(() => setToastMessage(null), 3000);
+      try { soundEngine.playPencil(); } catch {}
     }
-    if (t.dayOfWeek) {
-      return t.dayOfWeek === activeDayOfWeek;
+  };
+
+  const handleSaveAsDefault = () => {
+    saveDayAsWeekdayDefault(activeDateStr, activeDayOfWeek);
+    setToastMessage(language === 'am' 
+      ? `የዚህ ቀን ሰሌዳ ለሁሉም ${dayName} እንደ ነባሪ ተመዝግቧል!` 
+      : `Saved current schedule as default for ${dayName}!`
+    );
+    setTimeout(() => setToastMessage(null), 3000);
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const handleToggleTask = (task: ScheduleTask) => {
+    if (!isCustomDay) {
+      const materialized = materializeDaySchedule(activeDateStr);
+      const match = materialized.find((m) => m.title === task.title) || materialized[0];
+      if (match) {
+        toggleTaskCompletion(match.id);
+      }
+    } else {
+      toggleTaskCompletion(task.id);
     }
-    // Undated legacy tasks only show when viewing today
-    return isViewingToday;
-  });
+  };
+
+  const handleToggleChecklist = (task: ScheduleTask, checklistId: string) => {
+    if (!isCustomDay) {
+      const materialized = materializeDaySchedule(activeDateStr);
+      const match = materialized.find((m) => m.title === task.title);
+      if (match && match.checklist) {
+        const cMatch = match.checklist.find((c) => c.text === task.checklist?.find((tc) => tc.id === checklistId)?.text) || match.checklist[0];
+        if (cMatch) {
+          toggleChecklistItem(match.id, cMatch.id);
+        }
+      }
+    } else {
+      toggleChecklistItem(task.id, checklistId);
+    }
+  };
+
+  const handleDeleteTask = (task: ScheduleTask) => {
+    if (!isCustomDay) {
+      const materialized = materializeDaySchedule(activeDateStr);
+      const match = materialized.find((m) => m.title === task.title);
+      if (match) {
+        deleteTask(match.id);
+      }
+    } else {
+      deleteTask(task.id);
+    }
+    try { soundEngine.playPencil(); } catch {}
+  };
 
   // Group tasks by Main Stream Subjects for this active day
   const sortedTasks = [...dayTasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
@@ -456,6 +536,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     e.preventDefault();
     if (!newTitle.trim()) return;
 
+    if (!isCustomDay) {
+      materializeDaySchedule(activeDateStr);
+    }
+
     const catPlan = categoryPlans[selectedCategoryKey] || categoryPlans['music'];
     const domain = getDomainForCategory(selectedCategoryKey);
 
@@ -469,6 +553,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       soundProfile: 'SOLFEGGIO_432',
       completed: false,
       date: activeDateStr,
+      dayOfWeek: activeDayOfWeek,
       checklist: [
         { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
         { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
@@ -503,11 +588,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Master Subject Checkbox: Toggling subject checks or unchecks all tasks under it
   const handleToggleSubject = (groupTasks: ScheduleTask[], isCurrentlyAllDone: boolean) => {
+    let currentTasks = groupTasks;
+    if (!isCustomDay) {
+      const materialized = materializeDaySchedule(activeDateStr);
+      const titles = new Set(groupTasks.map((t) => t.title));
+      currentTasks = materialized.filter((t) => titles.has(t.title));
+    }
     const nextCompletedState = !isCurrentlyAllDone;
     if (nextCompletedState) {
       soundEngine.playSound('CHIME_MEDITATION');
     }
-    groupTasks.forEach((t) => {
+    currentTasks.forEach((t) => {
       if (t.completed !== nextCompletedState) {
         toggleTaskCompletion(t.id);
       }
@@ -625,6 +716,105 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             </div>
           </div>
         </div>
+
+        {/* Schedule Status & Day Customization Bar */}
+        <div className={`relative z-20 mb-2.5 px-3 py-2 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 backdrop-blur-xs transition-all shadow-2xs font-sans ${
+          isCustomDay 
+            ? 'bg-amber-500/10 dark:bg-amber-950/30 border-amber-500/30 text-amber-950 dark:text-amber-100'
+            : 'bg-blue-500/10 dark:bg-blue-950/30 border-blue-500/30 text-blue-950 dark:text-blue-100'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="text-base sm:text-lg">{isCustomDay ? '⭐' : '📅'}</span>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-extrabold text-[11px] sm:text-xs">
+                  {isCustomDay 
+                    ? (language === 'am' ? 'የዚህ ቀን ልዩ የተለየ የጊዜ ሰሌዳ' : 'Unique Custom Schedule')
+                    : (language === 'am' ? `መደበኛ የ${dayName} የጊዜ ሰሌዳ` : `Default Routine (${dayName})`)}
+                </span>
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                  isCustomDay 
+                    ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' 
+                    : 'bg-blue-500/20 text-blue-900 dark:text-blue-200'
+                }`}>
+                  {isCustomDay ? (language === 'am' ? 'ልዩ' : 'Custom') : (language === 'am' ? 'ነባሪ' : 'Default')}
+                </span>
+              </div>
+              <p className="text-[10px] opacity-75 leading-tight">
+                {isCustomDay
+                  ? (language === 'am' ? 'ለዚህ ቀን ብቻ የተቀመጠ ገለልተኛ ሰሌዳ።' : 'Independent schedule strictly for this date.')
+                  : (language === 'am' ? 'ነባሪ ዕቅድን ይጠቀማል። ለውጥ ሲያደርጉ ለዚህ ቀን ብቻ ተለይቶ ይቀመጣል።' : 'Using default template. Changes will save uniquely for this day.')}
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+            {isCustomDay ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleResetDayToDefault}
+                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                  title="Reset this day back to the default routine template"
+                >
+                  <RotateCcw size={11} />
+                  <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAsDefault}
+                  className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                  title={`Set this schedule as new default for ${dayName}`}
+                >
+                  <Save size={11} />
+                  <span>{language === 'am' ? `ለ${dayName} ነባሪ አድርግ` : `Set as ${dayName} Default`}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowApplyModal(true)}
+                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                  title="Apply this day schedule to other dates"
+                >
+                  <Copy size={11} />
+                  <span>{language === 'am' ? 'ለቀናት ቅዳ' : 'Apply to Days...'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCustomizeDay}
+                  className="px-3 py-1 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                  title="Customize schedule uniquely for this date"
+                >
+                  <Edit2 size={11} />
+                  <span>{language === 'am' ? 'ይህንን ቀን ለይተህ አዘጋጅ' : 'Customize for this Day'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDefaultsModal(true)}
+                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                  title="Manage default templates for all weekdays"
+                >
+                  <Settings size={11} />
+                  <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Toast Feedback */}
+        {toastMessage && (
+          <div className="relative z-20 mb-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-1.5 animate-fadeIn">
+            <Check size={14} />
+            <span>{toastMessage}</span>
+          </div>
+        )}
 
         {/* The Smaller Sticky / Sticker: Placed over the Daily To-Do Sticky Note */}
         <div className="relative z-20 my-3 -rotate-0.5 sm:-rotate-1 hover:rotate-0 transition-transform duration-200">
@@ -1099,7 +1289,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                               <button
                                 type="button"
-                                onClick={() => toggleTaskCompletion(task.id)}
+                                onClick={() => handleToggleTask(task)}
                                 className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                                   task.completed 
                                     ? `${theme.checkBgDone} border-transparent` 
@@ -1179,7 +1369,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                               <button
                                 type="button"
-                                onClick={() => deleteTask(task.id)}
+                                onClick={() => handleDeleteTask(task)}
                                 className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                                 title="Delete Task"
                               >
@@ -1194,7 +1384,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               {task.checklist.map((item) => (
                                 <div 
                                   key={item.id} 
-                                  onClick={() => toggleChecklistItem(task.id, item.id)}
+                                  onClick={() => handleToggleChecklist(task, item.id)}
                                   className="flex items-center gap-1.5 cursor-pointer opacity-75 hover:opacity-100"
                                 >
                                   <div className={`w-3 h-3 rounded-xs border flex items-center justify-center text-[8px] ${
@@ -1261,6 +1451,20 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           )}
         </div>
       </div>
+
+      <DayDefaultsModal
+        isOpen={showDefaultsModal}
+        onClose={() => setShowDefaultsModal(false)}
+        initialDayOfWeek={activeDayOfWeek}
+      />
+
+      <ApplyDayScheduleModal
+        isOpen={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        sourceDateStr={activeDateStr}
+        sourceDayName={dayName}
+        sourceTasksCount={dayTasks.length}
+      />
     </div>
   );
 };

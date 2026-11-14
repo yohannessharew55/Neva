@@ -341,6 +341,19 @@ interface LivotionContextType {
   setCurrentUser: (user: UserAccountProfile | null) => void;
   hydrateCloudState: (data: any) => void;
   logoutUser: () => void;
+  getDaySchedule: (date: Date) => {
+    tasks: ScheduleTask[];
+    isCustom: boolean;
+    source: 'custom' | 'weekday_default' | 'global_default' | 'rest_day';
+    dateStr: string;
+    dayOfWeek: number;
+  };
+  materializeDaySchedule: (dateStr: string) => ScheduleTask[];
+  resetDayScheduleToDefault: (dateStr: string) => void;
+  saveDayAsWeekdayDefault: (dateStr: string, dayOfWeek: number) => void;
+  applyDayScheduleToDates: (sourceDateStr: string, targetDateStrs: string[]) => void;
+  updateWeekdayDefaultSchedule: (dayOfWeek: number, newDefaultTasks: Omit<ScheduleTask, 'id' | 'date'>[]) => void;
+  getWeekdayDefaultTasks: (dayOfWeek: number) => ScheduleTask[];
 }
 
 const LivotionContext = createContext<LivotionContextType | undefined>(undefined);
@@ -885,6 +898,236 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (activeTask?.id === taskId) {
       stopTimer();
     }
+  };
+
+  // Helper to get default tasks for a given day of week (1 = Mon ... 7 = Sun)
+  const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
+    // 1. Check if explicit tasks exist for this day of week without a specific date
+    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek);
+    if (dayMatches.length > 0) {
+      return dayMatches;
+    }
+
+    // 2. If Sunday (dayOfWeek === 7), return default Sunday Rest routine
+    if (dayOfWeek === 7) {
+      return [
+        {
+          id: 'def-sun-1',
+          domain: 'DEVOTION_PRAYER',
+          title: 'Spiritual Devotion & Scripture Reflection',
+          startTime: '08:00 AM',
+          durationMin: 45,
+          completed: false,
+          color: '#a855f7',
+          badge: 'Devotion',
+          dayOfWeek: 7,
+          checklist: [
+            { id: 'c-sun-1', text: 'Serene prayer & contemplation', done: false },
+            { id: 'c-sun-2', text: 'Scripture journaling & quiet time', done: false }
+          ]
+        },
+        {
+          id: 'def-sun-2',
+          domain: 'PHYSICAL_FITNESS',
+          title: 'Gentle Nature Walk & Active Physical Reset',
+          startTime: '04:00 PM',
+          durationMin: 60,
+          completed: false,
+          color: '#10b981',
+          badge: 'Rest',
+          dayOfWeek: 7,
+          checklist: [
+            { id: 'c-sun-3', text: 'Gentle stroll & fresh air', done: false },
+            { id: 'c-sun-4', text: 'Hydration & mobility stretch', done: false }
+          ]
+        },
+        {
+          id: 'def-sun-3',
+          domain: 'OPEN_MULTIPURPOSE',
+          title: 'Family Fellowship & Serene Week Ahead Prep',
+          startTime: '07:00 PM',
+          durationMin: 45,
+          completed: false,
+          color: '#64748b',
+          badge: 'Reflection',
+          dayOfWeek: 7,
+          checklist: [
+            { id: 'c-sun-5', text: 'Connect with loved ones', done: false },
+            { id: 'c-sun-6', text: 'Plan calm priorities for Monday', done: false }
+          ]
+        }
+      ];
+    }
+
+    // 3. For Mon-Sat, check if global undated tasks exist (tasks with no date and no dayOfWeek)
+    const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek);
+    if (globalTasks.length > 0) {
+      return globalTasks;
+    }
+
+    // 4. Fallback defaults for weekdays
+    return [
+      {
+        id: `def-wd-${dayOfWeek}-1`,
+        domain: 'CHESS',
+        title: 'Tactical Chess Study & Calculation',
+        startTime: '08:00 AM',
+        durationMin: 45,
+        completed: false,
+        color: '#8b5cf6',
+        badge: 'Chess',
+        dayOfWeek,
+        checklist: [
+          { id: 'c-wd-1', text: 'Puzzle storm & pattern recognition', done: false },
+          { id: 'c-wd-2', text: 'Annotated master games analysis', done: false }
+        ]
+      },
+      {
+        id: `def-wd-${dayOfWeek}-2`,
+        domain: 'GUITAR',
+        title: 'Guitar Repertoire & Fretboard Mastery',
+        startTime: '05:00 PM',
+        durationMin: 45,
+        completed: false,
+        color: '#ec4899',
+        badge: 'Music',
+        dayOfWeek,
+        checklist: [
+          { id: 'c-wd-3', text: 'Metronome scale warm-up', done: false },
+          { id: 'c-wd-4', text: 'Piece run-through & phrasing', done: false }
+        ]
+      },
+      {
+        id: `def-wd-${dayOfWeek}-3`,
+        domain: 'PHYSICAL_FITNESS',
+        title: 'Compound Strength & Conditioning',
+        startTime: '06:00 PM',
+        durationMin: 60,
+        completed: false,
+        color: '#ef4444',
+        badge: 'Workout',
+        dayOfWeek,
+        checklist: [
+          { id: 'c-wd-5', text: 'Dynamic mobility & warm-up', done: false },
+          { id: 'c-wd-6', text: 'Target compound sets & cool down', done: false }
+        ]
+      }
+    ];
+  };
+
+  const getDaySchedule = (date: Date) => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon ... 7 = Sun
+    const customTasks = tasks.filter((t) => t.date === dateStr);
+
+    if (customTasks.length > 0) {
+      return {
+        tasks: customTasks,
+        isCustom: true,
+        source: 'custom' as const,
+        dateStr,
+        dayOfWeek
+      };
+    }
+
+    const defaultTasks = getWeekdayDefaultTasks(dayOfWeek);
+    const source = dayOfWeek === 7
+      ? ('rest_day' as const)
+      : tasks.some((t) => !t.date && t.dayOfWeek === dayOfWeek)
+        ? ('weekday_default' as const)
+        : ('global_default' as const);
+
+    return {
+      tasks: defaultTasks,
+      isCustom: false,
+      source,
+      dateStr,
+      dayOfWeek
+    };
+  };
+
+  const materializeDaySchedule = (dateStr: string): ScheduleTask[] => {
+    const existing = tasks.filter((t) => t.date === dateStr);
+    if (existing.length > 0) return existing;
+
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayOfWeek = (dateObj.getDay() + 6) % 7 + 1;
+    const defaults = getWeekdayDefaultTasks(dayOfWeek);
+
+    const cloned: ScheduleTask[] = defaults.map((t, idx) => ({
+      ...t,
+      id: `task-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      date: dateStr,
+      dayOfWeek,
+      completed: false,
+      checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-${Date.now()}-${idx}-${cidx}`, done: false })) : undefined
+    }));
+
+    setTasks((prev) => [...prev, ...cloned]);
+    return cloned;
+  };
+
+  const resetDayScheduleToDefault = (dateStr: string) => {
+    setTasks((prev) => prev.filter((t) => t.date !== dateStr));
+  };
+
+  const saveDayAsWeekdayDefault = (dateStr: string, dayOfWeek: number) => {
+    const dateTasks = tasks.filter((t) => t.date === dateStr);
+    const sourceTasks = dateTasks.length > 0 ? dateTasks : getWeekdayDefaultTasks(dayOfWeek);
+
+    setTasks((prev) => {
+      const filtered = prev.filter((t) => !(t.dayOfWeek === dayOfWeek && !t.date));
+      const newDefaults: ScheduleTask[] = sourceTasks.map((t, idx) => ({
+        ...t,
+        id: `def-task-${dayOfWeek}-${Date.now()}-${idx}`,
+        dayOfWeek,
+        date: undefined,
+        completed: false,
+        checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-def-${dayOfWeek}-${idx}-${cidx}`, done: false })) : undefined
+      }));
+      return [...filtered, ...newDefaults];
+    });
+  };
+
+  const applyDayScheduleToDates = (sourceDateStr: string, targetDateStrs: string[]) => {
+    const [y, m, d] = sourceDateStr.split('-').map(Number);
+    const sourceDate = new Date(y, m - 1, d);
+    const sourceSched = getDaySchedule(sourceDate);
+    const templateTasks = sourceSched.tasks;
+
+    setTasks((prev) => {
+      let next = prev.filter((t) => !t.date || !targetDateStrs.includes(t.date));
+      targetDateStrs.forEach((tDate) => {
+        const [ty, tm, td] = tDate.split('-').map(Number);
+        const dayOfWeek = (new Date(ty, tm - 1, td).getDay() + 6) % 7 + 1;
+        const newDayTasks: ScheduleTask[] = templateTasks.map((t, idx) => ({
+          ...t,
+          id: `task-${Date.now()}-${tDate}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+          date: tDate,
+          dayOfWeek,
+          completed: false,
+          checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-${tDate}-${idx}-${cidx}`, done: false })) : undefined
+        }));
+        next = [...next, ...newDayTasks];
+      });
+      return next;
+    });
+  };
+
+  const updateWeekdayDefaultSchedule = (dayOfWeek: number, newDefaultTasks: Omit<ScheduleTask, 'id' | 'date'>[]) => {
+    setTasks((prev) => {
+      const filtered = prev.filter((t) => !(t.dayOfWeek === dayOfWeek && !t.date));
+      const cleaned = filtered.filter((t) => t.date || t.dayOfWeek);
+      const created: ScheduleTask[] = newDefaultTasks.map((t, idx) => ({
+        ...t,
+        id: `def-task-${dayOfWeek}-${Date.now()}-${idx}`,
+        dayOfWeek,
+        date: undefined,
+        completed: false,
+      }));
+      return [...cleaned, ...created];
+    });
   };
 
   const triggerAlarmSound = (customProfile?: string) => {
@@ -1573,6 +1816,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurrentUser,
         hydrateCloudState,
         logoutUser,
+        getDaySchedule,
+        materializeDaySchedule,
+        resetDayScheduleToDefault,
+        saveDayAsWeekdayDefault,
+        applyDayScheduleToDates,
+        updateWeekdayDefaultSchedule,
+        getWeekdayDefaultTasks,
       }}
     >
       {children}
