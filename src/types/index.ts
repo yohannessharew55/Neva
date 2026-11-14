@@ -190,3 +190,13 @@ export interface DailyStickyReviewNote {
   tasks: DailyStickyTaskItem[];
   createdAt: string;
 }
+
+export interface IosNoteItem {
+  id: string;
+  title: string;
+  body: string;
+  folder: 'Work' | 'Ideas' | 'Personal' | 'All';
+  pinned: boolean;
+  updatedAt: string;
+}
+

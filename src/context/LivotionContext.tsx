@@ -12,7 +12,8 @@ import {
   DomainType,
   DailyStickyReviewNote,
   StickyNoteThemeColor,
-  DailyStickyTaskItem
+  DailyStickyTaskItem,
+  IosNoteItem
 } from '../types';
 import { 
   initialUser, 
@@ -372,12 +373,45 @@ interface LivotionContextType {
   setCategoryOrder: (order: string[]) => void;
   reorderCategories: (fromCatId: string, toCatId: string) => void;
   reorderTasks: (fromTaskId: string, toTaskId: string) => void;
+  iosNotes: IosNoteItem[];
+  setIosNotes: React.Dispatch<React.SetStateAction<IosNoteItem[]>>;
+  addIosNote: (note: Omit<IosNoteItem, 'id' | 'updatedAt'>) => void;
+  updateIosNote: (id: string, updates: Partial<IosNoteItem>) => void;
+  deleteIosNote: (id: string) => void;
+  togglePinIosNote: (id: string) => void;
 }
 
 const LivotionContext = createContext<LivotionContextType | undefined>(undefined);
 
 const OLD_STORAGE_KEY = 'livotion_mastery_state_v2';
 const STORAGE_KEY = 'neva_mastery_scratch_v1';
+
+export const DEFAULT_IOS_NOTES: IosNoteItem[] = [
+  {
+    id: 'note-1',
+    title: 'Neva Mastery OS • Core Directives',
+    body: '1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout',
+    folder: 'Work',
+    pinned: true,
+    updatedAt: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'note-2',
+    title: 'Guitar Solo Phrasing & Dorian Scale',
+    body: 'Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.',
+    folder: 'Ideas',
+    pinned: false,
+    updatedAt: new Date(Date.now() - 86400000).toISOString()
+  },
+  {
+    id: 'note-3',
+    title: 'Architecture & Site Supervision Checkpoints',
+    body: 'Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage',
+    folder: 'Work',
+    pinned: false,
+    updatedAt: new Date(Date.now() - 172800000).toISOString()
+  }
+];
 
 export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
@@ -519,6 +553,41 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
+  const [iosNotes, setIosNotes] = useState<IosNoteItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('livotion_apple_notes_v1');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return DEFAULT_IOS_NOTES;
+  });
+
+  const addIosNote = (note: Omit<IosNoteItem, 'id' | 'updatedAt'>) => {
+    const newNote: IosNoteItem = {
+      ...note,
+      id: `note-${Date.now()}`,
+      updatedAt: new Date().toISOString()
+    };
+    setIosNotes((prev) => [newNote, ...prev]);
+  };
+
+  const updateIosNote = (id: string, updates: Partial<IosNoteItem>) => {
+    setIosNotes((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n
+      )
+    );
+  };
+
+  const deleteIosNote = (id: string) => {
+    setIosNotes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const togglePinIosNote = (id: string) => {
+    setIosNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned, updatedAt: new Date().toISOString() } : n))
+    );
+  };
+
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -648,6 +717,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (d.reviews) setReviews(d.reviews);
     if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
     if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
+    if (d.iosNotes && Array.isArray(d.iosNotes)) {
+      setIosNotes(d.iosNotes);
+      try {
+        localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes));
+      } catch {}
+    }
     if (d.dailyStickyColor) {
       setDailyStickyColorState(d.dailyStickyColor);
       try {
@@ -676,7 +751,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const keyToUse = (customSyncKey || syncKey).trim() || 'default_user';
     if (isDeviceOffline()) {
       markPendingSync(keyToUse, {
-        user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes
+        user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, iosNotes
       });
       setCloudSyncStatus('offline');
       return false;
@@ -696,6 +771,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         categoryPlans,
         dailyStickyNotes,
         dailyStickyColor,
+        iosNotes,
       }, keyToUse);
 
       if (res.success) {
@@ -740,6 +816,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (d.reviews) setReviews(d.reviews);
           if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
           if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
+          if (d.iosNotes && Array.isArray(d.iosNotes)) {
+            setIosNotes(d.iosNotes);
+            try {
+              localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes));
+            } catch {}
+          }
           if (remote.database) setCloudDatabase(remote.database);
           setLastSyncedAt(remote.updatedAt || new Date().toISOString());
           clearPendingSync(keyToUse);
@@ -790,6 +872,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(`${STORAGE_KEY}_reviews`, JSON.stringify(reviews));
     localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(categoryPlans));
     localStorage.setItem(`${STORAGE_KEY}_daily_sticky_notes`, JSON.stringify(dailyStickyNotes));
+    localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(iosNotes));
 
     // Skip marking pending and pushing to cloud on initial mount
     if (isFirstMount.current) {
@@ -821,6 +904,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         categoryPlans,
         dailyStickyNotes,
         dailyStickyColor,
+        iosNotes,
       }, syncKey);
 
       if (res.success) {
@@ -834,7 +918,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 1200);
 
     return () => clearTimeout(syncTimer);
-  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, syncKey]);
+  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
 
   // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {
@@ -2009,6 +2093,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       reviews: [],
       categoryPlans: INITIAL_CATEGORY_PLANS,
       dailyStickyNotes: [],
+      dailyStickyColor: 'canary',
+      iosNotes: DEFAULT_IOS_NOTES,
     }, syncKey);
   };
 
@@ -2024,6 +2110,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       reviews,
       dailyStickyNotes,
       categoryPlans,
+      iosNotes,
       exportedAt: new Date().toISOString(),
       system: 'N e v a v2.0',
     };
@@ -2051,6 +2138,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (data.reviews) setReviews(data.reviews);
       if (data.dailyStickyNotes) setDailyStickyNotes(data.dailyStickyNotes);
       if (data.categoryPlans) setCategoryPlans(data.categoryPlans);
+      if (data.iosNotes && Array.isArray(data.iosNotes)) setIosNotes(data.iosNotes);
       return true;
     } catch (e) {
       console.error('Import failed', e);
@@ -2164,6 +2252,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCategoryOrder,
         reorderCategories,
         reorderTasks,
+        iosNotes,
+        setIosNotes,
+        addIosNote,
+        updateIosNote,
+        deleteIosNote,
+        togglePinIosNote,
       }}
     >
       {children}

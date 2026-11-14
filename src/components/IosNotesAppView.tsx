@@ -43,14 +43,16 @@ const DEFAULT_NOTES: IosNoteItem[] = [
 ];
 
 export const IosNotesAppView: React.FC = () => {
-  const { language } = useLivotion();
-  const [notes, setNotes] = useState<IosNoteItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('livotion_apple_notes_v1');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return DEFAULT_NOTES;
-  });
+  const { 
+    language, 
+    iosNotes: notes, 
+    setIosNotes: setNotes, 
+    updateIosNote, 
+    deleteIosNote, 
+    togglePinIosNote,
+    cloudSyncStatus,
+    syncNow
+  } = useLivotion();
 
   const [activeNoteId, setActiveNoteId] = useState<string>(() => {
     return notes[0]?.id || '';
@@ -61,17 +63,19 @@ export const IosNotesAppView: React.FC = () => {
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Keep active note synced with available notes
+  useEffect(() => {
+    if (!activeNoteId && notes.length > 0) {
+      setActiveNoteId(notes[0].id);
+    }
+  }, [notes, activeNoteId]);
+
   const activeNote = notes.find((n) => n.id === activeNoteId) || notes[0];
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(notes));
-    } catch (e) {}
-  }, [notes]);
-
   const handleCreateNote = () => {
+    const newNoteId = `note-${Date.now()}`;
     const newNote: IosNoteItem = {
-      id: `note-${Date.now()}`,
+      id: newNoteId,
       title: language === 'am' ? 'አዲስ ማስታወሻ' : 'New Note',
       body: '',
       folder: (selectedFolder === 'All' ? 'Work' : selectedFolder) as any,
@@ -80,23 +84,17 @@ export const IosNotesAppView: React.FC = () => {
     };
 
     setNotes((prev) => [newNote, ...prev]);
-    setActiveNoteId(newNote.id);
+    setActiveNoteId(newNoteId);
     setIsMobileEditorOpen(true);
   };
 
   const handleUpdateActiveNote = (updates: Partial<IosNoteItem>) => {
     if (!activeNote) return;
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === activeNote.id
-          ? { ...n, ...updates, updatedAt: new Date().toISOString() }
-          : n
-      )
-    );
+    updateIosNote(activeNote.id, updates);
   };
 
   const handleDeleteNote = (id: string) => {
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+    deleteIosNote(id);
     if (activeNoteId === id) {
       const remaining = notes.filter((n) => n.id !== id);
       if (remaining.length > 0) {
@@ -109,9 +107,7 @@ export const IosNotesAppView: React.FC = () => {
   };
 
   const togglePin = (id: string) => {
-    setNotes((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n))
-    );
+    togglePinIosNote(id);
   };
 
   const handleCopyNote = (note: IosNoteItem) => {
@@ -179,9 +175,25 @@ export const IosNotesAppView: React.FC = () => {
           {/* Top Bar: Title & New Note Button */}
           <div className="p-4 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400 block">
-                {language === 'am' ? 'የአይፎን ማስታወሻ' : 'iCloud • Notes'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400 block">
+                  {language === 'am' ? 'የአይፎን ማስታወሻ' : 'iCloud • Notes'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => syncNow()}
+                  className={`text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded-full cursor-pointer transition ${
+                    cloudSyncStatus === 'synced'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                      : cloudSyncStatus === 'syncing'
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 animate-pulse'
+                      : 'bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
+                  }`}
+                  title="Click to sync cloud immediately"
+                >
+                  {cloudSyncStatus === 'syncing' ? '☁️ Syncing...' : cloudSyncStatus === 'synced' ? '☁️ Synced' : '☁️ Offline'}
+                </button>
+              </div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                 {language === 'am' ? 'ማስታወሻዎች' : 'Notes'}
               </h2>

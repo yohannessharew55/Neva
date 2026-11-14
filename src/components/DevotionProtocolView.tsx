@@ -9,6 +9,11 @@ import {
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
 import { FitnessProtocolView } from './FitnessProtocolView';
+import { BIBLE_QUOTES_LIBRARY, BibleVerse } from '../data/bibleData';
+import { VerseMemorizePaperCard } from './devotion/VerseMemorizePaperCard';
+import { BibleReadingSessionView } from './devotion/BibleReadingSessionView';
+import { WeeklyBibleStudyView } from './devotion/WeeklyBibleStudyView';
+import { BibleQuotesGallery } from './devotion/BibleQuotesGallery';
 
 interface PrayerIntention {
   id: string;
@@ -100,6 +105,15 @@ const DEFAULT_RHYTHMS: DailyRhythmItem[] = [
   }
 ];
 
+const DEVOTION_SUB_TABS = [
+  { id: 'all', labelEn: 'All Features', labelAm: 'ሁሉንም በአንድ', icon: '🌟' },
+  { id: 'reading', labelEn: 'Bible Reading Session', labelAm: 'የመጽሐፍ ቅዱስ ንባብ', icon: '📖' },
+  { id: 'memorize', labelEn: 'Verse Card Paper', labelAm: 'የዕለቱ ቃል በካርድ ወረቀት', icon: '📜' },
+  { id: 'study', labelEn: 'Weekly Bible Study', labelAm: 'ሳምንታዊ ጥናትና ውጤት', icon: '📊' },
+  { id: 'quotes', labelEn: 'Quotes of the Day', labelAm: 'የጥቅሶች ስብስብና የዘፈቀደ ቃል', icon: '✨' },
+  { id: 'prayer', labelEn: 'Protocols & Prayer', labelAm: 'የጸሎት ፕሮቶኮልና ልመና', icon: '🕊️' },
+];
+
 export const DevotionProtocolView: React.FC = () => {
   const { language, categoryPlans, logSession, activeTab } = useLivotion();
   const devotionCategory = categoryPlans['devotion'];
@@ -108,6 +122,54 @@ export const DevotionProtocolView: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'devotion' | 'workouts'>(() => {
     return activeTab === 'fitness' ? 'workouts' : 'devotion';
   });
+
+  // Active Devotion Sub-Tab: 'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'
+  const [devotionSubTab, setDevotionSubTab] = useState<'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'>('all');
+
+  // Verse of the Day Card Verse state
+  const [cardVerse, setCardVerse] = useState<BibleVerse>(() => BIBLE_QUOTES_LIBRARY[0]);
+
+  const handleNextCardVerse = () => {
+    const currentIdx = BIBLE_QUOTES_LIBRARY.findIndex((v) => v.id === cardVerse.id);
+    const nextIdx = (currentIdx + 1) % BIBLE_QUOTES_LIBRARY.length;
+    setCardVerse(BIBLE_QUOTES_LIBRARY[nextIdx]);
+  };
+
+  const handlePrevCardVerse = () => {
+    const currentIdx = BIBLE_QUOTES_LIBRARY.findIndex((v) => v.id === cardVerse.id);
+    const prevIdx = (currentIdx - 1 + BIBLE_QUOTES_LIBRARY.length) % BIBLE_QUOTES_LIBRARY.length;
+    setCardVerse(BIBLE_QUOTES_LIBRARY[prevIdx]);
+  };
+
+  const handleRandomCardVerse = () => {
+    let nextIdx = Math.floor(Math.random() * BIBLE_QUOTES_LIBRARY.length);
+    if (BIBLE_QUOTES_LIBRARY[nextIdx].id === cardVerse.id) {
+      nextIdx = (nextIdx + 1) % BIBLE_QUOTES_LIBRARY.length;
+    }
+    setCardVerse(BIBLE_QUOTES_LIBRARY[nextIdx]);
+  };
+
+  const handleSelectVerseToMemorize = (verse: BibleVerse) => {
+    setCardVerse(verse);
+    setDevotionSubTab('memorize');
+    setTimeout(() => {
+      const el = document.getElementById('verse-memorize-card-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleLogDevotionSession = (durationMinutes: number, title: string, notes?: string) => {
+    logSession({
+      domainId: 'dom-3',
+      domainType: 'DEVOTION_PRAYER',
+      startedAt: new Date(Date.now() - durationMinutes * 60000).toISOString(),
+      endedAt: new Date().toISOString(),
+      actualDurationSeconds: durationMinutes * 60,
+      flowStateRating: 5,
+      notesMarkdown: notes || title,
+      metricsSnapshot: { title, durationMinutes }
+    } as any);
+  };
 
   useEffect(() => {
     if (activeTab === 'fitness') {
@@ -485,40 +547,78 @@ export const DevotionProtocolView: React.FC = () => {
         </div>
       </div>
 
-      {/* Scripture Verse of the Day Card */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-500/30">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <BookOpen size={160} />
-        </div>
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-purple-200 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={13} className="text-purple-300" />
-              {language === 'am' ? 'የዕለቱ የቅዱስ ቃል ቃልኪዳን' : 'Daily Word & Promise'} • {currentVerse.theme}
-            </span>
+      {/* Devotion Feature Sub-Navigator Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar p-1.5 bg-slate-100/90 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold">
+        {DEVOTION_SUB_TABS.map((tab) => {
+          const isActive = devotionSubTab === tab.id;
+          return (
             <button
-              onClick={nextVerse}
-              className="text-xs font-bold text-purple-200 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer flex items-center gap-1"
+              key={tab.id}
+              onClick={() => {
+                setDevotionSubTab(tab.id as any);
+                try { soundEngine.playPencil(); } catch (e) {}
+              }}
+              className={`px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none ${
+                isActive
+                  ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs scale-[1.02]'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800'
+              }`}
             >
-              <span>{language === 'am' ? 'ቀጣይ ቃል' : 'Next Verse'}</span>
-              <ChevronRight size={14} />
+              <span>{tab.icon}</span>
+              <span>{language === 'am' ? tab.labelAm : tab.labelEn}</span>
             </button>
-          </div>
-
-          <blockquote className="text-lg sm:text-xl md:text-2xl font-serif italic text-purple-50 leading-relaxed">
-            "{language === 'am' ? currentVerse.textAm : currentVerse.textEn}"
-          </blockquote>
-
-          <div className="flex items-center gap-2 pt-2">
-            <span className="text-sm font-bold tracking-wide text-purple-300">
-              — {language === 'am' ? currentVerse.refAm : currentVerse.refEn}
-            </span>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Main Grid: Daily Rhythms & Contemplative Timer */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* 1. Feature 2: Verse of the Day to Memorize with Card Paper */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'memorize') && (
+        <div id="verse-memorize-card-section" className="space-y-4">
+          <VerseMemorizePaperCard
+            currentVerse={cardVerse}
+            onNextVerse={handleNextCardVerse}
+            onPrevVerse={handlePrevCardVerse}
+            onRandomVerse={handleRandomCardVerse}
+            language={language}
+          />
+        </div>
+      )}
+
+      {/* 2. Feature 1: Bible Reading Session & Immersion Timer */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'reading') && (
+        <div className="pt-2">
+          <BibleReadingSessionView
+            language={language}
+            onLogDevotionSession={handleLogDevotionSession}
+          />
+        </div>
+      )}
+
+      {/* 3. Feature 3: Weekly Bible Study Tracker with Result Metric Time & Study Area */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'study') && (
+        <div className="pt-2">
+          <WeeklyBibleStudyView
+            language={language}
+            onLogDevotionSession={handleLogDevotionSession}
+          />
+        </div>
+      )}
+
+      {/* 4. Feature 4: Bible Quotes of the Day (New Random + Bunch of Quotes) */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'quotes') && (
+        <div className="pt-2">
+          <BibleQuotesGallery
+            language={language}
+            onSelectVerseToMemorize={handleSelectVerseToMemorize}
+          />
+        </div>
+      )}
+
+      {/* 5. Daily Spiritual Protocols, Contemplative Silence Timer & Prayer Intentions */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'prayer') && (
+        <>
+          {/* Main Grid: Daily Rhythms & Contemplative Timer */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
         
         {/* Left Column: Daily Spiritual Rhythms (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
@@ -863,6 +963,8 @@ export const DevotionProtocolView: React.FC = () => {
           ))}
         </div>
       </div>
+      </>
+      )}
 
       {/* Devotion Protocol Modal (Create / Edit) */}
       {isProtocolModalOpen && (
