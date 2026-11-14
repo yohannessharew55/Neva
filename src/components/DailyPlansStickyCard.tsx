@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Check, Plus, Trash2, Edit2, Play, Clock, 
-  Palette, Sparkles, CheckCircle2, ChevronRight, X
+  Palette, Sparkles, CheckCircle2, ChevronRight, X, Maximize2, Minimize2
 } from 'lucide-react';
 import { useLivotion, StickyNoteColor } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -208,6 +208,55 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   });
   const [newDurationMin, setNewDurationMin] = useState<number>(45);
   const [showColorPalette, setShowColorPalette] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Double-tap & double-click tracking for sticky note top area
+  const lastTapTimeRef = useRef<number>(0);
+  const lastTouchToggleRef = useRef<number>(0);
+
+  const handleTopDoubleTap = (e: React.TouchEvent | React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, select, input, a, [role="button"]')) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLast = now - lastTapTimeRef.current;
+    if (timeSinceLast > 30 && timeSinceLast < 400) {
+      lastTapTimeRef.current = 0;
+      lastTouchToggleRef.current = now;
+      setIsFullScreen((prev) => !prev);
+    } else {
+      lastTapTimeRef.current = now;
+    }
+  };
+
+  const handleTopDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, select, input, a, [role="button"]')) {
+      return;
+    }
+    if (Date.now() - lastTouchToggleRef.current < 700) {
+      return;
+    }
+    setIsFullScreen((prev) => !prev);
+  };
+
+  // Full Screen Scroll Lock and Escape Key handling
+  useEffect(() => {
+    if (!isFullScreen) return;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsFullScreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullScreen]);
 
   // In-line task editing state (allows modifying title, time, and duration)
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -263,25 +312,39 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   };
 
   return (
-    <div className={`relative transition-all duration-300 group/sticky ${className}`}>
-      {/* 1. Translucent Frosted Washi Tape at Top Center */}
-      <div 
-        className={`w-24 h-5 mx-auto -mb-3 rounded-xs shadow-2xs rotate-0.5 border backdrop-blur-xs select-none z-20 relative ${theme.tape} ${theme.tapeBorder}`}
-        title="Washi Tape"
-      />
+    <div className={
+      isFullScreen
+        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
+        : `relative transition-all duration-300 group/sticky ${className}`
+    }>
+      <div className={isFullScreen ? "relative w-full max-w-3xl py-2 sm:py-6 my-2 sm:my-4" : "relative w-full"}>
+        {/* 1. Translucent Frosted Washi Tape at Top Center */}
+        <div 
+          onClick={handleTopDoubleClick}
+          onDoubleClick={handleTopDoubleClick}
+          onTouchEnd={handleTopDoubleTap}
+          className={`w-24 h-5 mx-auto -mb-3 rounded-xs shadow-2xs rotate-0.5 border backdrop-blur-xs select-none z-20 relative cursor-pointer touch-manipulation active:scale-95 transition-transform ${theme.tape} ${theme.tapeBorder}`}
+          title={isFullScreen ? "Double Tap to Exit Full Screen" : "Double Tap to View Full Screen"}
+        />
 
-      {/* 2. Pushpin pinned on the top right */}
-      <div 
-        className="absolute top-2 right-4 text-xl filter drop-shadow-xs select-none z-30 transition-transform group-hover/sticky:scale-110"
-        title="Pinned Category Focus Note"
-      >
-        📌
-      </div>
+        {/* 2. Pushpin pinned on the top right */}
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFullScreen((prev) => !prev);
+          }}
+          onDoubleClick={handleTopDoubleClick}
+          onTouchEnd={handleTopDoubleTap}
+          className="absolute top-2 right-4 text-xl filter drop-shadow-xs select-none z-30 transition-transform hover:scale-110 active:scale-95 cursor-pointer touch-manipulation"
+          title={isFullScreen ? "Exit Full Screen" : "Toggle Full Screen"}
+        >
+          📌
+        </div>
 
-      {/* 3. The Authentic Sticky Note Paper Card */}
-      <div 
-        className={`relative p-5 sm:p-6 rounded-3xl border shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden ${theme.bg} ${theme.border} ${theme.text}`}
-      >
+        {/* 3. The Authentic Sticky Note Paper Card */}
+        <div 
+          className={`relative p-5 sm:p-6 rounded-3xl border shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden ${theme.bg} ${theme.border} ${theme.text}`}
+        >
         {/* Lined Paper Lines Background */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
@@ -304,9 +367,14 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           }}
         />
 
-        {/* Card Header */}
-        <div className="flex items-start justify-between gap-3 pb-3 border-b border-black/10 dark:border-white/10 relative z-10">
-          <div>
+        {/* Card Header - Double tap / click to toggle full screen */}
+        <div 
+          onDoubleClick={handleTopDoubleClick}
+          onTouchEnd={handleTopDoubleTap}
+          className="flex items-start justify-between gap-3 pb-3 border-b border-black/10 dark:border-white/10 relative z-10 cursor-pointer touch-manipulation select-none"
+          title={isFullScreen ? "Double tap to exit full screen" : "Double tap to view full screen"}
+        >
+          <div className="pointer-events-none">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-extrabold text-sm sm:text-base uppercase tracking-tight flex items-center gap-1.5">
                 {category?.title} {language === 'am' ? 'የትኩረት ዕቅዶች' : 'Focus Blocks & Daily Intentions'}
@@ -325,11 +393,14 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
             </p>
           </div>
 
-          {/* Top Actions: Add Button & Color Switcher */}
-          <div className="flex items-center gap-1.5 pr-6 relative">
+          {/* Top Actions: Add Button, Color Switcher & Full Screen */}
+          <div className="flex items-center gap-1.5 pr-6 relative z-20">
             <button
               type="button"
-              onClick={() => setIsAdding(!isAdding)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAdding(!isAdding);
+              }}
               className={`p-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                 isAdding ? 'bg-black/15 dark:bg-white/20' : 'bg-black/5 hover:bg-black/10 dark:bg-white/10'
               }`}
@@ -341,11 +412,28 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
 
             <button
               type="button"
-              onClick={() => setShowColorPalette(!showColorPalette)}
-              className="p-1.5 rounded-xl opacity-70 hover:opacity-100 transition cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowColorPalette(!showColorPalette);
+              }}
+              className="p-1.5 min-w-[28px] min-h-[28px] rounded-xl opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center"
               title="Change Sticky Note Color"
             >
               <Palette size={14} />
+            </button>
+
+            {/* Full Screen Symbol Button - Beside color palette */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullScreen(!isFullScreen);
+              }}
+              className="p-1.5 min-w-[28px] min-h-[28px] rounded-xl opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center text-current"
+              title={isFullScreen ? "Exit Full Screen" : "View Full Screen"}
+              aria-label="Toggle Full Screen"
+            >
+              {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
 
             {/* Color Palette Popover */}
@@ -355,7 +443,8 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                   <button
                     key={cKey}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setCategoryStickyNoteColor(categoryId, cKey);
                       setShowColorPalette(false);
                     }}
@@ -628,6 +717,22 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           </form>
         )}
       </div>
+      </div>
+
+      {/* Floating exit full-screen pill on mobile / desktop */}
+      {isFullScreen && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <button
+            type="button"
+            onClick={() => setIsFullScreen(false)}
+            className="px-4 py-2 rounded-full bg-black/85 hover:bg-black text-white dark:bg-white/95 dark:text-black dark:hover:bg-white text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer border border-white/20"
+            title="Exit Full Screen"
+          >
+            <Minimize2 size={13} />
+            <span>{language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen'}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

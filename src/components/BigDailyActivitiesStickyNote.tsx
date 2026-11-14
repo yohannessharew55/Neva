@@ -199,6 +199,47 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
+  // Double-tap & double-click tracking for sticky note top area
+  const lastClickTimeRef = useRef<number>(0);
+  const justToggledRef = useRef<number>(0);
+
+  const handleTopDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    // Don't toggle if tapping directly on interactive controls (button, select, input, a, etc.)
+    if (target.closest('button, select, input, a, [role="button"]')) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLast = now - lastClickTimeRef.current;
+    if (timeSinceLast > 30 && timeSinceLast < 450) {
+      lastClickTimeRef.current = 0;
+      justToggledRef.current = now;
+      setIsFullScreen((prev) => !prev);
+      try {
+        soundEngine.playPencil();
+      } catch {}
+    } else {
+      lastClickTimeRef.current = now;
+    }
+  };
+
+  const handleTopDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, select, input, a, [role="button"]')) {
+      return;
+    }
+    // Prevent double toggle if handleTopDoubleTap already triggered
+    if (Date.now() - justToggledRef.current < 600) {
+      return;
+    }
+    justToggledRef.current = Date.now();
+    setIsFullScreen((prev) => !prev);
+    try {
+      soundEngine.playPencil();
+    } catch {}
+  };
+
   // Full Screen Scroll Lock and Escape Key handling
   useEffect(() => {
     if (!isFullScreen) return;
@@ -687,26 +728,35 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   return (
     <div className={
       isFullScreen
-        ? "fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
+        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
         : "relative w-full max-w-2xl mx-auto my-2 group/stickymaster"
     }>
-      <div className={isFullScreen ? "relative w-full max-w-3xl my-auto py-2" : "relative w-full"}>
-        {/* 1. Translucent Frosted Washi Tape (Compact scale) */}
+      <div className={isFullScreen ? "relative w-full max-w-3xl py-2 sm:py-6 my-2 sm:my-4" : "relative w-full"}>
+        {/* 1. Translucent Frosted Washi Tape (Double tap / click toggles full screen) */}
         <div 
-          className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center ${theme.tapeBg} ${theme.tapeBorder}`}
-          title="Pinned to Desk"
+          onClick={handleTopDoubleTap}
+          onDoubleClick={handleTopDoubleClick}
+          className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center cursor-pointer touch-manipulation active:scale-95 transition-transform ${theme.tapeBg} ${theme.tapeBorder}`}
+          title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double Tap to Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double Tap to View Full Screen')}
         >
-          <span className="text-[8px] tracking-[0.2em] font-mono font-bold uppercase opacity-60">
+          <span className="text-[8px] tracking-[0.2em] font-mono font-bold uppercase opacity-60 pointer-events-none">
             {language === 'am' ? 'የዕለት ተግባራት' : 'DAILY TO-DO'}
           </span>
         </div>
 
-        {/* 2. Pushpin on Top Right */}
+        {/* 2. Pushpin on Top Right (Click or double tap toggles full screen) */}
         <div 
-          className="absolute top-1.5 right-4 sm:right-6 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95"
-          title="Pinned Desk Note"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsFullScreen((prev) => !prev);
+            try { soundEngine.playPencil(); } catch {}
+          }}
+          onDoubleClick={handleTopDoubleClick}
+          onTouchEnd={handleTopDoubleTap}
+          className="absolute top-1.5 right-3 sm:right-5 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95 touch-manipulation"
+          title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Toggle Full Screen')}
         >
-          <span className="text-lg sm:text-xl">📌</span>
+          <span className="text-lg sm:text-xl pointer-events-none">📌</span>
         </div>
 
         {/* 3. The Stationary Classic Sticky Note Card */}
@@ -729,10 +779,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           }}
         />
 
-        {/* Header */}
-        <div className="relative z-10 border-b border-black/10 dark:border-white/10 pb-2.5 mb-2.5">
-          <div className="flex items-center justify-between gap-2 pr-6">
-            <div>
+        {/* Header - Double tap or double click anywhere on top of sticky note card to toggle full screen */}
+        <div 
+          onClick={handleTopDoubleTap}
+          onDoubleClick={handleTopDoubleClick}
+          className="relative z-10 border-b border-black/10 dark:border-white/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none"
+          title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to view full screen')}
+        >
+          <div className="flex items-center justify-between gap-2 pr-7 sm:pr-8">
+            <div className="pointer-events-none">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[9px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10">
                   {dateBanner}
@@ -750,16 +805,19 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </h2>
             </div>
 
-            {/* Palette Controls */}
-            <div className="flex items-center gap-1.5">
+            {/* Palette & Full-Screen Controls */}
+            <div className="flex items-center gap-1.5 relative z-20">
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowColorPalette(!showColorPalette)}
-                  className="p-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowColorPalette(!showColorPalette);
+                  }}
+                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 flex items-center justify-center"
                   title="Change Color"
                 >
-                  <Palette size={13} />
+                  <Palette size={14} />
                 </button>
 
                 {showColorPalette && (
@@ -768,7 +826,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       <button
                         key={cKey}
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setDailyStickyColor(cKey);
                           setShowColorPalette(false);
                         }}
@@ -786,22 +845,29 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               {/* Full Screen Symbol Button - On the side of color palette, symbol only */}
               <button
                 type="button"
-                onClick={() => setIsFullScreen(!isFullScreen)}
-                className="p-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFullScreen(!isFullScreen);
+                  try { soundEngine.playPencil(); } catch {}
+                }}
+                className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center relative z-20"
                 title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
                 aria-label="Toggle Full Screen"
               >
-                {isFullScreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
               </button>
 
               {onClose && (
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="p-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                  }}
+                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
                   title={language === 'am' ? 'ዝጋ' : 'Close'}
                 >
-                  <X size={13} />
+                  <X size={14} />
                 </button>
               )}
             </div>
@@ -1605,6 +1671,24 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         </div>
       </div>
       </div>
+
+      {/* Floating exit full-screen pill on mobile / desktop */}
+      {isFullScreen && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <button
+            type="button"
+            onClick={() => {
+              setIsFullScreen(false);
+              try { soundEngine.playPencil(); } catch {}
+            }}
+            className="px-4 py-2 rounded-full bg-black/85 hover:bg-black text-white dark:bg-white/95 dark:text-black dark:hover:bg-white text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer border border-white/20"
+            title="Exit Full Screen"
+          >
+            <Minimize2 size={13} />
+            <span>{language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen'}</span>
+          </button>
+        </div>
+      )}
 
       <DayDefaultsModal
         isOpen={showDefaultsModal}
