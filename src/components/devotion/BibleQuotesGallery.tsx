@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, Copy, Check, Star, BookOpen, ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -35,6 +35,16 @@ export const BibleQuotesGallery: React.FC<BibleQuotesGalleryProps> = ({
     });
   };
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (typeof e.detail?.collapsed === 'boolean') {
+        setIsCollapsed(e.detail.collapsed);
+      }
+    };
+    window.addEventListener('neva-toggle-all-devotion-sections', handler);
+    return () => window.removeEventListener('neva-toggle-all-devotion-sections', handler);
+  }, []);
+
   const handleCopy = (verse: BibleVerse) => {
     const text = `"${verse.textEn}"\n"${verse.textAm}"\n— ${verse.refEn} (${verse.refAm})`;
     navigator.clipboard.writeText(text);
@@ -49,62 +59,49 @@ export const BibleQuotesGallery: React.FC<BibleQuotesGalleryProps> = ({
   });
 
   return (
-    <div className="w-full space-y-4">
-      {/* BUNCH OF DAILY QUOTES GALLERY */}
-      <div className="space-y-4 pt-1">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+    <div className="w-full bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden transition-all duration-300">
+      {/* Unified Card Header */}
+      <div 
+        onClick={toggleCollapse}
+        className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold shadow-2xs shrink-0">
             <span className="text-xl">📚</span>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <span>{language === 'am' ? 'የዕለቱ የመጽሐፍ ቅዱስ ጥቅሶች ስብስብ' : 'Bunch of Daily Bible Quotes'}</span>
-                <span className="text-xs font-mono font-bold text-slate-400">
-                  ({filteredVerses.length})
-                </span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {language === 'am' 
-                  ? 'የተመረጡ ቅዱሳት ጥቅሶችን በዘርፍ መመልከትና ለልብ ማሰላሰል መምረጥ' 
-                  : 'Browse a rich bunch of inspirational scriptures categorized by theme.'}
-              </p>
-            </div>
           </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የዕለቱ የመጽሐፍ ቅዱስ ጥቅሶች ስብስብ' : 'Bunch of Daily Bible Quotes'}
+              </h3>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-[#a855f7] border border-purple-200/80 dark:border-purple-900/40 shrink-0">
+                {filteredVerses.length} {language === 'am' ? 'ጥቅሶች' : 'Verses'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+              {isCollapsed ? 'Themed inspirational scriptures on Peace, Faith, Strength, and Wisdom' : (language === 'am' ? 'የተመረጡ ቅዱሳት ጥቅሶችን በዘርፍ መመልከትና ለልብ ማሰላሰል መምረጥ' : 'Browse inspirational scriptures categorized by theme')}
+            </p>
+          </div>
+        </div>
 
-          {/* Section Expand/Collapse Chevron Button */}
+        {/* Section Expand/Collapse Chevron Button */}
+        <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             onClick={toggleCollapse}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0 self-start sm:self-auto"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
             title={isCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
           >
             {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
           </button>
         </div>
+      </div>
 
-        {/* Collapsed State or Full Quotes Gallery */}
-        {isCollapsed ? (
-          <div 
-            onClick={toggleCollapse}
-            className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
-          >
-            <div className="flex items-center gap-2 truncate">
-              <span className="text-base">📚</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {filteredVerses.length} {language === 'am' ? 'የተመረጡ ጥቅሶች' : 'Inspirational Scripture Quotes'}
-              </span>
-              <span className="truncate opacity-75">
-                • Categorized by Faith, Peace, Strength, and Wisdom
-              </span>
-            </div>
-            <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
-              <span>{language === 'am' ? 'ዘርጋ' : 'Expand Gallery'}</span>
-              <ChevronDown size={14} />
-            </span>
-          </div>
-        ) : (
-          <>
-            {/* Category Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-bold no-scrollbar">
+      {/* Card Content (Only visible when expanded) */}
+      {!isCollapsed && (
+        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-slate-800/60 space-y-4">
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-bold no-scrollbar pt-3">
               {BIBLE_THEMES_FILTER.map((theme) => {
                 const isActive = activeCategory === theme.id;
                 return (
@@ -180,9 +177,8 @@ export const BibleQuotesGallery: React.FC<BibleQuotesGalleryProps> = ({
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
-    </div>
   );
 };

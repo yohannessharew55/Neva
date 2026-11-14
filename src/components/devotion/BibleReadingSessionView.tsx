@@ -49,6 +49,16 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
     });
   };
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (typeof e.detail?.collapsed === 'boolean') {
+        setIsCollapsed(e.detail.collapsed);
+      }
+    };
+    window.addEventListener('neva-toggle-all-devotion-sections', handler);
+    return () => window.removeEventListener('neva-toggle-all-devotion-sections', handler);
+  }, []);
+
   // Past Reading Sessions stored in localStorage
   const [readingSessions, setReadingSessions] = useState<BibleReadingSession[]>(() => {
     try {
@@ -188,35 +198,41 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
   const totalChaptersRead = readingSessions.reduce((sum, s) => sum + Math.max(1, s.chapterEnd - s.chapterStart + 1), 0);
 
   return (
-    <div className="w-full space-y-6">
-      {/* Top Header & Reading Metrics Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold shadow-xs">
+    <div className="w-full bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden transition-all duration-300">
+      {/* Unified Card Header */}
+      <div 
+        onClick={toggleCollapse}
+        className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold shadow-2xs shrink-0">
             <BookOpen size={20} />
           </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-              {language === 'am' ? 'የመጽሐፍ ቅዱስ ንባብ ክፍለ-ጊዜ' : 'Bible Reading Session & Immersion'}
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' 
-                ? 'የቅዱሳት መጻሕፍት ንባብ ጊዜን መመደብ፣ ማሰላሰልና የንባብ እድገትን መከታተል' 
-                : 'Dedicated Scripture reading time with immersive timer and automatic weekly tracking.'}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የመጽሐፍ ቅዱስ ንባብ ክፍለ-ጊዜ' : 'Bible Reading Session & Immersion'}
+              </h2>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-[#a855f7] border border-purple-200/80 dark:border-purple-900/40 shrink-0">
+                {selectedBook} {chapterStart}{chapterEnd > chapterStart ? `-${chapterEnd}` : ''}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+              {isCollapsed ? `${timerMinutes}m immersion timer • ${totalChaptersRead} chapters read (${totalReadingHours}h logged)` : (language === 'am' ? 'የቅዱሳት መጻሕፍት ንባብ ጊዜን መመደብና የንባብ እድገትን መከታተል' : 'Dedicated Scripture reading timer and automatic tracking')}
             </p>
           </div>
         </div>
 
         {/* Live Reading Metrics Counter & Expand/Collapse Icon */}
-        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          <div className="px-3 py-1.5 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-2 text-xs font-bold">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="px-3 py-1.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-2 text-xs font-bold">
             <Flame size={14} className="text-amber-500" />
             <span className="text-slate-600 dark:text-slate-300">
               {totalChaptersRead} {language === 'am' ? 'ምዕራፎች' : 'Chapters'}
             </span>
             <span className="opacity-30">•</span>
             <span className="text-purple-600 dark:text-purple-400 font-mono">
-              {totalReadingHours}h {language === 'am' ? 'ጠቅላላ' : 'Total'}
+              {totalReadingHours}h
             </span>
           </div>
 
@@ -231,28 +247,9 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
         </div>
       </div>
 
-      {/* Collapsed State or Full Reading Content */}
-      {isCollapsed ? (
-        <div 
-          onClick={toggleCollapse}
-          className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
-        >
-          <div className="flex items-center gap-2 truncate">
-            <span className="text-base">📖</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">
-              {selectedBook} {chapterStart}{chapterEnd > chapterStart ? `-${chapterEnd}` : ''}
-            </span>
-            <span className="truncate opacity-75">
-              • {timerMinutes} min immersion timer • {totalReadingHours}h logged total
-            </span>
-          </div>
-          <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
-            <span>{language === 'am' ? 'ዘርጋ' : 'Expand Session'}</span>
-            <ChevronDown size={14} />
-          </span>
-        </div>
-      ) : (
-        <>
+      {/* Card Content (Only visible when expanded) */}
+      {!isCollapsed && (
+        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-slate-800/60 space-y-6">
           {/* Main Grid: Reading Setup & Timer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -523,8 +520,8 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
           ))}
         </div>
       </div>
-      </>
-      )}
     </div>
+  )}
+</div>
   );
 };

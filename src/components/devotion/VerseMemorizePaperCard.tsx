@@ -50,6 +50,16 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
     });
   };
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (typeof e.detail?.collapsed === 'boolean') {
+        setIsCollapsed(e.detail.collapsed);
+      }
+    };
+    window.addEventListener('neva-toggle-all-devotion-sections', handler);
+    return () => window.removeEventListener('neva-toggle-all-devotion-sections', handler);
+  }, []);
+
   // Custom Verses added by user
   const [customVerses, setCustomVerses] = useState<BibleVerse[]>(() => {
     try {
@@ -203,28 +213,35 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
   const memorizedVersesList = allVersesLookup.filter((v) => memorizedIds.includes(v.id));
 
   return (
-    <div className="w-full space-y-4">
-      {/* Top Bar: Title, Add Custom Verse & Memorized Counter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">📜</span>
-          <div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span>{language === 'am' ? 'የዕለቱ ቃል ለማስታወስ (ካርድ ወረቀት)' : 'Verse of the Day Card Paper'}</span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                {currentVerse.theme}
+    <div className="w-full">
+      {/* Unified Card Container */}
+      <div className="w-full bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden transition-all duration-300">
+        {/* Unified Card Header */}
+      <div 
+        onClick={toggleCollapse}
+        className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold shadow-2xs shrink-0">
+            <span className="text-xl">📜</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የዕለቱ ቃል በካርድ ወረቀት' : 'Verse Card Paper'}
+              </h2>
+              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 shrink-0">
+                {currentVerse.refEn} • {currentVerse.theme}
               </span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' ? 'የእግዚአብሔርን ቃል በልብ ለማኖርና በቃለ-ቃል ለመሸምደድ' : 'Internalize Scripture into your heart with tactile card paper'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+              {isCollapsed ? `"${currentVerse.textEn.slice(0, 80)}..."` : (language === 'am' ? 'ቃሉን በልብ ለማኖርና በቃለ-ቃል ለመሸምደድ' : 'Interactive Scripture memorization with tactile paper')}
             </p>
           </div>
         </div>
 
-        {/* Right Header Actions: Add Custom Verse, Mode & Memorized Counter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          
-          {/* Button: Add Custom Quote from Bible (Copy & Paste) */}
+        {/* Header Controls */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             onClick={() => setIsAddCustomModalOpen(true)}
@@ -250,19 +267,18 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
               <button
                 key={colorKey}
                 onClick={() => setPaperColor(colorKey)}
-                className={`w-4 h-4 rounded-full transition-transform cursor-pointer ${
+                className={`w-3.5 h-3.5 rounded-full transition-transform cursor-pointer ${
                   colorKey === 'parchment' ? 'bg-[#ebd9b4]' : colorKey === 'canary' ? 'bg-[#fef08a]' : colorKey === 'mint' ? 'bg-[#bbf7d0]' : 'bg-[#fecdd3]'
-                } ${paperColor === colorKey ? 'scale-125 ring-2 ring-purple-500 ring-offset-1' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
+                } ${paperColor === colorKey ? 'scale-125 ring-2 ring-purple-500 ring-offset-1' : 'hover:scale-110 opacity-70'}`}
                 title={`Paper color: ${colorKey}`}
               />
             ))}
           </div>
 
-          {/* Section Expand/Collapse Chevron Button */}
           <button
             type="button"
             onClick={toggleCollapse}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer"
             title={isCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
           >
             {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
@@ -270,28 +286,9 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
         </div>
       </div>
 
-      {/* Collapsed State or Full Paper Content */}
-      {isCollapsed ? (
-        <div 
-          onClick={toggleCollapse}
-          className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
-        >
-          <div className="flex items-center gap-2 truncate">
-            <span className="text-base">📜</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">
-              {currentVerse.refEn} ({currentVerse.refAm})
-            </span>
-            <span className="truncate opacity-75">
-              — "{currentVerse.textEn.slice(0, 80)}..."
-            </span>
-          </div>
-          <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
-            <span>{language === 'am' ? 'ዘርጋ' : 'Expand Paper'}</span>
-            <ChevronDown size={14} />
-          </span>
-        </div>
-      ) : (
-        <>
+      {/* Card Content (Only visible when expanded) */}
+      {!isCollapsed && (
+        <div className="p-4 sm:p-6 pt-0 border-t border-slate-100 dark:border-slate-800/60 space-y-4">
           {/* Memorization Mode Pill Switcher (3 Modes: Full Text, Word Blanks, Flashcard Flip) */}
       <div className="flex items-center justify-between gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto text-xs font-bold">
         <div className="flex items-center gap-1">
@@ -525,8 +522,9 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
           </div>
         </div>
       </div>
-      </>
-      )}
+    </div>
+  )}
+</div>
 
       {/* Modal: Add & Paste Custom Bible Verse */}
       {isAddCustomModalOpen && (

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Copy, Check, Bookmark, 
   Sparkles, Layers
@@ -46,6 +46,16 @@ export const BibleQuoteHeroCard: React.FC<BibleQuoteHeroCardProps> = ({
       return next;
     });
   };
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (typeof e.detail?.collapsed === 'boolean') {
+        setIsCollapsed(e.detail.collapsed);
+      }
+    };
+    window.addEventListener('neva-toggle-all-devotion-sections', handler);
+    return () => window.removeEventListener('neva-toggle-all-devotion-sections', handler);
+  }, []);
 
   // Touch swipe support for mobile
   const touchStartXRef = useRef<number | null>(null);
