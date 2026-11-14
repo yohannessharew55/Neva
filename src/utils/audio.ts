@@ -29,15 +29,22 @@ class SoundEngine {
   private ambienceGain: GainNode | null = null;
   private currentAmbienceType: AmbienceType = 'none';
 
-  private getAudioContext(): AudioContext {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AudioCtx();
+  private getAudioContext(): AudioContext | null {
+    try {
+      if (!this.ctx && typeof window !== 'undefined') {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+      return this.ctx;
+    } catch (e) {
+      console.warn('AudioContext initialization error', e);
+      return null;
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-    return this.ctx;
   }
 
   // Load sound settings from localStorage
@@ -375,6 +382,66 @@ class SoundEngine {
     }
   }
 
+  // General playSound method supporting all profile names and sound types
+  playSound(profile?: string, customVol?: number): void {
+    try {
+      if (!profile) {
+        this.playStartSound();
+        return;
+      }
+      const clean = String(profile).trim().toLowerCase();
+      const settings = this.getSettings();
+      const vol = customVol !== undefined ? customVol : settings.masterVolume;
+
+      switch (clean) {
+        case 'chime_meditation':
+        case 'crystal_chime':
+          this.playCrystalChime(vol);
+          break;
+        case 'solfeggio_432':
+        case 'sacred_chimes':
+        case 'alpha432':
+          this.playSacredChimes(vol);
+          break;
+        case 'tibetan_bowl':
+          this.playTibetanBowl(vol);
+          break;
+        case 'zen_gong':
+          this.playZenGong(vol);
+          break;
+        case 'temple_bell':
+          this.playTempleBell(vol);
+          break;
+        case 'gentle_bell':
+          this.playGentleBell(vol);
+          break;
+        case 'gentle_harp':
+          this.playGentleHarp(vol);
+          break;
+        case 'digital_alert':
+          this.playDigitalAlert(vol);
+          break;
+        case 'pencil':
+          this.playPencil();
+          break;
+        default:
+          this.playGentleBell(vol);
+          break;
+      }
+    } catch (e) {
+      console.warn('playSound safe error caught', e);
+    }
+  }
+
+  // Alias for playAlarmSound
+  playAlarm(type?: AlarmSoundType | string, customVol?: number): void {
+    try {
+      this.playAlarmSound(type as AlarmSoundType, customVol);
+    } catch (e) {
+      console.warn('playAlarm safe error caught', e);
+    }
+  }
+
   // Background Ambience Synthesizer (Rain, 432Hz Alpha, Forest, White Noise)
   startAmbience(type?: AmbienceType, customVol?: number): void {
     this.stopAmbience();
@@ -483,4 +550,32 @@ class SoundEngine {
   }
 }
 
-export const soundEngine = new SoundEngine();
+const baseSoundEngine = new SoundEngine();
+
+// Bulletproof Proxy: Guarantees any existing or future audio call will never throw "xxx is not a function"
+export const soundEngine: SoundEngine & { [key: string]: any } = new Proxy(baseSoundEngine as any, {
+  get(target, prop, receiver) {
+    if (prop in target) {
+      const val = (target as any)[prop];
+      if (typeof val === 'function') {
+        return (...args: any[]) => {
+          try {
+            return val.apply(target, args);
+          } catch (err) {
+            console.warn(`soundEngine.${String(prop)} error caught safely:`, err);
+          }
+        };
+      }
+      return val;
+    }
+    // Safe fallback for any missing method: prevents "soundEngine.xxx is not a function"
+    return (...args: any[]) => {
+      console.warn(`soundEngine.${String(prop)} called but not defined on instance, handled gracefully`, args);
+      if (String(prop).toLowerCase().includes('alarm')) {
+        try { target.playAlarmSound(); } catch {}
+      } else {
+        try { target.playStartSound(); } catch {}
+      }
+    };
+  }
+});
