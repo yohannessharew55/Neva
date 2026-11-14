@@ -1178,7 +1178,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       >
                         <SubjectIcon size={12} />
                       </div>
-                      <span className={`text-xs font-black uppercase tracking-wider whitespace-nowrap ${
+                      <span className={`text-xs font-black uppercase tracking-wider whitespace-nowrap shrink-0 ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}>
                         {group.translatedTitle}

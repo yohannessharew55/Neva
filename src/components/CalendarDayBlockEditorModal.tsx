@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Check, Edit2, Trash2, Plus, Clock, Swords, Dumbbell, Palette, 
   Music, Building2, TrendingUp, BookOpen, Shield, Sparkles, CheckSquare,
-  AlertCircle, ArrowRight
+  AlertCircle, ArrowRight, RotateCcw
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -28,6 +28,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     categoryPlans, 
     getDaySchedule, 
     materializeDaySchedule,
+    resetDayScheduleToDefault,
     applyTaskActionWithScope 
   } = useLivotion();
 
@@ -230,9 +231,23 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                 {language === 'am' ? 'የቀኑ ብሎኮችና ተግባራት' : 'Edit Day Schedule Blocks'}
               </h3>
               {isCustomDay && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 font-bold">
-                  ⭐ {language === 'am' ? 'ልዩ ሰሌዳ' : 'Custom'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 font-bold">
+                    ⭐ {language === 'am' ? 'ልዩ ሰሌዳ' : 'Custom'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetDayScheduleToDefault(dateStr);
+                      try { soundEngine.playPencil(); } catch {}
+                    }}
+                    className="text-[10px] font-bold text-slate-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded-lg transition flex items-center gap-1 cursor-pointer border border-amber-200 dark:border-amber-800"
+                    title={language === 'am' ? 'ወደ ነባሪ ሰሌዳ መልስ' : 'Reset this day to default routine'}
+                  >
+                    <RotateCcw size={10} />
+                    <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
+                  </button>
+                </div>
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">

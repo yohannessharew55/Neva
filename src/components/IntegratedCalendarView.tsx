@@ -14,7 +14,6 @@ import {
   AMHARIC_DAYS, 
   formatDualDate 
 } from '../utils/ethiopianCalendar';
-import { BigDailyActivitiesStickyNote } from './BigDailyActivitiesStickyNote';
 import { DayDefaultsModal } from './DayDefaultsModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { CalendarDayBlockEditorModal } from './CalendarDayBlockEditorModal';
@@ -129,7 +128,6 @@ export const IntegratedCalendarView: React.FC = () => {
   const [selectedEthYear, setSelectedEthYear] = useState<number>(todayEth.year);
   const [selectedEthMonth, setSelectedEthMonth] = useState<number>(todayEth.month);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
-  const [showStickyModal, setShowStickyModal] = useState(false);
   const [calendarBlockEditorState, setCalendarBlockEditorState] = useState<{
     isOpen: boolean;
     date: Date;
@@ -681,12 +679,18 @@ export const IntegratedCalendarView: React.FC = () => {
                 </span>
               </div>
               <button
-                onClick={() => setShowStickyModal(true)}
-                className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-amber-100 transition"
-                title="Open Daily Sticky Note"
+                onClick={() => {
+                  setCalendarBlockEditorState({
+                    isOpen: true,
+                    date: selectedDate,
+                    taskId: null,
+                  });
+                }}
+                className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-[#0082ff] rounded-2xl text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-blue-100 transition"
+                title="Edit Blocks & Schedule for this Day"
               >
-                <span>⭐</span>
-                <span className="hidden sm:inline">{language === 'am' ? 'ስቲኪ ማስታወሻ' : 'Daily Sticky'}</span>
+                <Edit3 size={13} />
+                <span className="hidden sm:inline">{language === 'am' ? 'ዕለቱን አቅድ / ቀይር' : 'Plan / Edit Blocks'}</span>
               </button>
             </div>
           </div>
@@ -1149,7 +1153,11 @@ export const IntegratedCalendarView: React.FC = () => {
                     key={idx}
                     onClick={() => {
                       setSelectedDate(dayDate);
-                      handleSelectHorizon('daily');
+                      setCalendarBlockEditorState({
+                        isOpen: true,
+                        date: dayDate,
+                        taskId: null,
+                      });
                     }}
                     className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
                       isSelected
@@ -1548,6 +1556,11 @@ export const IntegratedCalendarView: React.FC = () => {
                     key={dayItem.ethDay}
                     onClick={() => {
                       setSelectedDate(dayItem.gregDate);
+                      setCalendarBlockEditorState({
+                        isOpen: true,
+                        date: dayItem.gregDate,
+                        taskId: null,
+                      });
                     }}
                     className={`min-h-[75px] sm:min-h-[95px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
@@ -1649,35 +1662,6 @@ export const IntegratedCalendarView: React.FC = () => {
               })}
             </div>
           </div>
-
-          {/* Selected Day Sticky Note & Blocks Inline (Matching User Screenshot) */}
-          {selectedDate && (
-            <div className="space-y-4 pt-3 border-t border-slate-200/80 dark:border-slate-800 animate-fadeIn">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📌</span>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    {language === 'am' ? 'የተመረጠው ቀን ስቲኪ ማስታወሻና ብሎኮች' : 'SELECTED DAY STICKY NOTE & BLOCKS'}
-                  </span>
-                  <span className="text-xs font-mono font-bold text-[#0082ff]">
-                    ({formatDualDate(selectedDate).gregorianStr})
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDate(null)}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                >
-                  Close (X)
-                </button>
-              </div>
-
-              <BigDailyActivitiesStickyNote
-                targetDate={selectedDate}
-                onClose={() => setSelectedDate(null)}
-              />
-            </div>
-          )}
         </div>
       )}
 
@@ -2081,36 +2065,6 @@ export const IntegratedCalendarView: React.FC = () => {
                 </button>
               </form>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* 7. DAILY STICKY NOTE MODAL / OVERLAY */}
-      {/* ========================================================= */}
-      {showStickyModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 w-full max-w-2xl rounded-3xl p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">⭐</span>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                  {language === 'am' ? 'የዕለቱ ስቲኪ ማስታወሻ' : 'Daily Sticky Note & Reflection'}
-                </h3>
-                <span className="text-xs text-slate-400 font-mono">({formatDualDate(selectedDate).gregorianStr})</span>
-              </div>
-              <button
-                onClick={() => setShowStickyModal(false)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <BigDailyActivitiesStickyNote
-              targetDate={selectedDate}
-              onClose={() => setShowStickyModal(false)}
-            />
           </div>
         </div>
       )}
