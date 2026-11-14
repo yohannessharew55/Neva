@@ -216,13 +216,13 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
 
   const handleTopDoubleTap = (e: React.TouchEvent | React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button, select, input, a, [role="button"]')) {
+    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
 
     const now = Date.now();
     const timeSinceLast = now - lastTapTimeRef.current;
-    if (timeSinceLast > 30 && timeSinceLast < 400) {
+    if (timeSinceLast > 30 && timeSinceLast < 450) {
       lastTapTimeRef.current = 0;
       lastTouchToggleRef.current = now;
       setIsFullScreen((prev) => !prev);
@@ -233,10 +233,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
 
   const handleTopDoubleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button, select, input, a, [role="button"]')) {
+    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    if (Date.now() - lastTouchToggleRef.current < 700) {
+    if (Date.now() - lastTouchToggleRef.current < 600) {
       return;
     }
     setIsFullScreen((prev) => !prev);
@@ -312,7 +312,14 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   };
 
   return (
-    <div className={
+    <div 
+      onClick={(e) => {
+        // Tapping the dark backdrop outside the paper exits full screen
+        if (isFullScreen && e.target === e.currentTarget) {
+          setIsFullScreen(false);
+        }
+      }}
+      className={
       isFullScreen
         ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-md pt-[max(env(safe-area-inset-top),16px)] pb-[max(env(safe-area-inset-bottom),24px)] px-2.5 sm:px-4 flex flex-col items-center justify-start animate-in fade-in duration-200"
         : `relative transition-all duration-300 group/sticky ${className}`
@@ -341,8 +348,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           📌
         </div>
 
-        {/* 3. The Authentic Sticky Note Paper Card - Expanded Up and Down in Full Screen */}
+        {/* 3. The Authentic Sticky Note Paper Card - Double tap on clear area toggles full screen */}
         <div 
+          onClick={handleTopDoubleTap}
+          onDoubleClick={handleTopDoubleClick}
           className={`relative p-5 sm:p-6 rounded-3xl border shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} ${theme.bg} ${theme.border} ${theme.text}`}
         >
         {/* Lined Paper Lines Background */}
@@ -718,21 +727,6 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
         )}
       </div>
       </div>
-
-      {/* Floating exit full-screen pill on mobile / desktop */}
-      {isFullScreen && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <button
-            type="button"
-            onClick={() => setIsFullScreen(false)}
-            className="px-4 py-2 rounded-full bg-black/85 hover:bg-black text-white dark:bg-white/95 dark:text-black dark:hover:bg-white text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer border border-white/20"
-            title="Exit Full Screen"
-          >
-            <Minimize2 size={13} />
-            <span>{language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen'}</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 };

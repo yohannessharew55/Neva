@@ -199,14 +199,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
-  // Double-tap & double-click tracking for sticky note top area
+  // Double-tap & double-click tracking for sticky note paper area
   const lastClickTimeRef = useRef<number>(0);
   const justToggledRef = useRef<number>(0);
 
-  const handleTopDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
+  const handlePaperDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
     const target = e.target as HTMLElement;
-    // Don't toggle if tapping directly on interactive controls (button, select, input, a, etc.)
-    if (target.closest('button, select, input, a, [role="button"]')) {
+    // Don't toggle if tapping directly on interactive controls (button, select, input, textarea, a, form, etc.)
+    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
 
@@ -224,12 +224,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     }
   };
 
-  const handleTopDoubleClick = (e: React.MouseEvent) => {
+  const handlePaperDoubleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button, select, input, a, [role="button"]')) {
+    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    // Prevent double toggle if handleTopDoubleTap already triggered
+    // Prevent double toggle if handlePaperDoubleTap already triggered
     if (Date.now() - justToggledRef.current < 600) {
       return;
     }
@@ -239,6 +239,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       soundEngine.playPencil();
     } catch {}
   };
+
+  const handleTopDoubleTap = handlePaperDoubleTap;
+  const handleTopDoubleClick = handlePaperDoubleClick;
 
   // Full Screen Scroll Lock and Escape Key handling
   useEffect(() => {
@@ -726,7 +729,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   return (
-    <div className={
+    <div 
+      onClick={(e) => {
+        // Tapping the dark backdrop outside the paper exits full screen
+        if (isFullScreen && e.target === e.currentTarget) {
+          setIsFullScreen(false);
+          try { soundEngine.playPencil(); } catch {}
+        }
+      }}
+      className={
       isFullScreen
         ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-md pt-[max(env(safe-area-inset-top),16px)] pb-[max(env(safe-area-inset-bottom),24px)] px-2.5 sm:px-4 flex flex-col items-center justify-start animate-in fade-in duration-200"
         : "relative w-full max-w-2xl mx-auto my-2 group/stickymaster"
@@ -759,9 +770,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           <span className="text-lg sm:text-xl pointer-events-none">📌</span>
         </div>
 
-        {/* 3. The Stationary Classic Sticky Note Card - Expanded Up and Down in Full Screen */}
+        {/* 3. The Stationary Classic Sticky Note Card - Double tap on clear area toggles full screen */}
         <div 
+          onClick={handlePaperDoubleTap}
+          onDoubleClick={handlePaperDoubleClick}
           className={`relative w-full ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
+          title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to expand full screen')}
           style={{
             boxShadow: isFullScreen
               ? `0 25px 50px -12px ${theme.shadowColor}, 0 10px 25px -5px rgba(0,0,0,0.3)`
@@ -1671,24 +1685,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         </div>
       </div>
       </div>
-
-      {/* Floating exit full-screen pill on mobile / desktop */}
-      {isFullScreen && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[10000] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <button
-            type="button"
-            onClick={() => {
-              setIsFullScreen(false);
-              try { soundEngine.playPencil(); } catch {}
-            }}
-            className="px-4 py-2 rounded-full bg-black/85 hover:bg-black text-white dark:bg-white/95 dark:text-black dark:hover:bg-white text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer border border-white/20"
-            title="Exit Full Screen"
-          >
-            <Minimize2 size={13} />
-            <span>{language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen'}</span>
-          </button>
-        </div>
-      )}
 
       <DayDefaultsModal
         isOpen={showDefaultsModal}
