@@ -39,7 +39,7 @@ export const CategoryDetailView: React.FC = () => {
   const [showEditDailyModal, setShowEditDailyModal] = useState(false);
   const [showEditWeeklyModal, setShowEditWeeklyModal] = useState(false);
   const [showEditMonthlyModal, setShowEditMonthlyModal] = useState(false);
-  const [showWeeklyDetail, setShowWeeklyDetail] = useState(false);
+  const [showWeeklyDetail, setShowWeeklyDetail] = useState(true);
   const [showMonthlyDetail, setShowMonthlyDetail] = useState(false);
   const [showStickyDrawer, setShowStickyDrawer] = useState(false);
   const [showFocusSessionModal, setShowFocusSessionModal] = useState(false);
@@ -115,6 +115,99 @@ export const CategoryDetailView: React.FC = () => {
     const newSlots = sorted.map(d => `${d} ${weeklyDayDefaultTime}: ${category.title} Focus`);
     const merged = Array.from(new Set([...editScheduleSlots, ...newSlots]));
     setEditScheduleSlots(merged);
+  };
+
+  // 7-Day Cadence Breakdown direct day editing state
+  const [editingDay, setEditingDay] = useState<string | null>(null);
+  const [editDayTime, setEditDayTime] = useState<string>('07:00 AM');
+  const [editDayText, setEditDayText] = useState<string>('');
+
+  const handleStartEditingDay = (dayName: string) => {
+    const dayShort = dayName.slice(0, 3);
+    const existingSlot = category.weeklyScheduleSummary.find((s) =>
+      s.toLowerCase().includes(dayShort.toLowerCase())
+    );
+
+    setEditingDay(dayName);
+    if (existingSlot) {
+      const timeMatch = existingSlot.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i);
+      setEditDayTime(timeMatch ? timeMatch[0] : '07:00 AM');
+      
+      const parts = existingSlot.split(':');
+      if (parts.length > 2) {
+        setEditDayText(parts.slice(2).join(':').trim());
+      } else if (parts.length === 2 && !parts[1].toLowerCase().includes('am') && !parts[1].toLowerCase().includes('pm')) {
+        setEditDayText(parts[1].trim());
+      } else {
+        const withoutDayAndTime = existingSlot
+          .replace(new RegExp(`^${dayShort}\\s*`, 'i'), '')
+          .replace(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b:?\s*/i, '')
+          .trim();
+        setEditDayText(withoutDayAndTime || `${category.title} Focus`);
+      }
+    } else {
+      setEditDayTime(dayName === 'Sunday' ? '08:00 AM' : '07:00 AM');
+      setEditDayText(dayName === 'Sunday' ? 'Serene Reflection & Devotion' : `${category.title} Focus Block`);
+    }
+  };
+
+  const handleToggleDayCadence = (dayName: string) => {
+    const dayShort = dayName.slice(0, 3);
+    const existingSlot = category.weeklyScheduleSummary.find((s) =>
+      s.toLowerCase().includes(dayShort.toLowerCase())
+    );
+
+    let updatedSlots: string[];
+    if (existingSlot) {
+      updatedSlots = category.weeklyScheduleSummary.filter(
+        (s) => !s.toLowerCase().includes(dayShort.toLowerCase())
+      );
+    } else {
+      const defaultText =
+        dayName.toLowerCase().startsWith('sun')
+          ? `${dayShort} 08:00 AM: ${category.title} Rest & Serene Reflection`
+          : `${dayShort} 07:00 AM: ${category.title} Focus`;
+      updatedSlots = [...category.weeklyScheduleSummary, defaultText];
+    }
+
+    const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    updatedSlots.sort((a, b) => {
+      const aDay = dayOrder.findIndex((d) => a.toLowerCase().startsWith(d.toLowerCase()));
+      const bDay = dayOrder.findIndex((d) => b.toLowerCase().startsWith(d.toLowerCase()));
+      return (aDay === -1 ? 99 : aDay) - (bDay === -1 ? 99 : bDay);
+    });
+
+    updateCategorySchedule(category.id, updatedSlots, Number(category.weeklyTargetHours));
+  };
+
+  const handleSaveDayCadence = (dayName: string) => {
+    const dayShort = dayName.slice(0, 3);
+    const cleanText = editDayText.trim() || `${category.title} Focus`;
+    const newSlot = `${dayShort} ${editDayTime}: ${cleanText}`;
+
+    const withoutThisDay = category.weeklyScheduleSummary.filter(
+      (s) => !s.toLowerCase().includes(dayShort.toLowerCase())
+    );
+    const updatedSlots = [...withoutThisDay, newSlot];
+
+    const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    updatedSlots.sort((a, b) => {
+      const aDay = dayOrder.findIndex((d) => a.toLowerCase().startsWith(d.toLowerCase()));
+      const bDay = dayOrder.findIndex((d) => b.toLowerCase().startsWith(d.toLowerCase()));
+      return (aDay === -1 ? 99 : aDay) - (bDay === -1 ? 99 : bDay);
+    });
+
+    updateCategorySchedule(category.id, updatedSlots, Number(category.weeklyTargetHours));
+    setEditingDay(null);
+  };
+
+  const handleSetDayAsRest = (dayName: string) => {
+    const dayShort = dayName.slice(0, 3);
+    const updatedSlots = category.weeklyScheduleSummary.filter(
+      (s) => !s.toLowerCase().includes(dayShort.toLowerCase())
+    );
+    updateCategorySchedule(category.id, updatedSlots, Number(category.weeklyTargetHours));
+    setEditingDay(null);
   };
 
   // Monthly Deliverable Edit form states
@@ -574,17 +667,290 @@ export const CategoryDetailView: React.FC = () => {
 
               {/* Expanded Detailed 7-Day Matrix */}
               {showWeeklyDetail && (
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
-                    7-Day Cadence Breakdown
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                        {language === 'am' ? 'የ7ቱ ቀናት የጊዜ ሰሌዳ' : '7-Day Cadence Breakdown'}
+                      </span>
+                      <p className="text-[10px] text-slate-400">
+                        {language === 'am' ? 'ቀናትን ይምረጡ ወይም ሰዓት ለማስተካከል ይጫኑ' : 'Choose active days or tap ✎ to customize time & focus'}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0082ff]">
+                      {category.weeklyScheduleSummary.length}/7 active
+                    </span>
+                  </div>
+
+                  {/* Quick Day Toggle Bar: [Mon] [Tue] [Wed] [Thu] [Fri] [Sat] [Sun 🌿] */}
+                  <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400 px-1">
+                      <span>{language === 'am' ? 'የሳምንት ቀናት ፈጣን ምርጫ' : 'Quick Day Chooser'}</span>
+                      <span className="font-mono text-slate-400">{category.weeklyScheduleSummary.length} days chosen</span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center">
+                      {[
+                        { id: 'Mon', en: 'Mon', am: 'ሰኞ', isRest: false },
+                        { id: 'Tue', en: 'Tue', am: 'ማክ', isRest: false },
+                        { id: 'Wed', en: 'Wed', am: 'ረቡ', isRest: false },
+                        { id: 'Thu', en: 'Thu', am: 'ሐሙ', isRest: false },
+                        { id: 'Fri', en: 'Fri', am: 'አር', isRest: false },
+                        { id: 'Sat', en: 'Sat', am: 'ቅዳ', isRest: false },
+                        { id: 'Sun', en: 'Sun 🌿', am: 'እሁ 🌿', isRest: true },
+                      ].map((d) => {
+                        const hasSlot = category.weeklyScheduleSummary.some((s) =>
+                          s.toLowerCase().includes(d.id.toLowerCase())
+                        );
+                        return (
+                          <button
+                            key={d.id}
+                            type="button"
+                            onClick={() => handleToggleDayCadence(d.en.slice(0, 3))}
+                            className={`py-1.5 px-0.5 rounded-xl text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 border ${
+                              hasSlot
+                                ? d.isRest
+                                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
+                                  : 'bg-[#0082ff] text-white border-[#0082ff] shadow-2xs'
+                                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                            }`}
+                          >
+                            <span>{language === 'am' ? d.am : d.en}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 7-Day Interactive Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                      const daySlot = category.weeklyScheduleSummary.find((s) => s.toLowerCase().includes(day.slice(0, 3).toLowerCase())) || 'Active recovery / review';
+                      const dayShort = day.slice(0, 3);
+                      const isSunday = day === 'Sunday';
+                      const existingSlot = category.weeklyScheduleSummary.find((s) =>
+                        s.toLowerCase().includes(dayShort.toLowerCase())
+                      );
+                      const isActive = !!existingSlot;
+                      const isEditingThis = editingDay === day;
+
                       return (
-                        <div key={day} className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block">{day}</span>
-                          <span className="text-slate-500 text-[10px] truncate block">{daySlot}</span>
+                        <div
+                          key={day}
+                          className={`p-3 rounded-2xl border transition-all ${
+                            isEditingThis
+                              ? 'bg-blue-50/90 dark:bg-blue-950/50 border-[#0082ff] ring-2 ring-[#0082ff]/30 shadow-md col-span-1 sm:col-span-2'
+                              : isActive
+                              ? 'bg-white dark:bg-slate-900/90 border-blue-200 dark:border-blue-900/60 shadow-2xs'
+                              : isSunday
+                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/50'
+                              : 'bg-slate-50/80 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800'
+                          }`}
+                        >
+                          {/* Normal Card View */}
+                          {!isEditingThis ? (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  {/* Quick Toggle Checkbox/Dot */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleDayCadence(day)}
+                                    className={`w-4 h-4 rounded-md border flex items-center justify-center transition cursor-pointer shrink-0 ${
+                                      isActive
+                                        ? isSunday
+                                          ? 'bg-emerald-500 border-emerald-500 text-white'
+                                          : 'bg-[#0082ff] border-[#0082ff] text-white'
+                                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400'
+                                    }`}
+                                    title={isActive ? 'Click to make Rest day' : 'Click to activate this day'}
+                                  >
+                                    {isActive && <Check size={11} strokeWidth={3} />}
+                                  </button>
+
+                                  <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                                    {day}
+                                  </span>
+
+                                  {isSunday && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                                      🌿 Rest
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  {/* Active / Off Pill */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleDayCadence(day)}
+                                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full cursor-pointer transition ${
+                                      isActive
+                                        ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                                    }`}
+                                  >
+                                    {isActive ? 'Active' : 'Off / Rest'}
+                                  </button>
+
+                                  {/* Edit Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditingDay(day)}
+                                    className="p-1 rounded-lg text-slate-400 hover:text-[#0082ff] hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                                    title={`Edit ${day} Schedule`}
+                                  >
+                                    <Edit3 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Cadence Description */}
+                              <div
+                                onClick={() => handleStartEditingDay(day)}
+                                className="cursor-pointer group flex items-center justify-between"
+                              >
+                                <span className={`text-[11px] truncate block ${
+                                  isActive
+                                    ? 'text-slate-700 dark:text-slate-200 font-medium'
+                                    : isSunday
+                                    ? 'text-emerald-700 dark:text-emerald-400 font-medium italic'
+                                    : 'text-slate-400 italic'
+                                }`}>
+                                  {existingSlot || (isSunday ? '🌿 Official Rest & Recovery Sanctuary' : 'Active recovery / review')}
+                                </span>
+                                <span className="text-[10px] text-slate-300 dark:text-slate-600 group-hover:text-[#0082ff] transition ml-1 shrink-0">
+                                  ✎
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Inline Day Editor View */
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
+                                <div className="flex items-center gap-1.5">
+                                  <Edit3 size={13} className="text-[#0082ff]" />
+                                  <span className="font-extrabold text-xs text-slate-900 dark:text-white">
+                                    {language === 'am' ? `${day} የጊዜ ሰሌዳ አድስ` : `Edit ${day} Cadence`}
+                                  </span>
+                                  {isSunday && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                                      🌿 Rest Day
+                                    </span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingDay(null)}
+                                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                                    {language === 'am' ? 'ሰዓት' : 'Time'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editDayTime}
+                                    onChange={(e) => setEditDayTime(e.target.value)}
+                                    placeholder="07:00 AM"
+                                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-[#0082ff]"
+                                  />
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                                    {language === 'am' ? 'ተግባር / የትኩረት አይነት' : 'Cadence Activity / Focus Label'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editDayText}
+                                    onChange={(e) => setEditDayText(e.target.value)}
+                                    placeholder="e.g. Deliberate Mastery Practice"
+                                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold outline-none focus:border-[#0082ff]"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Quick Presets */}
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                <span className="text-[10px] text-slate-400 font-mono">Presets:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditDayTime('07:00 AM');
+                                    setEditDayText(`${category.title} Focus Block`);
+                                  }}
+                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                >
+                                  🌅 07:00 AM Focus
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditDayTime('12:30 PM');
+                                    setEditDayText(`${category.title} Midday Practice`);
+                                  }}
+                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                >
+                                  ☀️ 12:30 PM Midday
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditDayTime('06:00 PM');
+                                    setEditDayText(`${category.title} Evening Mastery`);
+                                  }}
+                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                >
+                                  🌙 06:00 PM Evening
+                                </button>
+                                {isSunday && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditDayTime('08:00 AM');
+                                      setEditDayText('Spiritual Reflection & Devotion Sanctuary');
+                                    }}
+                                    className="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 cursor-pointer"
+                                  >
+                                    🌿 Sunday Sanctuary
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-between pt-2 border-t border-blue-200/50 dark:border-blue-900/50">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetDayAsRest(day)}
+                                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                                >
+                                  {language === 'am' ? 'እንደ እረፍት ቀን መዝግብ' : 'Set as Off / Rest'}
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingDay(null)}
+                                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                                  >
+                                    {language === 'am' ? 'ሰርዝ' : 'Cancel'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveDayCadence(day)}
+                                    className="px-4 py-1.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1"
+                                  >
+                                    <Check size={12} strokeWidth={3} />
+                                    <span>{language === 'am' ? 'አስቀምጥ' : 'Save Day'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
