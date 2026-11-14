@@ -49,6 +49,9 @@ const DEFAULT_CAREER_PRESETS: QuickPreset[] = [
 export const TripleEightLifeBalanceView: React.FC = () => {
   const { 
     tasks, 
+    getDaySchedule,
+    categoryPlans,
+    categoryOrder,
     addTask, 
     updateTask,
     deleteTask, 
@@ -64,9 +67,36 @@ export const TripleEightLifeBalanceView: React.FC = () => {
   const todayIndex = today.getDay();
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(todayIndex);
 
-  // View mode: 'donut' | 'clock24' | 'pillars'
+  // View mode: 'streams' (Main Streams) vs 'pillars' (3 Golden Pillars 8/8/8)
+  const [streamViewMode, setStreamViewMode] = useState<'streams' | 'pillars'>('streams');
+
+  // Chart type: 'donut' | 'clock24'
   const [chartMode, setChartMode] = useState<'donut' | 'clock24'>('donut');
   const [activeHoverSlice, setActiveHoverSlice] = useState<ActivitySlice | null>(null);
+
+  // Compute active date based on selected day index
+  const activeDate = useMemo(() => {
+    const d = new Date();
+    const currentDay = d.getDay();
+    const diff = selectedDayIndex - currentDay;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }, [selectedDayIndex]);
+
+  // Resolve schedule for active day (avoids duplicating tasks across days)
+  const daySchedule = useMemo(() => {
+    if (typeof getDaySchedule === 'function') {
+      return getDaySchedule(activeDate);
+    }
+    return { tasks: [] };
+  }, [getDaySchedule, activeDate]);
+
+  const activeDayTasks = useMemo(() => {
+    if (daySchedule?.tasks && daySchedule.tasks.length > 0) {
+      return daySchedule.tasks;
+    }
+    return tasks;
+  }, [daySchedule, tasks]);
 
   // Targets for the 3 Pillars (default 8.0h each, user customizable)
   const [pillarTargets, setPillarTargets] = useState<{ sleep: number; career: number; living: number }>(() => {
@@ -152,161 +182,249 @@ export const TripleEightLifeBalanceView: React.FC = () => {
   const dayNameEn = dayNames[selectedDayIndex];
   const dayNameAm = AMHARIC_DAYS[selectedDayIndex]?.am || dayNameEn;
 
-  // Domain to Pillar classification helper
-  const classifyDomainToPillar = (domain: string, title: string): { pillar: TripleEightPillar; color: string; icon: any } => {
-    const d = domain.toUpperCase();
-    const tLower = title.toLowerCase();
-
-    // Career Domains
-    if (
-      d.includes('ARCHITECTURE') || 
-      d.includes('SITE') || 
-      d.includes('TRADING') || 
-      d.includes('FOREX') || 
-      tLower.includes('work') || 
-      tLower.includes('client') ||
-      tLower.includes('code') ||
-      tLower.includes('career')
-    ) {
-      if (d.includes('TRADING') || d.includes('FOREX')) {
-        return { pillar: 'career', color: '#10b981', icon: Zap };
+  // Helper to map a task to its Main Stream Subject / Category
+  const getStreamForTask = (task: ScheduleTask): { streamId: string; streamTitle: string; pillar: TripleEightPillar; color: string; icon: any } => {
+    if (task.badge) {
+      const badgeLower = task.badge.toLowerCase();
+      for (const [id, plan] of Object.entries(categoryPlans || {})) {
+        if (badgeLower.includes(id) || plan.title.toLowerCase().includes(badgeLower)) {
+          const isCareer = id === 'architecture' || id === 'trading' || id === 'career' || id === 'work';
+          return {
+            streamId: id,
+            streamTitle: plan.title,
+            pillar: isCareer ? 'career' : 'living',
+            color: plan.color,
+            icon: isCareer ? Briefcase : (id === 'chess' ? Swords : id === 'music' ? Music : Sparkles)
+          };
+        }
       }
-      return { pillar: 'career', color: '#0082ff', icon: Briefcase };
     }
 
-    // Hobbies & Living
-    if (d.includes('CHESS') || tLower.includes('chess')) {
-      return { pillar: 'living', color: '#8b5cf6', icon: Swords };
+    const d = (task.domain || '').toUpperCase();
+    const tLower = (task.title || '').toLowerCase();
+
+    // Living: Chess
+    if (d.includes('CHESS') || tLower.includes('chess') || tLower.includes('puzzle') || tLower.includes('aagard')) {
+      const plan = categoryPlans?.['chess'];
+      return {
+        streamId: 'chess',
+        streamTitle: plan?.title || (language === 'am' ? 'ቼስ' : 'Chess'),
+        pillar: 'living',
+        color: plan?.color || '#8b5cf6',
+        icon: Swords
+      };
     }
-    if (d.includes('GUITAR') || d.includes('MUSIC') || tLower.includes('music') || tLower.includes('guitar')) {
-      return { pillar: 'living', color: '#ec4899', icon: Music };
+
+    // Living: Music & Guitar
+    if (d.includes('GUITAR') || d.includes('MUSIC') || tLower.includes('music') || tLower.includes('guitar') || tLower.includes('warmup') || tLower.includes('lick') || tLower.includes('song') || tLower.includes('freeplay')) {
+      const plan = categoryPlans?.['music'];
+      return {
+        streamId: 'music',
+        streamTitle: plan?.title || (language === 'am' ? 'ሙዚቃና ጊታር' : 'Music & Guitar'),
+        pillar: 'living',
+        color: plan?.color || '#ec4899',
+        icon: Music
+      };
     }
-    if (d.includes('PAINTING') || d.includes('ART') || tLower.includes('art')) {
-      return { pillar: 'living', color: '#f59e0b', icon: Palette };
-    }
+
+    // Living: Fitness / Exercise
     if (d.includes('FITNESS') || d.includes('EXERCISE') || tLower.includes('gym') || tLower.includes('workout')) {
-      return { pillar: 'living', color: '#ef4444', icon: Dumbbell };
-    }
-    if (d.includes('DEVOTION') || d.includes('PRAYER') || tLower.includes('prayer') || tLower.includes('scripture')) {
-      return { pillar: 'living', color: '#06b6d4', icon: BookOpen };
+      const plan = categoryPlans?.['exercise'];
+      return {
+        streamId: 'exercise',
+        streamTitle: plan?.title || (language === 'am' ? 'ስፖርትና ብቃት' : 'Exercise & Fitness'),
+        pillar: 'living',
+        color: plan?.color || '#ef4444',
+        icon: Dumbbell
+      };
     }
 
-    // Default Living / Buffer
-    return { pillar: 'living', color: '#3b82f6', icon: Sparkles };
+    // Living: Art
+    if (d.includes('PAINTING') || d.includes('ART') || tLower.includes('art')) {
+      const plan = categoryPlans?.['art'];
+      return {
+        streamId: 'art',
+        streamTitle: plan?.title || (language === 'am' ? 'ስዕልና ጥበብ' : 'Art & Painting'),
+        pillar: 'living',
+        color: plan?.color || '#f59e0b',
+        icon: Palette
+      };
+    }
+
+    // Living: Devotion & Prayer
+    if (d.includes('DEVOTION') || d.includes('PRAYER') || tLower.includes('prayer') || tLower.includes('scripture')) {
+      const plan = categoryPlans?.['devotion'];
+      return {
+        streamId: 'devotion',
+        streamTitle: plan?.title || (language === 'am' ? 'መንፈሳዊ ጸሎት' : 'Devotion & Prayer'),
+        pillar: 'living',
+        color: plan?.color || '#06b6d4',
+        icon: BookOpen
+      };
+    }
+
+    // Career: Trading
+    if (d.includes('TRADING') || d.includes('FOREX') || tLower.includes('trading') || tLower.includes('market')) {
+      const plan = categoryPlans?.['trading'];
+      return {
+        streamId: 'trading',
+        streamTitle: plan?.title || (language === 'am' ? 'ትሬዲንግ' : 'Trading & Markets'),
+        pillar: 'career',
+        color: plan?.color || '#10b981',
+        icon: Zap
+      };
+    }
+
+    // Career: Architecture / Design / Work
+    if (d.includes('ARCHITECTURE') || d.includes('SITE') || tLower.includes('arch') || tLower.includes('client') || tLower.includes('code') || tLower.includes('career') || tLower.includes('work')) {
+      const plan = categoryPlans?.['architecture'];
+      return {
+        streamId: 'architecture',
+        streamTitle: plan?.title || (language === 'am' ? 'አርክቴክቸርና ዲዛይን' : 'Architecture & Design'),
+        pillar: 'career',
+        color: plan?.color || '#0082ff',
+        icon: Briefcase
+      };
+    }
+
+    // Default Living buffer
+    return {
+      streamId: 'living-other',
+      streamTitle: language === 'am' ? 'ዕለታዊ እንቅስቃሴ' : 'Living & Leisure',
+      pillar: 'living',
+      color: '#3b82f6',
+      icon: Sparkles
+    };
   };
 
-  // Compile All Slices for the 24-Hour Day
+  // Compile All Slices for the 24-Hour Day: MAIN STREAMS ONLY (No over-detailed micro-tasks)
   const { slices, pillarTotals, balanceScore } = useMemo(() => {
-    // 1. Fixed / Dedicated Sleep Slice
-    const sleepSlice: ActivitySlice = {
-      id: 'sleep-fixed',
-      name: language === 'am' ? 'ዕለታዊ እንቅልፍ እና ዕረፍት' : 'Sleep & Biological Restoration',
-      pillar: 'sleep',
-      hours: pillarTargets.sleep,
-      color: '#4f46e5', // Deep Indigo
-      icon: Moon
-    };
-
-    // 2. Aggregate tasks scheduled for today
-    const rawSlices: ActivitySlice[] = [sleepSlice];
     let careerTotal = 0;
     let livingTotal = 0;
 
-    // Filter tasks for today / selected day
-    tasks.forEach(t => {
+    const careerStreamMap = new Map<string, { id: string; name: string; pillar: TripleEightPillar; hours: number; color: string; icon: any }>();
+    const livingStreamMap = new Map<string, { id: string; name: string; pillar: TripleEightPillar; hours: number; color: string; icon: any }>();
+
+    activeDayTasks.forEach((t) => {
       const durHours = (t.durationMin || 60) / 60;
-      const { pillar, color, icon } = classifyDomainToPillar(t.domain, t.title);
+      const { streamId, streamTitle, pillar, color, icon } = getStreamForTask(t);
 
-      rawSlices.push({
-        id: t.id,
-        name: t.title,
-        pillar,
-        hours: durHours,
-        color: t.color || color,
-        icon
-      });
-
-      if (pillar === 'career') careerTotal += durHours;
-      if (pillar === 'living') livingTotal += durHours;
+      if (pillar === 'career') {
+        careerTotal += durHours;
+        if (!careerStreamMap.has(streamId)) {
+          careerStreamMap.set(streamId, {
+            id: `stream-${streamId}`,
+            name: streamTitle,
+            pillar: 'career',
+            hours: durHours,
+            color,
+            icon
+          });
+        } else {
+          careerStreamMap.get(streamId)!.hours += durHours;
+        }
+      } else {
+        livingTotal += durHours;
+        if (!livingStreamMap.has(streamId)) {
+          livingStreamMap.set(streamId, {
+            id: `stream-${streamId}`,
+            name: streamTitle,
+            pillar: 'living',
+            hours: durHours,
+            color,
+            icon
+          });
+        } else {
+          livingStreamMap.get(streamId)!.hours += durHours;
+        }
+      }
     });
 
-    // If user has no career or living tasks yet, add realistic baseline defaults if empty
-    // so they see the full 8/8/8 concept immediately
-    if (careerTotal === 0 && tasks.length === 0) {
-      rawSlices.push({
-        id: 'career-baseline-arch',
-        name: language === 'am' ? 'አርክቴክቸርና ዲዛይን' : 'Architecture & Core Craft',
-        pillar: 'career',
-        hours: 4.5,
-        color: '#0082ff',
-        icon: Briefcase
-      });
-      rawSlices.push({
-        id: 'career-baseline-trading',
-        name: language === 'am' ? 'ትሬዲንግና ገበያ ትንተና' : 'Financial Markets Analysis',
-        pillar: 'career',
-        hours: 2.0,
-        color: '#10b981',
-        icon: Zap
-      });
-      careerTotal = 6.5;
-    }
-
-    if (livingTotal === 0 && tasks.length === 0) {
-      rawSlices.push({
-        id: 'living-baseline-chess',
-        name: language === 'am' ? 'የቼስ ስልጠና' : 'Chess Tactics & Openings',
-        pillar: 'living',
-        hours: 3.0,
-        color: '#8b5cf6',
-        icon: Swords
-      });
-      rawSlices.push({
-        id: 'living-baseline-music',
-        name: language === 'am' ? 'የጊታር ልምምድ' : 'Guitar Acoustic Flow',
-        pillar: 'living',
-        hours: 3.0,
-        color: '#ec4899',
-        icon: Music
-      });
-      rawSlices.push({
-        id: 'living-baseline-fitness',
-        name: language === 'am' ? 'አካላዊ ብቃት' : 'Physical Fitness Protocol',
-        pillar: 'living',
-        hours: 1.0,
-        color: '#ef4444',
-        icon: Dumbbell
-      });
-      livingTotal = 7.0;
-    }
-
-    // 3. Compute unallocated buffers for Career and Living according to user-customized targets
+    // Compute unallocated buffers according to user targets
     const careerRemaining = Math.max(0, pillarTargets.career - careerTotal);
     const livingRemaining = Math.max(0, pillarTargets.living - livingTotal);
-    const totalAssigned = pillarTargets.sleep + careerTotal + livingTotal;
-    const dayFreeSurplus = Math.max(0, 24.0 - totalAssigned);
 
-    if (careerRemaining > 0 && dayFreeSurplus > 0) {
-      const openWork = Math.min(careerRemaining, dayFreeSurplus);
-      rawSlices.push({
-        id: 'career-unallocated',
-        name: language === 'am' ? 'ክፍት የስራ ሰዓት' : 'Available Career Focus Capacity',
-        pillar: 'career',
-        hours: openWork,
-        color: '#93c5fd', // Light Blue
-        icon: Clock
-      });
-    }
+    let rawSlices: ActivitySlice[] = [];
 
-    if (livingRemaining > 0) {
+    if (streamViewMode === 'pillars') {
+      // 3 Golden Pillars View (Sleep 8h • Career 8h • Living 8h)
+      rawSlices = [
+        {
+          id: 'pillar-sleep',
+          name: language === 'am' ? 'ምሰሶ 1: እንቅልፍና እረፍት' : 'Pillar 1: Sleep & Restoration',
+          pillar: 'sleep',
+          hours: pillarTargets.sleep,
+          color: '#4f46e5',
+          icon: Moon
+        },
+        {
+          id: 'pillar-career',
+          name: language === 'am' ? 'ምሰሶ 2: ሙያና ስራ' : 'Pillar 2: Career & Craft',
+          pillar: 'career',
+          hours: pillarTargets.career,
+          color: '#0082ff',
+          icon: Briefcase
+        },
+        {
+          id: 'pillar-living',
+          name: language === 'am' ? 'ምሰሶ 3: የግል ህይወትና መዝናኛ' : 'Pillar 3: Living & Vitality',
+          pillar: 'living',
+          hours: pillarTargets.living,
+          color: '#ec4899',
+          icon: Heart
+        }
+      ];
+    } else {
+      // Main Streams View (Aggregated Categories ONLY - Zero Granular Task Clutter)
+      // 1. Sleep Stream
       rawSlices.push({
-        id: 'living-unallocated',
-        name: language === 'am' ? 'ክፍት የዕለት ፋታና እረፍት' : 'Free Leisure & Life Buffer',
-        pillar: 'living',
-        hours: livingRemaining,
-        color: '#fed7aa', // Soft Peach
-        icon: Coffee
+        id: 'stream-sleep',
+        name: language === 'am' ? 'ዕለታዊ እንቅልፍ እና ዕረፍት' : 'Sleep & Biological Restoration',
+        pillar: 'sleep',
+        hours: pillarTargets.sleep,
+        color: '#4f46e5',
+        icon: Moon
       });
+
+      // 2. Career Streams
+      if (careerStreamMap.size > 0) {
+        careerStreamMap.forEach((stream) => rawSlices.push(stream));
+      }
+      if (careerRemaining > 0) {
+        rawSlices.push({
+          id: 'stream-career-capacity',
+          name: language === 'am' ? 'ክፍት የስራ ሰዓት' : 'Available Career Focus Capacity',
+          pillar: 'career',
+          hours: careerRemaining,
+          color: '#93c5fd',
+          icon: Briefcase
+        });
+      }
+
+      // 3. Living Streams (Sorted by categoryOrder)
+      const sortedLivingStreams = Array.from(livingStreamMap.values()).sort((a, b) => {
+        const idA = a.id.replace('stream-', '');
+        const idB = b.id.replace('stream-', '');
+        const idxA = categoryOrder?.indexOf(idA) ?? -1;
+        const idxB = categoryOrder?.indexOf(idB) ?? -1;
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+      });
+
+      sortedLivingStreams.forEach((stream) => rawSlices.push(stream));
+
+      if (livingRemaining > 0) {
+        rawSlices.push({
+          id: 'stream-living-buffer',
+          name: language === 'am' ? 'ክፍት የዕለት ፋታና እረፍት' : 'Free Leisure & Life Buffer',
+          pillar: 'living',
+          hours: livingRemaining,
+          color: '#fed7aa',
+          icon: Coffee
+        });
+      }
     }
 
     // Normalize slices to exactly 24.0 hours for flawless geometry
@@ -316,7 +434,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
       normalizedHours: (s.hours / Math.max(1, totalCalculated)) * 24.0
     }));
 
-    // Balance Harmony Score (0 to 100%): How closely current distribution matches targets
+    // Balance Harmony Score
     const sleepDiff = Math.abs(pillarTargets.sleep - 8.0);
     const careerDiff = Math.abs(careerTotal - pillarTargets.career);
     const livingDiff = Math.abs(livingTotal - pillarTargets.living);
@@ -337,7 +455,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
       },
       balanceScore: score
     };
-  }, [tasks, pillarTargets, language]);
+  }, [activeDayTasks, pillarTargets, streamViewMode, categoryOrder, language]);
 
   // Helper to generate SVG pie slice path
   const generatePieSlicePath = (
@@ -419,12 +537,12 @@ export const TripleEightLifeBalanceView: React.FC = () => {
   };
 
   const livingTasks = useMemo(() => {
-    return tasks.filter(t => classifyDomainToPillar(t.domain, t.title).pillar === 'living');
-  }, [tasks]);
+    return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'living');
+  }, [activeDayTasks, categoryPlans]);
 
   const careerTasks = useMemo(() => {
-    return tasks.filter(t => classifyDomainToPillar(t.domain, t.title).pillar === 'career');
-  }, [tasks]);
+    return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'career');
+  }, [activeDayTasks, categoryPlans]);
 
   const handleAdjustTaskDuration = (taskId: string, deltaMin: number) => {
     const task = tasks.find(t => t.id === taskId);
@@ -685,20 +803,48 @@ export const TripleEightLifeBalanceView: React.FC = () => {
         {/* LEFT COLUMN: THE GRAPHICAL 24-HOUR PIE / DIAL (7 cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col items-center">
           
-          <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-2">
+          <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-2 flex-wrap gap-2">
             <div>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <PieChart size={18} className="text-[#0082ff]" />
                 <span>{language === 'am' ? 'የ24 ሰዓት የክብ ቻርት' : '24-Hour Equilibrium Wheel'}</span>
               </h2>
               <span className="text-[11px] text-slate-400">
-                {language === 'am' ? 'ክፍተቶቹን በመጫን ወይም በመንካት ዝርዝሩን ይመልከቱ' : 'Touch or hover any segment to inspect slice metrics'}
+                {language === 'am' ? 'ዋና ዋና ዘርፎች ብቻ • ዝርዝር ለማየት ክፍተቱን ይንኩ' : 'Main Streams Only • Touch any stream to inspect slice metrics'}
               </span>
             </div>
 
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-black">
-              {balanceScore}% {language === 'am' ? 'ሚዛናዊነት' : 'Harmony'}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Segmented Mode Switcher: Main Streams vs 3 Pillars */}
+              <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <button
+                  type="button"
+                  onClick={() => { setStreamViewMode('streams'); setActiveHoverSlice(null); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    streamViewMode === 'streams'
+                      ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
+                  }`}
+                >
+                  {language === 'am' ? 'ዋና ዋና ዘርፎች' : 'Main Streams'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStreamViewMode('pillars'); setActiveHoverSlice(null); }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    streamViewMode === 'pillars'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-500 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
+                  }`}
+                >
+                  {language === 'am' ? '3 ምሰሶዎች (8/8/8)' : '3 Pillars (8/8/8)'}
+                </button>
+              </div>
+
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-black">
+                {balanceScore}% {language === 'am' ? 'ሚዛናዊነት' : 'Harmony'}
+              </span>
+            </div>
           </div>
 
           {/* SVG Pie Chart Canvas */}
@@ -829,26 +975,26 @@ export const TripleEightLifeBalanceView: React.FC = () => {
             </div>
           </div>
 
-          {/* Slices Legend Grid */}
-          <div className="w-full grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+          {/* Slices Legend Grid: Main Streams only! */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
             {chartSlicesWithAngles.map((slice) => {
               const isSelected = activeHoverSlice?.id === slice.id;
               return (
                 <button
                   key={slice.id}
                   onClick={() => setActiveHoverSlice(isSelected ? null : slice)}
-                  className={`p-2 rounded-xl text-left transition cursor-pointer flex items-center gap-2 border ${
+                  className={`p-2.5 rounded-xl text-left transition cursor-pointer flex items-center gap-2.5 border ${
                     isSelected 
-                      ? 'border-[#0082ff] bg-blue-500/10' 
+                      ? 'border-[#0082ff] bg-blue-500/10 shadow-2xs ring-1 ring-[#0082ff]/50' 
                       : 'border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   <span 
-                    className="w-3 h-3 rounded-full shrink-0 shadow-2xs" 
+                    className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs ring-2 ring-white dark:ring-slate-900" 
                     style={{ backgroundColor: slice.color }} 
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block truncate text-[11px]">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block truncate text-xs">
                       {slice.name}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono block">
