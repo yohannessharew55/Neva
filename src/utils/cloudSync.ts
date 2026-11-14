@@ -25,12 +25,15 @@ export interface UserAccountProfile {
 }
 
 // Ensure mobile app on iOS connects to the production Vercel cloud endpoint
-const getApiBaseUrl = (): string => {
+export const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') return '';
   const isCapacitorNative = Capacitor.isNativePlatform() || 
     window.location.protocol === 'capacitor:' || 
+    window.location.protocol === 'ionic:' ||
+    window.location.protocol === 'file:' ||
     window.location.origin.includes('capacitor://') ||
-    window.location.hostname === 'localhost' && window.location.port === '';
+    window.location.origin.includes('ionic://') ||
+    (window.location.hostname === 'localhost' && (!window.location.port || window.location.port === '80' || window.location.port === '443'));
   
   if (isCapacitorNative) {
     return 'https://neva-os.vercel.app';
@@ -43,20 +46,61 @@ export const isDeviceOffline = (): boolean => {
   return typeof navigator !== 'undefined' && navigator.onLine === false;
 };
 
+// Offline pending sync tracking
+export const markPendingSync = (syncId: string = 'default_user', data?: any): void => {
+  try {
+    const cleanId = syncId.trim() || 'default_user';
+    localStorage.setItem(`neva_pending_sync_${cleanId}`, 'true');
+    localStorage.setItem(`neva_last_local_edit_${cleanId}`, Date.now().toString());
+    if (data) {
+      localStorage.setItem(`neva_local_mirror_${cleanId}`, JSON.stringify(data));
+    }
+  } catch (e) {}
+};
+
+export const clearPendingSync = (syncId: string = 'default_user'): void => {
+  try {
+    const cleanId = syncId.trim() || 'default_user';
+    localStorage.removeItem(`neva_pending_sync_${cleanId}`);
+  } catch (e) {}
+};
+
+export const hasPendingSync = (syncId: string = 'default_user'): boolean => {
+  try {
+    const cleanId = syncId.trim() || 'default_user';
+    return localStorage.getItem(`neva_pending_sync_${cleanId}`) === 'true';
+  } catch (e) {
+    return false;
+  }
+};
+
+export const getPendingSyncData = (syncId: string = 'default_user'): any | null => {
+  try {
+    const cleanId = syncId.trim() || 'default_user';
+    const local = localStorage.getItem(`neva_local_mirror_${cleanId}`);
+    return local ? JSON.parse(local) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 // Sync State to Cloud (or gracefully mirror locally if offline)
 export const syncStateToCloud = async (stateData: any, syncId: string = 'default_user'): Promise<CloudSyncResult> => {
   const cleanSyncId = syncId.trim() || 'default_user';
 
-  // If offline, save locally without network delay
+  // Always persist local mirror first so data is 100% safe on device
+  try {
+    localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(stateData));
+  } catch (e) {}
+
+  // If offline, queue for auto-sync when online
   if (isDeviceOffline()) {
-    try {
-      localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(stateData));
-    } catch (e) {}
+    markPendingSync(cleanSyncId, stateData);
     return {
-      success: true,
-      database: 'Local Mirror (100% Offline)',
+      success: false,
+      database: 'Local Storage (Offline - Queued)',
       syncId: cleanSyncId,
-      message: 'Persisted to local device storage while offline.',
+      message: 'Saved on device. Will automatically sync to cloud when online.',
       updatedAt: new Date().toISOString()
     };
   }
@@ -65,7 +109,7 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
 
     const response = await fetch(`${baseUrl}/api/sync`, {
       method: 'POST',
@@ -86,24 +130,27 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
     }
 
     const result = await response.json();
-    return {
-      success: result.status === 'success',
-      database: result.database || 'NEVA Cloud Storage',
-      syncId: result.syncId || cleanSyncId,
-      message: result.message,
-      updatedAt: result.updatedAt || new Date().toISOString(),
-    };
+    if (result.status === 'success') {
+      clearPendingSync(cleanSyncId);
+      return {
+        success: true,
+        database: result.database || 'NEVA Cloud Storage',
+        syncId: result.syncId || cleanSyncId,
+        message: result.message || 'Synced successfully to NEVA Cloud.',
+        updatedAt: result.updatedAt || new Date().toISOString(),
+      };
+    } else {
+      throw new Error(result.message || 'Sync failed on server');
+    }
   } catch (error: any) {
-    // Offline or network error - fall back to local storage
-    try {
-      localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(stateData));
-    } catch (e) {}
+    // Network or server error - mark pending for auto-sync when connection restores
+    markPendingSync(cleanSyncId, stateData);
 
     return {
       success: false,
-      database: 'Local Mirror (Offline Ready)',
+      database: 'Local Storage (Offline Pending)',
       syncId: cleanSyncId,
-      message: error.message || 'Saved locally in offline mode.',
+      message: error.message || 'Saved locally. Will auto-sync when back online.',
       updatedAt: new Date().toISOString()
     };
   }
@@ -131,7 +178,7 @@ export const fetchStateFromCloud = async (syncId: string = 'default_user'): Prom
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 3500); // Fast 3.5s timeout for snappy startup
 
     const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(cleanSyncId)}`, {
       method: 'GET',

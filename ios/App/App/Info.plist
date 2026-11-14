@@ -28,6 +28,11 @@
 	<string>NEVA integrates with Apple Reminders so your daily habits, devotion sessions, and focus tasks appear directly in your iPhone Reminders app.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>NEVA integrates with Apple Calendar to schedule your focused blocks and timeflow.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

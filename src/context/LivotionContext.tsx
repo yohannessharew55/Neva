@@ -32,7 +32,11 @@ import {
   UserAccountProfile, 
   getStoredUserAccount, 
   saveAccountToStorage, 
-  clearStoredUserAccount 
+  clearStoredUserAccount,
+  hasPendingSync,
+  clearPendingSync,
+  markPendingSync,
+  isDeviceOffline
 } from '../utils/cloudSync';
 import { 
   Language, 
@@ -533,10 +537,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
     if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
   };
-  const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error' | 'initial_pull'>('initial_pull');
-  const [cloudDatabase, setCloudDatabase] = useState<string>('PostgreSQL (Neon)');
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error' | 'initial_pull'>('synced');
+  const [cloudDatabase, setCloudDatabase] = useState<string>('NEVA Cloud DB');
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
-  const [isCloudHydrated, setIsCloudHydrated] = useState<boolean>(false);
+  const [isCloudHydrated, setIsCloudHydrated] = useState<boolean>(true);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState<boolean>(false);
 
   const openSyncModal = () => setIsSyncModalOpen(true);
@@ -548,52 +552,122 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(`${STORAGE_KEY}_sync_key`, trimmed);
   };
 
-  // Initial pull from Neon PostgreSQL on app startup / syncKey change
+  // Push all local state to cloud immediately
+  const pushStateToCloudImmediate = async (customSyncKey?: string): Promise<boolean> => {
+    const keyToUse = (customSyncKey || syncKey).trim() || 'default_user';
+    if (isDeviceOffline()) {
+      markPendingSync(keyToUse, {
+        user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes
+      });
+      setCloudSyncStatus('offline');
+      return false;
+    }
+
+    setCloudSyncStatus('syncing');
+    try {
+      const res = await syncStateToCloud({
+        user,
+        domains,
+        tasks,
+        workouts,
+        meals,
+        goals,
+        sessions,
+        reviews,
+        categoryPlans,
+        dailyStickyNotes,
+      }, keyToUse);
+
+      if (res.success) {
+        clearPendingSync(keyToUse);
+        setCloudSyncStatus('synced');
+        if (res.database) setCloudDatabase(res.database);
+        setLastSyncedAt(res.updatedAt || new Date().toISOString());
+        return true;
+      } else {
+        setCloudSyncStatus('offline');
+        return false;
+      }
+    } catch (e) {
+      setCloudSyncStatus('offline');
+      return false;
+    }
+  };
+
+  // Initial sync on app startup or syncKey change
   useEffect(() => {
     let isMounted = true;
-    const loadFromCloud = async () => {
+    const initializeSync = async () => {
+      // If offline on startup, immediately acknowledge offline state with zero delay
+      if (isDeviceOffline()) {
+        if (isMounted) setCloudSyncStatus('offline');
+        return;
+      }
+
       try {
-        setCloudSyncStatus('initial_pull');
+        if (isMounted) setCloudSyncStatus('syncing');
+
+        // If local device has pending unsynced offline edits, push them!
+        if (hasPendingSync(syncKey)) {
+          const pushRes = await syncStateToCloud({
+            user,
+            domains,
+            tasks,
+            workouts,
+            meals,
+            goals,
+            sessions,
+            reviews,
+            categoryPlans,
+            dailyStickyNotes,
+          }, syncKey);
+
+          if (isMounted) {
+            if (pushRes.success) {
+              clearPendingSync(syncKey);
+              setCloudSyncStatus('synced');
+              if (pushRes.database) setCloudDatabase(pushRes.database);
+              setLastSyncedAt(pushRes.updatedAt || new Date().toISOString());
+            } else {
+              setCloudSyncStatus('offline');
+            }
+          }
+          return;
+        }
+
+        // If no pending local edits, pull latest from cloud
         const remote = await fetchStateFromCloud(syncKey);
         if (remote && remote.data && isMounted) {
           const d = remote.data;
-          // Hydrate from cloud if data exists
-          if (d.tasks || d.workouts || d.meals || d.goals || d.categoryPlans || d.dailyStickyNotes || d.user) {
-            if (d.user) setUser(d.user);
-            if (d.domains) setDomains(d.domains);
-            if (d.tasks) setTasks(d.tasks);
-            if (d.workouts) setWorkouts(d.workouts);
-            if (d.meals) setMeals(d.meals);
-            if (d.goals) setGoals(d.goals);
-            if (d.sessions) setSessions(d.sessions);
-            if (d.reviews) setReviews(d.reviews);
-            if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
-            if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
-            if (remote.database) setCloudDatabase(remote.database);
-            setLastSyncedAt(remote.updatedAt || new Date().toISOString());
-            setCloudSyncStatus('synced');
-          } else {
-            setCloudSyncStatus('synced');
-          }
-        } else {
+          if (d.user) setUser(d.user);
+          if (d.domains) setDomains(d.domains);
+          if (d.tasks) setTasks(d.tasks);
+          if (d.workouts) setWorkouts(d.workouts);
+          if (d.meals) setMeals(d.meals);
+          if (d.goals) setGoals(d.goals);
+          if (d.sessions) setSessions(d.sessions);
+          if (d.reviews) setReviews(d.reviews);
+          if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
+          if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
+          if (remote.database) setCloudDatabase(remote.database);
+          setLastSyncedAt(remote.updatedAt || new Date().toISOString());
+          clearPendingSync(syncKey);
+          setCloudSyncStatus('synced');
+        } else if (isMounted) {
           setCloudSyncStatus('synced');
         }
       } catch (err) {
-        console.warn('Initial cloud sync error:', err);
-        setCloudSyncStatus('offline');
-      } finally {
-        if (isMounted) {
-          setIsCloudHydrated(true);
-        }
+        if (isMounted) setCloudSyncStatus('offline');
       }
     };
 
-    loadFromCloud();
+    initializeSync();
     return () => { isMounted = false; };
   }, [syncKey]);
 
-  // Persist locally & debounced sync to PostgreSQL (only after initial hydration)
+  // Persist locally immediately & debounced push to Cloud
   useEffect(() => {
+    // 1. Synchronously save all state locally on device
     localStorage.setItem(`${STORAGE_KEY}_user`, JSON.stringify(user));
     localStorage.setItem(`${STORAGE_KEY}_domains`, JSON.stringify(domains));
     localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(tasks));
@@ -605,7 +679,14 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(categoryPlans));
     localStorage.setItem(`${STORAGE_KEY}_daily_sticky_notes`, JSON.stringify(dailyStickyNotes));
 
-    if (!isCloudHydrated) return;
+    // 2. Mark that local edits have occurred
+    markPendingSync(syncKey);
+
+    // If device is offline, set status immediately without trying network
+    if (isDeviceOffline()) {
+      setCloudSyncStatus('offline');
+      return;
+    }
 
     setCloudSyncStatus('syncing');
     const syncTimer = setTimeout(async () => {
@@ -623,22 +704,97 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }, syncKey);
 
       if (res.success) {
+        clearPendingSync(syncKey);
         setCloudSyncStatus('synced');
         if (res.database) setCloudDatabase(res.database);
         setLastSyncedAt(res.updatedAt || new Date().toISOString());
       } else {
         setCloudSyncStatus('offline');
       }
-    }, 1500);
+    }, 1200);
 
     return () => clearTimeout(syncTimer);
-  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, isCloudHydrated, syncKey]);
+  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, syncKey]);
+
+  // 3. Automatic Online Reconnection Listener & Heartbeat Auto-Sync
+  useEffect(() => {
+    const handleAutoSync = async () => {
+      if (isDeviceOffline()) return;
+
+      if (hasPendingSync(syncKey)) {
+        console.log('[AutoSync] Device is online with pending changes. Automatically syncing to cloud...');
+        setCloudSyncStatus('syncing');
+        const res = await syncStateToCloud({
+          user,
+          domains,
+          tasks,
+          workouts,
+          meals,
+          goals,
+          sessions,
+          reviews,
+          categoryPlans,
+          dailyStickyNotes,
+        }, syncKey);
+
+        if (res.success) {
+          clearPendingSync(syncKey);
+          setCloudSyncStatus('synced');
+          if (res.database) setCloudDatabase(res.database);
+          setLastSyncedAt(res.updatedAt || new Date().toISOString());
+          console.log('[AutoSync] Automatically synced pending changes successfully!');
+        } else {
+          setCloudSyncStatus('offline');
+        }
+      }
+    };
+
+    const handleOffline = () => {
+      setCloudSyncStatus('offline');
+    };
+
+    window.addEventListener('online', handleAutoSync);
+    window.addEventListener('offline', handleOffline);
+
+    // Sync when app comes back from background (unlocked, app switch)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isDeviceOffline()) {
+        handleAutoSync();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Heartbeat auto-sync check every 20 seconds
+    const heartbeat = setInterval(() => {
+      if (!isDeviceOffline() && hasPendingSync(syncKey)) {
+        handleAutoSync();
+      }
+    }, 20000);
+
+    return () => {
+      window.removeEventListener('online', handleAutoSync);
+      window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(heartbeat);
+    };
+  }, [syncKey, user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes]);
 
   const syncNow = async (customSyncKey?: string): Promise<boolean> => {
     const keyToUse = (customSyncKey || syncKey).trim() || 'default_user';
     if (customSyncKey && customSyncKey !== syncKey) {
       setSyncKey(keyToUse);
     }
+
+    if (isDeviceOffline()) {
+      setCloudSyncStatus('offline');
+      return false;
+    }
+
+    // If local has pending unsynced offline changes, prioritize pushing them to cloud!
+    if (hasPendingSync(keyToUse)) {
+      return await pushStateToCloudImmediate(keyToUse);
+    }
+
     setCloudSyncStatus('syncing');
     try {
       const remote = await fetchStateFromCloud(keyToUse);
@@ -656,30 +812,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
         if (remote.database) setCloudDatabase(remote.database);
         setLastSyncedAt(remote.updatedAt || new Date().toISOString());
+        clearPendingSync(keyToUse);
         setCloudSyncStatus('synced');
         return true;
       } else {
         // If remote is empty, push current state to cloud
-        const pushRes = await syncStateToCloud({
-          user,
-          domains,
-          tasks,
-          workouts,
-          meals,
-          goals,
-          sessions,
-          reviews,
-          categoryPlans,
-          dailyStickyNotes,
-        }, keyToUse);
-        if (pushRes.success) {
-          setCloudSyncStatus('synced');
-          setLastSyncedAt(pushRes.updatedAt || new Date().toISOString());
-          return true;
-        }
+        return await pushStateToCloudImmediate(keyToUse);
       }
-      setCloudSyncStatus('synced');
-      return false;
     } catch (e) {
       setCloudSyncStatus('offline');
       return false;
