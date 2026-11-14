@@ -182,6 +182,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     applyDayScheduleToDates,
     getWeekdayDefaultTasks,
     applyTaskActionWithScope,
+    categoryOrder,
+    setCategoryOrder,
+    reorderCategories,
+    reorderTasks,
   } = useLivotion();
 
   const [colorTheme, setColorTheme] = useState<StickyColorTheme>('canary');
@@ -337,16 +341,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     }
   };
 
-  // User's custom drag-and-drop category order
-  const [categoryOrder, setCategoryOrder] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('neva_category_order_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [];
-  });
+  // Drag-and-drop state for subjects and tasks
   const [draggedSubjectId, setDraggedSubjectId] = useState<string | null>(null);
   const [dragOverSubjectId, setDragOverSubjectId] = useState<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
 
   const touchActiveId = useRef<string | null>(null);
 
@@ -492,20 +491,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   });
 
   const reorderSubjects = (fromId: string, toId: string) => {
-    if (fromId === toId) return;
-    const currentOrder = [...allCategoryKeys];
-    const fromIndex = currentOrder.indexOf(fromId);
-    const toIndex = currentOrder.indexOf(toId);
-    if (fromIndex === -1 || toIndex === -1) return;
-
-    const newOrder = [...currentOrder];
-    const [removed] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, removed);
-
-    setCategoryOrder(newOrder);
-    try {
-      localStorage.setItem('neva_category_order_v1', JSON.stringify(newOrder));
-    } catch {}
+    reorderCategories(fromId, toId);
     try {
       soundEngine.playPencil();
     } catch {}
@@ -518,14 +504,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= currentOrder.length) return;
 
-    const newOrder = [...currentOrder];
-    const [removed] = newOrder.splice(index, 1);
-    newOrder.splice(targetIndex, 0, removed);
-
-    setCategoryOrder(newOrder);
-    try {
-      localStorage.setItem('neva_category_order_v1', JSON.stringify(newOrder));
-    } catch {}
+    const targetId = currentOrder[targetIndex];
+    reorderCategories(id, targetId);
     try {
       soundEngine.playPencil();
     } catch {}
@@ -1239,213 +1219,316 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </div>
                 </div>
 
-                {/* 2. Tasks under this Main Stream Subject - ONLY SEEN IF EXPAND LITTLE SIGN IS TOUCHED */}
+                {/* 2. Nested Sub-Sticky Note for Tasks under this Main Stream Subject */}
                 {isExpanded && (
-                  <div className="pl-3.5 sm:pl-4 space-y-1 border-l-2 border-black/15 dark:border-white/15 ml-3 transition-all duration-150">
-                    {group.displayedTasks.map((task) => {
-                      const hoursTaken = (task.durationMin / 60).toFixed(1);
-                      const isSubtasksOpen = !!expandedSubtasks[task.id];
-                      const hasSubtasks = task.checklist && task.checklist.length > 0;
-                      const completedSubCount = task.checklist ? task.checklist.filter((c) => c.done).length : 0;
-                      const isActive = activeTask?.id === task.id;
+                  <div className="relative mt-2.5 mb-1.5 mx-0.5 sm:mx-1 transition-all duration-200">
+                    {/* Washi Tape Strip at top of this inner sticky note */}
+                    <div className="w-20 sm:w-28 h-3.5 bg-amber-200/90 dark:bg-amber-400/25 border-y border-dashed border-amber-400/60 dark:border-white/20 rounded-xs shadow-2xs rotate-[-0.6deg] mx-auto -mb-1.5 relative z-20 select-none flex items-center justify-center pointer-events-none">
+                      <span className="text-[7.5px] font-mono font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200/90 truncate px-1">
+                        {group.translatedTitle}
+                      </span>
+                    </div>
 
-                      const isEditing = editingTaskId === task.id;
+                    {/* Sub-Sticky Note Paper Container */}
+                    <div 
+                      className="relative rounded-2xl bg-[#fffdf0]/95 dark:bg-[#182234]/95 border border-amber-300/85 dark:border-slate-700/80 p-2 sm:p-3 shadow-md shadow-amber-950/10 dark:shadow-black/40 text-slate-800 dark:text-slate-100 space-y-1.5 overflow-hidden"
+                      style={{
+                        boxShadow: '0 4px 14px -2px rgba(217, 119, 6, 0.12), 0 2px 4px -1px rgba(0,0,0,0.06)'
+                      }}
+                    >
+                      {/* Subtle Ruled Lined Paper Texture */}
+                      <div 
+                        className="absolute inset-0 pointer-events-none select-none opacity-25 dark:opacity-10"
+                        style={{
+                          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(0,0,0,0.06) 20px)',
+                        }}
+                      />
 
-                      if (isEditing) {
-                        return (
-                          <form
-                            key={task.id}
-                            onSubmit={(e) => handleSaveEditTask(task.id, e)}
-                            className="p-2.5 rounded-xl bg-white/95 dark:bg-black/60 border border-black/15 dark:border-white/15 space-y-2 shadow-2xs my-1"
+                      {/* Sub-Sticky Header Bar */}
+                      <div className="relative z-10 flex items-center justify-between gap-1.5 pb-1.5 border-b border-amber-200/80 dark:border-slate-700/70">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-xs">📌</span>
+                          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-200 truncate">
+                            {language === 'am' ? `${group.translatedTitle} ብሎኮች` : `${group.translatedTitle} BLOCKS`}
+                          </span>
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 dark:bg-amber-900/50 text-amber-950 dark:text-amber-200 shrink-0">
+                            {group.tasks.length}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] font-mono font-bold opacity-75">
+                            {group.totalHours}h
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAddForSubject(group.id)}
+                            className="px-2 py-0.5 rounded-lg bg-amber-200/70 hover:bg-amber-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-amber-950 dark:text-amber-100 transition cursor-pointer flex items-center gap-1 text-[9px] font-bold active:scale-95 shadow-2xs"
+                            title={language === 'am' ? 'ብሎክ አክል' : 'Add Block'}
                           >
-                            <input
-                              type="text"
-                              autoFocus
-                              required
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              placeholder="Task title..."
-                              className="w-full px-2 py-1 rounded-lg text-xs font-bold bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 outline-none focus:border-[#0082ff]"
-                            />
-                            <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                              <div className="flex items-center gap-1.5">
-                                <div className="flex items-center gap-1 bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-2 py-0.5 text-xs">
-                                  <Clock size={10} className="opacity-50" />
-                                  <input
-                                    type="text"
-                                    value={editStartTime}
-                                    onChange={(e) => setEditStartTime(e.target.value)}
-                                    placeholder="09:00 PM"
-                                    className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold"
-                                  />
-                                </div>
-                                <select
-                                  value={editDurationMin}
-                                  onChange={(e) => setEditDurationMin(Number(e.target.value))}
-                                  className="bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-1.5 py-0.5 text-[10px] font-mono outline-none font-bold cursor-pointer"
-                                >
-                                  <option value={15}>15m</option>
-                                  <option value={20}>20m</option>
-                                  <option value={30}>30m</option>
-                                  <option value={45}>45m</option>
-                                  <option value={60}>60m</option>
-                                  <option value={90}>90m</option>
-                                  <option value={120}>120m</option>
-                                </select>
-                              </div>
-                              <div className="flex items-center gap-1 ml-auto">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingTaskId(null)}
-                                  className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-slate-600 dark:text-slate-300"
-                                  title={language === 'am' ? 'ተው' : 'Cancel'}
-                                  aria-label="Cancel"
-                                >
-                                  <X size={13} />
-                                </button>
-                                <button
-                                  type="submit"
-                                  className="p-1 px-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-lg shadow-2xs cursor-pointer flex items-center justify-center"
-                                  title={language === 'am' ? 'አስቀምጥ' : 'Save'}
-                                  aria-label="Save"
-                                >
-                                  <Check size={13} strokeWidth={3} />
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        );
-                      }
+                            <Plus size={10} strokeWidth={2.5} />
+                            <span>{language === 'am' ? 'አክል' : 'Add'}</span>
+                          </button>
+                        </div>
+                      </div>
 
-                      return (
-                        <div 
-                          key={task.id}
-                          className={`group/task py-1.5 px-2.5 rounded-xl border transition-all duration-150 ${
-                            task.completed 
-                              ? 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 opacity-55' 
-                              : isActive 
-                                ? 'bg-white/90 dark:bg-black/40 border-[#0082ff] shadow-2xs'
-                                : 'bg-white/50 dark:bg-black/15 hover:bg-white/80 dark:hover:bg-black/30 border-black/10 dark:border-white/10'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2 text-xs">
-                            {/* Checkbox, Time & Task Title */}
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleTask(task)}
-                                className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                                  task.completed 
-                                    ? `${theme.checkBgDone} border-transparent` 
-                                    : `${theme.checkBorder} bg-transparent hover:scale-110`
-                                }`}
-                                title={task.completed ? 'Mark uncompleted' : 'Mark completed'}
+                      {/* Task Block Cards inside this Sub-Sticky Note */}
+                      <div className="relative z-10 space-y-1 pt-0.5">
+                        {group.displayedTasks.map((task) => {
+                          const hoursTaken = (task.durationMin / 60).toFixed(1);
+                          const isSubtasksOpen = !!expandedSubtasks[task.id];
+                          const hasSubtasks = task.checklist && task.checklist.length > 0;
+                          const completedSubCount = task.checklist ? task.checklist.filter((c) => c.done).length : 0;
+                          const isActive = activeTask?.id === task.id;
+
+                          const isEditing = editingTaskId === task.id;
+
+                          if (isEditing) {
+                            return (
+                              <form
+                                key={task.id}
+                                onSubmit={(e) => handleSaveEditTask(task.id, e)}
+                                className="p-2.5 rounded-xl bg-white dark:bg-black/60 border border-amber-300/80 dark:border-white/15 space-y-2 shadow-2xs my-1"
                               >
-                                {task.completed && <Check size={11} strokeWidth={3} />}
-                              </button>
-
-                              <span className="font-mono text-[10px] font-bold shrink-0 opacity-65">
-                                {task.startTime || 'Flexible'}
-                              </span>
-
-                              <span 
-                                onClick={() => startEditTask(task)}
-                                className={`truncate font-semibold cursor-pointer select-none ${
-                                  task.completed ? 'line-through opacity-55' : 'opacity-90 hover:underline'
-                                }`}
-                                title={language === 'am' ? 'ለመቀየር ይንኩ' : 'Click to edit task'}
-                              >
-                                {task.title}
-                              </span>
-                            </div>
-
-                            {/* Duration Pill, Hidden on Mobile Play Button, Edit & Delete */}
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span 
-                                className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
-                                title={`${task.durationMin} minutes`}
-                              >
-                                {hoursTaken}h
-                              </span>
-
-                              {/* Play Button - HIDDEN ON MOBILE (Desktop only) */}
-                              {!task.completed && (
-                                <button
-                                  type="button"
-                                  onClick={() => startTask(task)}
-                                  className={`hidden sm:flex px-2 py-0.5 rounded-lg text-[10px] font-bold transition items-center gap-0.5 cursor-pointer shadow-2xs ${
-                                    isActive 
-                                      ? 'bg-rose-500 text-white animate-pulse' 
-                                      : 'bg-[#0082ff] hover:bg-[#0070df] text-white'
-                                  }`}
-                                  title="Start focus timer"
-                                >
-                                  <Play size={9} fill="currentColor" />
-                                  <span className="hidden md:inline">{isActive ? 'Focusing' : 'Focus'}</span>
-                                </button>
-                              )}
-
-                              {/* Edit Pencil Button for mobile and desktop */}
-                              <button
-                                type="button"
-                                onClick={() => startEditTask(task)}
-                                className="p-1 rounded text-slate-500 hover:text-[#0082ff] dark:hover:text-[#0082ff] hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
-                                title={language === 'am' ? 'ቀይር' : 'Edit task'}
-                              >
-                                <Edit2 size={11} />
-                              </button>
-
-                              {hasSubtasks && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setExpandedSubtasks((prev) => ({
-                                      ...prev,
-                                      [task.id]: !prev[task.id],
-                                    }));
-                                  }}
-                                  className="px-1 py-0.5 rounded text-[9px] font-mono opacity-60 hover:opacity-100 flex items-center cursor-pointer"
-                                >
-                                  <span>{completedSubCount}/{task.checklist?.length || 0}</span>
-                                  {isSubtasksOpen ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteTask(task)}
-                                className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                                title="Delete Task"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Checklist subtasks if expanded */}
-                          {isSubtasksOpen && hasSubtasks && task.checklist && (
-                            <div className="mt-1.5 pt-1.5 border-t border-black/5 dark:border-white/10 pl-6 space-y-1 text-[11px]">
-                              {task.checklist.map((item) => (
-                                <div 
-                                  key={item.id} 
-                                  onClick={() => handleToggleChecklist(task, item.id)}
-                                  className="flex items-center gap-1.5 cursor-pointer opacity-75 hover:opacity-100"
-                                >
-                                  <div className={`w-3 h-3 rounded-xs border flex items-center justify-center text-[8px] ${
-                                    item.done ? 'bg-current text-white dark:text-black border-transparent' : 'border-current'
-                                  }`}>
-                                    {item.done && <Check size={8} />}
+                                <input
+                                  type="text"
+                                  autoFocus
+                                  required
+                                  value={editTitle}
+                                  onChange={(e) => setEditTitle(e.target.value)}
+                                  placeholder="Task title..."
+                                  className="w-full px-2 py-1 rounded-lg text-xs font-bold bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 outline-none focus:border-[#0082ff]"
+                                />
+                                <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1 bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-2 py-0.5 text-xs">
+                                      <Clock size={10} className="opacity-50" />
+                                      <input
+                                        type="text"
+                                        value={editStartTime}
+                                        onChange={(e) => setEditStartTime(e.target.value)}
+                                        placeholder="09:00 PM"
+                                        className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold"
+                                      />
+                                    </div>
+                                    <select
+                                      value={editDurationMin}
+                                      onChange={(e) => setEditDurationMin(Number(e.target.value))}
+                                      className="bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-1.5 py-0.5 text-[10px] font-mono outline-none font-bold cursor-pointer"
+                                    >
+                                      <option value={15}>15m</option>
+                                      <option value={20}>20m</option>
+                                      <option value={30}>30m</option>
+                                      <option value={45}>45m</option>
+                                      <option value={60}>60m</option>
+                                      <option value={90}>90m</option>
+                                      <option value={120}>120m</option>
+                                    </select>
                                   </div>
-                                  <span className={item.done ? 'line-through opacity-50' : ''}>
-                                    {item.text}
+                                  <div className="flex items-center gap-1 ml-auto">
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingTaskId(null)}
+                                      className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-slate-600 dark:text-slate-300"
+                                      title={language === 'am' ? 'ተው' : 'Cancel'}
+                                      aria-label="Cancel"
+                                    >
+                                      <X size={13} />
+                                    </button>
+                                    <button
+                                      type="submit"
+                                      className="p-1 px-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-lg shadow-2xs cursor-pointer flex items-center justify-center"
+                                      title={language === 'am' ? 'አስቀምጥ' : 'Save'}
+                                      aria-label="Save"
+                                    >
+                                      <Check size={13} strokeWidth={3} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </form>
+                            );
+                          }
+
+                          return (
+                            <div 
+                              key={task.id}
+                              data-task-id={task.id}
+                              draggable={!task.completed}
+                              onDragStart={(e) => {
+                                e.stopPropagation();
+                                setDraggedTaskId(task.id);
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', task.id);
+                              }}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.dataTransfer.dropEffect = 'move';
+                                if (dragOverTaskId !== task.id) {
+                                  setDragOverTaskId(task.id);
+                                }
+                              }}
+                              onDragLeave={(e) => {
+                                e.stopPropagation();
+                                if (dragOverTaskId === task.id) {
+                                  setDragOverTaskId(null);
+                                }
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                                if (fromId && fromId !== task.id) {
+                                  reorderTasks(fromId, task.id);
+                                  try { soundEngine.playPencil(); } catch {}
+                                }
+                                setDraggedTaskId(null);
+                                setDragOverTaskId(null);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedTaskId(null);
+                                setDragOverTaskId(null);
+                              }}
+                              className={`group/task py-1.5 px-2.5 rounded-xl border transition-all duration-150 ${
+                                draggedTaskId === task.id
+                                  ? 'opacity-40 scale-98 border-dashed border-[#0082ff]'
+                                  : dragOverTaskId === task.id
+                                  ? 'border-[#0082ff] bg-blue-50/70 dark:bg-blue-950/40 shadow-xs'
+                                  : task.completed 
+                                  ? 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 opacity-55' 
+                                  : isActive 
+                                    ? 'bg-white/95 dark:bg-black/50 border-[#0082ff] shadow-2xs'
+                                    : 'bg-white/85 dark:bg-black/30 hover:bg-white dark:hover:bg-black/45 border-amber-200/70 dark:border-white/10'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 text-xs">
+                                {/* Checkbox, Time & Task Title */}
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  {/* Task Drag Handle */}
+                                  <div 
+                                    className="opacity-0 group-hover/task:opacity-60 hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0 -ml-1"
+                                    title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder block'}
+                                  >
+                                    <GripVertical size={11} />
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleTask(task)}
+                                    className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                      task.completed 
+                                        ? `${theme.checkBgDone} border-transparent` 
+                                        : `${theme.checkBorder} bg-transparent hover:scale-110`
+                                    }`}
+                                    title={task.completed ? 'Mark uncompleted' : 'Mark completed'}
+                                  >
+                                    {task.completed && <Check size={11} strokeWidth={3} />}
+                                  </button>
+
+                                  <span className="font-mono text-[10px] font-bold shrink-0 opacity-65">
+                                    {task.startTime || 'Flexible'}
+                                  </span>
+
+                                  <span 
+                                    onClick={() => startEditTask(task)}
+                                    className={`truncate font-semibold cursor-pointer select-none ${
+                                      task.completed ? 'line-through opacity-55' : 'opacity-90 hover:underline'
+                                    }`}
+                                    title={language === 'am' ? 'ለመቀየር ይንኩ' : 'Click to edit task'}
+                                  >
+                                    {task.title}
                                   </span>
                                 </div>
-                              ))}
+
+                                {/* Duration Pill, Hidden on Mobile Play Button, Edit & Delete */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span 
+                                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
+                                    title={`${task.durationMin} minutes`}
+                                  >
+                                    {hoursTaken}h
+                                  </span>
+
+                                  {/* Play Button - HIDDEN ON MOBILE (Desktop only) */}
+                                  {!task.completed && (
+                                    <button
+                                      type="button"
+                                      onClick={() => startTask(task)}
+                                      className={`hidden sm:flex px-2 py-0.5 rounded-lg text-[10px] font-bold transition items-center gap-0.5 cursor-pointer shadow-2xs ${
+                                        isActive 
+                                          ? 'bg-rose-500 text-white animate-pulse' 
+                                          : 'bg-[#0082ff] hover:bg-[#0070df] text-white'
+                                      }`}
+                                      title="Start focus timer"
+                                    >
+                                      <Play size={9} fill="currentColor" />
+                                      <span className="hidden md:inline">{isActive ? 'Focusing' : 'Focus'}</span>
+                                    </button>
+                                  )}
+
+                                  {/* Edit Pencil Button for mobile and desktop */}
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditTask(task)}
+                                    className="p-1 rounded text-slate-500 hover:text-[#0082ff] dark:hover:text-[#0082ff] hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                                    title={language === 'am' ? 'ቀይር' : 'Edit task'}
+                                  >
+                                    <Edit2 size={11} />
+                                  </button>
+
+                                  {hasSubtasks && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setExpandedSubtasks((prev) => ({
+                                          ...prev,
+                                          [task.id]: !prev[task.id],
+                                        }));
+                                      }}
+                                      className="px-1 py-0.5 rounded text-[9px] font-mono opacity-60 hover:opacity-100 flex items-center cursor-pointer"
+                                    >
+                                      <span>{completedSubCount}/{task.checklist?.length || 0}</span>
+                                      {isSubtasksOpen ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTask(task)}
+                                    className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                                    title="Delete Task"
+                                  >
+                                    <Trash2 size={11} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Checklist subtasks if expanded */}
+                              {isSubtasksOpen && hasSubtasks && task.checklist && (
+                                <div className="mt-1.5 pt-1.5 border-t border-black/5 dark:border-white/10 pl-6 space-y-1 text-[11px]">
+                                  {task.checklist.map((item) => (
+                                    <div 
+                                      key={item.id} 
+                                      onClick={() => handleToggleChecklist(task, item.id)}
+                                      className="flex items-center gap-1.5 cursor-pointer opacity-75 hover:opacity-100"
+                                    >
+                                      <div className={`w-3 h-3 rounded-xs border flex items-center justify-center text-[8px] ${
+                                        item.done ? 'bg-current text-white dark:text-black border-transparent' : 'border-current'
+                                      }`}>
+                                        {item.done && <Check size={8} />}
+                                      </div>
+                                      <span className={item.done ? 'line-through opacity-50' : ''}>
+                                        {item.text}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

@@ -365,6 +365,10 @@ interface LivotionContextType {
     updatedTaskData?: Partial<ScheduleTask>;
     newTaskData?: Omit<ScheduleTask, 'id'>;
   }) => void;
+  categoryOrder: string[];
+  setCategoryOrder: (order: string[]) => void;
+  reorderCategories: (fromCatId: string, toCatId: string) => void;
+  reorderTasks: (fromTaskId: string, toTaskId: string) => void;
 }
 
 const LivotionContext = createContext<LivotionContextType | undefined>(undefined);
@@ -424,6 +428,59 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return INITIAL_CATEGORY_PLANS;
   });
+
+  const [categoryOrder, setCategoryOrderState] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_category_order_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const setCategoryOrder = (order: string[]) => {
+    setCategoryOrderState(order);
+    try {
+      localStorage.setItem('neva_category_order_v1', JSON.stringify(order));
+    } catch {}
+  };
+
+  const reorderCategories = (fromCatId: string, toCatId: string) => {
+    if (fromCatId === toCatId) return;
+    const baseCategoryKeys = Object.keys(categoryPlans);
+    const currentOrder = [...baseCategoryKeys].sort((a, b) => {
+      const indexA = categoryOrder.indexOf(a);
+      const indexB = categoryOrder.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0;
+    });
+    const fromIndex = currentOrder.indexOf(fromCatId);
+    const toIndex = currentOrder.indexOf(toCatId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const newOrder = [...currentOrder];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+
+    setCategoryOrder(newOrder);
+  };
+
+  const reorderTasks = (fromTaskId: string, toTaskId: string) => {
+    if (fromTaskId === toTaskId) return;
+    setTasks((prev) => {
+      const fromIdx = prev.findIndex((t) => t.id === fromTaskId);
+      const toIdx = prev.findIndex((t) => t.id === toTaskId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const [dailyStickyNotes, setDailyStickyNotes] = useState<DailyStickyReviewNote[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_daily_sticky_notes`);
@@ -1998,6 +2055,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateWeekdayDefaultSchedule,
         getWeekdayDefaultTasks,
         applyTaskActionWithScope,
+        categoryOrder,
+        setCategoryOrder,
+        reorderCategories,
+        reorderTasks,
       }}
     >
       {children}
