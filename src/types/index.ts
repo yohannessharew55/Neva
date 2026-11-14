@@ -122,6 +122,8 @@ export interface ScheduleTask {
   priority?: PriorityLevel;
   checklist?: { id: string; text: string; done: boolean }[];
   soundProfile?: string;
+  date?: string;
+  dayOfWeek?: number;
 }
 
 export interface PracticeSession {
