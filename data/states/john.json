@@ -889,5 +889,31 @@
       "createdAt": "2026-11-14T22:11:48.699Z"
     }
   ],
-  "dailyStickyColor": "mint"
+  "dailyStickyColor": "mint",
+  "iosNotes": [
+    {
+      "id": "note-1",
+      "title": "Neva Mastery OS • Core Directives",
+      "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
+      "folder": "Work",
+      "pinned": true,
+      "updatedAt": "2026-11-14T21:21:25.647Z"
+    },
+    {
+      "id": "note-2",
+      "title": "Guitar Solo Phrasing & Dorian Scale",
+      "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
+      "folder": "Ideas",
+      "pinned": false,
+      "updatedAt": "2026-11-13T22:21:25.647Z"
+    },
+    {
+      "id": "note-3",
+      "title": "Architecture & Site Supervision Checkpoints",
+      "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
+      "folder": "Work",
+      "pinned": false,
+      "updatedAt": "2026-11-12T22:21:25.647Z"
+    }
+  ]
 }
