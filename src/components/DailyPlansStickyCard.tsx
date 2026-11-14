@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useLivotion, StickyNoteColor } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 interface DailyPlansStickyCardProps {
   categoryId: string;
@@ -314,7 +315,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
               </span>
               {totalCount > 0 && (
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText}`}>
-                  {totalHoursPlanned}h {language === 'am' ? 'እቅድ' : 'planned'}
+                  {formatTaskDuration(categoryTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0))} {language === 'am' ? 'እቅድ' : 'planned'}
                 </span>
               )}
             </div>
@@ -423,12 +424,12 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                           onChange={(e) => setEditDurationMin(Number(e.target.value))}
                           className="bg-transparent text-[11px] font-mono outline-none font-bold cursor-pointer"
                         >
-                          <option value={15} className="text-black">15m (0.2h)</option>
-                          <option value={30} className="text-black">30m (0.5h)</option>
-                          <option value={45} className="text-black">45m (0.8h)</option>
-                          <option value={60} className="text-black">60m (1.0h)</option>
-                          <option value={90} className="text-black">90m (1.5h)</option>
-                          <option value={120} className="text-black">120m (2.0h)</option>
+                          <option value={15} className="text-black">15m</option>
+                          <option value={30} className="text-black">30m</option>
+                          <option value={45} className="text-black">45m</option>
+                          <option value={60} className="text-black">1h</option>
+                          <option value={90} className="text-black">1.30h</option>
+                          <option value={120} className="text-black">2h</option>
                         </select>
                       </div>
                     </div>
@@ -508,7 +509,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                     className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-extrabold ${theme.badgeBg} ${theme.badgeText}`}
                     title={`${task.durationMin} minutes focus`}
                   >
-                    {(task.durationMin / 60).toFixed(1)}h
+                    {formatTaskDuration(task.durationMin)}
                   </span>
 
                   {/* Play Button - HIDDEN ON MOBILE (Desktop only) */}
@@ -613,9 +614,9 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                     <option value={15} className="text-black">15m</option>
                     <option value={30} className="text-black">30m</option>
                     <option value={45} className="text-black">45m</option>
-                    <option value={60} className="text-black">60m</option>
-                    <option value={90} className="text-black">90m</option>
-                    <option value={120} className="text-black">120m</option>
+                    <option value={60} className="text-black">1h</option>
+                    <option value={90} className="text-black">1.30h</option>
+                    <option value={120} className="text-black">2h</option>
                   </select>
                 </div>
               </div>

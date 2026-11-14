@@ -9,6 +9,7 @@ import { ScheduleTask, DomainType } from '../types';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { soundEngine } from '../utils/audio';
 import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 interface CalendarDayBlockEditorModalProps {
   isOpen: boolean;
@@ -342,9 +343,9 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                     <option value={15}>15m</option>
                     <option value={30}>30m</option>
                     <option value={45}>45m</option>
-                    <option value={60}>60m (1h)</option>
-                    <option value={90}>90m (1.5h)</option>
-                    <option value={120}>120m (2h)</option>
+                    <option value={60}>1h</option>
+                    <option value={90}>1.30h</option>
+                    <option value={120}>2h</option>
                   </select>
                 </div>
               </div>
@@ -437,9 +438,9 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                         <option value={15}>15m</option>
                         <option value={30}>30m</option>
                         <option value={45}>45m</option>
-                        <option value={60}>60m (1h)</option>
-                        <option value={90}>90m (1.5h)</option>
-                        <option value={120}>120m (2h)</option>
+                        <option value={60}>1h</option>
+                        <option value={90}>1.30h</option>
+                        <option value={120}>2h</option>
                       </select>
                     </div>
                   </div>
@@ -501,7 +502,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
                       <span>{task.startTime || 'Flexible'}</span>
                       <span>•</span>
-                      <span>{((task.durationMin || 30) / 60).toFixed(1)}h ({task.durationMin}m)</span>
+                      <span>{formatTaskDuration(task.durationMin || 30)}</span>
                     </div>
                   </div>
                 </div>

@@ -13,6 +13,7 @@ import { soundEngine } from '../utils/audio';
 import { DayDefaultsModal } from './DayDefaultsModal';
 import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
 
@@ -556,7 +557,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       const totalCount = catTasks.length;
       // Main Stream Subject is marked as checked when ALL its under tasks are marked as done!
       const isAllDone = totalCount > 0 && completedCount === totalCount;
-      const totalHours = (catTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
+      const totalMinutes = catTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0);
+      const totalHours = (totalMinutes / 60).toFixed(1);
+      const formattedDuration = formatTaskDuration(totalMinutes);
 
       return {
         id: catKey,
@@ -569,6 +572,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         completedCount,
         totalCount,
         totalHours,
+        formattedDuration,
         isAllDone,
       };
     })
@@ -582,7 +586,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const completedCount = dayTasks.filter((t) => t.completed).length;
   const totalCount = dayTasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-  const totalHours = (dayTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
+  const totalDayMinutes = dayTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0);
+  const totalHours = (totalDayMinutes / 60).toFixed(1);
+  const formattedDayDuration = formatTaskDuration(totalDayMinutes);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -897,7 +903,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             {/* Metrics summary & Filter Pills */}
             <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2 ${theme.textSecondary}`}>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{totalHours}h</strong></span>
+                <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{formattedDayDuration}</strong></span>
                 <span className="opacity-40">•</span>
                 <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">{completedCount} ({progressPercent}%)</strong></span>
                 <span className="opacity-40">•</span>
@@ -1034,9 +1040,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       <option value={20} className="text-black">20m</option>
                       <option value={30} className="text-black">30m</option>
                       <option value={45} className="text-black">45m</option>
-                      <option value={60} className="text-black">60m</option>
-                      <option value={90} className="text-black">90m</option>
-                      <option value={120} className="text-black">120m</option>
+                      <option value={60} className="text-black">1h</option>
+                      <option value={90} className="text-black">1.30h</option>
+                      <option value={120} className="text-black">2h</option>
                     </select>
                   </div>
                 </div>
@@ -1188,7 +1194,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                         ? 'bg-emerald-500/25 text-emerald-800 dark:text-emerald-200' 
                         : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
                     }`}>
-                      {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : `${group.totalHours}h`}
+                      {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
                     </span>
 
                     <button
@@ -1260,7 +1266,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span className="text-[10px] font-mono font-bold opacity-75">
-                            {group.totalHours}h
+                            {group.formattedDuration}
                           </span>
                           <button
                             type="button"
@@ -1277,7 +1283,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       {/* Task Block Cards inside this Sub-Sticky Note */}
                       <div className="relative z-10 space-y-1 pt-0.5">
                         {group.displayedTasks.map((task) => {
-                          const hoursTaken = (task.durationMin / 60).toFixed(1);
+                          const formattedDuration = formatTaskDuration(task.durationMin);
                           const isSubtasksOpen = !!expandedSubtasks[task.id];
                           const hasSubtasks = task.checklist && task.checklist.length > 0;
                           const completedSubCount = task.checklist ? task.checklist.filter((c) => c.done).length : 0;
@@ -1322,9 +1328,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                       <option value={20}>20m</option>
                                       <option value={30}>30m</option>
                                       <option value={45}>45m</option>
-                                      <option value={60}>60m</option>
-                                      <option value={90}>90m</option>
-                                      <option value={120}>120m</option>
+                                      <option value={60}>1h</option>
+                                      <option value={90}>1.30h</option>
+                                      <option value={120}>2h</option>
                                     </select>
                                   </div>
                                   <div className="flex items-center gap-1 ml-auto">
@@ -1448,7 +1454,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
                                     title={`${task.durationMin} minutes`}
                                   >
-                                    {hoursTaken}h
+                                    {formattedDuration}
                                   </span>
 
                                   {/* Play Button - HIDDEN ON MOBILE (Desktop only) */}

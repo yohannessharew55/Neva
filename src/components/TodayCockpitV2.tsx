@@ -16,6 +16,7 @@ import { QuickScratchpadCard } from './QuickScratchpadCard';
 import { ReminderCenterModal } from './ReminderCenterModal';
 import { gregorianToEthiopian, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { soundEngine } from '../utils/audio';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 
 
@@ -117,7 +118,8 @@ export const TodayCockpitV2: React.FC = () => {
   const totalCount = dayTasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const totalHoursPlanned = (dayTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
-  const remainingHours = (dayTasks.filter(t => !t.completed).reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
+  const remainingMinutes = dayTasks.filter(t => !t.completed).reduce((sum, t) => sum + (t.durationMin || 0), 0);
+  const remainingFormatted = formatTaskDuration(remainingMinutes);
 
   // Helper to map task to category key
   const getCategoryKeyForTask = (task: ScheduleTask): string => {
@@ -289,7 +291,7 @@ export const TodayCockpitV2: React.FC = () => {
                     {completedCount}/{totalCount} {language === 'am' ? 'ተጠናቋል' : 'Done'} ({progressPercent}%)
                   </span>
                   <span className="text-[11px] font-mono text-slate-400">
-                    • {remainingHours}h {language === 'am' ? 'ቀሪ' : 'left'}
+                    • {remainingFormatted} {language === 'am' ? 'ቀሪ' : 'left'}
                   </span>
                 </div>
                 <div className="w-36 sm:w-44 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5">

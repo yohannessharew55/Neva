@@ -8,6 +8,7 @@ import {
 import { useLivotion } from '../context/LivotionContext';
 import { DailyStickyReviewNote, StickyNoteThemeColor, DailyStickyTaskItem } from '../types';
 import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 const THEME_STYLES: Record<StickyNoteThemeColor, {
   name: string;
@@ -678,7 +679,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                       {t('checklistLabel')}:
                     </span>
                     {note.tasks.map((task) => {
-                      const hours = (task.durationMin / 60).toFixed(1);
+                      const formattedDuration = formatTaskDuration(task.durationMin);
                       return (
                         <div
                           key={task.id}
@@ -706,7 +707,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                             </span>
                           </div>
                           <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${theme.hourBadgeBg} ${theme.hourBadgeText} shrink-0`}>
-                            {hours}{t('hoursShort')}
+                            {formattedDuration}
                           </span>
                         </div>
                       );

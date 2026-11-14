@@ -11,6 +11,7 @@ import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { gregorianToEthiopian, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { soundEngine } from '../utils/audio';
+import { formatTaskDuration } from '../utils/formatDuration';
 
 // Triple 8 Pillars
 export type TripleEightPillar = 'sleep' | 'career' | 'living';
@@ -1488,8 +1489,8 @@ export const TripleEightLifeBalanceView: React.FC = () => {
                             >
                               -
                             </button>
-                            <span className="font-mono font-bold text-[11px] w-10 text-center text-amber-600 dark:text-amber-400">
-                              {((t.durationMin || 60) / 60).toFixed(1)}h
+                            <span className="font-mono font-bold text-[11px] w-12 text-center text-amber-600 dark:text-amber-400">
+                              {formatTaskDuration(t.durationMin || 60)}
                             </span>
                             <button
                               type="button"
