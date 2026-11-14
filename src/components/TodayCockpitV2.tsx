@@ -181,7 +181,7 @@ export const TodayCockpitV2: React.FC = () => {
   }
 
   if (!computedNextTask) {
-    computedNextTask = dayTasks.find((t) => !t.completed) || tasks.find((t) => !t.completed);
+    computedNextTask = dayTasks.find((t) => !t.completed);
   }
 
   const nextTask = activeTask || computedNextTask;

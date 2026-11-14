@@ -1038,14 +1038,31 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Helper to get default tasks for a given day of week (1 = Mon ... 7 = Sun)
   const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
-    // 1. Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
+    // 1. If Sunday (dayOfWeek === 7):
+    // SUNDAY IS STRICTLY THE REST DAY!
+    // It should ONLY show tasks from Devotion or explicit Sunday tasks.
+    // Weekday execution blocks (Exercise, Chess, Guitar, etc.) must NEVER leak into Sunday.
+    // If there are none, return [] so the sticky card displays "Rest Day and Relax".
+    if (dayOfWeek === 7) {
+      const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
+      const sundayMatches = tasks.filter((t) => {
+        if (t.date) return false;
+        if (t.id.startsWith('def-') || t.id.startsWith('carry-')) return false;
+        if (weekdayDomains.includes(t.domain)) return false;
+        return t.domain === 'DEVOTION_PRAYER' || t.dayOfWeek === 7;
+      });
+      return sundayMatches;
+    }
+
+    // 2. Monday through Saturday (dayOfWeek 1..6):
+    // Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
     const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek && !t.id.startsWith('def-'));
 
-    // 2. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
-    // These blocks are the user's foundation and MUST be held across ALL days (including Sunday)
+    // 3. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
+    // These blocks are the user's foundation for active execution days (Monday - Saturday)
     const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek && !t.id.startsWith('def-'));
 
-    // Combine dayMatches with global stream blocks so all streams are held across days
+    // Combine dayMatches with global stream blocks so all streams are held across Mon - Sat
     const combined: ScheduleTask[] = [];
     const seenTitles = new Set<string>();
 
@@ -1065,10 +1082,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return combined;
     }
 
-    // 3. Fallback to existing user custom tasks across any date/day before mock defaults
-    // If user has created ANY custom tasks anywhere in the app, carry them forward so
-    // the user's main stream blocks NEVER get replaced by arbitrary defaults!
-    const userCustomTasks = tasks.filter((t) => !t.id.startsWith('def-'));
+    // 4. Fallback to existing user custom tasks across any date/day before mock defaults
+    const userCustomTasks = tasks.filter((t) => !t.id.startsWith('def-') && t.dayOfWeek !== 7);
     if (userCustomTasks.length > 0) {
       const carryTasks: ScheduleTask[] = [];
       const seenCarry = new Set<string>();
@@ -1091,57 +1106,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
 
-    // 4. ONLY if the user has NEVER created ANY tasks in the entire app, return starter templates
-    if (dayOfWeek === 7) {
-      return [
-        {
-          id: 'def-sun-1',
-          domain: 'DEVOTION_PRAYER',
-          title: 'Spiritual Devotion & Scripture Reflection',
-          startTime: '08:00 AM',
-          durationMin: 45,
-          completed: false,
-          color: '#a855f7',
-          badge: 'Devotion',
-          dayOfWeek: 7,
-          checklist: [
-            { id: 'c-sun-1', text: 'Serene prayer & contemplation', done: false },
-            { id: 'c-sun-2', text: 'Scripture journaling & quiet time', done: false }
-          ]
-        },
-        {
-          id: 'def-sun-2',
-          domain: 'PHYSICAL_FITNESS',
-          title: 'Gentle Nature Walk & Active Physical Reset',
-          startTime: '04:00 PM',
-          durationMin: 60,
-          completed: false,
-          color: '#10b981',
-          badge: 'Rest',
-          dayOfWeek: 7,
-          checklist: [
-            { id: 'c-sun-3', text: 'Gentle stroll & fresh air', done: false },
-            { id: 'c-sun-4', text: 'Hydration & mobility stretch', done: false }
-          ]
-        },
-        {
-          id: 'def-sun-3',
-          domain: 'OPEN_MULTIPURPOSE',
-          title: 'Family Fellowship & Serene Week Ahead Prep',
-          startTime: '07:00 PM',
-          durationMin: 45,
-          completed: false,
-          color: '#64748b',
-          badge: 'Reflection',
-          dayOfWeek: 7,
-          checklist: [
-            { id: 'c-sun-5', text: 'Connect with loved ones', done: false },
-            { id: 'c-sun-6', text: 'Plan calm priorities for Monday', done: false }
-          ]
-        }
-      ];
-    }
-
+    // 5. Default templates only if user has never created any tasks for weekdays
     return [
       {
         id: `def-wd-${dayOfWeek}-1`,
@@ -1196,6 +1161,41 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon ... 7 = Sun
     const customTasks = tasks.filter((t) => t.date === dateStr);
 
+    if (dayOfWeek === 7) {
+      // SUNDAY IS THE DESIGNATED REST DAY:
+      // Only show devotion tasks or explicit Sunday tasks.
+      // Filter out any weekday execution streams (Exercise & Fitness, Chess, Music & Guitar, etc.)
+      const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
+      const sundayAllowed = customTasks.filter((t) => {
+        if (t.domain === 'DEVOTION_PRAYER') return true;
+        if (weekdayDomains.includes(t.domain)) {
+          const titleLower = (t.title || '').toLowerCase();
+          const badgeLower = (t.badge || '').toLowerCase();
+          return titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+        }
+        return true;
+      });
+
+      if (sundayAllowed.length > 0) {
+        return {
+          tasks: sundayAllowed,
+          isCustom: true,
+          source: 'rest_day' as const,
+          dateStr,
+          dayOfWeek
+        };
+      }
+
+      const defaultSunday = getWeekdayDefaultTasks(7);
+      return {
+        tasks: defaultSunday,
+        isCustom: false,
+        source: 'rest_day' as const,
+        dateStr,
+        dayOfWeek
+      };
+    }
+
     if (customTasks.length > 0) {
       return {
         tasks: customTasks,
@@ -1207,11 +1207,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     const defaultTasks = getWeekdayDefaultTasks(dayOfWeek);
-    const source = dayOfWeek === 7
-      ? ('rest_day' as const)
-      : tasks.some((t) => !t.date && t.dayOfWeek === dayOfWeek)
-        ? ('weekday_default' as const)
-        : ('global_default' as const);
+    const source = tasks.some((t) => !t.date && t.dayOfWeek === dayOfWeek)
+      ? ('weekday_default' as const)
+      : ('global_default' as const);
 
     return {
       tasks: defaultTasks,

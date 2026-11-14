@@ -366,6 +366,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
   const isViewingToday = activeDateStr === todayStr;
   const activeDayOfWeek = (today.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
+  const isSunday = activeDayOfWeek === 7;
 
   const ethDate = gregorianToEthiopian(today);
   const dayName = today.toLocaleDateString('en-US', { weekday: 'short' });
@@ -1038,68 +1039,95 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             {/* Sticker Top Bar: Sticker Title */}
             <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5 border-b border-black/10 dark:border-white/10">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs">🏷️</span>
+                <span className="text-xs">{isSunday ? '🌿' : '🏷️'}</span>
                 <span className={`text-[10px] font-mono font-black uppercase tracking-wider ${theme.textPrimary}`}>
-                  {language === 'am' ? 'የዕለት ማጠቃለያ ስቲከር' : 'TODAY EXECUTION STICKER'}
+                  {isSunday 
+                    ? (language === 'am' ? 'የዕሁድ ዕረፍትና ማስተንተን' : 'SUNDAY REST & RECHARGE')
+                    : (language === 'am' ? 'የዕለት ማጠቃለያ ስቲከር' : 'TODAY EXECUTION STICKER')}
                 </span>
               </div>
             </div>
 
             {/* Metrics summary & Filter Pills */}
-            <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2 ${theme.textSecondary}`}>
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{formattedDayDuration}</strong></span>
-                <span className="opacity-40">•</span>
-                <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">{completedCount} ({progressPercent}%)</strong></span>
-                <span className="opacity-40">•</span>
-                <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
+            {isSunday && totalCount === 0 ? (
+              <div className="relative z-10 py-2 text-xs font-mono font-bold flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                  <span className="text-sm">☕</span>
+                  <span className="font-sans font-extrabold text-xs sm:text-sm">
+                    {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-900 dark:text-emerald-200">
+                    {language === 'am' ? 'ዕረፍት' : 'Rest Day & Relax'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsAdding(!isAdding)}
+                    className="p-1 min-w-[24px] min-h-[24px] rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white flex items-center justify-center cursor-pointer transition active:scale-95 shadow-2xs"
+                    title={language === 'am' ? 'ተግባር አክል' : 'Add Sunday Task'}
+                    aria-label="Add Sunday Task"
+                  >
+                    <Plus size={12} strokeWidth={3} />
+                  </button>
+                </div>
               </div>
+            ) : (
+              <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2 ${theme.textSecondary}`}>
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{formattedDayDuration}</strong></span>
+                  <span className="opacity-40">•</span>
+                  <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">{completedCount} ({progressPercent}%)</strong></span>
+                  <span className="opacity-40">•</span>
+                  <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
+                </div>
 
-              <div className="flex items-center gap-1 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => setFilterMode('all')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                    filterMode === 'all' 
-                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                      : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {t('all')} ({totalCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterMode('remaining')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                    filterMode === 'remaining' 
-                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                      : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {t('remaining')} ({totalCount - completedCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterMode('completed')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                    filterMode === 'completed' 
-                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                      : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {t('done')} ({completedCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(!isAdding)}
-                  className="px-2.5 py-0.5 rounded-md bg-[#0082ff] hover:bg-[#0070df] text-white cursor-pointer font-extrabold ml-1 shadow-2xs transition active:scale-95 flex items-center gap-1"
-                  title={isAdding ? 'Close form' : 'Add focus task'}
-                >
-                  <span>{isAdding ? '✕' : '+'}</span>
-                  <span className="hidden sm:inline text-[9px] font-sans font-bold">{isAdding ? 'Close' : 'Add'}</span>
-                </button>
+                <div className="flex items-center gap-1 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setFilterMode('all')}
+                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                      filterMode === 'all' 
+                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    {t('all')} ({totalCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterMode('remaining')}
+                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                      filterMode === 'remaining' 
+                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    {t('remaining')} ({totalCount - completedCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterMode('completed')}
+                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                      filterMode === 'completed' 
+                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    {t('done')} ({completedCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAdding(!isAdding)}
+                    className="p-1 min-w-[24px] min-h-[24px] rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white flex items-center justify-center cursor-pointer transition active:scale-95 shadow-2xs ml-0.5"
+                    title={language === 'am' ? 'ተግባር አክል' : 'Add Task'}
+                    aria-label="Add Task"
+                  >
+                    <Plus size={12} strokeWidth={3} />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Progress Line */}
             <div className="relative z-10 w-full bg-black/10 dark:bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
@@ -1670,8 +1698,39 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             );
           })}
 
-          {/* Empty State: Prompt user to choose a Main Stream Subject to schedule */}
-          {subjectGroups.length === 0 && !isAdding && (
+          {/* Sunday Rest Day Card: Shown on Sundays when no devotion/Sunday activities are scheduled */}
+          {isSunday && subjectGroups.length === 0 && !isAdding && (
+            <div className="py-8 px-4 text-center select-none rounded-3xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/25 backdrop-blur-xs space-y-4 shadow-xs my-2 animate-fade-in">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/15 dark:bg-emerald-500/25 flex items-center justify-center text-3xl shadow-inner">
+                🌿
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg sm:text-xl font-black font-sans tracking-tight text-emerald-950 dark:text-emerald-100">
+                  {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
+                </h3>
+                <p className="text-xs sm:text-sm font-medium opacity-80 max-w-md mx-auto text-emerald-900/80 dark:text-emerald-200/80 leading-relaxed font-sans">
+                  {language === 'am' 
+                    ? 'እሁድ የተመደበው የዕረፍትና የመረጋጊያ ቀንዎ ነው። አዕምሮዎን ያሳርፉ፣ ጸጥታን ይለማመዱ እና ለሚመጣው አዲስ ሳምንት ራስዎን ያድሱ።' 
+                    : 'Sunday is your designated rest day. Relax, reflect, recharge, and enjoy peaceful moments with loved ones.'}
+                </p>
+              </div>
+
+              {/* Devotion & Gentle Sunday activities */}
+              <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddForSubject('devotion')}
+                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                >
+                  <Plus size={13} strokeWidth={2.5} />
+                  <span>{language === 'am' ? 'የጸሎት / የዕሁድ ተግባር አክል' : 'Add Devotion / Sunday Task'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Weekday Empty State: Prompt user to choose a Main Stream Subject to schedule */}
+          {!isSunday && subjectGroups.length === 0 && !isAdding && (
             <div className="py-6 px-3 text-center space-y-3 select-none border border-dashed border-black/15 dark:border-white/15 rounded-2xl">
               <p className="font-hand text-sm sm:text-base font-bold opacity-80">
                 {language === 'am' ? 'ምንም የተመዘገበ ተግባር የለም። ከዋና ዋናዎቹ ክፍሎች አንዱን ይምረጡ፡' : 'No activities scheduled yet. Schedule your first focus block for:'}
@@ -1720,11 +1779,13 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ለማየት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to expand full screen')}
           >
             <div className="flex items-center gap-1.5 opacity-35 group-hover/taparea:opacity-75 transition-opacity">
-              <span className="text-[10px]">✏️</span>
+              <span className="text-[10px]">{isSunday ? '🌿' : '✏️'}</span>
               <span className="text-[9px] font-mono tracking-wider font-semibold uppercase">
-                {isFullScreen 
-                  ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to exit full screen')
-                  : (language === 'am' ? 'በሙሉ ገጽ ለማስፋት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to expand full screen')}
+                {isSunday && totalCount === 0
+                  ? (language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ • ለማስፋት/ለመውጣት ሁለት ጊዜ ይንኩ' : 'Rest Day and Relax • Double-tap paper to expand/exit')
+                  : (isFullScreen 
+                    ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to exit full screen')
+                    : (language === 'am' ? 'በሙሉ ገጽ ለማስፋት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to expand full screen'))}
               </span>
             </div>
           </div>
