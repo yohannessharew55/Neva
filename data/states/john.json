@@ -182,6 +182,28 @@
         }
       ],
       "id": "task-1794607244907"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647533131-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647533131-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647533131"
     }
   ],
   "workouts": [
