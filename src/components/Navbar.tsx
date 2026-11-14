@@ -73,7 +73,6 @@ export const Navbar: React.FC = () => {
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: t('navFocusTimer'), icon: Timer },
-    { id: 'triple-eight', label: language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance', icon: PieChart },
   ];
 
   const drawerNavItems = [
@@ -161,6 +160,7 @@ export const Navbar: React.FC = () => {
                 item.id === 'cockpit' ? activeTab === 'cockpit' :
                 item.id === 'calendar' ? (activeTab === 'calendar' || activeTab === 'notes-gallery') :
                 item.id === 'devotion' ? (activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition') :
+                item.id === 'goals' ? (activeTab === 'goals' || activeTab === 'triple-eight') :
                 activeTab === item.id
               );
               return (

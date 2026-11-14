@@ -180,10 +180,12 @@ export const fetchStateFromCloud = async (syncId: string = 'default_user'): Prom
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500); // Fast 3.5s timeout for snappy startup
 
-    const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(cleanSyncId)}`, {
+    const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(cleanSyncId)}&_t=${Date.now()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       },
       signal: controller.signal
     });

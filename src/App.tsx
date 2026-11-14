@@ -9,6 +9,7 @@ import { StrategicHorizonsView } from './components/StrategicHorizonsView';
 import { PracticeFlowView } from './components/PracticeFlowView';
 import { CategoryDetailView } from './components/CategoryDetailView';
 import { MergedCalendarGalleryView } from './components/MergedCalendarGalleryView';
+import { MergedGoalsView } from './components/MergedGoalsView';
 import { IntegratedCalendarView } from './components/IntegratedCalendarView';
 import { DailyStickyNotesGalleryView } from './components/DailyStickyNotesGalleryView';
 import { IosNotesAppView } from './components/IosNotesAppView';
@@ -90,8 +91,9 @@ const MainContent: React.FC = () => {
       case 'devotion':
       case 'nutrition':
         return <DevotionProtocolView />;
+      case 'triple-eight':
       case 'goals':
-        return <StrategicHorizonsView />;
+        return <MergedGoalsView />;
       case 'practice':
         return <PracticeFlowView />;
       case 'notes':

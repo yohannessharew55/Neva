@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   UserProfile, 
@@ -601,50 +601,21 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Initial sync on app startup or syncKey change
-  useEffect(() => {
-    let isMounted = true;
-    const initializeSync = async () => {
-      // If offline on startup, immediately acknowledge offline state with zero delay
-      if (isDeviceOffline()) {
-        if (isMounted) setCloudSyncStatus('offline');
-        return;
-      }
+  const isFirstMount = useRef(true);
 
-      try {
-        if (isMounted) setCloudSyncStatus('syncing');
+  // Pull latest updates from server and seamlessly hydrate the app UI
+  const pullLatestStateFromCloud = async (force: boolean = false): Promise<boolean> => {
+    if (isDeviceOffline()) return false;
+    const keyToUse = syncKey.trim() || 'default_user';
+    try {
+      const remote = await fetchStateFromCloud(keyToUse);
+      if (remote && remote.data) {
+        const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
+        const lastLocalEdit = localStorage.getItem('neva_last_local_edit_time');
+        const localEditTime = lastLocalEdit ? new Date(lastLocalEdit).getTime() : 0;
 
-        // If local device has pending unsynced offline edits, push them!
-        if (hasPendingSync(syncKey)) {
-          const pushRes = await syncStateToCloud({
-            user,
-            domains,
-            tasks,
-            workouts,
-            meals,
-            goals,
-            sessions,
-            reviews,
-            categoryPlans,
-            dailyStickyNotes,
-          }, syncKey);
-
-          if (isMounted) {
-            if (pushRes.success) {
-              clearPendingSync(syncKey);
-              setCloudSyncStatus('synced');
-              if (pushRes.database) setCloudDatabase(pushRes.database);
-              setLastSyncedAt(pushRes.updatedAt || new Date().toISOString());
-            } else {
-              setCloudSyncStatus('offline');
-            }
-          }
-          return;
-        }
-
-        // If no pending local edits, pull latest from cloud
-        const remote = await fetchStateFromCloud(syncKey);
-        if (remote && remote.data && isMounted) {
+        // If remote was updated on website, or no pending local edits, or force: hydrate immediately!
+        if (force || !hasPendingSync(keyToUse) || remoteTime > localEditTime) {
           const d = remote.data;
           if (d.user) setUser(d.user);
           if (d.domains) setDomains(d.domains);
@@ -658,11 +629,32 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
           if (remote.database) setCloudDatabase(remote.database);
           setLastSyncedAt(remote.updatedAt || new Date().toISOString());
-          clearPendingSync(syncKey);
+          clearPendingSync(keyToUse);
           setCloudSyncStatus('synced');
-        } else if (isMounted) {
-          setCloudSyncStatus('synced');
+          return true;
+        } else if (hasPendingSync(keyToUse)) {
+          // Local has newer edits, push to cloud
+          await pushStateToCloudImmediate(keyToUse);
         }
+      }
+    } catch (e) {
+      console.warn('Realtime cloud pull notice:', e);
+    }
+    return false;
+  };
+
+  // Initial sync on app startup or syncKey change
+  useEffect(() => {
+    let isMounted = true;
+    const initializeSync = async () => {
+      if (isDeviceOffline()) {
+        if (isMounted) setCloudSyncStatus('offline');
+        return;
+      }
+
+      try {
+        if (isMounted) setCloudSyncStatus('syncing');
+        await pullLatestStateFromCloud(true);
       } catch (err) {
         if (isMounted) setCloudSyncStatus('offline');
       }
@@ -686,8 +678,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(categoryPlans));
     localStorage.setItem(`${STORAGE_KEY}_daily_sticky_notes`, JSON.stringify(dailyStickyNotes));
 
-    // 2. Mark that local edits have occurred
+    // Skip marking pending and pushing to cloud on initial mount
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+
+    // 2. Mark that user-initiated local edits have occurred
     markPendingSync(syncKey);
+    localStorage.setItem('neva_last_local_edit_time', new Date().toISOString());
 
     // If device is offline, set status immediately without trying network
     if (isDeviceOffline()) {
@@ -723,36 +722,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => clearTimeout(syncTimer);
   }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, syncKey]);
 
-  // 3. Automatic Online Reconnection Listener & Heartbeat Auto-Sync
+  // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {
     const handleAutoSync = async () => {
       if (isDeviceOffline()) return;
 
       if (hasPendingSync(syncKey)) {
-        console.log('[AutoSync] Device is online with pending changes. Automatically syncing to cloud...');
-        setCloudSyncStatus('syncing');
-        const res = await syncStateToCloud({
-          user,
-          domains,
-          tasks,
-          workouts,
-          meals,
-          goals,
-          sessions,
-          reviews,
-          categoryPlans,
-          dailyStickyNotes,
-        }, syncKey);
-
-        if (res.success) {
-          clearPendingSync(syncKey);
-          setCloudSyncStatus('synced');
-          if (res.database) setCloudDatabase(res.database);
-          setLastSyncedAt(res.updatedAt || new Date().toISOString());
-          console.log('[AutoSync] Automatically synced pending changes successfully!');
-        } else {
-          setCloudSyncStatus('offline');
-        }
+        await pushStateToCloudImmediate(syncKey);
+      } else {
+        await pullLatestStateFromCloud();
       }
     };
 
@@ -763,28 +741,30 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('online', handleAutoSync);
     window.addEventListener('offline', handleOffline);
 
-    // Sync when app comes back from background (unlocked, app switch)
-    const handleVisibilityChange = () => {
+    // Sync when app comes back to foreground (unlocked, app switch, tab focus)
+    const handleForeground = () => {
       if (document.visibilityState === 'visible' && !isDeviceOffline()) {
-        handleAutoSync();
+        pullLatestStateFromCloud();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleForeground);
+    window.addEventListener('focus', handleForeground);
 
-    // Heartbeat auto-sync check every 20 seconds
+    // Heartbeat auto-sync check every 10 seconds while app is active
     const heartbeat = setInterval(() => {
-      if (!isDeviceOffline() && hasPendingSync(syncKey)) {
-        handleAutoSync();
+      if (!isDeviceOffline() && document.visibilityState === 'visible' && !hasPendingSync(syncKey)) {
+        pullLatestStateFromCloud();
       }
-    }, 20000);
+    }, 10000);
 
     return () => {
       window.removeEventListener('online', handleAutoSync);
       window.removeEventListener('offline', handleOffline);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleForeground);
+      window.removeEventListener('focus', handleForeground);
       clearInterval(heartbeat);
     };
-  }, [syncKey, user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes]);
+  }, [syncKey]);
 
   const syncNow = async (customSyncKey?: string): Promise<boolean> => {
     const keyToUse = (customSyncKey || syncKey).trim() || 'default_user';
@@ -797,34 +777,14 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return false;
     }
 
-    // If local has pending unsynced offline changes, prioritize pushing them to cloud!
-    if (hasPendingSync(keyToUse)) {
-      return await pushStateToCloudImmediate(keyToUse);
-    }
-
     setCloudSyncStatus('syncing');
     try {
-      const remote = await fetchStateFromCloud(keyToUse);
-      if (remote && remote.data) {
-        const d = remote.data;
-        if (d.user) setUser(d.user);
-        if (d.domains) setDomains(d.domains);
-        if (d.tasks) setTasks(d.tasks);
-        if (d.workouts) setWorkouts(d.workouts);
-        if (d.meals) setMeals(d.meals);
-        if (d.goals) setGoals(d.goals);
-        if (d.sessions) setSessions(d.sessions);
-        if (d.reviews) setReviews(d.reviews);
-        if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
-        if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
-        if (remote.database) setCloudDatabase(remote.database);
-        setLastSyncedAt(remote.updatedAt || new Date().toISOString());
-        clearPendingSync(keyToUse);
-        setCloudSyncStatus('synced');
-        return true;
+      if (hasPendingSync(keyToUse)) {
+        const pushRes = await pushStateToCloudImmediate(keyToUse);
+        return pushRes;
       } else {
-        // If remote is empty, push current state to cloud
-        return await pushStateToCloudImmediate(keyToUse);
+        const pullRes = await pullLatestStateFromCloud(true);
+        return pullRes;
       }
     } catch (e) {
       setCloudSyncStatus('offline');

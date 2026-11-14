@@ -33,7 +33,7 @@ export const IosBottomTabBar: React.FC = () => {
     if (tabId === 'cockpit') return activeTab === 'cockpit';
     if (tabId === 'calendar') return activeTab === 'calendar' || activeTab === 'notes-gallery';
     if (tabId === 'devotion') return activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition';
-    if (tabId === 'goals') return activeTab === 'goals';
+    if (tabId === 'goals') return activeTab === 'goals' || activeTab === 'triple-eight';
     if (tabId === 'practice') return activeTab === 'practice';
     return activeTab === tabId;
   };
