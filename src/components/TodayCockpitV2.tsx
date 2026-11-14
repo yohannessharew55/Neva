@@ -225,20 +225,7 @@ export const TodayCockpitV2: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowSundaySanctuary(prev => !prev)}
-              className={`p-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer border ${
-                isSundayToday || showSundaySanctuary
-                  ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-              }`}
-              title="Sunday Rest & Relaxation Sanctuary"
-            >
-              <span>🌿</span>
-              <span className="text-[10px] sm:text-xs font-semibold">{language === 'am' ? 'እሁድ' : 'Sunday Rest'}</span>
-            </button>
-
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-900/60 flex items-center gap-1">
               <Flame size={11} className="text-amber-500 fill-amber-500" />
               <span>{activeDaysCount}/7</span>
@@ -246,11 +233,11 @@ export const TodayCockpitV2: React.FC = () => {
 
             <button
               onClick={toggleHeaderExpanded}
-              className="p-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-2xs"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer active:scale-95 shadow-2xs flex items-center justify-center"
               title={language === 'am' ? 'ማጠቃለያውን ዘርጋ' : "Expand Today's Summary & Momentum"}
+              aria-label="Expand"
             >
-              <span className="text-[10px] sm:text-xs font-semibold">{language === 'am' ? 'ዘርጋ' : 'Expand'}</span>
-              <ChevronDown size={14} className="text-[#0082ff]" />
+              <ChevronDown size={15} className="text-[#0082ff]" />
             </button>
           </div>
         </div>
@@ -319,6 +306,20 @@ export const TodayCockpitV2: React.FC = () => {
               >
                 <SlidersHorizontal size={14} />
                 <span className="hidden sm:inline">{language === 'am' ? 'መርሐግብር' : 'Planner'}</span>
+              </button>
+
+              {/* Sunday Rest toggle button in expanded header */}
+              <button
+                onClick={() => setShowSundaySanctuary(prev => !prev)}
+                className={`p-2 sm:px-3 sm:py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border ${
+                  isSundayToday || showSundaySanctuary
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                }`}
+                title="Sunday Rest & Relaxation Sanctuary"
+              >
+                <span>🌿</span>
+                <span className="hidden sm:inline">{language === 'am' ? 'የእሁድ እረፍት' : 'Sunday Rest'}</span>
               </button>
 
               {/* Desktop Collapse Button */}

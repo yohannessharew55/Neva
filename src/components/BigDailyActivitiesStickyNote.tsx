@@ -679,7 +679,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   return (
-    <div className="relative w-full max-w-xl mx-auto my-2 group/stickymaster">
+    <div className="relative w-full max-w-2xl mx-auto my-2 group/stickymaster">
       {/* 1. Translucent Frosted Washi Tape (Compact scale) */}
       <div 
         className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center ${theme.tapeBg} ${theme.tapeBorder}`}
@@ -1140,7 +1140,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   }`}
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
-                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 mr-2 overflow-hidden">
                     {/* Drag Handle: Desktop mouse grab & Mobile touch handle */}
                     <div
                       className="text-black/30 dark:text-white/30 hover:text-black/80 dark:hover:text-white/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
@@ -1169,8 +1169,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {/* Subject Icon & Title - Touching toggles expand sign */}
                     <div 
                       onClick={() => toggleSubjectExpand(group.id)}
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-100 select-none min-w-0"
-                      title={isExpanded ? (language === 'am' ? 'ንዑስ ተግባራትን ሰብስብ' : 'Collapse sub-tasks') : (language === 'am' ? 'ንዑስ ተግባራትን ዘርጋ' : 'Expand sub-tasks')}
+                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-100 select-none min-w-0 flex-1 overflow-hidden"
+                      title={group.translatedTitle}
                     >
                       <div 
                         className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs"
@@ -1178,21 +1178,21 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       >
                         <SubjectIcon size={12} />
                       </div>
-                      <span className={`text-xs font-black uppercase tracking-wider whitespace-nowrap shrink-0 ${
+                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}>
                         {group.translatedTitle}
                       </span>
                     </div>
 
-                    {/* Quick Link to open Category Detail View */}
+                    {/* Quick Link to open Category Detail View (desktop only) */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedCategoryId(group.id);
                       }}
-                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0"
+                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0 hidden sm:inline-flex"
                       title={language === 'am' ? 'ሙሉ እቅድ ክፈት' : 'Open category detail view'}
                     >
                       <ExternalLink size={10} />
@@ -1200,8 +1200,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </div>
 
                   {/* Right: Progress Badge, Quick Add & Expand Little Sign */}
-                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 ${
                       group.isAllDone 
                         ? 'bg-emerald-500/25 text-emerald-800 dark:text-emerald-200' 
                         : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
