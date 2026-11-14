@@ -728,10 +728,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   return (
     <div className={
       isFullScreen
-        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
+        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-md pt-[max(env(safe-area-inset-top),44px)] pb-[max(env(safe-area-inset-bottom),88px)] px-3 sm:px-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
         : "relative w-full max-w-2xl mx-auto my-2 group/stickymaster"
     }>
-      <div className={isFullScreen ? "relative w-full max-w-3xl py-2 sm:py-6 my-2 sm:my-4" : "relative w-full"}>
+      <div className={isFullScreen ? "relative w-full max-w-md sm:max-w-2xl my-auto py-2" : "relative w-full"}>
         {/* 1. Translucent Frosted Washi Tape (Double tap / click toggles full screen) */}
         <div 
           onClick={handleTopDoubleTap}
@@ -761,7 +761,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
         {/* 3. The Stationary Classic Sticky Note Card */}
         <div 
-          className={`relative w-full ${isFullScreen ? 'min-h-[85vh] sm:min-h-0' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
+          className={`relative w-full ${isFullScreen ? 'min-h-[60vh] sm:min-h-0 shadow-2xl' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
           style={{
             boxShadow: isFullScreen
               ? `0 25px 50px -12px ${theme.shadowColor}, 0 10px 25px -5px rgba(0,0,0,0.3)`

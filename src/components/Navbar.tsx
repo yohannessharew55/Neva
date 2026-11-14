@@ -120,13 +120,13 @@ export const Navbar: React.FC = () => {
           
           {/* Left: Hamburger Button & Logo */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Main Hamburger Menu Button - Ergonomic 42x42px touch target */}
+            {/* Main Hamburger Menu Button - Proportionally minimized */}
             <button
               onClick={() => setDrawerOpen(true)}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 active:scale-90 min-w-[40px] min-h-[40px]"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 active:scale-90 w-8.5 h-8.5 min-w-[34px] min-h-[34px] sm:w-auto sm:min-w-[38px] sm:min-h-[38px]"
               title={language === 'am' ? 'ማውጫ ክፈት' : 'Open Categories & Menu'}
             >
-              <Menu size={19} />
+              <Menu size={16} />
               <span className="hidden sm:inline text-xs font-bold text-slate-600 dark:text-slate-300">{t('menu')}</span>
             </button>
 
@@ -143,7 +143,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group shrink-0 active:scale-95 transition-transform"
               title="Home (Click to replay N e v a intro)"
             >
-              <div className="w-8 h-8 rounded-xl bg-[#0082ff] text-white flex items-center justify-center font-black text-sm tracking-tight shadow-sm group-hover:scale-105 transition-transform shrink-0">
+              <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-xl bg-[#0082ff] text-white flex items-center justify-center font-black text-xs sm:text-sm tracking-tight shadow-sm group-hover:scale-105 transition-transform shrink-0">
                 N
               </div>
               <span className="font-black text-sm sm:text-base tracking-[0.24em] uppercase text-slate-900 dark:text-white font-sans whitespace-nowrap shrink-0 select-none">
@@ -183,16 +183,16 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Right Action Icons - Uncluttered on mobile, secondary actions moved under hamburger drawer */}
+          {/* Right Action Icons - Proportionally minimized per user request */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Schedule Reminders & Alarms Button - Always accessible on mobile & desktop */}
+            {/* Schedule Reminders & Alarms Button - Proportionally minimized */}
             <button
               onClick={() => setShowReminderModal(true)}
-              className="flex p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer relative active:scale-90 min-w-[40px] min-h-[40px] items-center justify-center shadow-2xs"
+              className="flex p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer relative active:scale-90 w-8.5 h-8.5 min-w-[34px] min-h-[34px] items-center justify-center shadow-2xs"
               title={language === 'am' ? 'አስታዋሾች እና የማንቂያ ደወል (Reminders & Alarms)' : 'Reminders & Alarms Hub'}
             >
-              <BellRing size={18} className="text-[#0082ff]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <BellRing size={15} className="text-[#0082ff]" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             </button>
 
             {/* Add Category Button */}
@@ -214,44 +214,42 @@ export const Navbar: React.FC = () => {
             {/* Language Switcher (EN 🇬🇧 <-> አማ 🇪🇹) - hidden on mobile, placed inside Hamburger Drawer */}
             <button
               onClick={toggleLanguage}
-              className="hidden sm:flex h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold transition cursor-pointer active:scale-90 min-w-[42px] min-h-[40px] items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs"
+              className="hidden sm:flex h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold transition cursor-pointer active:scale-90 min-w-[38px] min-h-[36px] items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs"
               title={language === 'en' ? 'ወደ አማርኛ ቀይር (Switch to Amharic)' : 'Switch to English (ወደ እንግሊዝኛ ቀይር)'}
             >
-              <Languages size={16} className="text-[#0082ff]" />
+              <Languages size={15} className="text-[#0082ff]" />
               <span className="font-extrabold text-xs tracking-tight">
                 {language === 'en' ? 'አማ' : 'EN'}
               </span>
             </button>
 
-
-
-            {/* Quick Scratchpad / Classic Note Icon - Always visible on mobile & desktop navbar */}
+            {/* Quick Scratchpad / Classic Note Icon - Proportionally minimized */}
             <button
               onClick={() => setShowScratchModal(true)}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-500 hover:text-amber-600 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-500 hover:text-amber-600 transition cursor-pointer active:scale-90 w-8.5 h-8.5 min-w-[34px] min-h-[34px] flex items-center justify-center relative shadow-2xs"
               title={language === 'am' ? 'ፈጣን ማስታወሻ' : 'Quick Scratch & Notes'}
             >
-              <StickyNote size={18} className="text-amber-500 fill-amber-400/20" />
+              <StickyNote size={15} className="text-amber-500 fill-amber-400/20" />
             </button>
 
-            {/* Theme Toggle (Daytime vs Dark) - Quick ergonomic access on mobile & desktop */}
+            {/* Theme Toggle (Daytime vs Dark) - Proportionally minimized */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 w-8.5 h-8.5 min-w-[34px] min-h-[34px] flex items-center justify-center shadow-2xs"
               title={theme === 'light' ? t('themeDark') : t('themeLight')}
             >
               {theme === 'light' ? (
-                <Sun size={18} className="text-amber-500 fill-amber-400" />
+                <Sun size={15} className="text-amber-500 fill-amber-400" />
               ) : (
-                <Moon size={18} className="text-cyan-400" />
+                <Moon size={15} className="text-cyan-400" />
               )}
             </button>
 
-            {/* More Dropdown (Account, Options & Backup) */}
+            {/* More Dropdown (Account, Options & Backup) - Proportionally minimized */}
             <div className="relative">
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
+                className="p-1 sm:p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer active:scale-90 w-8.5 h-8.5 min-w-[34px] min-h-[34px] flex items-center justify-center relative shadow-2xs"
                 title={currentUser ? `@${currentUser.username} (${t('options')})` : t('options')}
               >
                 {currentUser ? (
@@ -259,21 +257,21 @@ export const Navbar: React.FC = () => {
                     <img 
                       src={currentUser.avatarPhoto} 
                       alt={currentUser.name} 
-                      className="w-6 h-6 rounded-full object-cover ring-2 ring-[#0082ff]/60 shadow-xs" 
+                      className="w-5 h-5 rounded-full object-cover ring-2 ring-[#0082ff]/60 shadow-xs" 
                     />
                   ) : (
                     <div 
-                      className="w-5 h-5 rounded-md text-white font-black text-[10px] flex items-center justify-center shadow-xs"
+                      className="w-4.5 h-4.5 rounded-md text-white font-black text-[9px] flex items-center justify-center shadow-xs"
                       style={{ backgroundColor: currentUser.avatarColor || '#0082ff' }}
                     >
                       {currentUser.name ? currentUser.name[0].toUpperCase() : currentUser.username[0].toUpperCase()}
                     </div>
                   )
                 ) : (
-                  <MoreHorizontal size={18} />
+                  <MoreHorizontal size={15} />
                 )}
                 {/* Active indicator dot */}
-                <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${currentUser ? 'bg-emerald-500 animate-pulse' : 'bg-transparent'}`} />
+                <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${currentUser ? 'bg-emerald-500 animate-pulse' : 'bg-transparent'}`} />
               </button>
 
               {showMoreMenu && (

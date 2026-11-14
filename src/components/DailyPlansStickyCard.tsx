@@ -314,10 +314,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   return (
     <div className={
       isFullScreen
-        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
+        ? "fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-md pt-[max(env(safe-area-inset-top),44px)] pb-[max(env(safe-area-inset-bottom),88px)] px-3 sm:px-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
         : `relative transition-all duration-300 group/sticky ${className}`
     }>
-      <div className={isFullScreen ? "relative w-full max-w-3xl py-2 sm:py-6 my-2 sm:my-4" : "relative w-full"}>
+      <div className={isFullScreen ? "relative w-full max-w-md sm:max-w-2xl my-auto py-2" : "relative w-full"}>
         {/* 1. Translucent Frosted Washi Tape at Top Center */}
         <div 
           onClick={handleTopDoubleClick}
