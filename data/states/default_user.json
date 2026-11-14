@@ -116,7 +116,93 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "domain": "CHESS",
+      "title": "Puzzle",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607316468-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607316468-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607316468"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636697750"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636699236"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636704735"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636704960"
+    },
+    {
+      "title": "Chess Tactics & Grandmaster Drills",
+      "domain": "CHESS",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#8b5cf6",
+      "id": "task-1794636710079"
+    },
+    {
+      "title": "Chess Tactics & Grandmaster Drills",
+      "domain": "CHESS",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#8b5cf6",
+      "id": "task-1794636710760"
+    },
+    {
+      "title": "Chess Tactics & Grandmaster Drills",
+      "domain": "CHESS",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#8b5cf6",
+      "id": "task-1794636710974"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
