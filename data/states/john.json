@@ -749,6 +749,145 @@
       "dailyPlans": []
     }
   },
-  "dailyStickyNotes": [],
+  "dailyStickyNotes": [
+    {
+      "dateStr": "2026-11-14",
+      "dayName": "Sunday",
+      "ethiopianDateStr": "እሁድ • ህዳር 6, 2019",
+      "ratingStars": 5,
+      "colorTheme": "mint",
+      "moodEmoji": "☕",
+      "summaryReview": "Win",
+      "wins": [
+        "Win"
+      ],
+      "focusHoursLogged": 0,
+      "totalTargetHours": 7.4,
+      "tasks": [
+        {
+          "id": "task-1794607192262",
+          "title": "Puzzle training",
+          "startTime": "01:00 AM",
+          "durationMin": 30,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794607215060",
+          "title": "Aagard book",
+          "startTime": "01:00 AM",
+          "durationMin": 45,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794607244907",
+          "title": "15+10 game and analysis",
+          "startTime": "01:00 AM",
+          "durationMin": 30,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794647533131",
+          "title": "Warmup exercise",
+          "startTime": "12:00 PM",
+          "durationMin": 20,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794647582698",
+          "title": "Lick of the day",
+          "startTime": "12:00 PM",
+          "durationMin": 15,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794647598186",
+          "title": "Song practice",
+          "startTime": "12:00 PM",
+          "durationMin": 45,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794647622674",
+          "title": "Freeplay",
+          "startTime": "12:00 PM",
+          "durationMin": 15,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794672760665-0-zn2z",
+          "title": "Puzzle training",
+          "startTime": "01:00 AM",
+          "durationMin": 30,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794672760666-1-sofn",
+          "title": "Aagard book",
+          "startTime": "01:00 AM",
+          "durationMin": 45,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794672760666-2-p7hp",
+          "title": "15+10 game and analysis",
+          "startTime": "01:00 AM",
+          "durationMin": 30,
+          "completed": false,
+          "category": "CHESS"
+        },
+        {
+          "id": "task-1794672760666-3-1ful",
+          "title": "Warmup exercise",
+          "startTime": "12:00 PM",
+          "durationMin": 20,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794672760666-4-f9m2",
+          "title": "Lick of the day",
+          "startTime": "12:00 PM",
+          "durationMin": 15,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794672760666-5-ho46",
+          "title": "Song practice",
+          "startTime": "12:00 PM",
+          "durationMin": 45,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794672760666-6-56ci",
+          "title": "Freeplay",
+          "startTime": "12:00 PM",
+          "durationMin": 15,
+          "completed": false,
+          "category": "GUITAR"
+        },
+        {
+          "id": "task-1794694233575",
+          "title": "Puzzle",
+          "startTime": "01:00 AM",
+          "durationMin": 45,
+          "completed": false,
+          "category": "CHESS"
+        }
+      ],
+      "id": "note-1794694308699",
+      "createdAt": "2026-11-14T22:11:48.699Z"
+    }
+  ],
   "dailyStickyColor": "mint"
 }
