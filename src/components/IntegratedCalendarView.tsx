@@ -17,6 +17,7 @@ import {
 import { BigDailyActivitiesStickyNote } from './BigDailyActivitiesStickyNote';
 import { DayDefaultsModal } from './DayDefaultsModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
+import { CalendarDayBlockEditorModal } from './CalendarDayBlockEditorModal';
 import { DomainType, PriorityLevel, ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 
@@ -129,6 +130,11 @@ export const IntegratedCalendarView: React.FC = () => {
   const [selectedEthMonth, setSelectedEthMonth] = useState<number>(todayEth.month);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
   const [showStickyModal, setShowStickyModal] = useState(false);
+  const [calendarBlockEditorState, setCalendarBlockEditorState] = useState<{
+    isOpen: boolean;
+    date: Date;
+    taskId: string | null;
+  } | null>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
 
   // Quick Plan Modal State
@@ -1167,23 +1173,41 @@ export const IntegratedCalendarView: React.FC = () => {
                             {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {ethDate.day}
                           </div>
                         </div>
-                        {isDayToday ? (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">
-                            Today
-                          </span>
-                        ) : isCustom ? (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                            ⭐ Custom
-                          </span>
-                        ) : isSunday ? (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
-                            🌿 {language === 'am' ? 'እረፍት' : 'Rest'}
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-500">
-                            Default
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {isDayToday ? (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">
+                              Today
+                            </span>
+                          ) : isCustom ? (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                              ⭐ Custom
+                            </span>
+                          ) : isSunday ? (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                              🌿 {language === 'am' ? 'እረፍት' : 'Rest'}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-500">
+                              Default
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDate(dayDate);
+                              setCalendarBlockEditorState({
+                                isOpen: true,
+                                date: dayDate,
+                                taskId: null,
+                              });
+                            }}
+                            className="w-4 h-4 rounded-md text-slate-400 hover:text-[#0082ff] hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition cursor-pointer"
+                            title={language === 'am' ? 'ወደዚህ ቀን ብሎክ አክል ወይም ቀይር' : 'Add or edit blocks for this day'}
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Scheduled Blocks */}
@@ -1193,17 +1217,42 @@ export const IntegratedCalendarView: React.FC = () => {
                           return (
                             <div
                               key={tidx}
-                              className="px-2 py-1 rounded-xl text-[10px] font-bold truncate flex items-center gap-1.5 shadow-2xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedDate(dayDate);
+                                setCalendarBlockEditorState({
+                                  isOpen: true,
+                                  date: dayDate,
+                                  taskId: t.id,
+                                });
+                              }}
+                              className="px-2 py-1 rounded-xl text-[10px] font-bold truncate flex items-center justify-between gap-1.5 shadow-2xs cursor-pointer hover:scale-[1.02] transition group/pill"
                               style={{ backgroundColor: `${matchedCat.color}15`, color: matchedCat.color }}
+                              title={language === 'am' ? 'ይህንን ብሎክ ለመቀየር ይንኩ' : 'Click to edit block details'}
                             >
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: matchedCat.color }} />
-                              <span className="truncate">{t.title}</span>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: matchedCat.color }} />
+                                <span className="truncate">{t.title}</span>
+                              </div>
+                              <Edit3 size={10} className="opacity-0 group-hover/pill:opacity-100 shrink-0 text-slate-500" />
                             </div>
                           );
                         })}
 
                         {dayTasks.length > 3 && (
-                          <span className="text-[9px] text-slate-400 font-bold block pl-1">
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDate(dayDate);
+                              setCalendarBlockEditorState({
+                                isOpen: true,
+                                date: dayDate,
+                                taskId: null,
+                              });
+                            }}
+                            className="text-[9px] text-slate-400 hover:text-[#0082ff] font-bold block pl-1 cursor-pointer hover:underline"
+                            title={language === 'am' ? 'ሁሉንም ብሎኮች ይመልከቱ / ይቀይሩ' : 'View and edit all blocks for this day'}
+                          >
                             +{dayTasks.length - 3} more blocks
                           </span>
                         )}
@@ -1523,11 +1572,29 @@ export const IntegratedCalendarView: React.FC = () => {
                         )}
                       </div>
 
-                      {(mode === 'dual' || mode === 'gregorian') && (
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {gregShortStr}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {(mode === 'dual' || mode === 'gregorian') && (
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {gregShortStr}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDate(dayItem.gregDate);
+                            setCalendarBlockEditorState({
+                              isOpen: true,
+                              date: dayItem.gregDate,
+                              taskId: null,
+                            });
+                          }}
+                          className="w-4 h-4 rounded-md text-slate-400 hover:text-[#0082ff] hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition cursor-pointer"
+                          title={language === 'am' ? 'ወደዚህ ቀን ብሎክ አክል ወይም ቀይር' : 'Add or edit blocks for this day'}
+                        >
+                          <Plus size={11} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Scheduled Category Dots / Pills */}
@@ -1537,17 +1604,42 @@ export const IntegratedCalendarView: React.FC = () => {
                         return (
                           <div
                             key={tidx}
-                            className="px-1.5 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold truncate flex items-center gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDate(dayItem.gregDate);
+                              setCalendarBlockEditorState({
+                                isOpen: true,
+                                date: dayItem.gregDate,
+                                taskId: t.id,
+                              });
+                            }}
+                            className="px-1.5 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold truncate flex items-center justify-between gap-1 cursor-pointer hover:scale-[1.02] hover:shadow-xs transition group/pill"
                             style={{ backgroundColor: `${matchedCat.color}15`, color: matchedCat.color }}
+                            title={language === 'am' ? 'ይህንን ብሎክ ለመቀየር ይንኩ' : 'Click to edit block details'}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: matchedCat.color }} />
-                            <span className="truncate">{t.title}</span>
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: matchedCat.color }} />
+                              <span className="truncate">{t.title}</span>
+                            </div>
+                            <Edit3 size={9} className="opacity-0 group-hover/pill:opacity-100 shrink-0 text-slate-600 dark:text-slate-300" />
                           </div>
                         );
                       })}
 
                       {dayTasks.length > 2 && (
-                        <span className="text-[9px] text-slate-400 font-bold block pl-1">
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDate(dayItem.gregDate);
+                            setCalendarBlockEditorState({
+                              isOpen: true,
+                              date: dayItem.gregDate,
+                              taskId: null,
+                            });
+                          }}
+                          className="text-[9px] text-slate-400 hover:text-[#0082ff] font-bold block pl-1 cursor-pointer hover:underline"
+                          title={language === 'am' ? 'ሁሉንም ብሎኮች ይመልከቱ / ይቀይሩ' : 'View and edit all blocks for this day'}
+                        >
                           +{dayTasks.length - 2} more
                         </span>
                       )}
@@ -2038,6 +2130,16 @@ export const IntegratedCalendarView: React.FC = () => {
           itemDescription={calendarScopeAction.itemDescription}
           sourceDate={selectedDate}
           onConfirm={handleConfirmCalendarScope}
+        />
+      )}
+
+      {/* Direct Calendar Block Editor Modal for specific clicked days */}
+      {calendarBlockEditorState && (
+        <CalendarDayBlockEditorModal
+          isOpen={calendarBlockEditorState.isOpen}
+          date={calendarBlockEditorState.date}
+          initialEditingTaskId={calendarBlockEditorState.taskId}
+          onClose={() => setCalendarBlockEditorState(null)}
         />
       )}
     </div>
