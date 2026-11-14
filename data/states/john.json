@@ -452,7 +452,11 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Mon 07:00 AM: Chess Focus",
+        "Tue 07:00 AM: Chess Focus",
+        "Wed 07:00 AM: Chess Focus"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
