@@ -335,7 +335,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           }}
           onDoubleClick={handleTopDoubleClick}
           onTouchEnd={handleTopDoubleTap}
-          className="absolute top-2 right-4 text-xl filter drop-shadow-xs select-none z-30 transition-transform hover:scale-110 active:scale-95 cursor-pointer touch-manipulation"
+          className="absolute top-2 right-4 text-sm sm:text-base filter drop-shadow-xs select-none z-30 transition-transform hover:scale-110 active:scale-95 cursor-pointer touch-manipulation"
           title={isFullScreen ? "Exit Full Screen" : "Toggle Full Screen"}
         >
           📌
@@ -416,24 +416,24 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 e.stopPropagation();
                 setShowColorPalette(!showColorPalette);
               }}
-              className="p-1.5 min-w-[28px] min-h-[28px] rounded-xl opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center"
+              className="p-1 w-[22px] h-[22px] min-w-[22px] min-h-[22px] rounded-md opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center"
               title="Change Sticky Note Color"
             >
-              <Palette size={14} />
+              <Palette size={11} />
             </button>
 
-            {/* Full Screen Symbol Button - Beside color palette */}
+            {/* Full Screen Symbol Button - Beside color palette (minimized by 20%) */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsFullScreen(!isFullScreen);
               }}
-              className="p-1.5 min-w-[28px] min-h-[28px] rounded-xl opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center text-current"
+              className="p-1 w-[22px] h-[22px] min-w-[22px] min-h-[22px] rounded-md opacity-70 hover:opacity-100 transition cursor-pointer flex items-center justify-center text-current"
               title={isFullScreen ? "Exit Full Screen" : "View Full Screen"}
               aria-label="Toggle Full Screen"
             >
-              {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              {isFullScreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
             </button>
 
             {/* Color Palette Popover */}

@@ -756,7 +756,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           className="absolute top-1.5 right-3 sm:right-5 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95 touch-manipulation"
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Toggle Full Screen')}
         >
-          <span className="text-lg sm:text-xl pointer-events-none">📌</span>
+          <span className="text-sm sm:text-base pointer-events-none">📌</span>
         </div>
 
         {/* 3. The Stationary Classic Sticky Note Card */}
@@ -805,8 +805,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </h2>
             </div>
 
-            {/* Palette & Full-Screen Controls */}
-            <div className="flex items-center gap-1.5 relative z-20">
+            {/* Palette & Full-Screen Controls (minimized by 20%) */}
+            <div className="flex items-center gap-1 relative z-20">
               <div className="relative">
                 <button
                   type="button"
@@ -814,14 +814,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     e.stopPropagation();
                     setShowColorPalette(!showColorPalette);
                   }}
-                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 flex items-center justify-center"
+                  className="p-1 w-[22px] h-[22px] min-w-[22px] min-h-[22px] rounded-md bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 flex items-center justify-center text-current"
                   title="Change Color"
                 >
-                  <Palette size={14} />
+                  <Palette size={11} />
                 </button>
 
                 {showColorPalette && (
-                  <div className="absolute right-0 top-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-xl flex items-center gap-1.5 z-40">
+                  <div className="absolute right-0 top-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-xl flex items-center gap-1 z-40">
                     {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
                       <button
                         key={cKey}
@@ -831,7 +831,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                           setDailyStickyColor(cKey);
                           setShowColorPalette(false);
                         }}
-                        className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
+                        className={`w-4 h-4 rounded-full transition-transform cursor-pointer ${
                           colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-80 hover:opacity-100'
                         }`}
                         style={{ backgroundColor: THEMES[cKey].dotColor }}
@@ -842,7 +842,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 )}
               </div>
 
-              {/* Full Screen Symbol Button - On the side of color palette, symbol only */}
+              {/* Full Screen Symbol Button - Minimized by 20%, symbol only */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -850,11 +850,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   setIsFullScreen(!isFullScreen);
                   try { soundEngine.playPencil(); } catch {}
                 }}
-                className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center relative z-20"
+                className="p-1 w-[22px] h-[22px] min-w-[22px] min-h-[22px] rounded-md bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center relative z-20"
                 title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
                 aria-label="Toggle Full Screen"
               >
-                {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                {isFullScreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
               </button>
 
               {onClose && (
@@ -864,10 +864,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     e.stopPropagation();
                     onClose();
                   }}
-                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
+                  className="p-1 w-[22px] h-[22px] min-w-[22px] min-h-[22px] rounded-md bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
                   title={language === 'am' ? 'ዝጋ' : 'Close'}
                 >
-                  <X size={14} />
+                  <X size={11} />
                 </button>
               )}
             </div>
@@ -1253,10 +1253,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       title={group.translatedTitle}
                     >
                       <div 
-                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs"
+                        className="w-4 h-4 rounded-md flex items-center justify-center shrink-0 shadow-2xs"
                         style={{ backgroundColor: `${group.color}25`, color: group.color }}
                       >
-                        <SubjectIcon size={12} />
+                        <SubjectIcon size={10} />
                       </div>
                       <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
