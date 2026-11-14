@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, Shuffle, Copy, Check, Bookmark, 
-  Share2, Heart, Star, BookOpen, Layers
+  Sparkles, Copy, Check, Star, BookOpen
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { BibleVerse, BIBLE_QUOTES_LIBRARY, BIBLE_THEMES_FILTER } from '../../data/bibleData';
 import { soundEngine } from '../../utils/audio';
 
@@ -16,36 +14,8 @@ export const BibleQuotesGallery: React.FC<BibleQuotesGalleryProps> = ({
   language,
   onSelectVerseToMemorize
 }) => {
-  // Random Featured Quote State
-  const [featuredQuote, setFeaturedQuote] = useState<BibleVerse>(() => {
-    const randomIndex = Math.floor(Math.random() * BIBLE_QUOTES_LIBRARY.length);
-    return BIBLE_QUOTES_LIBRARY[randomIndex];
-  });
-
-  const [isRolling, setIsRolling] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Trigger New Random Quote
-  const handleRollRandom = () => {
-    setIsRolling(true);
-    try {
-      soundEngine.playPencil();
-    } catch (e) {}
-
-    setTimeout(() => {
-      let nextIndex = Math.floor(Math.random() * BIBLE_QUOTES_LIBRARY.length);
-      // Ensure it's different from the current one
-      if (BIBLE_QUOTES_LIBRARY[nextIndex].id === featuredQuote.id) {
-        nextIndex = (nextIndex + 1) % BIBLE_QUOTES_LIBRARY.length;
-      }
-      setFeaturedQuote(BIBLE_QUOTES_LIBRARY[nextIndex]);
-      setIsRolling(false);
-      try {
-        soundEngine.playSound('CHIME_MEDITATION');
-      } catch (e) {}
-    }, 250);
-  };
 
   const handleCopy = (verse: BibleVerse) => {
     const text = `"${verse.textEn}"\n"${verse.textAm}"\n— ${verse.refEn} (${verse.refAm})`;
@@ -61,74 +31,9 @@ export const BibleQuotesGallery: React.FC<BibleQuotesGalleryProps> = ({
   });
 
   return (
-    <div className="w-full space-y-6">
-      {/* 1. HERO: Everytime New & Random Quote from the Bible */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-950 via-indigo-950 to-slate-900 border border-purple-500/30 text-white p-6 sm:p-8 shadow-xl">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <Sparkles size={140} />
-        </div>
-
-        <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-purple-200 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={13} className="text-purple-300" />
-              <span>{language === 'am' ? 'የዘፈቀደ አዲስ ቃል' : 'Instant Random Quote'}</span> • {language === 'am' ? featuredQuote.themeAm : featuredQuote.theme}
-            </span>
-
-            {/* The Prominent Random Roll Button */}
-            <button
-              onClick={handleRollRandom}
-              disabled={isRolling}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold flex items-center gap-2 cursor-pointer transition shadow-md active:scale-95 disabled:opacity-50"
-              title="Get a fresh random quote from the Bible"
-            >
-              <Shuffle size={14} className={isRolling ? 'animate-spin' : ''} />
-              <span>{language === 'am' ? '🎲 አዲስ የዘፈቀደ ቃል ቀይር' : '🎲 New Random Quote'}</span>
-            </button>
-          </div>
-
-          {/* Featured Quote Display */}
-          <div className={`space-y-3 transition-opacity duration-200 ${isRolling ? 'opacity-30' : 'opacity-100'}`}>
-            <blockquote className="text-lg sm:text-xl md:text-2xl font-serif italic text-purple-50 leading-relaxed">
-              "{featuredQuote.textEn}"
-            </blockquote>
-
-            <blockquote className="text-base sm:text-lg md:text-xl font-serif font-semibold text-purple-200/90 leading-relaxed pt-1 border-t border-white/10">
-              "{featuredQuote.textAm}"
-            </blockquote>
-
-            <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
-              <span className="text-sm font-bold tracking-wide text-purple-300">
-                — {featuredQuote.refEn} ({featuredQuote.refAm})
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleCopy(featuredQuote)}
-                  className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                >
-                  {copiedId === featuredQuote.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                  <span>{copiedId === featuredQuote.id ? (language === 'am' ? 'ተቀድቷል' : 'Copied') : (language === 'am' ? 'ቅዳ' : 'Copy')}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    onSelectVerseToMemorize(featuredQuote);
-                    try { soundEngine.playPencil(); } catch (e) {}
-                  }}
-                  className="px-3.5 py-1 rounded-xl bg-[#a855f7] hover:bg-purple-600 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
-                >
-                  <Star size={13} />
-                  <span>{language === 'am' ? 'በካርድ ወረቀት ሸምድድ' : 'Memorize on Card Paper'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. BUNCH OF DAILY QUOTES GALLERY */}
-      <div className="space-y-4 pt-2">
+    <div className="w-full space-y-4">
+      {/* BUNCH OF DAILY QUOTES GALLERY */}
+      <div className="space-y-4 pt-1">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xl">📚</span>

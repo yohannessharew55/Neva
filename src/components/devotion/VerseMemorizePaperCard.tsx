@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, Check, ChevronRight, ChevronLeft, Shuffle, 
-  Copy, Eye, EyeOff, Layers, Award, RotateCw, BookOpen, Star
+  Copy, Eye, EyeOff, Award, RotateCw, BookOpen, Star, Plus, X, Bookmark
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BibleVerse, BIBLE_QUOTES_LIBRARY } from '../../data/bibleData';
@@ -12,6 +12,7 @@ interface VerseMemorizePaperCardProps {
   onNextVerse: () => void;
   onPrevVerse: () => void;
   onRandomVerse: () => void;
+  onSelectCustomVerse?: (verse: BibleVerse) => void;
   language: string;
 }
 
@@ -20,14 +21,32 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
   onNextVerse,
   onPrevVerse,
   onRandomVerse,
+  onSelectCustomVerse,
   language
 }) => {
-  // Memorization Mode: 'full' | 'blanks' | 'letters' | 'flashcard'
-  const [memoMode, setMemoMode] = useState<'full' | 'blanks' | 'letters' | 'flashcard'>('full');
+  // Memorization Mode: 'full' | 'blanks' | 'flashcard' (First Letters removed per user request)
+  const [memoMode, setMemoMode] = useState<'full' | 'blanks' | 'flashcard'>('full');
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [paperColor, setPaperColor] = useState<'canary' | 'parchment' | 'mint' | 'rose'>('parchment');
   const [copiedToast, setCopiedToast] = useState(false);
   const [showMemorizedModal, setShowMemorizedModal] = useState(false);
+  const [isAddCustomModalOpen, setIsAddCustomModalOpen] = useState(false);
+
+  // Custom Verses added by user
+  const [customVerses, setCustomVerses] = useState<BibleVerse[]>(() => {
+    try {
+      const saved = localStorage.getItem('livotion_custom_bible_verses_v1');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Custom Verse Form State
+  const [customRef, setCustomRef] = useState('');
+  const [customTextEn, setCustomTextEn] = useState('');
+  const [customTextAm, setCustomTextAm] = useState('');
+  const [customTheme, setCustomTheme] = useState('Faith & Guidance');
 
   // Memorized verses list stored in localStorage
   const [memorizedIds, setMemorizedIds] = useState<string[]>(() => {
@@ -76,7 +95,6 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
     const words = text.split(' ');
     return words
       .map((word, idx) => {
-        // preserve punctuation
         const clean = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
         if (clean.length <= 2) return word;
         return idx % 2 === 1 ? '______' : word;
@@ -84,17 +102,36 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
       .join(' ');
   };
 
-  // Helper to show only the first letter of each word (ultimate memory cue)
-  const getInitialLettersText = (text: string): string => {
-    const words = text.split(' ');
-    return words
-      .map((word) => {
-        if (!word) return '';
-        const firstLetter = word[0];
-        const punctuation = word.slice(1).replace(/[^.,;:!?"'()]/g, '');
-        return `${firstLetter}___${punctuation}`;
-      })
-      .join(' ');
+  // Save Custom Verse pasted by User
+  const handleSaveCustomVerse = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customTextEn.trim() && !customTextAm.trim()) return;
+
+    const newVerse: BibleVerse = {
+      id: `custom-verse-${Date.now()}`,
+      refEn: customRef.trim() || (language === 'am' ? 'የተቀዳ ጥቅስ' : 'My Bible Verse'),
+      refAm: customRef.trim() || 'የተቀዳ ጥቅስ',
+      textEn: customTextEn.trim() || customTextAm.trim(),
+      textAm: customTextAm.trim() || customTextEn.trim(),
+      theme: customTheme.trim() || 'My Scripture',
+      themeAm: 'የተመረጠ ጥቅስ',
+      category: 'faith'
+    };
+
+    const updated = [newVerse, ...customVerses];
+    setCustomVerses(updated);
+    try {
+      localStorage.setItem('livotion_custom_bible_verses_v1', JSON.stringify(updated));
+      soundEngine.playPencil();
+      confetti({ particleCount: 35, spread: 60 });
+    } catch (e) {}
+
+    // Load newly added custom verse immediately on card paper
+    onSelectCustomVerse?.(newVerse);
+    setIsAddCustomModalOpen(false);
+    setCustomRef('');
+    setCustomTextEn('');
+    setCustomTextAm('');
   };
 
   // Paper Theme Configurations
@@ -143,9 +180,13 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
 
   const theme = PAPER_THEMES[paperColor];
 
+  // All verses list for memorized modal lookup
+  const allVersesLookup = [...BIBLE_QUOTES_LIBRARY, ...customVerses];
+  const memorizedVersesList = allVersesLookup.filter((v) => memorizedIds.includes(v.id));
+
   return (
     <div className="w-full space-y-4">
-      {/* Top Bar: Title, Memorized Count & Memorization Mode Selector */}
+      {/* Top Bar: Title, Add Custom Verse & Memorized Counter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-xl">📜</span>
@@ -162,8 +203,20 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
           </div>
         </div>
 
-        {/* Right Header Actions: Mode & Memorized Counter */}
+        {/* Right Header Actions: Add Custom Verse, Mode & Memorized Counter */}
         <div className="flex items-center gap-2 flex-wrap">
+          
+          {/* Button: Add Custom Quote from Bible (Copy & Paste) */}
+          <button
+            type="button"
+            onClick={() => setIsAddCustomModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95"
+            title="Paste and memorize your own Scripture from Bible"
+          >
+            <Plus size={14} />
+            <span>{language === 'am' ? 'ከመጽሐፍ ቅዱስ ለጥፍ' : 'Paste from Bible'}</span>
+          </button>
+
           <button
             onClick={() => setShowMemorizedModal(true)}
             className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 text-[#a855f7] border border-purple-200 dark:border-purple-800 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
@@ -189,7 +242,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
         </div>
       </div>
 
-      {/* Memorization Mode Pill Switcher */}
+      {/* Memorization Mode Pill Switcher (3 Modes: Full Text, Word Blanks, Flashcard Flip) */}
       <div className="flex items-center justify-between gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto text-xs font-bold">
         <div className="flex items-center gap-1">
           <button
@@ -201,7 +254,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
             }`}
           >
             <Eye size={13} />
-            <span>{language === 'am' ? 'ሙሉ ቃል' : '1. Full Text'}</span>
+            <span>{language === 'am' ? '1. ሙሉ ቃል' : '1. Full Text'}</span>
           </button>
 
           <button
@@ -214,20 +267,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
             title="Hides 40% of words for recall practice"
           >
             <EyeOff size={13} />
-            <span>{language === 'am' ? 'የተደበቁ ቃላት (40%)' : '2. Word Blanks'}</span>
-          </button>
-
-          <button
-            onClick={() => setMemoMode('letters')}
-            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-              memoMode === 'letters'
-                ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-            }`}
-            title="Shows first letter cues only"
-          >
-            <Layers size={13} />
-            <span>{language === 'am' ? 'ፊደላት ብቻ (80%)' : '3. First Letters'}</span>
+            <span>{language === 'am' ? '2. የተደበቁ ቃላት (40%)' : '2. Word Blanks (40%)'}</span>
           </button>
 
           <button
@@ -240,7 +280,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
             title="Flip flashcard mode"
           >
             <RotateCw size={13} />
-            <span>{language === 'am' ? 'ፍላሽ ካርድ' : '4. Flashcard Flip'}</span>
+            <span>{language === 'am' ? '3. ፍላሽ ካርድ' : '3. Flashcard Flip'}</span>
           </button>
         </div>
 
@@ -309,7 +349,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
                 </span>
               </div>
 
-              {/* Action Icons */}
+              {/* Action Icons with Right Top Memorized Check */}
               <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
@@ -320,18 +360,27 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
                   {copiedToast ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
                 </button>
 
+                {/* Right Top Memorized Check Button */}
                 <button
                   type="button"
                   onClick={toggleMemorized}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs ${
                     isCurrentMemorized
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-500/40 ring-offset-1'
                       : 'bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20'
                   }`}
-                  title={isCurrentMemorized ? 'Memorized! Click to remove' : 'Mark as memorized into heart'}
+                  title={isCurrentMemorized ? 'Memorized into heart! Click to uncheck' : 'Click when memorized to mark as checked'}
                 >
-                  <Star size={13} className={isCurrentMemorized ? 'fill-white text-white' : ''} />
-                  <span>{isCurrentMemorized ? (language === 'am' ? 'ተሸምድዷል ✓' : 'Memorized ✓') : (language === 'am' ? 'ሸምድጃለሁ' : 'Mark Memorized')}</span>
+                  {isCurrentMemorized ? (
+                    <Check size={14} className="stroke-[3]" />
+                  ) : (
+                    <Star size={13} />
+                  )}
+                  <span>
+                    {isCurrentMemorized 
+                      ? (language === 'am' ? 'ተሸምድዷል ✓' : 'Memorized ✓') 
+                      : (language === 'am' ? 'ሸምድጃለሁ' : 'Mark Memorized')}
+                  </span>
                 </button>
               </div>
             </div>
@@ -358,13 +407,11 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
               </div>
             ) : (
               <div className="space-y-4 py-2">
-                {/* English Text */}
+                {/* English / Primary Text */}
                 <div className="space-y-1">
                   <blockquote className="text-base sm:text-lg md:text-xl font-serif italic font-medium leading-relaxed">
                     "{memoMode === 'blanks' 
                       ? getBlankedText(currentVerse.textEn) 
-                      : memoMode === 'letters' 
-                      ? getInitialLettersText(currentVerse.textEn) 
                       : currentVerse.textEn}"
                   </blockquote>
                   <p className="text-xs font-mono font-bold tracking-wider opacity-65">
@@ -372,19 +419,19 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
                   </p>
                 </div>
 
-                {/* Amharic Text Divider & Verse */}
-                <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-1">
-                  <blockquote className="text-sm sm:text-base md:text-lg font-serif font-semibold leading-relaxed">
-                    "{memoMode === 'blanks' 
-                      ? getBlankedText(currentVerse.textAm) 
-                      : memoMode === 'letters' 
-                      ? getInitialLettersText(currentVerse.textAm) 
-                      : currentVerse.textAm}"
-                  </blockquote>
-                  <p className="text-xs font-mono font-bold tracking-wider opacity-65">
-                    — {currentVerse.refAm}
-                  </p>
-                </div>
+                {/* Amharic / Secondary Text Divider & Verse */}
+                {currentVerse.textAm && currentVerse.textAm !== currentVerse.textEn && (
+                  <div className="pt-3 border-t border-black/10 dark:border-white/10 space-y-1">
+                    <blockquote className="text-sm sm:text-base md:text-lg font-serif font-semibold leading-relaxed">
+                      "{memoMode === 'blanks' 
+                        ? getBlankedText(currentVerse.textAm) 
+                        : currentVerse.textAm}"
+                    </blockquote>
+                    <p className="text-xs font-mono font-bold tracking-wider opacity-65">
+                      — {currentVerse.refAm}
+                    </p>
+                  </div>
+                )}
 
                 {memoMode === 'flashcard' && isFlipped && (
                   <div className="pt-2 text-center">
@@ -401,7 +448,7 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
               <button
                 type="button"
                 onClick={onPrevVerse}
-                className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-black/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-2xs"
+                className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
               >
                 <ChevronLeft size={14} />
                 <span>{language === 'am' ? 'ያለፈው' : 'Prev'}</span>
@@ -410,16 +457,16 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
               <button
                 type="button"
                 onClick={onRandomVerse}
-                className="px-3 py-1.5 rounded-xl bg-[#a855f7] hover:bg-purple-600 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-xs"
+                className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95"
               >
                 <Shuffle size={13} />
-                <span>{language === 'am' ? 'የዘፈቀደ ቃል' : 'Shuffle Verse'}</span>
+                <span>{language === 'am' ? 'ቃል ቀይር' : 'Shuffle Verse'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={onNextVerse}
-                className="px-3 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-black/40 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-2xs"
+                className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
               >
                 <span>{language === 'am' ? 'ቀጣይ' : 'Next'}</span>
                 <ChevronRight size={14} />
@@ -429,66 +476,159 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
         </div>
       </div>
 
-      {/* Memorized Verses Modal */}
-      {showMemorizedModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121927] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+      {/* Modal: Add & Paste Custom Bible Verse */}
+      {isAddCustomModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#111724] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-lg p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Award size={20} className="text-[#a855f7]" />
-                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                  {language === 'am' ? 'የተሸመደዱ ቅዱሳት ቃላት' : 'Memorized Scriptures'}
+                <BookOpen size={18} className="text-purple-600 dark:text-purple-400" />
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  {language === 'am' ? 'የመጽሐፍ ቅዱስ ቃል ለጥፍና ሸምድድ' : 'Paste Bible Verse to Memorize'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsAddCustomModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCustomVerse} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'am' ? 'የመጽሐፍ ቅዱስ ጥቅስ አድራሻ (ምሳሌ: ሮሜ 8:28 / Philippians 4:13)' : 'Scripture Reference (e.g. Philippians 4:13, Romans 8:28)'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customRef}
+                  onChange={(e) => setCustomRef(e.target.value)}
+                  placeholder="e.g. Philippians 4:13 or ፊልጵስዩስ 4:13"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'am' ? 'የጥቅሱ ጽሑፍ (ከመጽሐፍ ቅዱስህ ኮፒ አድርገህ እዚህ ለጥፈው)' : 'Scripture Text (Copy from your Bible & paste here)'}
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={customTextEn}
+                  onChange={(e) => setCustomTextEn(e.target.value)}
+                  placeholder="Paste Scripture text here..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:border-purple-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'am' ? 'የአማርኛ ወይም ሁለተኛ ትርጉም (አስገዳጅ አይደለም)' : 'Amharic or Second Translation (Optional)'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={customTextAm}
+                  onChange={(e) => setCustomTextAm(e.target.value)}
+                  placeholder="Paste Amharic translation or secondary version..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:border-purple-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'am' ? 'ጭብጥ / ምድብ' : 'Theme / Topic'}
+                </label>
+                <input
+                  type="text"
+                  value={customTheme}
+                  onChange={(e) => setCustomTheme(e.target.value)}
+                  placeholder="e.g. Faith & Victory, Peace, Prayer"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCustomModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  {language === 'am' ? 'ተወው' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-md active:scale-95"
+                >
+                  <Bookmark size={14} />
+                  <span>{language === 'am' ? 'መዝግብና በካርድ ሸምድድ' : 'Save & Memorize on Paper'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Memorized Verses Library */}
+      {showMemorizedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-[#111724] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="text-amber-500" size={20} />
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  {language === 'am' ? 'በልብ የተሸመደዱ ጥቅሶች' : 'Verses Memorized in Heart'} ({memorizedVersesList.length})
                 </h3>
               </div>
               <button
                 onClick={() => setShowMemorizedModal(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {memorizedIds.length === 0 ? (
-                <div className="py-8 text-center text-slate-400 text-xs font-medium">
-                  {language === 'am' ? 'እስካሁን የተሸመደደ ቃል የለም። ቃላትን በልብህ ለመሸምደድ «ሸምድጃለሁ»ን ተጫን!' : 'No verses marked as memorized yet. Use the card to practice and commit them to memory!'}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+              {memorizedVersesList.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  {language === 'am' ? 'እስካሁን የተሸመደደ ቃል የለም። ካርዱ ላይ ሸምድጃለሁ የሚለውን ይጫኑ!' : 'No verses marked as memorized yet. Use the card paper to memorize Scripture!'}
                 </div>
               ) : (
-                memorizedIds.map((id) => {
-                  const verse = BIBLE_QUOTES_LIBRARY.find((v) => v.id === id);
-                  if (!verse) return null;
-                  return (
-                    <div
-                      key={id}
-                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2 text-left"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-purple-600 dark:text-purple-400 font-mono">
-                          {verse.refEn} • {verse.refAm}
+                memorizedVersesList.map((verse) => (
+                  <div
+                    key={verse.id}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold font-mono text-purple-600 dark:text-purple-400">
+                          {verse.refEn} ({verse.refAm})
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">
-                          {verse.theme}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 border border-emerald-200 dark:border-emerald-800">
+                          ✓ Memorized
                         </span>
                       </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-200 font-serif italic">
+                      <p className="text-xs sm:text-sm font-serif italic text-slate-800 dark:text-slate-200 pt-1">
                         "{verse.textEn}"
                       </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 font-serif">
-                        "{verse.textAm}"
-                      </p>
                     </div>
-                  );
-                })
-              )}
-            </div>
 
-            <div className="pt-2 text-right">
-              <button
-                onClick={() => setShowMemorizedModal(false)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                {language === 'am' ? 'ዝጋ' : 'Close'}
-              </button>
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800">
+                      <button
+                        onClick={() => {
+                          onSelectCustomVerse?.(verse);
+                          setShowMemorizedModal(false);
+                        }}
+                        className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                      >
+                        {language === 'am' ? 'ካርድ ላይ አሳይ' : 'Review on Card'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import { VerseMemorizePaperCard } from './devotion/VerseMemorizePaperCard';
 import { BibleReadingSessionView } from './devotion/BibleReadingSessionView';
 import { WeeklyBibleStudyView } from './devotion/WeeklyBibleStudyView';
 import { BibleQuotesGallery } from './devotion/BibleQuotesGallery';
+import { BibleQuoteHeroCard } from './devotion/BibleQuoteHeroCard';
 
 interface PrayerIntention {
   id: string;
@@ -571,6 +572,16 @@ export const DevotionProtocolView: React.FC = () => {
         })}
       </div>
 
+      {/* TOP: Daily Inspiring Scripture Quote Hero Card with Hover Chevrons (PC) & Mobile Swipe */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'quotes') && (
+        <div className="w-full">
+          <BibleQuoteHeroCard
+            language={language}
+            onSelectVerseToMemorize={handleSelectVerseToMemorize}
+          />
+        </div>
+      )}
+
       {/* 1. Feature 2: Verse of the Day to Memorize with Card Paper */}
       {(devotionSubTab === 'all' || devotionSubTab === 'memorize') && (
         <div id="verse-memorize-card-section" className="space-y-4">
@@ -579,6 +590,7 @@ export const DevotionProtocolView: React.FC = () => {
             onNextVerse={handleNextCardVerse}
             onPrevVerse={handlePrevCardVerse}
             onRandomVerse={handleRandomCardVerse}
+            onSelectCustomVerse={(verse) => setCardVerse(verse)}
             language={language}
           />
         </div>
@@ -604,7 +616,7 @@ export const DevotionProtocolView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Feature 4: Bible Quotes of the Day (New Random + Bunch of Quotes) */}
+      {/* 4. Feature 4: Bunch of Daily Bible Quotes Gallery */}
       {(devotionSubTab === 'all' || devotionSubTab === 'quotes') && (
         <div className="pt-2">
           <BibleQuotesGallery
