@@ -913,14 +913,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Helper to get default tasks for a given day of week (1 = Mon ... 7 = Sun)
   const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
-    // 1. Check if explicit tasks exist for this day of week without a specific date
-    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek);
-    if (dayMatches.length > 0) {
-      return dayMatches;
-    }
-
-    // 2. If Sunday (dayOfWeek === 7), return default Sunday Rest routine
+    // 1. If Sunday (dayOfWeek === 7), return Sunday Rest routine unless explicit Sunday tasks exist
     if (dayOfWeek === 7) {
+      const sundayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === 7);
+      if (sundayMatches.length > 0) return sundayMatches;
       return [
         {
           id: 'def-sun-1',
@@ -970,13 +966,33 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ];
     }
 
-    // 3. For Mon-Sat, check if global undated tasks exist (tasks with no date and no dayOfWeek)
+    // 2. Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
+    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek);
+
+    // 3. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
     const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek);
-    if (globalTasks.length > 0) {
-      return globalTasks;
+
+    // Combine dayMatches with global stream blocks so all streams are held across days
+    const combined: ScheduleTask[] = [];
+    const seenTitles = new Set<string>();
+
+    dayMatches.forEach((t) => {
+      combined.push(t);
+      seenTitles.add(t.title.toLowerCase());
+    });
+
+    globalTasks.forEach((t) => {
+      if (!seenTitles.has(t.title.toLowerCase())) {
+        combined.push(t);
+        seenTitles.add(t.title.toLowerCase());
+      }
+    });
+
+    if (combined.length > 0) {
+      return combined;
     }
 
-    // 4. Fallback defaults for weekdays
+    // 4. Fallback defaults for weekdays if tasks array is completely empty
     return [
       {
         id: `def-wd-${dayOfWeek}-1`,

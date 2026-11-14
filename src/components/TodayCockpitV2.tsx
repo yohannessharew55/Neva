@@ -535,44 +535,7 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Mobile Alarms & Apple Reminders Action Hub (Positioned under the Sticky Note) */}
-      <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent border border-blue-200/80 dark:border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#0082ff] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
-            <AlarmClock size={19} className="animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                {language === 'am' ? 'የስልክ ማንቂያ እና አፕል አስታዋሽ' : 'Mobile Phone Alarms & Apple Reminders'}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {language === 'am' ? 'የስልክ ማንቂያ ያዘጋጁ፣ በድምጽ ያስደውሉ ወይም ወደ አፕል አስታዋሽ ይላኩ' : 'Arm phone focus alarms, countdown timers & sync to iPhone Reminders app'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 shrink-0">
-          <button
-            onClick={() => setShowReminderModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-xs shrink-0"
-          >
-            <AlarmClock size={14} />
-            <span>{language === 'am' ? 'ማንቂያ አዘጋጅ' : 'Set Phone Alarm'}</span>
-          </button>
-
-          <button
-            onClick={() => setShowReminderModal(true)}
-            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-2xs shrink-0"
-          >
-            <BellRing size={14} className="text-[#0082ff]" />
-            <span>{language === 'am' ? 'አፕል አስታዋሽ' : 'Sync Reminders'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 3. 24-Hour Balance (8/8/8) Preview Card - Minimal Words & Ultra Clean */}
+      {/* 2. 24-Hour Balance (8/8/8) Preview Card - Minimal Words & Ultra Clean */}
       <div 
         onClick={() => setActiveTab('triple-eight')}
         className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-[#121927] border border-indigo-200/70 dark:border-indigo-900/40 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-700 transition group"
