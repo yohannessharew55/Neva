@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Check, Play, Plus, Clock, Wind, 
-  Trash2, ChevronDown, ChevronUp, Palette,
+  Trash2, ChevronDown, ChevronUp, Palette, Maximize2, Minimize2,
   Dumbbell, Swords, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
   ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar
@@ -14,6 +14,7 @@ import { DayDefaultsModal } from './DayDefaultsModal';
 import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { formatTaskDuration } from '../utils/formatDuration';
+import { DurationPicker } from './DurationPicker';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
 
@@ -194,8 +195,25 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const colorTheme = (dailyStickyColor as StickyColorTheme) || 'canary';
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showColorPalette, setShowColorPalette] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
+
+  // Full Screen Scroll Lock and Escape Key handling
+  useEffect(() => {
+    if (!isFullScreen) return;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsFullScreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullScreen]);
 
   // Day Defaults & Multi-Day Apply Modals
   const [showDefaultsModal, setShowDefaultsModal] = useState(false);
@@ -667,32 +685,39 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto my-2 group/stickymaster">
-      {/* 1. Translucent Frosted Washi Tape (Compact scale) */}
-      <div 
-        className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center ${theme.tapeBg} ${theme.tapeBorder}`}
-        title="Pinned to Desk"
-      >
-        <span className="text-[8px] tracking-[0.2em] font-mono font-bold uppercase opacity-60">
-          {language === 'am' ? 'የዕለት ተግባራት' : 'DAILY TO-DO'}
-        </span>
-      </div>
+    <div className={
+      isFullScreen
+        ? "fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md p-2 sm:p-4 md:p-6 flex flex-col items-center justify-start animate-in fade-in duration-200"
+        : "relative w-full max-w-2xl mx-auto my-2 group/stickymaster"
+    }>
+      <div className={isFullScreen ? "relative w-full max-w-3xl my-auto py-2" : "relative w-full"}>
+        {/* 1. Translucent Frosted Washi Tape (Compact scale) */}
+        <div 
+          className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center ${theme.tapeBg} ${theme.tapeBorder}`}
+          title="Pinned to Desk"
+        >
+          <span className="text-[8px] tracking-[0.2em] font-mono font-bold uppercase opacity-60">
+            {language === 'am' ? 'የዕለት ተግባራት' : 'DAILY TO-DO'}
+          </span>
+        </div>
 
-      {/* 2. Pushpin on Top Right */}
-      <div 
-        className="absolute top-1.5 right-4 sm:right-6 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95"
-        title="Pinned Desk Note"
-      >
-        <span className="text-lg sm:text-xl">📌</span>
-      </div>
+        {/* 2. Pushpin on Top Right */}
+        <div 
+          className="absolute top-1.5 right-4 sm:right-6 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95"
+          title="Pinned Desk Note"
+        >
+          <span className="text-lg sm:text-xl">📌</span>
+        </div>
 
-      {/* 3. The Stationary Classic Sticky Note Card */}
-      <div 
-        className={`relative w-full rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
-        style={{
-          boxShadow: `0 10px 24px -6px ${theme.shadowColor}, 0 4px 8px -2px rgba(0,0,0,0.05)`,
-        }}
-      >
+        {/* 3. The Stationary Classic Sticky Note Card */}
+        <div 
+          className={`relative w-full ${isFullScreen ? 'min-h-[85vh] sm:min-h-0' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
+          style={{
+            boxShadow: isFullScreen
+              ? `0 25px 50px -12px ${theme.shadowColor}, 0 10px 25px -5px rgba(0,0,0,0.3)`
+              : `0 10px 24px -6px ${theme.shadowColor}, 0 4px 8px -2px rgba(0,0,0,0.05)`,
+          }}
+        >
         {/* Ruled Lined Paper & Red Left Margin Line */}
         <div 
           className="absolute inset-0 pointer-events-none select-none opacity-80"
@@ -757,6 +782,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </div>
                 )}
               </div>
+
+              {/* Full Screen Symbol Button - On the side of color palette, symbol only */}
+              <button
+                type="button"
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-1.5 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
+                title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
+                aria-label="Toggle Full Screen"
+              >
+                {isFullScreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              </button>
 
               {onClose && (
                 <button
@@ -1029,22 +1065,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     />
                   </div>
 
-                  {/* Duration */}
-                  <div className="flex items-center gap-1 bg-white/90 dark:bg-black/40 border border-black/15 dark:border-white/15 rounded-xl px-2 py-1 text-xs">
-                    <select
-                      value={newDurationMin}
-                      onChange={(e) => setNewDurationMin(Number(e.target.value))}
-                      className="bg-transparent text-[11px] font-mono outline-none cursor-pointer font-bold"
-                    >
-                      <option value={15} className="text-black">15m</option>
-                      <option value={20} className="text-black">20m</option>
-                      <option value={30} className="text-black">30m</option>
-                      <option value={45} className="text-black">45m</option>
-                      <option value={60} className="text-black">1h</option>
-                      <option value={90} className="text-black">1.30h</option>
-                      <option value={120} className="text-black">2h</option>
-                    </select>
-                  </div>
+                  {/* Duration with Custom Minute Support */}
+                  <DurationPicker
+                    value={newDurationMin}
+                    onChange={setNewDurationMin}
+                    size="sm"
+                  />
                 </div>
 
                 {/* Right: Only Icons for Actions - Cancel (X) & Add (Check) */}
@@ -1319,19 +1345,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                         className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold"
                                       />
                                     </div>
-                                    <select
+                                    <DurationPicker
                                       value={editDurationMin}
-                                      onChange={(e) => setEditDurationMin(Number(e.target.value))}
-                                      className="bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-1.5 py-0.5 text-[10px] font-mono outline-none font-bold cursor-pointer"
-                                    >
-                                      <option value={15}>15m</option>
-                                      <option value={20}>20m</option>
-                                      <option value={30}>30m</option>
-                                      <option value={45}>45m</option>
-                                      <option value={60}>1h</option>
-                                      <option value={90}>1.30h</option>
-                                      <option value={120}>2h</option>
-                                    </select>
+                                      onChange={setEditDurationMin}
+                                      size="xs"
+                                    />
                                   </div>
                                   <div className="flex items-center gap-1 ml-auto">
                                     <button
@@ -1585,6 +1603,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             </div>
           )}
         </div>
+      </div>
       </div>
 
       <DayDefaultsModal

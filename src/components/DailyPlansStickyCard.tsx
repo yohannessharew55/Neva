@@ -6,6 +6,7 @@ import {
 import { useLivotion, StickyNoteColor } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { formatTaskDuration } from '../utils/formatDuration';
+import { DurationPicker } from './DurationPicker';
 
 interface DailyPlansStickyCardProps {
   categoryId: string;
@@ -418,20 +419,11 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                         />
                       </div>
 
-                      <div className="flex items-center gap-1 bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-xl px-2 py-1 text-xs">
-                        <select
-                          value={editDurationMin}
-                          onChange={(e) => setEditDurationMin(Number(e.target.value))}
-                          className="bg-transparent text-[11px] font-mono outline-none font-bold cursor-pointer"
-                        >
-                          <option value={15} className="text-black">15m</option>
-                          <option value={30} className="text-black">30m</option>
-                          <option value={45} className="text-black">45m</option>
-                          <option value={60} className="text-black">1h</option>
-                          <option value={90} className="text-black">1.30h</option>
-                          <option value={120} className="text-black">2h</option>
-                        </select>
-                      </div>
+                      <DurationPicker
+                        value={editDurationMin}
+                        onChange={setEditDurationMin}
+                        size="xs"
+                      />
                     </div>
 
                     <div className="flex items-center gap-1 ml-auto">
@@ -604,21 +596,12 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                   />
                 </div>
 
-                {/* Duration select */}
-                <div className="flex items-center gap-1 bg-white/90 dark:bg-black/50 border border-black/15 dark:border-white/15 rounded-xl px-2 py-1.5 text-xs">
-                  <select
-                    value={newDurationMin}
-                    onChange={(e) => setNewDurationMin(Number(e.target.value))}
-                    className="bg-transparent text-[11px] font-mono outline-none cursor-pointer font-bold"
-                  >
-                    <option value={15} className="text-black">15m</option>
-                    <option value={30} className="text-black">30m</option>
-                    <option value={45} className="text-black">45m</option>
-                    <option value={60} className="text-black">1h</option>
-                    <option value={90} className="text-black">1.30h</option>
-                    <option value={120} className="text-black">2h</option>
-                  </select>
-                </div>
+                {/* Duration select with custom minute support */}
+                <DurationPicker
+                  value={newDurationMin}
+                  onChange={setNewDurationMin}
+                  size="sm"
+                />
               </div>
 
               {/* Action buttons - ONLY ICONS */}

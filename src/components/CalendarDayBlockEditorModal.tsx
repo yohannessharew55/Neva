@@ -10,6 +10,7 @@ import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeMo
 import { soundEngine } from '../utils/audio';
 import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { formatTaskDuration } from '../utils/formatDuration';
+import { DurationPicker } from './DurationPicker';
 
 interface CalendarDayBlockEditorModalProps {
   isOpen: boolean;
@@ -335,18 +336,12 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                 </div>
                 <div>
                   <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Duration</label>
-                  <select
+                  <DurationPicker
                     value={newDurationMin}
-                    onChange={(e) => setNewDurationMin(Number(e.target.value))}
-                    className="w-full px-2 py-1.5 rounded-lg text-xs font-mono font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 outline-none"
-                  >
-                    <option value={15}>15m</option>
-                    <option value={30}>30m</option>
-                    <option value={45}>45m</option>
-                    <option value={60}>1h</option>
-                    <option value={90}>1.30h</option>
-                    <option value={120}>2h</option>
-                  </select>
+                    onChange={setNewDurationMin}
+                    size="sm"
+                    className="w-full justify-between"
+                  />
                 </div>
               </div>
 
@@ -430,18 +425,12 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                     </div>
                     <div>
                       <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Duration</label>
-                      <select
+                      <DurationPicker
                         value={editDurationMin}
-                        onChange={(e) => setEditDurationMin(Number(e.target.value))}
-                        className="w-full px-2 py-1 rounded-lg text-xs font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none"
-                      >
-                        <option value={15}>15m</option>
-                        <option value={30}>30m</option>
-                        <option value={45}>45m</option>
-                        <option value={60}>1h</option>
-                        <option value={90}>1.30h</option>
-                        <option value={120}>2h</option>
-                      </select>
+                        onChange={setEditDurationMin}
+                        size="sm"
+                        className="w-full justify-between"
+                      />
                     </div>
                   </div>
 
