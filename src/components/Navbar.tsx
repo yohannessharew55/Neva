@@ -741,6 +741,10 @@ export const Navbar: React.FC = () => {
                     </span>
                   </button>
                 </div>
+
+                <div className="pt-3 pb-1 text-center text-[10px] font-mono text-slate-400 dark:text-slate-500 select-none">
+                  NEVA Standalone • v1.0.4
+                </div>
               </div>
             </div>
 
