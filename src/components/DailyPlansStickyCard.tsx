@@ -163,12 +163,14 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
     activeTask,
     isRunning,
     setCategoryStickyNoteColor,
+    dailyStickyColor,
     language,
     t
   } = useLivotion();
 
   const category = categoryPlans[categoryId];
-  const noteColor: StickyNoteColor = category?.stickyNoteColor || 'yellow';
+  const mappedColor: StickyNoteColor = dailyStickyColor === 'canary' ? 'yellow' : (dailyStickyColor === 'sky' ? 'cyan' : (dailyStickyColor as StickyNoteColor));
+  const noteColor: StickyNoteColor = category?.stickyNoteColor || mappedColor || 'yellow';
   const theme = STICKY_THEMES[noteColor] || STICKY_THEMES.yellow;
 
   // Resolve domain types for this category

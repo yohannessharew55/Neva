@@ -647,6 +647,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (d.reviews) setReviews(d.reviews);
     if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
     if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
+    if (d.dailyStickyColor) {
+      setDailyStickyColorState(d.dailyStickyColor);
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_daily_sticky_color`, d.dailyStickyColor);
+        localStorage.setItem('neva_daily_sticky_color', d.dailyStickyColor);
+      } catch {}
+    }
   };
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'syncing' | 'offline' | 'error' | 'initial_pull'>('synced');
   const [cloudDatabase, setCloudDatabase] = useState<string>('NEVA Cloud DB');
@@ -687,6 +694,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         reviews,
         categoryPlans,
         dailyStickyNotes,
+        dailyStickyColor,
       }, keyToUse);
 
       if (res.success) {
@@ -811,6 +819,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         reviews,
         categoryPlans,
         dailyStickyNotes,
+        dailyStickyColor,
       }, syncKey);
 
       if (res.success) {
@@ -824,7 +833,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 1200);
 
     return () => clearTimeout(syncTimer);
-  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, syncKey]);
+  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, syncKey]);
 
   // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {
