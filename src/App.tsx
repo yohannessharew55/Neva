@@ -8,6 +8,7 @@ import { PrecisionNutritionView } from './components/PrecisionNutritionView';
 import { StrategicHorizonsView } from './components/StrategicHorizonsView';
 import { PracticeFlowView } from './components/PracticeFlowView';
 import { CategoryDetailView } from './components/CategoryDetailView';
+import { MergedCalendarGalleryView } from './components/MergedCalendarGalleryView';
 import { IntegratedCalendarView } from './components/IntegratedCalendarView';
 import { DailyStickyNotesGalleryView } from './components/DailyStickyNotesGalleryView';
 import { IosNotesAppView } from './components/IosNotesAppView';
@@ -83,11 +84,9 @@ const MainContent: React.FC = () => {
   const renderActiveView = () => {
     switch (activeTab) {
       case 'notes-gallery':
-        return <DailyStickyNotesGalleryView />;
       case 'calendar':
-        return <IntegratedCalendarView />;
+        return <MergedCalendarGalleryView />;
       case 'fitness':
-        return <FitnessProtocolView />;
       case 'devotion':
       case 'nutrition':
         return <DevotionProtocolView />;

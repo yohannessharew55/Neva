@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
-  Calendar, CalendarDays, Dumbbell, BookOpen, 
-  Target, Timer, Star
+  Calendar, CalendarDays, BookOpen, 
+  Target, Timer
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 
@@ -17,9 +17,7 @@ export const IosBottomTabBar: React.FC = () => {
 
   const tabs = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'notes-gallery', label: language === 'am' ? 'ማስታወሻ ⭐' : 'Gallery ⭐', icon: Star },
     { id: 'calendar', label: language === 'am' ? 'ቀን' : 'Calendar', icon: CalendarDays },
-    { id: 'fitness', label: t('navWorkouts'), icon: Dumbbell },
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: language === 'am' ? 'ትኩረት' : 'Focus', icon: Timer },
@@ -30,6 +28,16 @@ export const IosBottomTabBar: React.FC = () => {
     setActiveTab(tabId);
   };
 
+  const isTabActive = (tabId: string) => {
+    if (selectedCategoryId) return false;
+    if (tabId === 'cockpit') return activeTab === 'cockpit';
+    if (tabId === 'calendar') return activeTab === 'calendar' || activeTab === 'notes-gallery';
+    if (tabId === 'devotion') return activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition';
+    if (tabId === 'goals') return activeTab === 'goals';
+    if (tabId === 'practice') return activeTab === 'practice';
+    return activeTab === tabId;
+  };
+
   return (
     <nav 
       aria-label="iPhone Mobile Navigation"
@@ -38,7 +46,7 @@ export const IosBottomTabBar: React.FC = () => {
       <div className="flex items-center justify-around max-w-md mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeTab === tab.id && !selectedCategoryId;
+          const isActive = isTabActive(tab.id);
 
           return (
             <button

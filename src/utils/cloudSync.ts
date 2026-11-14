@@ -392,12 +392,36 @@ export const updateUserAccountProfile = async (
   }
 };
 
-// Local storage account persistence
+// Local storage and persistent cookie account session management (Keep signed in until explicit logout)
 export const getStoredUserAccount = (): UserAccountProfile | null => {
   try {
+    // 1. Primary localStorage session
     const saved = localStorage.getItem('neva_user_account_v2');
     if (saved) return JSON.parse(saved);
-    // Legacy migration check
+
+    // 2. Backup persistent session key
+    const persistent = localStorage.getItem('neva_persistent_session');
+    if (persistent) {
+      const parsed = JSON.parse(persistent);
+      localStorage.setItem('neva_user_account_v2', persistent);
+      return parsed;
+    }
+
+    // 3. Persistent cookie backup (survives WKWebView cache evictions)
+    if (typeof document !== 'undefined' && document.cookie) {
+      const match = document.cookie.match(/(?:^|;\s*)neva_user_account=([^;]+)/);
+      if (match && match[1]) {
+        try {
+          const cookieUser = JSON.parse(decodeURIComponent(match[1]));
+          if (cookieUser && cookieUser.username) {
+            saveAccountToStorage(cookieUser);
+            return cookieUser;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // 4. Legacy migration check
     const legacy = localStorage.getItem('neva_user_account_v1');
     if (legacy) {
       const parsed = JSON.parse(legacy);
@@ -411,8 +435,28 @@ export const getStoredUserAccount = (): UserAccountProfile | null => {
         lastSyncedAt: parsed.lastSyncedAt,
         isOnlineAccount: parsed.isOnlineAccount ?? true
       };
-      localStorage.setItem('neva_user_account_v2', JSON.stringify(migrated));
+      saveAccountToStorage(migrated);
       return migrated;
+    }
+
+    // 5. Automatic session recovery from existing sync key
+    const activeSyncKey = localStorage.getItem('neva_mastery_scratch_v1_sync_key') || 
+                          localStorage.getItem('livotion_mastery_state_v2_sync_key') ||
+                          localStorage.getItem('neva_sync_key');
+    if (activeSyncKey && activeSyncKey !== 'default_user' && activeSyncKey.trim().length >= 3) {
+      const clean = activeSyncKey.trim();
+      const recovered: UserAccountProfile = {
+        id: `usr_${clean}`,
+        username: clean,
+        name: clean.charAt(0).toUpperCase() + clean.slice(1),
+        email: null,
+        avatarColor: '#0082ff',
+        createdAt: new Date().toISOString(),
+        lastSyncedAt: new Date().toISOString(),
+        isOnlineAccount: true
+      };
+      saveAccountToStorage(recovered);
+      return recovered;
     }
   } catch (e) {}
   return null;
@@ -420,14 +464,27 @@ export const getStoredUserAccount = (): UserAccountProfile | null => {
 
 export const saveAccountToStorage = (user: UserAccountProfile): void => {
   try {
-    localStorage.setItem('neva_user_account_v2', JSON.stringify(user));
+    const serialized = JSON.stringify(user);
+    localStorage.setItem('neva_user_account_v2', serialized);
+    localStorage.setItem('neva_persistent_session', serialized);
+    localStorage.setItem('neva_keep_signed_in', 'true');
+    // Set 10-year persistent cookie
+    if (typeof document !== 'undefined') {
+      document.cookie = `neva_user_account=${encodeURIComponent(serialized)}; max-age=315360000; path=/; SameSite=Lax`;
+    }
   } catch (e) {}
 };
 
 export const clearStoredUserAccount = (): void => {
   try {
     localStorage.removeItem('neva_user_account_v2');
-    localStorage.removeItem('neva_user_account_v1');
+    localStorage.removeItem('neva_persistent_session');
+    localStorage.removeItem('neva_keep_signed_in');
+    localStorage.removeItem('neva_mastery_scratch_v1_sync_key');
+    localStorage.removeItem('livotion_mastery_state_v2_sync_key');
+    if (typeof document !== 'undefined') {
+      document.cookie = `neva_user_account=; max-age=0; path=/; SameSite=Lax`;
+    }
   } catch (e) {}
 };
 

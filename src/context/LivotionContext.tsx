@@ -524,6 +524,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSyncKey('default_user');
   };
 
+  // Keep active user session permanently persisted until user explicitly clicks logout
+  useEffect(() => {
+    if (currentUser) {
+      saveAccountToStorage(currentUser);
+    }
+  }, [currentUser]);
+
   const hydrateCloudState = (d: any) => {
     if (!d) return;
     if (d.user) setUser(d.user);

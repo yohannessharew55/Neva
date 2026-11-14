@@ -3,10 +3,12 @@ import {
   BookOpen, Heart, Sparkles, CheckCircle2, Square, 
   Play, Pause, RotateCcw, Plus, Trash2, Check, 
   Volume2, Flame, Sun, Moon, Sunrise, Clock, Star,
-  Share2, BookmarkCheck, Shield, ChevronRight, Pencil, X
+  Share2, BookmarkCheck, Shield, ChevronRight, Pencil, X,
+  Dumbbell
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
+import { FitnessProtocolView } from './FitnessProtocolView';
 
 interface PrayerIntention {
   id: string;
@@ -99,8 +101,21 @@ const DEFAULT_RHYTHMS: DailyRhythmItem[] = [
 ];
 
 export const DevotionProtocolView: React.FC = () => {
-  const { language, categoryPlans, logSession } = useLivotion();
+  const { language, categoryPlans, logSession, activeTab } = useLivotion();
   const devotionCategory = categoryPlans['devotion'];
+
+  // Sub-section state: Devotion & Prayer vs Workouts & Fitness
+  const [activeSection, setActiveSection] = useState<'devotion' | 'workouts'>(() => {
+    return activeTab === 'fitness' ? 'workouts' : 'devotion';
+  });
+
+  useEffect(() => {
+    if (activeTab === 'fitness') {
+      setActiveSection('workouts');
+    } else if (activeTab === 'devotion') {
+      setActiveSection('devotion');
+    }
+  }, [activeTab]);
 
   // Current Verse Index
   const [verseIndex, setVerseIndex] = useState<number>(0);
@@ -387,8 +402,55 @@ export const DevotionProtocolView: React.FC = () => {
     return true;
   });
 
+  if (activeSection === 'workouts') {
+    return (
+      <div className="w-full min-h-screen">
+        {/* Top Segmented Sub-Nav: Devotion vs Workouts */}
+        <div className="w-full max-w-7xl mx-auto px-4 pt-3 sm:pt-5 pb-1 flex justify-center">
+          <div className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+            <button
+              onClick={() => setActiveSection('devotion')}
+              className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer"
+            >
+              <BookOpen size={16} />
+              <span>{language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer'}</span>
+            </button>
+            <button
+              onClick={() => setActiveSection('workouts')}
+              className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-white dark:bg-slate-900 text-rose-500 shadow-xs transition-all cursor-pointer"
+            >
+              <Dumbbell size={16} />
+              <span>{language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness'}</span>
+            </button>
+          </div>
+        </div>
+        <FitnessProtocolView />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
+    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-fadeIn">
+      {/* Top Segmented Sub-Nav: Devotion vs Workouts */}
+      <div className="w-full flex justify-center pb-2">
+        <div className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+          <button
+            onClick={() => setActiveSection('devotion')}
+            className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs transition-all cursor-pointer"
+          >
+            <BookOpen size={16} />
+            <span>{language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer'}</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('workouts')}
+            className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer"
+          >
+            <Dumbbell size={16} />
+            <span>{language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness'}</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
         <div className="space-y-1">

@@ -32,6 +32,7 @@ export const Navbar: React.FC = () => {
     resetAllData,
     tasks,
     categoryPlans,
+    selectedCategoryId,
     setSelectedCategoryId,
     openNewCategoryModal,
     openSyncModal,
@@ -68,13 +69,22 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'notes-gallery', label: t('navStickyGallery'), icon: Star },
-    { id: 'calendar', label: t('navCalendar'), icon: CalendarDays },
-    { id: 'fitness', label: t('navWorkouts'), icon: Dumbbell },
+    { id: 'calendar', label: language === 'am' ? 'ቀን' : 'Calendar', icon: CalendarDays },
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: t('navFocusTimer'), icon: Timer },
     { id: 'triple-eight', label: language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance', icon: PieChart },
+  ];
+
+  const drawerNavItems = [
+    { id: 'cockpit', label: t('navToday'), icon: Calendar },
+    { id: 'calendar', label: language === 'am' ? 'ቀን መቁጠሪያ' : 'Calendar & Schedule', icon: CalendarDays },
+    { id: 'notes-gallery', label: language === 'am' ? 'ስቲኪ ማስታወሻ ⭐' : 'Sticky Notes Gallery ⭐', icon: Star },
+    { id: 'devotion', label: language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer', icon: BookOpen },
+    { id: 'fitness', label: language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness', icon: Dumbbell },
+    { id: 'goals', label: t('navGoals'), icon: Target },
+    { id: 'practice', label: t('navFocusTimer'), icon: Timer },
+    { id: 'triple-eight', label: language === 'am' ? '24 ሰዓት ሚዛን (8/8/8)' : '24h Balance (8/8/8)', icon: PieChart },
   ];
 
   const handleSelectCategory = (categoryId: string) => {
@@ -147,7 +157,12 @@ export const Navbar: React.FC = () => {
           <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-full border border-slate-200/60 dark:border-slate-800 text-xs font-semibold">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id;
+              const isActive = !selectedCategoryId && (
+                item.id === 'cockpit' ? activeTab === 'cockpit' :
+                item.id === 'calendar' ? (activeTab === 'calendar' || activeTab === 'notes-gallery') :
+                item.id === 'devotion' ? (activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition') :
+                activeTab === item.id
+              );
               return (
                 <button
                   key={item.id}
@@ -671,8 +686,16 @@ export const Navbar: React.FC = () => {
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block px-2">
                   {t('systemViews')}
                 </span>
-                {navItems.map((item) => {
+                {drawerNavItems.map((item) => {
                   const Icon = item.icon;
+                  const isItemActive = !selectedCategoryId && (
+                    item.id === 'cockpit' ? activeTab === 'cockpit' :
+                    item.id === 'calendar' ? activeTab === 'calendar' :
+                    item.id === 'notes-gallery' ? activeTab === 'notes-gallery' :
+                    item.id === 'devotion' ? activeTab === 'devotion' :
+                    item.id === 'fitness' ? activeTab === 'fitness' :
+                    activeTab === item.id
+                  );
                   return (
                     <button
                       key={item.id}
@@ -681,10 +704,14 @@ export const Navbar: React.FC = () => {
                         setActiveTab(item.id);
                         setDrawerOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 flex items-center justify-between cursor-pointer"
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
+                        isItemActive
+                          ? 'bg-[#0082ff]/10 text-[#0082ff] font-bold'
+                          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                      }`}
                     >
                       <span className="flex items-center gap-2.5">
-                        <Icon size={15} className={item.id === 'triple-eight' ? 'text-indigo-500' : 'text-slate-400'} />
+                        <Icon size={15} className={isItemActive ? 'text-[#0082ff]' : (item.id === 'triple-eight' ? 'text-indigo-500' : 'text-slate-400')} />
                         <span>{item.label}</span>
                       </span>
                       {item.id === 'triple-eight' && (
