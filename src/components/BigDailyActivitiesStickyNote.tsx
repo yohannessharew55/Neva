@@ -199,28 +199,46 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
-  // Double-tap & double-click tracking for sticky note paper area
-  const lastClickTimeRef = useRef<number>(0);
+  // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
+  const lastTouchTimeRef = useRef<number>(0);
+  const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const justToggledRef = useRef<number>(0);
 
-  const handlePaperDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
+  const handlePaperTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    }
+  };
+
+  const handlePaperTouchEnd = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
-    // Don't toggle if tapping directly on interactive controls (button, select, input, textarea, a, form, etc.)
+    // Don't toggle if tapping directly on interactive controls or task actions
     if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
 
-    const now = Date.now();
-    const timeSinceLast = now - lastClickTimeRef.current;
-    if (timeSinceLast > 30 && timeSinceLast < 450) {
-      lastClickTimeRef.current = 0;
-      justToggledRef.current = now;
-      setIsFullScreen((prev) => !prev);
-      try {
-        soundEngine.playPencil();
-      } catch {}
-    } else {
-      lastClickTimeRef.current = now;
+    if (e.changedTouches.length === 1) {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const moveDistance = Math.hypot(endX - touchStartPosRef.current.x, endY - touchStartPosRef.current.y);
+      // Ignore if user dragged or scrolled finger > 22px
+      if (moveDistance > 22) return;
+
+      const now = Date.now();
+      const timeSinceLast = now - lastTouchTimeRef.current;
+      if (timeSinceLast >= 40 && timeSinceLast <= 500) {
+        lastTouchTimeRef.current = 0;
+        justToggledRef.current = now;
+        setIsFullScreen((prev) => !prev);
+        try {
+          soundEngine.playPencil();
+        } catch {}
+      } else {
+        lastTouchTimeRef.current = now;
+      }
     }
   };
 
@@ -229,7 +247,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    // Prevent double toggle if handlePaperDoubleTap already triggered
+    // Prevent double toggle if touchEnd already triggered
     if (Date.now() - justToggledRef.current < 600) {
       return;
     }
@@ -240,7 +258,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     } catch {}
   };
 
-  const handleTopDoubleTap = handlePaperDoubleTap;
+  const handleTopDoubleTap = handlePaperTouchEnd;
   const handleTopDoubleClick = handlePaperDoubleClick;
 
   // Full Screen Scroll Lock and Escape Key handling
@@ -745,8 +763,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       <div className={isFullScreen ? "relative w-full max-w-lg sm:max-w-2xl flex-1 flex flex-col my-1 py-1" : "relative w-full"}>
         {/* 1. Translucent Frosted Washi Tape (Double tap / click toggles full screen) */}
         <div 
-          onClick={handleTopDoubleTap}
-          onDoubleClick={handleTopDoubleClick}
+          onTouchStart={handlePaperTouchStart}
+          onTouchEnd={handlePaperTouchEnd}
+          onDoubleClick={handlePaperDoubleClick}
           className={`w-28 sm:w-32 h-4.5 mx-auto -mb-2 rounded-xs shadow-xs rotate-[-0.4deg] border backdrop-blur-md z-30 relative select-none flex items-center justify-center cursor-pointer touch-manipulation active:scale-95 transition-transform ${theme.tapeBg} ${theme.tapeBorder}`}
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double Tap to Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double Tap to View Full Screen')}
         >
@@ -762,8 +781,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             setIsFullScreen((prev) => !prev);
             try { soundEngine.playPencil(); } catch {}
           }}
-          onDoubleClick={handleTopDoubleClick}
-          onTouchEnd={handleTopDoubleTap}
+          onDoubleClick={handlePaperDoubleClick}
+          onTouchEnd={handlePaperTouchEnd}
           className="absolute top-1.5 right-3 sm:right-5 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95 touch-manipulation"
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Toggle Full Screen')}
         >
@@ -772,9 +791,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
         {/* 3. The Stationary Classic Sticky Note Card - Double tap on clear area toggles full screen */}
         <div 
-          onClick={handlePaperDoubleTap}
+          onTouchStart={handlePaperTouchStart}
+          onTouchEnd={handlePaperTouchEnd}
           onDoubleClick={handlePaperDoubleClick}
-          className={`relative w-full ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
+          className={`relative w-full ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden touch-manipulation select-none ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to expand full screen')}
           style={{
             boxShadow: isFullScreen
@@ -795,8 +815,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
         {/* Header - Double tap or double click anywhere on top of sticky note card to toggle full screen */}
         <div 
-          onClick={handleTopDoubleTap}
-          onDoubleClick={handleTopDoubleClick}
+          onTouchStart={handlePaperTouchStart}
+          onTouchEnd={handlePaperTouchEnd}
+          onDoubleClick={handlePaperDoubleClick}
           className="relative z-10 border-b border-black/10 dark:border-white/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none"
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to view full screen')}
         >

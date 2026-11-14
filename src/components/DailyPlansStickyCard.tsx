@@ -210,37 +210,58 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Double-tap & double-click tracking for sticky note top area
-  const lastTapTimeRef = useRef<number>(0);
-  const lastTouchToggleRef = useRef<number>(0);
+  // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
+  const lastTouchTimeRef = useRef<number>(0);
+  const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const justToggledRef = useRef<number>(0);
 
-  const handleTopDoubleTap = (e: React.TouchEvent | React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
-      return;
-    }
-
-    const now = Date.now();
-    const timeSinceLast = now - lastTapTimeRef.current;
-    if (timeSinceLast > 30 && timeSinceLast < 450) {
-      lastTapTimeRef.current = 0;
-      lastTouchToggleRef.current = now;
-      setIsFullScreen((prev) => !prev);
-    } else {
-      lastTapTimeRef.current = now;
+  const handlePaperTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
     }
   };
 
-  const handleTopDoubleClick = (e: React.MouseEvent) => {
+  const handlePaperTouchEnd = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    if (Date.now() - lastTouchToggleRef.current < 600) {
+
+    if (e.changedTouches.length === 1) {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const moveDistance = Math.hypot(endX - touchStartPosRef.current.x, endY - touchStartPosRef.current.y);
+      if (moveDistance > 22) return;
+
+      const now = Date.now();
+      const timeSinceLast = now - lastTouchTimeRef.current;
+      if (timeSinceLast >= 40 && timeSinceLast <= 500) {
+        lastTouchTimeRef.current = 0;
+        justToggledRef.current = now;
+        setIsFullScreen((prev) => !prev);
+      } else {
+        lastTouchTimeRef.current = now;
+      }
+    }
+  };
+
+  const handlePaperDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
+    if (Date.now() - justToggledRef.current < 600) {
+      return;
+    }
+    justToggledRef.current = Date.now();
     setIsFullScreen((prev) => !prev);
   };
+
+  const handleTopDoubleTap = handlePaperTouchEnd;
+  const handleTopDoubleClick = handlePaperDoubleClick;
 
   // Full Screen Scroll Lock and Escape Key handling
   useEffect(() => {
@@ -327,9 +348,9 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
       <div className={isFullScreen ? "relative w-full max-w-lg sm:max-w-2xl flex-1 flex flex-col my-1 py-1" : "relative w-full"}>
         {/* 1. Translucent Frosted Washi Tape at Top Center */}
         <div 
-          onClick={handleTopDoubleClick}
-          onDoubleClick={handleTopDoubleClick}
-          onTouchEnd={handleTopDoubleTap}
+          onTouchStart={handlePaperTouchStart}
+          onTouchEnd={handlePaperTouchEnd}
+          onDoubleClick={handlePaperDoubleClick}
           className={`w-24 h-5 mx-auto -mb-3 rounded-xs shadow-2xs rotate-0.5 border backdrop-blur-xs select-none z-20 relative cursor-pointer touch-manipulation active:scale-95 transition-transform ${theme.tape} ${theme.tapeBorder}`}
           title={isFullScreen ? "Double Tap to Exit Full Screen" : "Double Tap to View Full Screen"}
         />
@@ -340,8 +361,8 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
             e.stopPropagation();
             setIsFullScreen((prev) => !prev);
           }}
-          onDoubleClick={handleTopDoubleClick}
-          onTouchEnd={handleTopDoubleTap}
+          onDoubleClick={handlePaperDoubleClick}
+          onTouchEnd={handlePaperTouchEnd}
           className="absolute top-2 right-4 text-xl filter drop-shadow-xs select-none z-30 transition-transform hover:scale-110 active:scale-95 cursor-pointer touch-manipulation"
           title={isFullScreen ? "Exit Full Screen" : "Toggle Full Screen"}
         >
@@ -350,9 +371,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
 
         {/* 3. The Authentic Sticky Note Paper Card - Double tap on clear area toggles full screen */}
         <div 
-          onClick={handleTopDoubleTap}
-          onDoubleClick={handleTopDoubleClick}
-          className={`relative p-5 sm:p-6 rounded-3xl border shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} ${theme.bg} ${theme.border} ${theme.text}`}
+          onTouchStart={handlePaperTouchStart}
+          onTouchEnd={handlePaperTouchEnd}
+          onDoubleClick={handlePaperDoubleClick}
+          className={`relative p-5 sm:p-6 rounded-3xl border shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden touch-manipulation select-none ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} ${theme.bg} ${theme.border} ${theme.text}`}
         >
         {/* Lined Paper Lines Background */}
         <div 
