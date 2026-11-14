@@ -141,7 +141,7 @@
     },
     {
       "domain": "CHESS",
-      "title": "Aagard book",
+      "title": "Aagard book collection",
       "startTime": "01:00 AM",
       "durationMin": 45,
       "completed": false,
@@ -182,116 +182,6 @@
         }
       ],
       "id": "task-1794607244907"
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Warmup exercise",
-      "startTime": "12:00 PM",
-      "durationMin": 15,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794647533131-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794647533131-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794647533131"
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Fingerstyle practice travis picking",
-      "startTime": "12:00 PM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794647560643-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794647560643-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794647560643"
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Lick of the day",
-      "startTime": "12:00 PM",
-      "durationMin": 15,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794647582698-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794647582698-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794647582698"
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Song practice",
-      "startTime": "12:00 PM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794647598186-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794647598186-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794647598186"
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Freeplay",
-      "startTime": "12:00 PM",
-      "durationMin": 15,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794647622674-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794647622674-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794647622674"
     }
   ],
   "workouts": [
@@ -452,14 +342,7 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Mon 07:00 AM: Chess Focus",
-        "Tue 07:00 AM: Chess Focus",
-        "Wed 07:00 AM: Chess Focus",
-        "Thu 07:00 AM: Chess Focus",
-        "Fri 07:00 AM: Chess Focus",
-        "Sat 07:00 AM: Chess Focus"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -467,7 +350,7 @@
       "inProgressItems": [],
       "achievedItems": [],
       "upcomingItems": [],
-      "stickyNoteColor": "mint",
+      "stickyNoteColor": "yellow",
       "dailyPlans": []
     },
     "art": {
