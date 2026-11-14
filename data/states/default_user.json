@@ -419,5 +419,6 @@
       "dailyPlans": []
     }
   },
-  "dailyStickyNotes": []
+  "dailyStickyNotes": [],
+  "dailyStickyColor": "canary"
 }
