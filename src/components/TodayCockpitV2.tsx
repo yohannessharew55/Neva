@@ -423,7 +423,7 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       )}
 
-      {/* 2. 24-Hour Balance (8/8/8) Preview Card - Minimal Words & Ultra Clean */}
+      {/* 2. Triple Eight Balance Card */}
       <div 
         onClick={() => setActiveTab('triple-eight')}
         className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-[#121927] border border-indigo-200/70 dark:border-indigo-900/40 shadow-2xs flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-700 transition group"
@@ -432,19 +432,9 @@ export const TodayCockpitV2: React.FC = () => {
           <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
             <PieChart size={16} />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance'}
-              </span>
-              <span className="px-1.5 py-0.2 rounded-md text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                8/8/8
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-              {language === 'am' ? 'እንቅልፍ (8h) • ሥራ (8h) • ሕይወት (8h)' : 'Sleep (8h) • Career (8h) • Living (8h)'}
-            </p>
-          </div>
+          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+            {language === 'am' ? 'ትሪፕል ኤይት' : 'Triple Eight'}
+          </span>
         </div>
 
         <button
