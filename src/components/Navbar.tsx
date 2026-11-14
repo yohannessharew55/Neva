@@ -77,7 +77,7 @@ export const Navbar: React.FC = () => {
 
   const drawerNavItems = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'calendar', label: language === 'am' ? 'ዕቅድና የቀን መቁጠሪያ' : 'Plan & Calendar', icon: CalendarRange },
+    { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
     { id: 'notes-gallery', label: language === 'am' ? 'ስቲኪ ማስታወሻ ⭐' : 'Sticky Notes Gallery ⭐', icon: Star },
     { id: 'devotion', label: language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer', icon: BookOpen },
     { id: 'fitness', label: language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness', icon: Dumbbell },

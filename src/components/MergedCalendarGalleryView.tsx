@@ -32,7 +32,7 @@ export const MergedCalendarGalleryView: React.FC = () => {
             }`}
           >
             <CalendarRange size={16} />
-            <span>{language === 'am' ? 'ዕቅድና የቀን መቁጠሪያ' : 'Plan & Calendar'}</span>
+            <span>{language === 'am' ? 'ዕቅድ' : 'Plan'}</span>
           </button>
           <button
             onClick={() => setSubTab('gallery')}

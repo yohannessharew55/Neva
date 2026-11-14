@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, CalendarDays, CalendarRange, ChevronLeft, ChevronRight, 
-  Clock, Plus, CheckCircle2, Play, Filter, Globe, Sparkles, Check, Trash2, Edit3,
+  Clock, Plus, PlusCircle, CheckCircle2, Play, Filter, Globe, Sparkles, Check, Trash2, Edit3,
   Dumbbell, Swords, Palette, Music, Building2, TrendingUp, BookOpen, Shield,
   ArrowRight, X, ListChecks, CheckSquare, Square, Target, Award, Flame, Zap, Settings
 } from 'lucide-react';
@@ -17,6 +17,7 @@ import {
 import { DayDefaultsModal } from './DayDefaultsModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { CalendarDayBlockEditorModal } from './CalendarDayBlockEditorModal';
+import { PlanningModal } from './PlanningModal';
 import { DomainType, PriorityLevel, ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 
@@ -137,6 +138,7 @@ export const IntegratedCalendarView: React.FC = () => {
 
   // Quick Plan Modal State
   const [showPlanModal, setShowPlanModal] = useState(false);
+  const [showPlanningRoutineModal, setShowPlanningRoutineModal] = useState(false);
   const [planModalTab, setPlanModalTab] = useState<'block' | 'daily_focus' | 'weekly_target' | 'monthly_deliverable'>('block');
   
   // Quick Add Block Form State
@@ -549,16 +551,26 @@ export const IntegratedCalendarView: React.FC = () => {
             </button>
           </div>
 
+          {/* Merged + Plan Routine Button */}
+          <button
+            onClick={() => setShowPlanningRoutineModal(true)}
+            className="px-3.5 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-98 transition cursor-pointer"
+            title={language === 'am' ? 'መርሐግብር አዘጋጅ / ዕቅድ' : 'Plan Routine / Schedule'}
+          >
+            <PlusCircle size={15} />
+            <span>{language === 'am' ? '+ ዕቅድ' : '+ Plan'}</span>
+          </button>
+
           {/* Quick Plan / Add Block Button */}
           <button
             onClick={() => {
               setPlanModalTab(horizon === 'weekly' ? 'weekly_target' : horizon === 'monthly' ? 'monthly_deliverable' : 'block');
               setShowPlanModal(true);
             }}
-            className="px-3.5 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-98 transition cursor-pointer"
+            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
           >
             <Plus size={14} />
-            <span>{language === 'am' ? '+ አዲስ ዕቅድ / ብሎክ' : '+ Add Plan / Block'}</span>
+            <span>{language === 'am' ? '+ ብሎክ' : '+ Block'}</span>
           </button>
 
           {/* Manage Day Defaults Templates Button */}
@@ -2096,6 +2108,12 @@ export const IntegratedCalendarView: React.FC = () => {
           onClose={() => setCalendarBlockEditorState(null)}
         />
       )}
+
+      {/* Merged Routine & Task Planning Modal inside Calendar */}
+      <PlanningModal
+        isOpen={showPlanningRoutineModal}
+        onClose={() => setShowPlanningRoutineModal(false)}
+      />
     </div>
   );
 };
