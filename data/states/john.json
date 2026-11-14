@@ -270,6 +270,28 @@
         }
       ],
       "id": "task-1794647598186"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647622674-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647622674-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647622674"
     }
   ],
   "workouts": [
