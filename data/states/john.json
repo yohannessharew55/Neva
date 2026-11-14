@@ -226,6 +226,28 @@
         }
       ],
       "id": "task-1794647560643"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647582698-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647582698-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647582698"
     }
   ],
   "workouts": [
