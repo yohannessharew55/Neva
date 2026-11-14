@@ -186,9 +186,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setCategoryOrder,
     reorderCategories,
     reorderTasks,
+    dailyStickyColor,
+    setDailyStickyColor,
   } = useLivotion();
 
-  const [colorTheme, setColorTheme] = useState<StickyColorTheme>('canary');
+  const colorTheme = (dailyStickyColor as StickyColorTheme) || 'canary';
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
@@ -736,7 +738,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                         key={cKey}
                         type="button"
                         onClick={() => {
-                          setColorTheme(cKey);
+                          setDailyStickyColor(cKey);
                           setShowColorPalette(false);
                         }}
                         className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
@@ -869,10 +871,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         {/* The Smaller Sticky / Sticker: Placed over the Daily To-Do Sticky Note */}
         <div className="relative z-20 my-3 -rotate-0.5 sm:-rotate-1 hover:rotate-0 transition-transform duration-200">
           {/* Frosted Washi Tape / Tape Strip on Top Edge */}
-          <div className="absolute -top-2 left-6 sm:left-10 w-20 sm:w-28 h-3.5 bg-white/75 dark:bg-white/20 backdrop-blur-xs border-y border-dashed border-amber-400/40 dark:border-white/20 rounded-xs shadow-2xs rotate-1 pointer-events-none z-30" />
+          <div className={`absolute -top-2 left-6 sm:left-10 w-20 sm:w-28 h-3.5 ${theme.tapeBg} ${theme.tapeBorder} backdrop-blur-xs border-y border-dashed rounded-xs shadow-2xs rotate-1 pointer-events-none z-30`} />
 
-          {/* Mini Sticky Note / Sticker Body */}
-          <div className="relative rounded-2xl bg-amber-100/95 dark:bg-[#18202f] border border-amber-300/80 dark:border-amber-500/30 p-2.5 sm:p-3.5 shadow-md shadow-amber-950/10 dark:shadow-black/50 text-slate-800 dark:text-slate-100 overflow-hidden">
+          {/* Mini Sticky Note / Sticker Body (Harmonized with sticky color) */}
+          <div className={`relative rounded-2xl bg-white/70 dark:bg-black/40 ${theme.paperBorder} border p-2.5 sm:p-3.5 shadow-md shadow-black/5 ${theme.textPrimary} overflow-hidden`}>
             
             {/* Subtle Ruled Texture for Authentic Sticky Note Paper Feel */}
             <div 
@@ -883,23 +885,23 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             />
 
             {/* Sticker Top Bar: Sticker Title */}
-            <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5 border-b border-amber-200/80 dark:border-slate-700/80">
+            <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5 border-b border-black/10 dark:border-white/10">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs">🏷️</span>
-                <span className="text-[10px] font-mono font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200">
+                <span className={`text-[10px] font-mono font-black uppercase tracking-wider ${theme.textPrimary}`}>
                   {language === 'am' ? 'የዕለት ማጠቃለያ ስቲከር' : 'TODAY EXECUTION STICKER'}
                 </span>
               </div>
             </div>
 
             {/* Metrics summary & Filter Pills */}
-            <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2">
+            <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2 ${theme.textSecondary}`}>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{totalHours}h</strong></span>
                 <span className="opacity-40">•</span>
                 <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">{completedCount} ({progressPercent}%)</strong></span>
                 <span className="opacity-40">•</span>
-                <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className="font-extrabold text-amber-800 dark:text-amber-300">{totalCount - completedCount}</strong></span>
+                <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
               </div>
 
               <div className="flex items-center gap-1 text-[10px]">
@@ -908,7 +910,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   onClick={() => setFilterMode('all')}
                   className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                     filterMode === 'all' 
-                      ? 'bg-amber-900/20 dark:bg-white/20 font-extrabold text-slate-900 dark:text-white shadow-2xs' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
                       : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
                   }`}
                 >
@@ -919,7 +921,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   onClick={() => setFilterMode('remaining')}
                   className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                     filterMode === 'remaining' 
-                      ? 'bg-amber-900/20 dark:bg-white/20 font-extrabold text-slate-900 dark:text-white shadow-2xs' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
                       : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
                   }`}
                 >
@@ -930,7 +932,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   onClick={() => setFilterMode('completed')}
                   className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                     filterMode === 'completed' 
-                      ? 'bg-amber-900/20 dark:bg-white/20 font-extrabold text-slate-900 dark:text-white shadow-2xs' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
                       : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
                   }`}
                 >

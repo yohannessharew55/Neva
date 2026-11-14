@@ -316,6 +316,8 @@ interface LivotionContextType {
   deleteCategoryDailyPlan: (categoryId: string, planId: string) => void;
   updateCategoryDailyPlan: (categoryId: string, planId: string, text: string) => void;
   setCategoryStickyNoteColor: (categoryId: string, color: StickyNoteColor) => void;
+  dailyStickyColor: StickyNoteThemeColor;
+  setDailyStickyColor: (color: StickyNoteThemeColor) => void;
   dailyStickyNotes: DailyStickyReviewNote[];
   updateDailyStickyNoteRating: (id: string, stars: number) => void;
   updateDailyStickyNoteReview: (id: string, reviewText: string) => void;
@@ -494,6 +496,27 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return initialDailyStickyNotes;
   });
+
+  const [dailyStickyColor, setDailyStickyColorState] = useState<StickyNoteThemeColor>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_daily_sticky_color`) || localStorage.getItem('neva_daily_sticky_color');
+      if (saved && ['canary', 'peach', 'mint', 'sky', 'rose', 'lavender'].includes(saved)) {
+        return saved as StickyNoteThemeColor;
+      }
+    } catch {}
+    return 'canary';
+  });
+
+  const setDailyStickyColor = (color: StickyNoteThemeColor) => {
+    setDailyStickyColorState(color);
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_daily_sticky_color`, color);
+      localStorage.setItem('neva_daily_sticky_color', color);
+    } catch {}
+    setDailyStickyNotes((prev) =>
+      prev.map((n) => ({ ...n, colorTheme: color }))
+    );
+  };
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -2022,6 +2045,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteCategoryDailyPlan,
         updateCategoryDailyPlan,
         setCategoryStickyNoteColor,
+        dailyStickyColor,
+        setDailyStickyColor,
         dailyStickyNotes,
         updateDailyStickyNoteRating,
         updateDailyStickyNoteReview,
