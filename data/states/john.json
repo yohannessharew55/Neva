@@ -438,6 +438,31 @@
       "id": "task-1794672760666-6-56ci",
       "date": "2026-11-14",
       "dayOfWeek": 6
+    },
+    {
+      "title": "Puzzle",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "soundProfile": "SOLFEGGIO_432",
+      "completed": false,
+      "checklist": [
+        {
+          "id": "c-1794694229770-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-1794694229770-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ],
+      "date": "2026-11-15",
+      "dayOfWeek": 7,
+      "id": "task-1794694233575"
     }
   ],
   "workouts": [
