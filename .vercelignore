@@ -7,3 +7,5 @@ dist
 scratch
 ios
 .github
+*.ipa
+public/*.ipa

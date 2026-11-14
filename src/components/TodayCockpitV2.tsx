@@ -153,13 +153,26 @@ export const TodayCockpitV2: React.FC = () => {
     return 0;
   });
 
+  const parseTimeToMinutes = (timeStr: string): number => {
+    if (!timeStr) return 0;
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return 0;
+    let [_, h, m, meridiem] = match;
+    let hours = parseInt(h, 10);
+    const minutes = parseInt(m, 10);
+    if (meridiem.toUpperCase() === 'PM' && hours < 12) hours += 12;
+    if (meridiem.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
   // Up Next / Active task:
   // Dynamically points to the first uncompleted task of the top-most category in the sticky note!
-  // If Music & Guitar is dragged above Chess, it picks Music & Guitar. If Chess is dragged to top, it picks Chess!
+  // If Music & Guitar is dragged above Chess, it picks Music & Guitar (e.g. warmup exercise). If Chess is dragged to top, it picks Chess!
   let computedNextTask: ScheduleTask | undefined;
   for (const catKey of orderedCategoryKeys) {
     const catTasks = dayTasks.filter((t) => getCategoryKeyForTask(t) === catKey && !t.completed);
     if (catTasks.length > 0) {
+      catTasks.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
       computedNextTask = catTasks[0];
       break;
     }
