@@ -213,7 +213,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
   const lastTouchTimeRef = useRef<number>(0);
   const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const justToggledRef = useRef<number>(0);
+  const blockToggleUntilRef = useRef<number>(0);
 
   const handlePaperTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
@@ -230,17 +230,22 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
       return;
     }
 
+    if (Date.now() < blockToggleUntilRef.current) {
+      return;
+    }
+
     if (e.changedTouches.length === 1) {
       const endX = e.changedTouches[0].clientX;
       const endY = e.changedTouches[0].clientY;
       const moveDistance = Math.hypot(endX - touchStartPosRef.current.x, endY - touchStartPosRef.current.y);
-      if (moveDistance > 22) return;
+      if (moveDistance > 35) return;
 
       const now = Date.now();
       const timeSinceLast = now - lastTouchTimeRef.current;
-      if (timeSinceLast >= 40 && timeSinceLast <= 500) {
+      if (timeSinceLast >= 50 && timeSinceLast <= 650) {
+        e.stopPropagation();
         lastTouchTimeRef.current = 0;
-        justToggledRef.current = now;
+        blockToggleUntilRef.current = now + 1000;
         setIsFullScreen((prev) => !prev);
       } else {
         lastTouchTimeRef.current = now;
@@ -253,10 +258,11 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
     if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    if (Date.now() - justToggledRef.current < 600) {
+    if (Date.now() < blockToggleUntilRef.current) {
       return;
     }
-    justToggledRef.current = Date.now();
+    e.stopPropagation();
+    blockToggleUntilRef.current = Date.now() + 1000;
     setIsFullScreen((prev) => !prev);
   };
 

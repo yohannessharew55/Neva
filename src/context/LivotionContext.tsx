@@ -353,6 +353,7 @@ interface LivotionContextType {
   materializeDaySchedule: (dateStr: string) => ScheduleTask[];
   resetDayScheduleToDefault: (dateStr: string) => void;
   saveDayAsWeekdayDefault: (dateStr: string, dayOfWeek: number) => void;
+  saveDayAsGlobalRoutine: (dateStr: string) => void;
   applyDayScheduleToDates: (sourceDateStr: string, targetDateStrs: string[]) => void;
   updateWeekdayDefaultSchedule: (dayOfWeek: number, newDefaultTasks: Omit<ScheduleTask, 'id' | 'date'>[]) => void;
   getWeekdayDefaultTasks: (dayOfWeek: number) => ScheduleTask[];
@@ -879,6 +880,41 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [syncKey]);
 
+  // Auto-migration & stream preservation:
+  // If the user has created tasks (e.g. on Saturday or under date/dayOfWeek) and there are no global tasks,
+  // ensure these user-created tasks are also registered as recurring global tasks (!t.date && !t.dayOfWeek)
+  // so the user's main stream blocks never vanish or get wiped out when the day changes at midnight!
+  useEffect(() => {
+    setTasks((prev) => {
+      const userTasks = prev.filter((t) => !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
+      if (userTasks.length === 0) return prev;
+
+      const hasGlobal = prev.some((t) => !t.date && !t.dayOfWeek && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
+      if (!hasGlobal) {
+        const seen = new Set<string>();
+        const newGlobals: ScheduleTask[] = [];
+        userTasks.forEach((t, idx) => {
+          const key = t.title.toLowerCase().trim();
+          if (!seen.has(key)) {
+            seen.add(key);
+            newGlobals.push({
+              ...t,
+              id: `promoted-global-${Date.now()}-${idx}`,
+              date: undefined,
+              dayOfWeek: undefined,
+              completed: false,
+              checklist: t.checklist ? t.checklist.map((c) => ({ ...c, done: false })) : undefined,
+            });
+          }
+        });
+        if (newGlobals.length > 0) {
+          return [...prev, ...newGlobals];
+        }
+      }
+      return prev;
+    });
+  }, []);
+
   const syncNow = async (customSyncKey?: string): Promise<boolean> => {
     const keyToUse = (customSyncKey || syncKey).trim() || 'default_user';
     if (customSyncKey && customSyncKey !== syncKey) {
@@ -1002,10 +1038,61 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Helper to get default tasks for a given day of week (1 = Mon ... 7 = Sun)
   const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
-    // 1. If Sunday (dayOfWeek === 7), return Sunday Rest routine unless explicit Sunday tasks exist
+    // 1. Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
+    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek && !t.id.startsWith('def-'));
+
+    // 2. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
+    // These blocks are the user's foundation and MUST be held across ALL days (including Sunday)
+    const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek && !t.id.startsWith('def-'));
+
+    // Combine dayMatches with global stream blocks so all streams are held across days
+    const combined: ScheduleTask[] = [];
+    const seenTitles = new Set<string>();
+
+    dayMatches.forEach((t) => {
+      combined.push(t);
+      seenTitles.add(t.title.toLowerCase().trim());
+    });
+
+    globalTasks.forEach((t) => {
+      if (!seenTitles.has(t.title.toLowerCase().trim())) {
+        combined.push(t);
+        seenTitles.add(t.title.toLowerCase().trim());
+      }
+    });
+
+    if (combined.length > 0) {
+      return combined;
+    }
+
+    // 3. Fallback to existing user custom tasks across any date/day before mock defaults
+    // If user has created ANY custom tasks anywhere in the app, carry them forward so
+    // the user's main stream blocks NEVER get replaced by arbitrary defaults!
+    const userCustomTasks = tasks.filter((t) => !t.id.startsWith('def-'));
+    if (userCustomTasks.length > 0) {
+      const carryTasks: ScheduleTask[] = [];
+      const seenCarry = new Set<string>();
+      userCustomTasks.forEach((t) => {
+        const key = t.title.toLowerCase().trim();
+        if (!seenCarry.has(key)) {
+          seenCarry.add(key);
+          carryTasks.push({
+            ...t,
+            id: `carry-${t.id}`,
+            date: undefined,
+            dayOfWeek: undefined,
+            completed: false,
+            checklist: t.checklist ? t.checklist.map((c) => ({ ...c, done: false })) : undefined
+          });
+        }
+      });
+      if (carryTasks.length > 0) {
+        return carryTasks;
+      }
+    }
+
+    // 4. ONLY if the user has NEVER created ANY tasks in the entire app, return starter templates
     if (dayOfWeek === 7) {
-      const sundayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === 7);
-      if (sundayMatches.length > 0) return sundayMatches;
       return [
         {
           id: 'def-sun-1',
@@ -1055,33 +1142,6 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ];
     }
 
-    // 2. Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
-    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek);
-
-    // 3. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
-    const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek);
-
-    // Combine dayMatches with global stream blocks so all streams are held across days
-    const combined: ScheduleTask[] = [];
-    const seenTitles = new Set<string>();
-
-    dayMatches.forEach((t) => {
-      combined.push(t);
-      seenTitles.add(t.title.toLowerCase());
-    });
-
-    globalTasks.forEach((t) => {
-      if (!seenTitles.has(t.title.toLowerCase())) {
-        combined.push(t);
-        seenTitles.add(t.title.toLowerCase());
-      }
-    });
-
-    if (combined.length > 0) {
-      return combined;
-    }
-
-    // 4. Fallback defaults for weekdays if tasks array is completely empty
     return [
       {
         id: `def-wd-${dayOfWeek}-1`,
@@ -1206,6 +1266,27 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const saveDayAsGlobalRoutine = (dateStr: string) => {
+    const dateTasks = tasks.filter((t) => t.date === dateStr);
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const sourceTasks = dateTasks.length > 0 ? dateTasks : getDaySchedule(dateObj).tasks;
+
+    setTasks((prev) => {
+      // Keep date-specific tasks and day-specific tasks, replace/update global tasks (!t.date && !t.dayOfWeek)
+      const nonGlobals = prev.filter((t) => t.date || t.dayOfWeek);
+      const newGlobals: ScheduleTask[] = sourceTasks.map((t, idx) => ({
+        ...t,
+        id: `global-task-${Date.now()}-${idx}`,
+        dayOfWeek: undefined,
+        date: undefined,
+        completed: false,
+        checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-glob-${idx}-${cidx}`, done: false })) : undefined
+      }));
+      return [...nonGlobals, ...newGlobals];
+    });
+  };
+
   const applyDayScheduleToDates = (sourceDateStr: string, targetDateStrs: string[]) => {
     const [y, m, d] = sourceDateStr.split('-').map(Number);
     const sourceDate = new Date(y, m - 1, d);
@@ -1301,7 +1382,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (action === 'create' && newTaskData) {
         addTask({
           ...newTaskData,
-          dayOfWeek,
+          dayOfWeek: undefined, // undefined applies globally to all 7 days
           date: undefined,
         });
         // Also update sourceDateStr if already custom
@@ -1316,13 +1397,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (action === 'edit' && updatedTaskData) {
         setTasks((prev) =>
           prev.map((t) => {
-            const isMatchingDefault = !t.date && (
-              (t.dayOfWeek === dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title))) ||
-              (!t.dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title)))
-            );
-            const isMatchingSource = t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title));
-
-            if (isMatchingDefault || isMatchingSource) {
+            const isMatching = (t.id === taskId || (originalTask && t.title.toLowerCase().trim() === originalTask.title.toLowerCase().trim()));
+            if (isMatching) {
               return { ...t, ...updatedTaskData };
             }
             return t;
@@ -1331,12 +1407,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else if (action === 'delete') {
         setTasks((prev) =>
           prev.filter((t) => {
-            const isMatchingDefault = !t.date && (
-              (t.dayOfWeek === dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title))) ||
-              (!t.dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title)))
-            );
-            const isMatchingSource = t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title));
-            return !(isMatchingDefault || isMatchingSource);
+            const isMatching = (t.id === taskId || (originalTask && t.title.toLowerCase().trim() === originalTask.title.toLowerCase().trim()));
+            return !isMatching;
           })
         );
       }
@@ -2085,6 +2157,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         materializeDaySchedule,
         resetDayScheduleToDefault,
         saveDayAsWeekdayDefault,
+        saveDayAsGlobalRoutine,
         applyDayScheduleToDates,
         updateWeekdayDefaultSchedule,
         getWeekdayDefaultTasks,

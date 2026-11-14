@@ -181,6 +181,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     materializeDaySchedule,
     resetDayScheduleToDefault,
     saveDayAsWeekdayDefault,
+    saveDayAsGlobalRoutine,
     applyDayScheduleToDates,
     getWeekdayDefaultTasks,
     applyTaskActionWithScope,
@@ -202,7 +203,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
   const lastTouchTimeRef = useRef<number>(0);
   const touchStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const justToggledRef = useRef<number>(0);
+  const blockToggleUntilRef = useRef<number>(0);
 
   const handlePaperTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
@@ -220,18 +221,24 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       return;
     }
 
+    // Suppress if already toggled recently to avoid synthetic double-trigger
+    if (Date.now() < blockToggleUntilRef.current) {
+      return;
+    }
+
     if (e.changedTouches.length === 1) {
       const endX = e.changedTouches[0].clientX;
       const endY = e.changedTouches[0].clientY;
       const moveDistance = Math.hypot(endX - touchStartPosRef.current.x, endY - touchStartPosRef.current.y);
-      // Ignore if user dragged or scrolled finger > 22px
-      if (moveDistance > 22) return;
+      // Generous jitter tolerance for mobile fingers (up to 35px)
+      if (moveDistance > 35) return;
 
       const now = Date.now();
       const timeSinceLast = now - lastTouchTimeRef.current;
-      if (timeSinceLast >= 40 && timeSinceLast <= 500) {
+      if (timeSinceLast >= 50 && timeSinceLast <= 650) {
+        e.stopPropagation();
         lastTouchTimeRef.current = 0;
-        justToggledRef.current = now;
+        blockToggleUntilRef.current = now + 1000;
         setIsFullScreen((prev) => !prev);
         try {
           soundEngine.playPencil();
@@ -247,11 +254,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (target.closest('button, select, input, textarea, a, [role="button"], form, .group\\/task, [data-no-fullscreen-toggle]')) {
       return;
     }
-    // Prevent double toggle if touchEnd already triggered
-    if (Date.now() - justToggledRef.current < 600) {
+    // Prevent synthetic bounce if touchEnd already handled it
+    if (Date.now() < blockToggleUntilRef.current) {
       return;
     }
-    justToggledRef.current = Date.now();
+    e.stopPropagation();
+    blockToggleUntilRef.current = Date.now() + 1000;
     setIsFullScreen((prev) => !prev);
     try {
       soundEngine.playPencil();
@@ -521,8 +529,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         materializeDaySchedule(activeDateStr);
         setToastMessage(language === 'am' ? 'ለዚህ ቀን ብቻ ተቀምጧል!' : `Saved strictly for ${dayName}!`);
       } else if (scope === 'all_days') {
-        saveDayAsWeekdayDefault(activeDateStr, activeDayOfWeek);
-        setToastMessage(language === 'am' ? `ለሁሉም ${dayName} ነባሪ ሆኖ ተቀምጧል!` : `Set as default routine for all ${dayName}s!`);
+        saveDayAsGlobalRoutine(activeDateStr);
+        setToastMessage(language === 'am' ? 'ለሁሉም ቀናት እንደ መደበኛ ሰሌዳ ተቀምጧል!' : 'Set as default routine for ALL days!');
       } else if (scope === 'chosen_days') {
         applyDayScheduleToDates(activeDateStr, targetDates);
         setToastMessage(language === 'am' ? `ለ${targetDates.length} ቀናት ተተግብሯል!` : `Applied schedule to ${targetDates.length} chosen days!`);
@@ -877,7 +885,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 )}
               </div>
 
-              {/* Full Screen Symbol Button - On the side of color palette, symbol only */}
+              {/* Full Screen Symbol Button - On the side of color palette, comfortable touch target */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -885,11 +893,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   setIsFullScreen(!isFullScreen);
                   try { soundEngine.playPencil(); } catch {}
                 }}
-                className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center relative z-20"
+                className="p-1.5 sm:p-2 min-w-[32px] min-h-[32px] rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-90 text-current flex items-center justify-center relative z-20 shadow-2xs"
                 title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
                 aria-label="Toggle Full Screen"
               >
-                {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
               </button>
 
               {onClose && (
@@ -1703,6 +1711,23 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               )}
             </div>
           )}
+          {/* Dedicated Clear Paper Area for effortless double-tap to toggle full-screen on mobile & desktop */}
+          <div 
+            onTouchStart={handlePaperTouchStart}
+            onTouchEnd={handlePaperTouchEnd}
+            onDoubleClick={handlePaperDoubleClick}
+            className="w-full py-8 mt-2 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation group/taparea min-h-[70px]"
+            title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ለማየት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to expand full screen')}
+          >
+            <div className="flex items-center gap-1.5 opacity-35 group-hover/taparea:opacity-75 transition-opacity">
+              <span className="text-[10px]">✏️</span>
+              <span className="text-[9px] font-mono tracking-wider font-semibold uppercase">
+                {isFullScreen 
+                  ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to exit full screen')
+                  : (language === 'am' ? 'በሙሉ ገጽ ለማስፋት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to expand full screen')}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       </div>
