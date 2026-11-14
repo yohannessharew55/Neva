@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Calendar, CalendarDays, BookOpen, 
+  Calendar, CalendarRange, BookOpen, 
   Target, Timer
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
@@ -17,7 +17,7 @@ export const IosBottomTabBar: React.FC = () => {
 
   const tabs = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'calendar', label: language === 'am' ? 'ቀን' : 'Calendar', icon: CalendarDays },
+    { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: language === 'am' ? 'ትኩረት' : 'Focus', icon: Timer },

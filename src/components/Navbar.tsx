@@ -4,7 +4,7 @@ import {
   Menu, X, Calendar, Dumbbell, Target, Timer, 
   MoreHorizontal, Swords, Palette, Music, Building2, 
   TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
-  PlusCircle, CalendarDays, BellRing, Plus, Sparkles, Database, Cloud, Star,
+  PlusCircle, CalendarDays, CalendarRange, BellRing, Plus, Sparkles, Database, Cloud, Star,
   Languages, Globe, SquarePen, StickyNote, User, LogOut,
   PieChart
 } from 'lucide-react';
@@ -69,7 +69,7 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'calendar', label: language === 'am' ? 'ቀን' : 'Calendar', icon: CalendarDays },
+    { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
     { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: t('navFocusTimer'), icon: Timer },
@@ -77,7 +77,7 @@ export const Navbar: React.FC = () => {
 
   const drawerNavItems = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'calendar', label: language === 'am' ? 'ቀን መቁጠሪያ' : 'Calendar & Schedule', icon: CalendarDays },
+    { id: 'calendar', label: language === 'am' ? 'ዕቅድና የቀን መቁጠሪያ' : 'Plan & Calendar', icon: CalendarRange },
     { id: 'notes-gallery', label: language === 'am' ? 'ስቲኪ ማስታወሻ ⭐' : 'Sticky Notes Gallery ⭐', icon: Star },
     { id: 'devotion', label: language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer', icon: BookOpen },
     { id: 'fitness', label: language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness', icon: Dumbbell },
@@ -193,16 +193,6 @@ export const Navbar: React.FC = () => {
             >
               <BellRing size={18} className="text-[#0082ff]" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            </button>
-
-            {/* Plan Routine Button - hidden on mobile, placed inside Hamburger Drawer */}
-            <button
-              onClick={() => setShowPlanningModal(true)}
-              className="hidden sm:flex h-10 px-3 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold items-center justify-center gap-1.5 shadow-xs transition cursor-pointer active:scale-90 shrink-0"
-              title={t('plan')}
-            >
-              <PlusCircle size={15} />
-              <span className="hidden sm:inline">{t('plan')}</span>
             </button>
 
             {/* Add Category Button */}
@@ -452,16 +442,17 @@ export const Navbar: React.FC = () => {
                       <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                     </button>
 
-                    {/* 3. Planning Icon Button */}
+                    {/* 3. Planning Icon Button (Merged with Plan & Calendar) */}
                     <button
                       onClick={() => {
                         setShowMoreMenu(false);
-                        setShowPlanningModal(true);
+                        setSelectedCategoryId(null);
+                        setActiveTab('calendar');
                       }}
                       className="flex-1 py-2 rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white transition cursor-pointer active:scale-95 flex items-center justify-center shadow-xs"
-                      title={t('plan')}
+                      title={language === 'am' ? 'ዕቅድ' : 'Plan'}
                     >
-                      <PlusCircle size={16} />
+                      <CalendarRange size={16} />
                     </button>
                   </div>
 

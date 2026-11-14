@@ -214,7 +214,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     
     navToday: 'Today',
     navStickyGallery: 'Sticky Gallery ⭐',
-    navCalendar: 'Calendar (🇪🇹)',
+    navCalendar: 'Plan (🇪🇹)',
     navWorkouts: 'Workouts',
     navMeals: 'Devotion',
     navDevotion: 'Devotion',
@@ -389,7 +389,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     
     navToday: 'ዛሬ',
     navStickyGallery: 'ስቲኪ ማስታወሻ ⭐',
-    navCalendar: 'ቀን መቁጠሪያ (🇪🇹)',
+    navCalendar: 'ዕቅድ (🇪🇹)',
     navWorkouts: 'ስፖርት',
     navMeals: 'ጸሎት',
     navDevotion: 'ጸሎት',

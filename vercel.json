@@ -2,6 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "git": {
+    "deploymentEnabled": {
+      "data-sync": false
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
