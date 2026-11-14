@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Check, Play, Plus, Clock, Wind, 
   Trash2, ChevronDown, ChevronUp, Palette,
   Dumbbell, Swords, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
-  ExternalLink
+  ExternalLink, GripVertical
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -295,10 +295,98 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     }
   };
 
+  // User's custom drag-and-drop category order
+  const [categoryOrder, setCategoryOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_category_order_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+  const [draggedSubjectId, setDraggedSubjectId] = useState<string | null>(null);
+  const [dragOverSubjectId, setDragOverSubjectId] = useState<string | null>(null);
+
+  const touchActiveId = useRef<string | null>(null);
+
   // Group tasks by Main Stream Subjects
   const sortedTasks = [...tasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
 
-  const allCategoryKeys = Object.keys(categoryPlans);
+  const baseCategoryKeys = Object.keys(categoryPlans);
+  const allCategoryKeys = [...baseCategoryKeys].sort((a, b) => {
+    const indexA = categoryOrder.indexOf(a);
+    const indexB = categoryOrder.indexOf(b);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return 0;
+  });
+
+  const reorderSubjects = (fromId: string, toId: string) => {
+    if (fromId === toId) return;
+    const currentOrder = [...allCategoryKeys];
+    const fromIndex = currentOrder.indexOf(fromId);
+    const toIndex = currentOrder.indexOf(toId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const newOrder = [...currentOrder];
+    const [removed] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, removed);
+
+    setCategoryOrder(newOrder);
+    try {
+      localStorage.setItem('neva_category_order_v1', JSON.stringify(newOrder));
+    } catch {}
+    try {
+      soundEngine.playPencil();
+    } catch {}
+  };
+
+  const moveSubject = (id: string, direction: 'up' | 'down') => {
+    const currentOrder = [...allCategoryKeys];
+    const index = currentOrder.indexOf(id);
+    if (index === -1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= currentOrder.length) return;
+
+    const newOrder = [...currentOrder];
+    const [removed] = newOrder.splice(index, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    setCategoryOrder(newOrder);
+    try {
+      localStorage.setItem('neva_category_order_v1', JSON.stringify(newOrder));
+    } catch {}
+    try {
+      soundEngine.playPencil();
+    } catch {}
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, id: string) => {
+    touchActiveId.current = id;
+    setDraggedSubjectId(id);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchActiveId.current) return;
+    const touch = e.touches[0];
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    const card = targetElement?.closest('[data-subject-id]');
+    if (card) {
+      const targetId = card.getAttribute('data-subject-id');
+      if (targetId && targetId !== touchActiveId.current) {
+        setDragOverSubjectId(targetId);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchActiveId.current && dragOverSubjectId && touchActiveId.current !== dragOverSubjectId) {
+      reorderSubjects(touchActiveId.current, dragOverSubjectId);
+    }
+    touchActiveId.current = null;
+    setDraggedSubjectId(null);
+    setDragOverSubjectId(null);
+  };
 
   // Calculate grouped subjects with their tasks
   const subjectGroups = allCategoryKeys
@@ -705,16 +793,63 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 key={group.id}
                 className="space-y-1.5 transition-all"
               >
-                {/* 1. Main Stream Subject Header Card with Automatic Master Checkbox & Expand Sign */}
+                {/* 1. Main Stream Subject Header Card with Automatic Master Checkbox, Drag Handle & Expand Sign */}
                 <div 
+                  data-subject-id={group.id}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    setDraggedSubjectId(group.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', group.id);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (dragOverSubjectId !== group.id) {
+                      setDragOverSubjectId(group.id);
+                    }
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverSubjectId === group.id) {
+                      setDragOverSubjectId(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const fromId = e.dataTransfer.getData('text/plain') || draggedSubjectId;
+                    if (fromId) {
+                      reorderSubjects(fromId, group.id);
+                    }
+                    setDraggedSubjectId(null);
+                    setDragOverSubjectId(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedSubjectId(null);
+                    setDragOverSubjectId(null);
+                  }}
                   className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all ${
-                    group.isAllDone 
+                    draggedSubjectId === group.id
+                      ? 'opacity-40 scale-[0.98] border-dashed border-[#0082ff] bg-blue-50/20'
+                      : dragOverSubjectId === group.id
+                      ? 'border-2 border-[#0082ff] bg-blue-50/40 dark:bg-blue-950/30 scale-[1.01]'
+                      : group.isAllDone 
                       ? 'bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10 opacity-75' 
                       : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
                   }`}
                 >
-                  {/* Left: Main Stream Subject Checkbox & Title */}
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+                    {/* Drag Handle: Desktop mouse grab & Mobile touch handle */}
+                    <div
+                      className="text-black/30 dark:text-white/30 hover:text-black/80 dark:hover:text-white/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
+                      title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
+                      onTouchStart={(e) => handleTouchStart(e, group.id)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                    >
+                      <GripVertical size={13} />
+                    </div>
+
                     {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! */}
                     <button
                       type="button"
@@ -762,8 +897,34 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     </button>
                   </div>
 
-                  {/* Right: Progress Badge, Quick Add & Expand Little Sign */}
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Right: Move Up/Down, Progress Badge, Quick Add & Expand Little Sign */}
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                    {/* Quick Reorder Up / Down Buttons */}
+                    <div className="flex items-center gap-0.5 opacity-40 hover:opacity-100 transition">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveSubject(group.id, 'up');
+                        }}
+                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
+                        title={language === 'am' ? 'ወደ ላይ ውሰድ' : 'Move up'}
+                      >
+                        <ChevronUp size={11} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveSubject(group.id, 'down');
+                        }}
+                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
+                        title={language === 'am' ? 'ወደ ታች ውሰድ' : 'Move down'}
+                      >
+                        <ChevronDown size={11} />
+                      </button>
+                    </div>
+
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
                       group.isAllDone 
                         ? 'bg-emerald-500/25 text-emerald-800 dark:text-emerald-200' 
