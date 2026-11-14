@@ -5,7 +5,7 @@ import {
   Palette, Music, Swords, Building2, TrendingUp,
   Shield, Calendar, ChevronRight, SlidersHorizontal, ChevronDown, ChevronUp,
   ExternalLink, Dumbbell, BookOpen, Sparkles, Flame, SquarePen,
-  AlarmClock, BellRing, PieChart
+  AlarmClock, BellRing, PieChart, Check, X
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -15,6 +15,23 @@ import { DayCloseoutModal } from './DayCloseoutModal';
 import { QuickScratchpadCard } from './QuickScratchpadCard';
 import { ReminderCenterModal } from './ReminderCenterModal';
 import { gregorianToEthiopian, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
+import { soundEngine } from '../utils/audio';
+
+interface SundayRestHabit {
+  id: string;
+  text: string;
+  completed: boolean;
+  icon: string;
+}
+
+const DEFAULT_SUNDAY_HABITS: SundayRestHabit[] = [
+  { id: 'sh-1', text: 'Spiritual Devotion, Prayer & Scripture Reflection', completed: false, icon: '📖' },
+  { id: 'sh-2', text: 'Gentle Nature Walk & Deep Breathing', completed: false, icon: '🍃' },
+  { id: 'sh-3', text: 'Family Connection & Wholesome Fellowship', completed: false, icon: '☕' },
+  { id: 'sh-4', text: 'Read Inspiring Literature / Creative Journaling', completed: false, icon: '📚' },
+  { id: 'sh-5', text: 'Restful Sleep, Recovery Nap & Physical Reset', completed: false, icon: '🛌' },
+  { id: 'sh-6', text: 'Gratitude Reflection & Peaceful Week Ahead Prep', completed: false, icon: '🧘' }
+];
 
 export const TodayCockpitV2: React.FC = () => {
   const { 
@@ -145,6 +162,51 @@ export const TodayCockpitV2: React.FC = () => {
   const weeklyMomentum = getWeeklyMomentum();
   const activeDaysCount = weeklyMomentum.filter((d) => d.isCompleted).length;
 
+  const isSundayToday = now.getDay() === 0;
+  const [showSundaySanctuary, setShowSundaySanctuary] = useState(isSundayToday);
+  const [sundayHabits, setSundayHabits] = useState<SundayRestHabit[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_sunday_habits_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_SUNDAY_HABITS;
+  });
+  const [newSundayHabitText, setNewSundayHabitText] = useState('');
+
+  const toggleSundayHabit = (id: string) => {
+    setSundayHabits(prev => {
+      const next = prev.map(h => h.id === id ? { ...h, completed: !h.completed } : h);
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const addSundayHabit = () => {
+    if (!newSundayHabitText.trim()) return;
+    const newHabit: SundayRestHabit = {
+      id: `sh-${Date.now()}`,
+      text: newSundayHabitText.trim(),
+      completed: false,
+      icon: '🌿'
+    };
+    setSundayHabits(prev => {
+      const next = [...prev, newHabit];
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    setNewSundayHabitText('');
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const deleteSundayHabit = (id: string) => {
+    setSundayHabits(prev => {
+      const next = prev.filter(h => h.id !== id);
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-3.5 sm:py-6 space-y-4 sm:space-y-6 max-w-full overflow-x-clip">
       
@@ -164,6 +226,19 @@ export const TodayCockpitV2: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowSundaySanctuary(prev => !prev)}
+              className={`p-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer border ${
+                isSundayToday || showSundaySanctuary
+                  ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+              }`}
+              title="Sunday Rest & Relaxation Sanctuary"
+            >
+              <span>🌿</span>
+              <span className="text-[10px] sm:text-xs font-semibold">{language === 'am' ? 'እሁድ' : 'Sunday Rest'}</span>
+            </button>
+
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-900/60 flex items-center gap-1">
               <Flame size={11} className="text-amber-500 fill-amber-500" />
               <span>{activeDaysCount}/7</span>
@@ -295,6 +370,120 @@ export const TodayCockpitV2: React.FC = () => {
                 <Flame size={12} className="text-amber-500 fill-amber-500" />
                 <span>{activeDaysCount}/7 {language === 'am' ? 'ቀናት' : 'Active'}</span>
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sunday Official Rest & Relaxation Sanctuary */}
+      {(isSundayToday || showSundaySanctuary) && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-slate-50 dark:from-emerald-950/30 dark:via-teal-950/15 dark:to-slate-900 border-2 border-emerald-400/80 dark:border-emerald-700/80 shadow-md space-y-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20">
+                🌿
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500 text-white uppercase tracking-wider">
+                    {language === 'am' ? 'ይፋዊ የእረፍት ቀን' : 'Official Rest Day'}
+                  </span>
+                  <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300 font-bold">
+                    {language === 'am' ? 'እሁድ' : 'Sunday'}
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                  {language === 'am' ? 'የእሁድ እረፍትና የመዝናናት ማዕከል' : 'Sunday Rest & Relaxation Sanctuary'}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <div className="px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300">
+                {sundayHabits.filter(h => h.completed).length}/{sundayHabits.length} {language === 'am' ? 'ተጠናቋል' : 'recharged'}
+              </div>
+              {!isSundayToday && (
+                <button
+                  onClick={() => setShowSundaySanctuary(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title="Hide"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Serene Rest Quote */}
+          <div className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-emerald-100 dark:border-emerald-900/40 text-xs italic text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <span className="text-emerald-500 font-bold text-sm">❝</span>
+            <span>
+              {language === 'am'
+                ? 'እረፍት ስንፍና አይደለም—ለሚቀጥለው ሳምንት ከፍተኛ ውጤታማነትና ትኩረት የሚሰጥ የተቀደሰ መሰረት ነው።'
+                : 'Rest is not a lack of momentum—it is the holy foundation that powers deep focus and mastery for the upcoming week.'}
+            </span>
+            <span className="text-emerald-500 font-bold text-sm">❞</span>
+          </div>
+
+          {/* Relaxing Activities & Habits */}
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {sundayHabits.map((habit) => (
+                <div
+                  key={habit.id}
+                  className={`p-2.5 rounded-2xl border transition flex items-center justify-between group ${
+                    habit.completed
+                      ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/80 dark:border-emerald-800/60'
+                      : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 hover:border-emerald-400'
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleSundayHabit(habit.id)}
+                    className="flex items-center gap-2 min-w-0 text-left cursor-pointer"
+                  >
+                    <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                      habit.completed
+                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                        : 'border-slate-300 dark:border-slate-600'
+                    }`}>
+                      {habit.completed && <Check size={11} strokeWidth={3} />}
+                    </div>
+                    <span className="text-sm shrink-0">{habit.icon}</span>
+                    <span className={`text-xs truncate ${habit.completed ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200 font-medium'}`}>
+                      {habit.text}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => deleteSundayHabit(habit.id)}
+                    className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-1 cursor-pointer transition shrink-0"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Inline add custom Sunday relaxing habit */}
+            <div className="flex items-center gap-2 pt-1.5">
+              <input
+                type="text"
+                value={newSundayHabitText}
+                onChange={(e) => setNewSundayHabitText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSundayHabit();
+                  }
+                }}
+                placeholder={language === 'am' ? '+ የእሁድ መዝናኛ ተግባር ጻፍና Enter ንካ...' : '+ Add relaxing habit or family reflection (press Enter)...'}
+                className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs outline-none focus:border-emerald-500"
+              />
+              <button
+                onClick={addSundayHabit}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <Plus size={13} /> {language === 'am' ? 'አክል' : 'Add'}
+              </button>
             </div>
           </div>
         </div>

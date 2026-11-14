@@ -21,6 +21,32 @@ import { soundEngine } from '../utils/audio';
 type CalendarMode = 'ethiopian' | 'gregorian' | 'dual';
 type PlannerHorizon = 'daily' | 'weekly' | 'monthly';
 
+interface SundayRestHabit {
+  id: string;
+  text: string;
+  completed: boolean;
+  icon: string;
+}
+
+const DEFAULT_SUNDAY_HABITS: SundayRestHabit[] = [
+  { id: 'sh-1', text: 'Spiritual Devotion, Prayer & Scripture Reflection', completed: false, icon: '📖' },
+  { id: 'sh-2', text: 'Gentle Nature Walk & Deep Breathing', completed: false, icon: '🍃' },
+  { id: 'sh-3', text: 'Family Connection & Wholesome Fellowship', completed: false, icon: '☕' },
+  { id: 'sh-4', text: 'Read Inspiring Literature / Creative Journaling', completed: false, icon: '📚' },
+  { id: 'sh-5', text: 'Restful Sleep, Recovery Nap & Physical Reset', completed: false, icon: '🛌' },
+  { id: 'sh-6', text: 'Gratitude Reflection & Peaceful Week Ahead Prep', completed: false, icon: '🧘' }
+];
+
+const WEEK_DAYS = [
+  { id: 'Mon', en: 'Mon', am: 'ሰኞ', isRest: false },
+  { id: 'Tue', en: 'Tue', am: 'ማክ', isRest: false },
+  { id: 'Wed', en: 'Wed', am: 'ረቡ', isRest: false },
+  { id: 'Thu', en: 'Thu', am: 'ሐሙ', isRest: false },
+  { id: 'Fri', en: 'Fri', am: 'አር', isRest: false },
+  { id: 'Sat', en: 'Sat', am: 'ቅዳ', isRest: false },
+  { id: 'Sun', en: 'Sun 🌿', am: 'እሁ 🌿', isRest: true },
+];
+
 export const IntegratedCalendarView: React.FC = () => {
   const { 
     tasks, 
@@ -116,6 +142,70 @@ export const IntegratedCalendarView: React.FC = () => {
 
   // Inline Quick Add Focus State for Daily Plan view
   const [inlineFocusInputs, setInlineFocusInputs] = useState<Record<string, string>>({});
+
+  // Sunday Rest Habits State
+  const [sundayHabits, setSundayHabits] = useState<SundayRestHabit[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_sunday_habits_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_SUNDAY_HABITS;
+  });
+  const [newSundayHabitText, setNewSundayHabitText] = useState('');
+
+  const toggleSundayHabit = (id: string) => {
+    setSundayHabits(prev => {
+      const next = prev.map(h => h.id === id ? { ...h, completed: !h.completed } : h);
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const addSundayHabit = () => {
+    if (!newSundayHabitText.trim()) return;
+    const newHabit: SundayRestHabit = {
+      id: `sh-${Date.now()}`,
+      text: newSundayHabitText.trim(),
+      completed: false,
+      icon: '🌿'
+    };
+    setSundayHabits(prev => {
+      const next = [...prev, newHabit];
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    setNewSundayHabitText('');
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const deleteSundayHabit = (id: string) => {
+    setSundayHabits(prev => {
+      const next = prev.filter(h => h.id !== id);
+      try { localStorage.setItem('neva_sunday_habits_v1', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const isSelectedSunday = selectedDate.getDay() === 0;
+
+  // Day Picker State for Weekly Tab in Quick Plan Modal
+  const [selectedModalWeeklyDays, setSelectedModalWeeklyDays] = useState<string[]>(['Mon', 'Wed', 'Fri']);
+  const [modalWeeklyDefaultTime, setModalWeeklyDefaultTime] = useState('07:00 AM');
+
+  const handleToggleModalDay = (dayId: string) => {
+    setSelectedModalWeeklyDays(prev =>
+      prev.includes(dayId) ? prev.filter(d => d !== dayId) : [...prev, dayId]
+    );
+  };
+
+  const handleApplyModalDays = () => {
+    if (selectedModalWeeklyDays.length === 0) return;
+    const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const sorted = [...selectedModalWeeklyDays].sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+    const newSlots = sorted.map(d => `${d} ${modalWeeklyDefaultTime}`);
+    setWeeklySlotsInput(newSlots.join(', '));
+  };
 
   // Active Dual Date formatting
   const activeDualDate = formatDualDate(selectedDate);
@@ -559,6 +649,111 @@ export const IntegratedCalendarView: React.FC = () => {
             </div>
           </div>
 
+          {/* Sunday Official Rest & Relaxation Sanctuary */}
+          {isSelectedSunday && (
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-slate-50 dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-slate-900 border border-emerald-500/30 dark:border-emerald-800/50 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-emerald-200/60 dark:border-emerald-800/40 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-sm shrink-0">
+                    🕊️
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                        {language === 'am' ? 'እሁድ፡ ይፋዊ የእረፍትና የመዝናናት ቀን' : 'Sunday: Official Rest & Relaxation Sanctuary'}
+                      </h3>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                        {language === 'am' ? 'እረፍት' : 'Rest Day'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {language === 'am' 
+                        ? 'የአእምሮና የአካል እድሳት፣ መንፈሳዊ ጥንካሬ እና ለሚቀጥለው ሳምንት ሙሉ ጉልበት መሙያ።' 
+                        : 'Deep mental & physical recharge, spiritual grounding, and serene preparation for the week ahead.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-[11px] font-mono text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-900/40 px-3 py-1 rounded-xl self-start sm:self-auto">
+                  {sundayHabits.filter(h => h.completed).length}/{sundayHabits.length} {language === 'am' ? 'ተጠናቋል' : 'recharged'}
+                </div>
+              </div>
+
+              {/* Serene Rest Quote */}
+              <div className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-emerald-100 dark:border-emerald-900/40 text-xs italic text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                <span className="text-emerald-500 font-bold text-sm">❝</span>
+                <span>
+                  {language === 'am'
+                    ? 'እረፍት ስንፍና አይደለም—ለሚቀጥለው ሳምንት ከፍተኛ ውጤታማነትና ትኩረት የሚሰጥ የተቀደሰ መሰረት ነው።'
+                    : 'Rest is not a lack of momentum—it is the holy foundation that powers deep focus and mastery for the upcoming week.'}
+                </span>
+                <span className="text-emerald-500 font-bold text-sm">❞</span>
+              </div>
+
+              {/* Relaxing Activities & Habits */}
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {sundayHabits.map((habit) => (
+                    <div
+                      key={habit.id}
+                      className={`p-2.5 rounded-2xl border transition flex items-center justify-between group ${
+                        habit.completed
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300/80 dark:border-emerald-800/60'
+                          : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 hover:border-emerald-400'
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleSundayHabit(habit.id)}
+                        className="flex items-center gap-2 min-w-0 text-left cursor-pointer"
+                      >
+                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                          habit.completed
+                            ? 'bg-emerald-500 border-emerald-500 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {habit.completed && <Check size={11} strokeWidth={3} />}
+                        </div>
+                        <span className="text-sm shrink-0">{habit.icon}</span>
+                        <span className={`text-xs truncate ${habit.completed ? 'line-through text-slate-400' : 'text-slate-800 dark:text-slate-200 font-medium'}`}>
+                          {habit.text}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => deleteSundayHabit(habit.id)}
+                        className="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-1 cursor-pointer transition shrink-0"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Inline add custom Sunday relaxing habit */}
+                <div className="flex items-center gap-2 pt-1.5">
+                  <input
+                    type="text"
+                    value={newSundayHabitText}
+                    onChange={(e) => setNewSundayHabitText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSundayHabit();
+                      }
+                    }}
+                    placeholder={language === 'am' ? '+ የእሁድ መዝናኛ ተግባር ጻፍና Enter ንካ...' : '+ Add relaxing habit or family reflection (press Enter)...'}
+                    className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    onClick={addSundayHabit}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shrink-0"
+                  >
+                    <Plus size={13} /> {language === 'am' ? 'አክል' : 'Add'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Left 7 Cols: Tactical Time-Blocked Schedule */}
             <div className="lg:col-span-7 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
@@ -901,6 +1096,7 @@ export const IntegratedCalendarView: React.FC = () => {
                 const dayMinutes = dayTasks.reduce((acc, t) => acc + (t.durationMin || 0), 0);
                 const isDayToday = dayDate.toDateString() === today.toDateString();
                 const isSelected = dayDate.toDateString() === selectedDate.toDateString();
+                const isSunday = dayDate.getDay() === 0;
                 const amharicDayMeta = AMHARIC_DAYS[dayDate.getDay()];
                 const ethDate = gregorianToEthiopian(dayDate);
 
@@ -916,6 +1112,8 @@ export const IntegratedCalendarView: React.FC = () => {
                         ? 'bg-blue-50/80 dark:bg-blue-950/60 border-[#0082ff] ring-2 ring-[#0082ff] shadow-md'
                         : isDayToday
                         ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-400 dark:border-indigo-700 shadow-xs'
+                        : isSunday
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/60 hover:border-emerald-400 shadow-2xs'
                         : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
                     }`}
                   >
@@ -931,11 +1129,15 @@ export const IntegratedCalendarView: React.FC = () => {
                             {dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {ethDate.day}
                           </div>
                         </div>
-                        {isDayToday && (
+                        {isDayToday ? (
                           <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-indigo-600 text-white">
                             Today
                           </span>
-                        )}
+                        ) : isSunday ? (
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                            🌿 {language === 'am' ? 'እረፍት' : 'Rest'}
+                          </span>
+                        ) : null}
                       </div>
 
                       {/* Scheduled Blocks */}
@@ -961,8 +1163,13 @@ export const IntegratedCalendarView: React.FC = () => {
                         )}
 
                         {dayTasks.length === 0 && (
-                          <span className="text-[10px] text-slate-400 italic block pt-3 text-center">
-                            {language === 'am' ? 'ነፃ ቀን' : 'Open day'}
+                          <span className={`text-[10px] italic block pt-3 text-center ${
+                            isSunday ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-400'
+                          }`}>
+                            {isSunday 
+                              ? (language === 'am' ? '🌿 ይፋዊ የእረፍትና የመዝናናት ቀን' : '🌿 Rest & Relaxation Day')
+                              : (language === 'am' ? 'ነፃ ቀን' : 'Open day')
+                            }
                           </span>
                         )}
                       </div>
@@ -1573,6 +1780,69 @@ export const IntegratedCalendarView: React.FC = () => {
                     onChange={(e) => setWeeklyHoursInput(Number(e.target.value))}
                     className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-mono font-bold outline-none"
                   />
+                </div>
+
+                {/* Day Selection Options: Mon, Tue, Wed, Thu, Fri, Sat, Sun 🌿 */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-700 dark:text-slate-300 font-bold block text-[11px]">
+                      {language === 'am' ? 'የሳምንቱን ቀናት ይምረጡ (Mon, Tue, Wed...)' : 'Choose Weekly Days (Mon, Tue, Wed...)'}
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {selectedModalWeeklyDays.length} {language === 'am' ? 'ቀናት' : 'days'}
+                    </span>
+                  </div>
+
+                  {/* Day Buttons */}
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {WEEK_DAYS.map((d) => {
+                      const isSelected = selectedModalWeeklyDays.includes(d.id);
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => handleToggleModalDay(d.id)}
+                          className={`py-1.5 px-1 rounded-xl text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 border ${
+                            isSelected
+                              ? d.isRest
+                                ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
+                                : 'bg-[#0082ff] text-white border-[#0082ff] shadow-xs'
+                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{language === 'am' ? d.am : d.en}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Sunday Rest Day Info */}
+                  {selectedModalWeeklyDays.includes('Sun') && (
+                    <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 font-medium">
+                      <span>🌿</span>
+                      <span>{language === 'am' ? 'እሁድ ይፋዊ የእረፍትና የመዝናናት ቀን ነው።' : 'Sunday is officially designated as a Rest & Recovery Day.'}</span>
+                    </div>
+                  )}
+
+                  {/* Default Time & Apply Button */}
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={modalWeeklyDefaultTime}
+                        onChange={(e) => setModalWeeklyDefaultTime(e.target.value)}
+                        placeholder="07:00 AM"
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleApplyModalDays}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-xs transition cursor-pointer"
+                    >
+                      {language === 'am' ? '+ ቀናት አክል' : '+ Apply Days'}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
