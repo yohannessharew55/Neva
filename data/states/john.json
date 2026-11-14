@@ -248,6 +248,28 @@
         }
       ],
       "id": "task-1794647582698"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647598186-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647598186-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647598186"
     }
   ],
   "workouts": [
