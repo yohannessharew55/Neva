@@ -16,6 +16,7 @@ import {
 } from '../utils/ethiopianCalendar';
 import { BigDailyActivitiesStickyNote } from './BigDailyActivitiesStickyNote';
 import { DayDefaultsModal } from './DayDefaultsModal';
+import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { DomainType, PriorityLevel, ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 
@@ -75,9 +76,17 @@ export const IntegratedCalendarView: React.FC = () => {
     resetDayScheduleToDefault,
     saveDayAsWeekdayDefault,
     getWeekdayDefaultTasks,
+    applyTaskActionWithScope,
   } = useLivotion();
 
   const [showDefaultsModal, setShowDefaultsModal] = useState(false);
+  const [calendarScopeAction, setCalendarScopeAction] = useState<{
+    isOpen: boolean;
+    action: 'create';
+    title?: string;
+    itemDescription?: string;
+    newTaskData: Omit<ScheduleTask, 'id'>;
+  } | null>(null);
 
   const today = new Date();
   const todayEth = gregorianToEthiopian(today);
@@ -378,30 +387,48 @@ export const IntegratedCalendarView: React.FC = () => {
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (selectedDate.getDay() + 6) % 7 + 1;
 
-    const sched = getDaySchedule(selectedDate);
-    if (!sched.isCustom) {
-      materializeDaySchedule(dateStr);
-    }
-
-    addTask({
-      domain: getDomainForCat(cat.id),
-      title: blockTitle.trim(),
-      startTime: blockTime,
-      durationMin: Number(blockDuration),
-      completed: false,
-      color: cat.color,
-      badge: cat.title.split(' ')[0],
-      priority: blockPriority,
-      date: dateStr,
-      dayOfWeek,
-      checklist: [
-        { id: `c-${Date.now()}-1`, text: 'Initial set up & focus context', done: false },
-        { id: `c-${Date.now()}-2`, text: 'High-focus deliberate practice', done: false }
-      ]
+    setCalendarScopeAction({
+      isOpen: true,
+      action: 'create',
+      title: language === 'am' ? 'አዲስ ብሎክ ወደ ሰሌዳው አክል' : 'Add Block to Schedule',
+      itemDescription: `"${blockTitle.trim()}" (${blockTime} • ${blockDuration}m)`,
+      newTaskData: {
+        domain: getDomainForCat(cat.id),
+        title: blockTitle.trim(),
+        startTime: blockTime,
+        durationMin: Number(blockDuration),
+        completed: false,
+        color: cat.color,
+        badge: cat.title.split(' ')[0],
+        priority: blockPriority,
+        dayOfWeek,
+        checklist: [
+          { id: `c-${Date.now()}-1`, text: 'Initial set up & focus context', done: false },
+          { id: `c-${Date.now()}-2`, text: 'High-focus deliberate practice', done: false }
+        ]
+      }
     });
 
     setBlockTitle('');
     setShowPlanModal(false);
+  };
+
+  const handleConfirmCalendarScope = (scope: ScheduleSaveScope, targetDates: string[]) => {
+    if (!calendarScopeAction) return;
+
+    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const dayOfWeek = (selectedDate.getDay() + 6) % 7 + 1;
+
+    applyTaskActionWithScope({
+      action: 'create',
+      scope,
+      sourceDateStr: dateStr,
+      targetDateStrs: targetDates,
+      dayOfWeek,
+      newTaskData: calendarScopeAction.newTaskData,
+    });
+
+    setCalendarScopeAction(null);
     try { soundEngine.playPencil(); } catch {}
   };
 
@@ -2002,6 +2029,17 @@ export const IntegratedCalendarView: React.FC = () => {
         onClose={() => setShowDefaultsModal(false)}
         initialDayOfWeek={(selectedDate.getDay() + 6) % 7 + 1}
       />
+
+      {calendarScopeAction && (
+        <ScheduleSaveScopeModal
+          isOpen={calendarScopeAction.isOpen}
+          onClose={() => setCalendarScopeAction(null)}
+          title={calendarScopeAction.title}
+          itemDescription={calendarScopeAction.itemDescription}
+          sourceDate={selectedDate}
+          onConfirm={handleConfirmCalendarScope}
+        />
+      )}
     </div>
   );
 };

@@ -354,6 +354,17 @@ interface LivotionContextType {
   applyDayScheduleToDates: (sourceDateStr: string, targetDateStrs: string[]) => void;
   updateWeekdayDefaultSchedule: (dayOfWeek: number, newDefaultTasks: Omit<ScheduleTask, 'id' | 'date'>[]) => void;
   getWeekdayDefaultTasks: (dayOfWeek: number) => ScheduleTask[];
+  applyTaskActionWithScope: (params: {
+    action: 'edit' | 'create' | 'delete';
+    scope: 'this_day_only' | 'all_days' | 'chosen_days';
+    sourceDateStr: string;
+    targetDateStrs?: string[];
+    dayOfWeek?: number;
+    taskId?: string;
+    originalTask?: ScheduleTask;
+    updatedTaskData?: Partial<ScheduleTask>;
+    newTaskData?: Omit<ScheduleTask, 'id'>;
+  }) => void;
 }
 
 const LivotionContext = createContext<LivotionContextType | undefined>(undefined);
@@ -1130,6 +1141,153 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const applyTaskActionWithScope = (params: {
+    action: 'edit' | 'create' | 'delete';
+    scope: 'this_day_only' | 'all_days' | 'chosen_days';
+    sourceDateStr: string;
+    targetDateStrs?: string[];
+    dayOfWeek?: number;
+    taskId?: string;
+    originalTask?: ScheduleTask;
+    updatedTaskData?: Partial<ScheduleTask>;
+    newTaskData?: Omit<ScheduleTask, 'id'>;
+  }) => {
+    const {
+      action,
+      scope,
+      sourceDateStr,
+      targetDateStrs = [sourceDateStr],
+      taskId,
+      originalTask,
+      updatedTaskData,
+      newTaskData
+    } = params;
+
+    const [y, m, d] = sourceDateStr.split('-').map(Number);
+    const sourceDate = new Date(y, m - 1, d);
+    const dayOfWeek = params.dayOfWeek || ((sourceDate.getDay() + 6) % 7 + 1);
+
+    if (scope === 'this_day_only') {
+      // 1. Materialize this day so edits remain completely unique to this date
+      materializeDaySchedule(sourceDateStr);
+
+      if (action === 'create' && newTaskData) {
+        addTask({
+          ...newTaskData,
+          date: sourceDateStr,
+          dayOfWeek,
+        });
+      } else if (action === 'edit' && updatedTaskData) {
+        setTasks((prev) =>
+          prev.map((t) => {
+            if (t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title))) {
+              return { ...t, ...updatedTaskData, date: sourceDateStr };
+            }
+            return t;
+          })
+        );
+      } else if (action === 'delete') {
+        setTasks((prev) =>
+          prev.filter((t) => !(t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title))))
+        );
+      }
+    } else if (scope === 'all_days') {
+      // 2. Apply to default routine so all days throughout the calendar receive this change
+      if (action === 'create' && newTaskData) {
+        addTask({
+          ...newTaskData,
+          dayOfWeek,
+          date: undefined,
+        });
+        // Also update sourceDateStr if already custom
+        const isSourceCustom = tasks.some((t) => t.date === sourceDateStr);
+        if (isSourceCustom) {
+          addTask({
+            ...newTaskData,
+            date: sourceDateStr,
+            dayOfWeek,
+          });
+        }
+      } else if (action === 'edit' && updatedTaskData) {
+        setTasks((prev) =>
+          prev.map((t) => {
+            const isMatchingDefault = !t.date && (
+              (t.dayOfWeek === dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title))) ||
+              (!t.dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title)))
+            );
+            const isMatchingSource = t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title));
+
+            if (isMatchingDefault || isMatchingSource) {
+              return { ...t, ...updatedTaskData };
+            }
+            return t;
+          })
+        );
+      } else if (action === 'delete') {
+        setTasks((prev) =>
+          prev.filter((t) => {
+            const isMatchingDefault = !t.date && (
+              (t.dayOfWeek === dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title))) ||
+              (!t.dayOfWeek && (t.id === taskId || (originalTask && t.title === originalTask.title)))
+            );
+            const isMatchingSource = t.date === sourceDateStr && (t.id === taskId || (originalTask && t.title === originalTask.title));
+            return !(isMatchingDefault || isMatchingSource);
+          })
+        );
+      }
+    } else if (scope === 'chosen_days') {
+      // 3. Apply to source date + each selected date
+      const allDates = Array.from(new Set([sourceDateStr, ...targetDateStrs]));
+      allDates.forEach((dateStr) => {
+        materializeDaySchedule(dateStr);
+      });
+
+      setTasks((prev) => {
+        let next = [...prev];
+
+        allDates.forEach((dateStr) => {
+          const [ty, tm, td] = dateStr.split('-').map(Number);
+          const tDow = (new Date(ty, tm - 1, td).getDay() + 6) % 7 + 1;
+
+          if (action === 'create' && newTaskData) {
+            const created: ScheduleTask = {
+              ...newTaskData,
+              id: `task-${Date.now()}-${dateStr}-${Math.random().toString(36).substring(2, 6)}`,
+              date: dateStr,
+              dayOfWeek: tDow,
+              completed: false,
+            };
+            next.push(created);
+          } else if (action === 'edit' && updatedTaskData) {
+            let found = false;
+            next = next.map((t) => {
+              if (t.date === dateStr && (t.id === taskId || (originalTask && t.title === originalTask.title))) {
+                found = true;
+                return { ...t, ...updatedTaskData, date: dateStr };
+              }
+              return t;
+            });
+            if (!found && originalTask) {
+              const added: ScheduleTask = {
+                ...originalTask,
+                ...updatedTaskData,
+                id: `task-${Date.now()}-${dateStr}-${Math.random().toString(36).substring(2, 6)}`,
+                date: dateStr,
+                dayOfWeek: tDow,
+                completed: false,
+              };
+              next.push(added);
+            }
+          } else if (action === 'delete') {
+            next = next.filter((t) => !(t.date === dateStr && (t.id === taskId || (originalTask && t.title === originalTask.title))));
+          }
+        });
+
+        return next;
+      });
+    }
+  };
+
   const triggerAlarmSound = (customProfile?: string) => {
     soundEngine.playSound(customProfile || soundProfile);
   };
@@ -1823,6 +1981,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         applyDayScheduleToDates,
         updateWeekdayDefaultSchedule,
         getWeekdayDefaultTasks,
+        applyTaskActionWithScope,
       }}
     >
       {children}

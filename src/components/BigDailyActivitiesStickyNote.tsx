@@ -12,6 +12,7 @@ import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/e
 import { soundEngine } from '../utils/audio';
 import { DayDefaultsModal } from './DayDefaultsModal';
 import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
+import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
 
@@ -178,6 +179,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     saveDayAsWeekdayDefault,
     applyDayScheduleToDates,
     getWeekdayDefaultTasks,
+    applyTaskActionWithScope,
   } = useLivotion();
 
   const [colorTheme, setColorTheme] = useState<StickyColorTheme>('canary');
@@ -190,6 +192,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [showDefaultsModal, setShowDefaultsModal] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Scope Confirmation Modal State (Independent day vs whole days vs chosen days)
+  const [pendingScopeAction, setPendingScopeAction] = useState<{
+    isOpen: boolean;
+    action: 'edit' | 'create' | 'delete' | 'day_schedule';
+    title?: string;
+    itemDescription?: string;
+    taskId?: string;
+    originalTask?: ScheduleTask;
+    updatedTaskData?: Partial<ScheduleTask>;
+    newTaskData?: Omit<ScheduleTask, 'id'>;
+  } | null>(null);
 
   const toggleSubjectExpand = (subjectId: string) => {
     setExpandedSubjects((prev) => ({
@@ -205,13 +219,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [editDurationMin, setEditDurationMin] = useState(30);
 
   const startEditTask = (task: ScheduleTask) => {
-    let targetTaskId = task.id;
-    if (!isCustomDay) {
-      const materialized = materializeDaySchedule(activeDateStr);
-      const match = materialized.find((m) => m.title === task.title) || materialized[0];
-      if (match) targetTaskId = match.id;
-    }
-    setEditingTaskId(targetTaskId);
+    setEditingTaskId(task.id);
     setEditTitle(task.title);
     setEditStartTime(task.startTime || '06:00 PM');
     setEditDurationMin(task.durationMin || 30);
@@ -220,14 +228,20 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const handleSaveEditTask = (taskId: string, e: React.FormEvent) => {
     e.preventDefault();
     if (!editTitle.trim()) return;
-    updateTask(taskId, {
-      title: editTitle.trim(),
-      startTime: editStartTime,
-      durationMin: editDurationMin,
-      date: activeDateStr,
+    const targetTask = dayTasks.find((t) => t.id === taskId);
+    setPendingScopeAction({
+      isOpen: true,
+      action: 'edit',
+      title: language === 'am' ? 'የብሎክ / ተግባር ለውጥ አስቀምጥ' : 'Save Block Changes',
+      itemDescription: `"${editTitle.trim()}" (${editStartTime || 'Flexible'} • ${editDurationMin}m)`,
+      taskId,
+      originalTask: targetTask,
+      updatedTaskData: {
+        title: editTitle.trim(),
+        startTime: editStartTime.trim() || 'Flexible',
+        durationMin: Number(editDurationMin),
+      },
     });
-    setEditingTaskId(null);
-    try { soundEngine.playPencil(); } catch {}
   };
 
   // Quick Add State
@@ -396,16 +410,70 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   const handleDeleteTask = (task: ScheduleTask) => {
-    if (!isCustomDay) {
-      const materialized = materializeDaySchedule(activeDateStr);
-      const match = materialized.find((m) => m.title === task.title);
-      if (match) {
-        deleteTask(match.id);
+    setPendingScopeAction({
+      isOpen: true,
+      action: 'delete',
+      title: language === 'am' ? 'ብሎክ / ተግባር ሰርዝ' : 'Delete Block / Task',
+      itemDescription: `"${task.title}" (${task.startTime || 'Flexible'})`,
+      taskId: task.id,
+      originalTask: task,
+    });
+  };
+
+  const handleOpenSaveDaySchedule = () => {
+    setPendingScopeAction({
+      isOpen: true,
+      action: 'day_schedule',
+      title: language === 'am' ? 'የቀኑን ሰሌዳ አስቀምጥ' : 'Save Day Schedule',
+      itemDescription: `${dayName}, ${gregFormatted} (${dayTasks.length} blocks)`,
+    });
+  };
+
+  const handleConfirmScope = (scope: ScheduleSaveScope, targetDates: string[]) => {
+    if (!pendingScopeAction) return;
+
+    if (pendingScopeAction.action === 'day_schedule') {
+      if (scope === 'this_day_only') {
+        materializeDaySchedule(activeDateStr);
+        setToastMessage(language === 'am' ? 'ለዚህ ቀን ብቻ ተቀምጧል!' : `Saved strictly for ${dayName}!`);
+      } else if (scope === 'all_days') {
+        saveDayAsWeekdayDefault(activeDateStr, activeDayOfWeek);
+        setToastMessage(language === 'am' ? `ለሁሉም ${dayName} ነባሪ ሆኖ ተቀምጧል!` : `Set as default routine for all ${dayName}s!`);
+      } else if (scope === 'chosen_days') {
+        applyDayScheduleToDates(activeDateStr, targetDates);
+        setToastMessage(language === 'am' ? `ለ${targetDates.length} ቀናት ተተግብሯል!` : `Applied schedule to ${targetDates.length} chosen days!`);
       }
     } else {
-      deleteTask(task.id);
+      applyTaskActionWithScope({
+        action: pendingScopeAction.action as 'edit' | 'create' | 'delete',
+        scope,
+        sourceDateStr: activeDateStr,
+        targetDateStrs: targetDates,
+        dayOfWeek: activeDayOfWeek,
+        taskId: pendingScopeAction.taskId,
+        originalTask: pendingScopeAction.originalTask,
+        updatedTaskData: pendingScopeAction.updatedTaskData,
+        newTaskData: pendingScopeAction.newTaskData,
+      });
+
+      if (pendingScopeAction.action === 'edit') {
+        setEditingTaskId(null);
+      } else if (pendingScopeAction.action === 'create') {
+        setNewTitle('');
+        setIsAdding(false);
+      }
+
+      if (scope === 'this_day_only') {
+        setToastMessage(language === 'am' ? `ለ${dayName} (${activeDateStr}) ብቻ ተቀምጧል!` : `Saved for ${dayName} (${activeDateStr}) only!`);
+      } else if (scope === 'all_days') {
+        setToastMessage(language === 'am' ? 'ለሁሉም ቀናት እንደ ነባሪ ተቀምጧል!' : 'Updated default routine for all days!');
+      } else if (scope === 'chosen_days') {
+        setToastMessage(language === 'am' ? `ለ${targetDates.length} የተመረጡ ቀናት ተተግብሯል!` : `Applied to ${targetDates.length} chosen days!`);
+      }
     }
-    try { soundEngine.playPencil(); } catch {}
+
+    setPendingScopeAction(null);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   // Group tasks by Main Stream Subjects for this active day
@@ -536,34 +604,31 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    if (!isCustomDay) {
-      materializeDaySchedule(activeDateStr);
-    }
-
     const catPlan = categoryPlans[selectedCategoryKey] || categoryPlans['music'];
     const domain = getDomainForCategory(selectedCategoryKey);
 
-    addTask({
-      title: newTitle.trim(),
-      startTime: newStartTime.trim() || 'Flexible',
-      durationMin: Number(newDurationMin),
-      domain,
-      badge: catPlan?.title?.split(' ')[0] || 'Focus',
-      color: catPlan?.color || '#0082ff',
-      soundProfile: 'SOLFEGGIO_432',
-      completed: false,
-      date: activeDateStr,
-      dayOfWeek: activeDayOfWeek,
-      checklist: [
-        { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
-        { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
-      ],
+    setPendingScopeAction({
+      isOpen: true,
+      action: 'create',
+      title: language === 'am' ? 'አዲስ ብሎክ / ተግባር አክል' : 'Add Block to Schedule',
+      itemDescription: `"${newTitle.trim()}" under ${catPlan?.title || 'Main Stream'} (${newStartTime} • ${newDurationMin}m)`,
+      newTaskData: {
+        title: newTitle.trim(),
+        startTime: newStartTime.trim() || 'Flexible',
+        durationMin: Number(newDurationMin),
+        domain,
+        badge: catPlan?.title?.split(' ')[0] || 'Focus',
+        color: catPlan?.color || '#0082ff',
+        soundProfile: 'SOLFEGGIO_432',
+        completed: false,
+        checklist: [
+          { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
+          { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
+        ],
+      },
     });
 
-    setNewTitle('');
-    setIsAdding(false);
     setExpandedSubjects((prev) => ({ ...prev, [selectedCategoryKey]: true }));
-    try { soundEngine.playPencil(); } catch {}
   };
 
   const handleCopyTodayRoutine = () => {
@@ -750,6 +815,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+            {/* Global Save / Apply Button (prompts for scope) */}
+            <button
+              type="button"
+              onClick={handleOpenSaveDaySchedule}
+              className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+              title="Save or apply this schedule to this day, all days, or chosen days"
+            >
+              <Save size={11} />
+              <span>{language === 'am' ? 'ሰሌዳ አስቀምጥ / ተግብር' : 'Save / Apply Schedule'}</span>
+            </button>
+
             {isCustomDay ? (
               <>
                 <button
@@ -760,16 +836,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 >
                   <RotateCcw size={11} />
                   <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSaveAsDefault}
-                  className="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
-                  title={`Set this schedule as new default for ${dayName}`}
-                >
-                  <Save size={11} />
-                  <span>{language === 'am' ? `ለ${dayName} ነባሪ አድርግ` : `Set as ${dayName} Default`}</span>
                 </button>
 
                 <button
@@ -1465,6 +1531,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         sourceDayName={dayName}
         sourceTasksCount={dayTasks.length}
       />
+
+      {pendingScopeAction && (
+        <ScheduleSaveScopeModal
+          isOpen={pendingScopeAction.isOpen}
+          onClose={() => setPendingScopeAction(null)}
+          title={pendingScopeAction.title}
+          itemDescription={pendingScopeAction.itemDescription}
+          sourceDate={today}
+          onConfirm={handleConfirmScope}
+        />
+      )}
     </div>
   );
 };
