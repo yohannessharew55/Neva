@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart2, BookOpen, Clock, Plus, Check, Star, 
-  Trash2, ChevronRight, Sparkles, Filter, Edit2, Lightbulb,
+  Trash2, ChevronRight, ChevronDown, ChevronUp, Sparkles, Filter, Edit2, Lightbulb,
   FileText, TrendingUp, Layers
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -29,6 +29,24 @@ export const WeeklyBibleStudyView: React.FC<WeeklyBibleStudyViewProps> = ({
 
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTargetHours, setTempTargetHours] = useState<number>(weeklyTargetHours);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('neva_collapse_devotion_weekly_study') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_collapse_devotion_weekly_study', String(next));
+        soundEngine.playPencil();
+      } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     try {
@@ -168,17 +186,50 @@ export const WeeklyBibleStudyView: React.FC<WeeklyBibleStudyViewProps> = ({
           </div>
         </div>
 
-        {/* Action Button: Log Study Session */}
-        <button
-          onClick={() => setIsLogModalOpen(true)}
-          className="px-4 py-2 bg-[#a855f7] hover:bg-purple-600 text-white rounded-2xl text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          <span>{language === 'am' ? 'የጥናት ውጤት መዝግብ' : 'Log Study Result'}</span>
-        </button>
+        {/* Action Button: Log Study Session & Section Collapse Icon */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            onClick={() => setIsLogModalOpen(true)}
+            className="px-4 py-2 bg-[#a855f7] hover:bg-purple-600 text-white rounded-2xl text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs flex items-center gap-1.5"
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            <span>{language === 'am' ? 'የጥናት ውጤት መዝግብ' : 'Log Study Result'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            title={isCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
+          >
+            {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+          </button>
+        </div>
       </div>
 
-      {/* Feature Metric Card: Weekly Target Gauge & Study Areas Distribution */}
+      {/* Collapsed State or Full Study Content */}
+      {isCollapsed ? (
+        <div 
+          onClick={toggleCollapse}
+          className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-base">📊</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {totalWeeklyHours}h / {weeklyTargetHours}h {language === 'am' ? 'ሳምንታዊ ጥናት' : 'Weekly Study Target'}
+            </span>
+            <span className="truncate opacity-75">
+              • {studySessions.length} {language === 'am' ? 'የተመዘገቡ ጥናቶች' : 'logged sessions'}
+            </span>
+          </div>
+          <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
+            <span>{language === 'am' ? 'ዘርጋ' : 'Expand Study'}</span>
+            <ChevronDown size={14} />
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* Feature Metric Card: Weekly Target Gauge & Study Areas Distribution */}
       <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
           {/* Target Hours Indicator */}
@@ -408,6 +459,8 @@ export const WeeklyBibleStudyView: React.FC<WeeklyBibleStudyViewProps> = ({
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Log Study Session Modal */}
       {isLogModalOpen && (

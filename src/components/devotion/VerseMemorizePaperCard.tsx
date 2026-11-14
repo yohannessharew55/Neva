@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Sparkles, Check, ChevronRight, ChevronLeft, Shuffle, 
+  Sparkles, Check, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Shuffle, 
   Copy, Eye, EyeOff, Award, RotateCw, BookOpen, Star, Plus, X, Bookmark
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -31,6 +31,24 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
   const [copiedToast, setCopiedToast] = useState(false);
   const [showMemorizedModal, setShowMemorizedModal] = useState(false);
   const [isAddCustomModalOpen, setIsAddCustomModalOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('neva_collapse_devotion_verse_paper') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_collapse_devotion_verse_paper', String(next));
+        soundEngine.playPencil();
+      } catch {}
+      return next;
+    });
+  };
 
   // Custom Verses added by user
   const [customVerses, setCustomVerses] = useState<BibleVerse[]>(() => {
@@ -239,10 +257,42 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
               />
             ))}
           </div>
+
+          {/* Section Expand/Collapse Chevron Button */}
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            title={isCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
+          >
+            {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+          </button>
         </div>
       </div>
 
-      {/* Memorization Mode Pill Switcher (3 Modes: Full Text, Word Blanks, Flashcard Flip) */}
+      {/* Collapsed State or Full Paper Content */}
+      {isCollapsed ? (
+        <div 
+          onClick={toggleCollapse}
+          className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-base">📜</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {currentVerse.refEn} ({currentVerse.refAm})
+            </span>
+            <span className="truncate opacity-75">
+              — "{currentVerse.textEn.slice(0, 80)}..."
+            </span>
+          </div>
+          <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
+            <span>{language === 'am' ? 'ዘርጋ' : 'Expand Paper'}</span>
+            <ChevronDown size={14} />
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* Memorization Mode Pill Switcher (3 Modes: Full Text, Word Blanks, Flashcard Flip) */}
       <div className="flex items-center justify-between gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto text-xs font-bold">
         <div className="flex items-center gap-1">
           <button
@@ -475,6 +525,8 @@ export const VerseMemorizePaperCard: React.FC<VerseMemorizePaperCardProps> = ({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Modal: Add & Paste Custom Bible Verse */}
       {isAddCustomModalOpen && (

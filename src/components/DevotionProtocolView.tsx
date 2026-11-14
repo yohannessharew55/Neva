@@ -3,7 +3,7 @@ import {
   BookOpen, Heart, Sparkles, CheckCircle2, Square, 
   Play, Pause, RotateCcw, Plus, Trash2, Check, 
   Volume2, Flame, Sun, Moon, Sunrise, Clock, Star,
-  Share2, BookmarkCheck, Shield, ChevronRight, Pencil, X,
+  Share2, BookmarkCheck, Shield, ChevronRight, ChevronDown, ChevronUp, Pencil, X,
   Dumbbell
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
@@ -111,8 +111,8 @@ const DEVOTION_SUB_TABS = [
   { id: 'reading', labelEn: 'Bible Reading Session', labelAm: 'የመጽሐፍ ቅዱስ ንባብ', icon: '📖' },
   { id: 'memorize', labelEn: 'Verse Card Paper', labelAm: 'የዕለቱ ቃል በካርድ ወረቀት', icon: '📜' },
   { id: 'study', labelEn: 'Weekly Bible Study', labelAm: 'ሳምንታዊ ጥናትና ውጤት', icon: '📊' },
-  { id: 'quotes', labelEn: 'Quotes of the Day', labelAm: 'የጥቅሶች ስብስብና የዘፈቀደ ቃል', icon: '✨' },
   { id: 'prayer', labelEn: 'Protocols & Prayer', labelAm: 'የጸሎት ፕሮቶኮልና ልመና', icon: '🕊️' },
+  { id: 'quotes', labelEn: 'Quotes of the Day', labelAm: 'የጥቅሶች ስብስብና የዘፈቀደ ቃል', icon: '✨' },
 ];
 
 export const DevotionProtocolView: React.FC = () => {
@@ -126,6 +126,45 @@ export const DevotionProtocolView: React.FC = () => {
 
   // Active Devotion Sub-Tab: 'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'
   const [devotionSubTab, setDevotionSubTab] = useState<'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'>('all');
+
+  // Collapse states for Prayer sections
+  const [isProtocolsCollapsed, setIsProtocolsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('neva_collapse_devotion_protocols') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [isJournalCollapsed, setIsJournalCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('neva_collapse_devotion_journal') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleProtocolsCollapse = () => {
+    setIsProtocolsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_collapse_devotion_protocols', String(next));
+        soundEngine.playPencil();
+      } catch {}
+      return next;
+    });
+  };
+
+  const toggleJournalCollapse = () => {
+    setIsJournalCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_collapse_devotion_journal', String(next));
+        soundEngine.playPencil();
+      } catch {}
+      return next;
+    });
+  };
 
   // Verse of the Day Card Verse state
   const [cardVerse, setCardVerse] = useState<BibleVerse>(() => BIBLE_QUOTES_LIBRARY[0]);
@@ -616,31 +655,18 @@ export const DevotionProtocolView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Feature 4: Bunch of Daily Bible Quotes Gallery */}
-      {(devotionSubTab === 'all' || devotionSubTab === 'quotes') && (
-        <div className="pt-2">
-          <BibleQuotesGallery
-            language={language}
-            onSelectVerseToMemorize={handleSelectVerseToMemorize}
-          />
-        </div>
-      )}
-
-      {/* 5. Daily Spiritual Protocols, Contemplative Silence Timer & Prayer Intentions */}
+      {/* 4. Daily Spiritual Protocols & Contemplative Silence Timer (Placed ABOVE Bible Quotes Gallery per user request) */}
       {(devotionSubTab === 'all' || devotionSubTab === 'prayer') && (
-        <>
-          {/* Main Grid: Daily Rhythms & Contemplative Timer */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-        
-        {/* Left Column: Daily Spiritual Rhythms (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="space-y-4 pt-2">
+          {/* Section Header with Protocols Counter & Expand/Collapse Icon */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Clock size={18} className="text-[#a855f7]" />
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                {language === 'am' ? 'የዕለት የጸሎት ፕሮቶኮል' : 'Daily Devotion Protocols'}
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span>{language === 'am' ? 'የዕለት የጸሎት ፕሮቶኮልና የጸጥታ ሰዓት' : 'Daily Devotion Protocols & Sacred Silence'}</span>
               </h2>
             </div>
+
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                 {completedRhythmsCount} / {rhythms.length} {language === 'am' ? 'ተጠናቋል' : 'done'}
@@ -662,10 +688,45 @@ export const DevotionProtocolView: React.FC = () => {
               >
                 <RotateCcw size={13} />
               </button>
+
+              <button
+                type="button"
+                onClick={toggleProtocolsCollapse}
+                className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                title={isProtocolsCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
+              >
+                {isProtocolsCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+              </button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          {/* Collapsed State or Protocols & Timer Grid */}
+          {isProtocolsCollapsed ? (
+            <div 
+              onClick={toggleProtocolsCollapse}
+              className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-base">🕊️</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {completedRhythmsCount} / {rhythms.length} {language === 'am' ? 'የጸሎት ፕሮቶኮሎች ተጠናቀዋል' : 'Daily Protocols Completed'}
+                </span>
+                <span className="truncate opacity-75">
+                  • Contemplative silence timer & sacred pauses
+                </span>
+              </div>
+              <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
+                <span>{language === 'am' ? 'ዘርጋ' : 'Expand Protocols'}</span>
+                <ChevronDown size={14} />
+              </span>
+            </div>
+          ) : (
+            /* Main Grid: Daily Rhythms & Contemplative Timer */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-1">
+          
+          {/* Left Column: Daily Spiritual Rhythms (7 cols) */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="space-y-3">
             {rhythms.map((rhythm) => {
               const isMorning = rhythm.timeSlot === 'morning';
               const isMidday = rhythm.timeSlot === 'midday';
@@ -835,51 +896,90 @@ export const DevotionProtocolView: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
+      </div>
+      )}
 
-      {/* Bottom Section: Prayer Intentions & Thanksgiving Journal */}
-      <div className="space-y-4 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Heart size={18} className="text-[#a855f7]" />
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'የጸሎት ልመናዎችና የምስጋና ማስታወሻ' : 'Prayer Intentions & Gratitude Journal'}
-            </h2>
+      {/* 5. Prayer Intentions & Thanksgiving Journal */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'prayer') && (
+        <div className="space-y-4 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Heart size={18} className="text-[#a855f7]" />
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የጸሎት ልመናዎችና የምስጋና ማስታወሻ' : 'Prayer Intentions & Gratitude Journal'}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Filter Pills */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-bold">
+                <button
+                  onClick={() => setFilterMode('all')}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    filterMode === 'all'
+                      ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {language === 'am' ? 'ሁሉም' : 'All'} ({prayers.length})
+                </button>
+                <button
+                  onClick={() => setFilterMode('active')}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    filterMode === 'active'
+                      ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {language === 'am' ? 'በጸሎት ላይ' : 'Active'} ({prayers.filter((p) => !p.answered).length})
+                </button>
+                <button
+                  onClick={() => setFilterMode('answered')}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    filterMode === 'answered'
+                      ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {language === 'am' ? 'የተመለሱ 🎉' : 'Answered 🎉'} ({prayers.filter((p) => p.answered).length})
+                </button>
+              </div>
+
+              {/* Section Expand/Collapse Chevron Button */}
+              <button
+                type="button"
+                onClick={toggleJournalCollapse}
+                className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+                title={isJournalCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
+              >
+                {isJournalCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+              </button>
+            </div>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-bold">
-            <button
-              onClick={() => setFilterMode('all')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filterMode === 'all'
-                  ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
+          {/* Collapsed State or Full Journal Form & Cards */}
+          {isJournalCollapsed ? (
+            <div 
+              onClick={toggleJournalCollapse}
+              className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
             >
-              {language === 'am' ? 'ሁሉም' : 'All'} ({prayers.length})
-            </button>
-            <button
-              onClick={() => setFilterMode('active')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filterMode === 'active'
-                  ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-            >
-              {language === 'am' ? 'በጸሎት ላይ' : 'Active'} ({prayers.filter((p) => !p.answered).length})
-            </button>
-            <button
-              onClick={() => setFilterMode('answered')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                filterMode === 'answered'
-                  ? 'bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-            >
-              {language === 'am' ? 'የተመለሱ 🎉' : 'Answered 🎉'} ({prayers.filter((p) => p.answered).length})
-            </button>
-          </div>
-        </div>
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-base">❤️</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {prayers.length} {language === 'am' ? 'የጸሎት ልመናዎችና ምስጋናዎች' : 'Prayer Intentions & Gratitude Entries'}
+                </span>
+                <span className="truncate opacity-75">
+                  • {prayers.filter((p) => p.answered).length} {language === 'am' ? 'የተመለሱ' : 'Answered'}
+                </span>
+              </div>
+              <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
+                <span>{language === 'am' ? 'ዘርጋ' : 'Expand Journal'}</span>
+                <ChevronDown size={14} />
+              </span>
+            </div>
+          ) : (
+            <>
 
         {/* Add Prayer Input Form */}
         <form onSubmit={addPrayer} className="flex flex-col sm:flex-row gap-2">
@@ -974,8 +1074,19 @@ export const DevotionProtocolView: React.FC = () => {
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
-      </>
+      )}
+
+      {/* 6. Feature 4: Bunch of Daily Bible Quotes Gallery (Positioned BELOW Prayer Section per user request) */}
+      {(devotionSubTab === 'all' || devotionSubTab === 'quotes') && (
+        <div className="pt-2">
+          <BibleQuotesGallery
+            language={language}
+            onSelectVerseToMemorize={handleSelectVerseToMemorize}
+          />
+        </div>
       )}
 
       {/* Devotion Protocol Modal (Create / Edit) */}

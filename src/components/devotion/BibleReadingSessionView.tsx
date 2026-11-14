@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, Play, Pause, RotateCcw, Check, Clock, 
   Calendar, Flame, Sparkles, Plus, Trash2, Volume2, VolumeX,
-  ChevronDown, BookMarked
+  ChevronDown, ChevronUp, BookMarked
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BIBLE_BOOKS, BibleBook, BibleReadingSession } from '../../data/bibleData';
@@ -30,6 +30,24 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [isAmbienceEnabled, setIsAmbienceEnabled] = useState<boolean>(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('neva_collapse_devotion_reading_session') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('neva_collapse_devotion_reading_session', String(next));
+        soundEngine.playPencil();
+      } catch {}
+      return next;
+    });
+  };
 
   // Past Reading Sessions stored in localStorage
   const [readingSessions, setReadingSessions] = useState<BibleReadingSession[]>(() => {
@@ -189,7 +207,7 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
           </div>
         </div>
 
-        {/* Live Reading Metrics Counter */}
+        {/* Live Reading Metrics Counter & Expand/Collapse Icon */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <div className="px-3 py-1.5 rounded-2xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-2 text-xs font-bold">
             <Flame size={14} className="text-amber-500" />
@@ -201,10 +219,41 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
               {totalReadingHours}h {language === 'am' ? 'ጠቅላላ' : 'Total'}
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            title={isCollapsed ? (language === 'am' ? 'ዘርጋ' : 'Expand Section') : (language === 'am' ? 'ሰብስብ' : 'Collapse Section')}
+          >
+            {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: Reading Setup & Timer */}
+      {/* Collapsed State or Full Reading Content */}
+      {isCollapsed ? (
+        <div 
+          onClick={toggleCollapse}
+          className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-dashed border-purple-200 dark:border-purple-800/60 text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between cursor-pointer hover:border-purple-400 hover:text-purple-600 transition group"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-base">📖</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              {selectedBook} {chapterStart}{chapterEnd > chapterStart ? `-${chapterEnd}` : ''}
+            </span>
+            <span className="truncate opacity-75">
+              • {timerMinutes} min immersion timer • {totalReadingHours}h logged total
+            </span>
+          </div>
+          <span className="shrink-0 text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 group-hover:underline">
+            <span>{language === 'am' ? 'ዘርጋ' : 'Expand Session'}</span>
+            <ChevronDown size={14} />
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* Main Grid: Reading Setup & Timer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Passage Selector & Notes (7 cols) */}
@@ -474,6 +523,8 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
           ))}
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };
