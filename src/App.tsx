@@ -91,7 +91,6 @@ const MainContent: React.FC = () => {
       case 'devotion':
       case 'nutrition':
         return <DevotionProtocolView />;
-      case 'triple-eight':
       case 'goals':
         return <MergedGoalsView />;
       case 'practice':

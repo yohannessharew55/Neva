@@ -280,6 +280,8 @@ export const IntegratedCalendarView: React.FC = () => {
   // Filter Tasks for a given Date
   const getTasksForDate = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const nowObj = new Date();
+    const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
     
     return tasks.filter((t) => {
@@ -302,13 +304,13 @@ export const IntegratedCalendarView: React.FC = () => {
         return t.date === dateStr;
       }
 
-      // If dayOfWeek attached, must match
+      // If dayOfWeek attached without a date, match only that recurring day of week
       if (t.dayOfWeek) {
         return t.dayOfWeek === dayOfWeek;
       }
 
-      // Default: daily recurring block
-      return true;
+      // Undated legacy tasks: only show on today's date, preventing duplication across all days of month
+      return dateStr === todayStr;
     }).sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
   };
 
@@ -1503,42 +1505,32 @@ export const IntegratedCalendarView: React.FC = () => {
             </div>
           </div>
 
-          {/* Selected Day Quick Card */}
+          {/* Selected Day Sticky Note & Blocks Inline (Matching User Screenshot) */}
           {selectedDate && (
-            <div className="bg-white dark:bg-[#121927] border border-blue-200 dark:border-blue-900/80 rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
+            <div className="space-y-4 pt-3 border-t border-slate-200/80 dark:border-slate-800 animate-fadeIn">
+              <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0082ff]">
-                    {language === 'am' ? 'የተመረጠ ቀን' : 'Selected Day'}
+                  <span className="text-lg">📌</span>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    {language === 'am' ? 'የተመረጠው ቀን ስቲኪ ማስታወሻና ብሎኮች' : 'SELECTED DAY STICKY NOTE & BLOCKS'}
                   </span>
-                  <span className="text-xs text-slate-400">
-                    {formatDualDate(selectedDate).gregorianStr}
+                  <span className="text-xs font-mono font-bold text-[#0082ff]">
+                    ({formatDualDate(selectedDate).gregorianStr})
                   </span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
-                  {formatDualDate(selectedDate).ethiopianStr}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  {getTasksForDate(selectedDate).length} {language === 'am' ? 'የተመደቡ ብሎኮች' : 'scheduled blocks on this date'}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                >
+                  Close (X)
+                </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleSelectHorizon('daily')}
-                  className="px-4 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition"
-                >
-                  <Clock size={14} />
-                  <span>{language === 'am' ? 'ዕለታዊ እቅዱን ክፈት' : 'Open Daily Plan'}</span>
-                </button>
-                <button
-                  onClick={() => setShowStickyModal(true)}
-                  className="px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition hover:bg-amber-100"
-                >
-                  <span>⭐</span>
-                  <span>{language === 'am' ? 'ስቲኪ ማስታወሻ' : 'Sticky Note'}</span>
-                </button>
-              </div>
+              <BigDailyActivitiesStickyNote
+                targetDate={selectedDate}
+                onClose={() => setSelectedDate(null)}
+              />
             </div>
           )}
         </div>

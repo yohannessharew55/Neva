@@ -206,8 +206,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       title: editTitle.trim(),
       startTime: editStartTime,
       durationMin: editDurationMin,
+      date: activeDateStr,
     });
     setEditingTaskId(null);
+    try { soundEngine.playPencil(); } catch {}
   };
 
   // Quick Add State
@@ -230,6 +232,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Dual Date Calculation
   const today = targetDate || new Date();
+  const activeDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const nowObj = new Date();
+  const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
+  const isViewingToday = activeDateStr === todayStr;
+  const activeDayOfWeek = (today.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
+
   const ethDate = gregorianToEthiopian(today);
   const dayName = today.toLocaleDateString('en-US', { weekday: 'short' });
   const gregFormatted = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -308,8 +316,20 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   const touchActiveId = useRef<string | null>(null);
 
-  // Group tasks by Main Stream Subjects
-  const sortedTasks = [...tasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+  // Filter tasks strictly for this day so each day's blocks are completely independent
+  const dayTasks = tasks.filter((t) => {
+    if (t.date) {
+      return t.date === activeDateStr;
+    }
+    if (t.dayOfWeek) {
+      return t.dayOfWeek === activeDayOfWeek;
+    }
+    // Undated legacy tasks only show when viewing today
+    return isViewingToday;
+  });
+
+  // Group tasks by Main Stream Subjects for this active day
+  const sortedTasks = [...dayTasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
 
   const baseCategoryKeys = Object.keys(categoryPlans);
   const allCategoryKeys = [...baseCategoryKeys].sort((a, b) => {
@@ -426,11 +446,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       return group.displayedTasks.length > 0;
     });
 
-  // Calculate global sticky note metrics
-  const completedCount = tasks.filter((t) => t.completed).length;
-  const totalCount = tasks.length;
+  // Calculate day-specific sticky note metrics
+  const completedCount = dayTasks.filter((t) => t.completed).length;
+  const totalCount = dayTasks.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-  const totalHours = (tasks.reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
+  const totalHours = (dayTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0) / 60).toFixed(1);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -448,6 +468,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       color: catPlan?.color || '#0082ff',
       soundProfile: 'SOLFEGGIO_432',
       completed: false,
+      date: activeDateStr,
       checklist: [
         { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
         { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
@@ -457,6 +478,27 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setNewTitle('');
     setIsAdding(false);
     setExpandedSubjects((prev) => ({ ...prev, [selectedCategoryKey]: true }));
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const handleCopyTodayRoutine = () => {
+    const todayTasks = tasks.filter((t) => t.date ? t.date === todayStr : isViewingToday);
+    if (todayTasks.length === 0) return;
+    todayTasks.forEach((t, idx) => {
+      addTask({
+        title: t.title,
+        startTime: t.startTime || 'Flexible',
+        durationMin: t.durationMin || 60,
+        domain: t.domain,
+        badge: t.badge || 'Focus',
+        color: t.color || '#0082ff',
+        soundProfile: t.soundProfile || 'SOLFEGGIO_432',
+        completed: false,
+        date: activeDateStr,
+        checklist: t.checklist ? t.checklist.map((c, cidx) => ({ id: `c-${Date.now()}-${idx}-${cidx}`, text: c.text, done: false })) : undefined,
+      });
+    });
+    try { soundEngine.playSound('CHIME_MEDITATION'); } catch {}
   };
 
   // Master Subject Checkbox: Toggling subject checks or unchecks all tasks under it
@@ -1201,6 +1243,20 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   );
                 })}
               </div>
+
+              {/* One-click option to copy today's routine to this day for independent editing */}
+              {!isViewingToday && (
+                <div className="pt-2 border-t border-black/10 dark:border-white/10 mt-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyTodayRoutine}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                  >
+                    <span>📋</span>
+                    <span>{language === 'am' ? 'የዛሬውን ፕሮግራም ወደዚህ ቀን ቅዳ' : "Copy Today's Routine to this Day"}</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
