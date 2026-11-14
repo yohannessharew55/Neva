@@ -56,9 +56,9 @@ export function verifyPassword(password, salt, storedHash) {
   return hash === storedHash;
 }
 
-// Read all users
+// Read all users from data-sync branch to protect main branch deployment limits
 export async function getUsersDb() {
-  const res = await githubRequest('/contents/data/users_db.json');
+  const res = await githubRequest('/contents/data/users_db.json?ref=data-sync');
   if (res.status === 200 && res.data && res.data.content) {
     try {
       const content = Buffer.from(res.data.content, 'base64').toString('utf-8');
@@ -73,11 +73,12 @@ export async function getUsersDb() {
   return { db: { users: {} }, sha: null };
 }
 
-// Save all users
+// Save all users to data-sync branch
 export async function saveUsersDb(db, sha = null) {
   const putData = {
     message: 'Update NEVA user accounts [skip ci]',
-    content: Buffer.from(JSON.stringify(db, null, 2)).toString('base64')
+    content: Buffer.from(JSON.stringify(db, null, 2)).toString('base64'),
+    branch: 'data-sync'
   };
   if (sha) putData.sha = sha;
 
@@ -213,10 +214,10 @@ export async function updateUserProfile(username, updates) {
   };
 }
 
-// Get user saved state
+// Get user saved state from data-sync branch
 export async function getUserState(username) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  const res = await githubRequest(`/contents/data/states/${cleanUser}.json`);
+  const res = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync`);
   if (res.status === 200 && res.data && res.data.content) {
     try {
       const content = Buffer.from(res.data.content, 'base64').toString('utf-8');
@@ -226,17 +227,18 @@ export async function getUserState(username) {
   return { payload: null, sha: null, updatedAt: null };
 }
 
-// Save user state
+// Save user state to data-sync branch
 export async function saveUserState(username, payload) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   
-  // Get current sha if exists
-  const existing = await githubRequest(`/contents/data/states/${cleanUser}.json`);
+  // Get current sha from data-sync branch if exists
+  const existing = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync`);
   const sha = existing.status === 200 ? existing.data.sha : undefined;
 
   const putData = {
     message: `Sync state for ${cleanUser} [skip ci]`,
-    content: Buffer.from(JSON.stringify(payload, null, 2)).toString('base64')
+    content: Buffer.from(JSON.stringify(payload, null, 2)).toString('base64'),
+    branch: 'data-sync'
   };
   if (sha) putData.sha = sha;
 
