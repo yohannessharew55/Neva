@@ -156,6 +156,24 @@
       "completed": false,
       "color": "#ec4899",
       "id": "task-1794636699236"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636704735"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1794636704960"
     }
   ],
   "workouts": [
