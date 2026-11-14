@@ -153,11 +153,13 @@ const getCategoryIcon = (catId: string) => {
 export interface BigDailyActivitiesStickyNoteProps {
   targetDate?: Date;
   onClose?: () => void;
+  showScheduleBar?: boolean;
 }
 
 export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNoteProps> = ({
   targetDate,
   onClose,
+  showScheduleBar = false,
 }) => {
   const { 
     tasks, 
@@ -782,97 +784,99 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           </div>
         </div>
 
-        {/* Schedule Status & Day Customization Bar */}
-        <div className={`relative z-20 mb-2.5 px-3 py-2 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 backdrop-blur-xs transition-all shadow-2xs font-sans ${
-          isCustomDay 
-            ? 'bg-amber-500/10 dark:bg-amber-950/30 border-amber-500/30 text-amber-950 dark:text-amber-100'
-            : 'bg-blue-500/10 dark:bg-blue-950/30 border-blue-500/30 text-blue-950 dark:text-blue-100'
-        }`}>
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg">{isCustomDay ? '⭐' : '📅'}</span>
-            <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-extrabold text-[11px] sm:text-xs">
-                  {isCustomDay 
-                    ? (language === 'am' ? 'የዚህ ቀን ልዩ የተለየ የጊዜ ሰሌዳ' : 'Unique Custom Schedule')
-                    : (language === 'am' ? `መደበኛ የ${dayName} የጊዜ ሰሌዳ` : `Default Routine (${dayName})`)}
-                </span>
-                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
-                  isCustomDay 
-                    ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' 
-                    : 'bg-blue-500/20 text-blue-900 dark:text-blue-200'
-                }`}>
-                  {isCustomDay ? (language === 'am' ? 'ልዩ' : 'Custom') : (language === 'am' ? 'ነባሪ' : 'Default')}
-                </span>
+        {/* Schedule Status & Day Customization Bar (Hidden on front page, opt-in for calendar views) */}
+        {showScheduleBar && (
+          <div className={`relative z-20 mb-2.5 px-3 py-2 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 backdrop-blur-xs transition-all shadow-2xs font-sans ${
+            isCustomDay 
+              ? 'bg-amber-500/10 dark:bg-amber-950/30 border-amber-500/30 text-amber-950 dark:text-amber-100'
+              : 'bg-blue-500/10 dark:bg-blue-950/30 border-blue-500/30 text-blue-950 dark:text-blue-100'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-base sm:text-lg">{isCustomDay ? '⭐' : '📅'}</span>
+              <div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-extrabold text-[11px] sm:text-xs">
+                    {isCustomDay 
+                      ? (language === 'am' ? 'የዚህ ቀን ልዩ የተለየ የጊዜ ሰሌዳ' : 'Unique Custom Schedule')
+                      : (language === 'am' ? `መደበኛ የ${dayName} የጊዜ ሰሌዳ` : `Default Routine (${dayName})`)}
+                  </span>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                    isCustomDay 
+                      ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' 
+                      : 'bg-blue-500/20 text-blue-900 dark:text-blue-200'
+                  }`}>
+                    {isCustomDay ? (language === 'am' ? 'ልዩ' : 'Custom') : (language === 'am' ? 'ነባሪ' : 'Default')}
+                  </span>
+                </div>
+                <p className="text-[10px] opacity-75 leading-tight">
+                  {isCustomDay
+                    ? (language === 'am' ? 'ለዚህ ቀን ብቻ የተቀመጠ ገለልተኛ ሰሌዳ።' : 'Independent schedule strictly for this date.')
+                    : (language === 'am' ? 'ነባሪ ዕቅድን ይጠቀማል። ለውጥ ሲያደርጉ ለዚህ ቀን ብቻ ተለይቶ ይቀመጣል።' : 'Using default template. Changes will save uniquely for this day.')}
+                </p>
               </div>
-              <p className="text-[10px] opacity-75 leading-tight">
-                {isCustomDay
-                  ? (language === 'am' ? 'ለዚህ ቀን ብቻ የተቀመጠ ገለልተኛ ሰሌዳ።' : 'Independent schedule strictly for this date.')
-                  : (language === 'am' ? 'ነባሪ ዕቅድን ይጠቀማል። ለውጥ ሲያደርጉ ለዚህ ቀን ብቻ ተለይቶ ይቀመጣል።' : 'Using default template. Changes will save uniquely for this day.')}
-              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+              {/* Global Save / Apply Button (prompts for scope) */}
+              <button
+                type="button"
+                onClick={handleOpenSaveDaySchedule}
+                className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                title="Save or apply this schedule to this day, all days, or chosen days"
+              >
+                <Save size={11} />
+                <span>{language === 'am' ? 'ሰሌዳ አስቀምጥ / ተግብር' : 'Save / Apply Schedule'}</span>
+              </button>
+
+              {isCustomDay ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleResetDayToDefault}
+                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    title="Reset this day back to the default routine template"
+                  >
+                    <RotateCcw size={11} />
+                    <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowApplyModal(true)}
+                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    title="Apply this day schedule to other dates"
+                  >
+                    <Copy size={11} />
+                    <span>{language === 'am' ? 'ለቀናት ቅዳ' : 'Apply to Days...'}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCustomizeDay}
+                    className="px-3 py-1 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                    title="Customize schedule uniquely for this date"
+                  >
+                    <Edit2 size={11} />
+                    <span>{language === 'am' ? 'ይህንን ቀን ለይተህ አዘጋጅ' : 'Customize for this Day'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowDefaultsModal(true)}
+                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    title="Manage default templates for all weekdays"
+                  >
+                    <Settings size={11} />
+                    <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
-            {/* Global Save / Apply Button (prompts for scope) */}
-            <button
-              type="button"
-              onClick={handleOpenSaveDaySchedule}
-              className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
-              title="Save or apply this schedule to this day, all days, or chosen days"
-            >
-              <Save size={11} />
-              <span>{language === 'am' ? 'ሰሌዳ አስቀምጥ / ተግብር' : 'Save / Apply Schedule'}</span>
-            </button>
-
-            {isCustomDay ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleResetDayToDefault}
-                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                  title="Reset this day back to the default routine template"
-                >
-                  <RotateCcw size={11} />
-                  <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowApplyModal(true)}
-                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                  title="Apply this day schedule to other dates"
-                >
-                  <Copy size={11} />
-                  <span>{language === 'am' ? 'ለቀናት ቅዳ' : 'Apply to Days...'}</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={handleCustomizeDay}
-                  className="px-3 py-1 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
-                  title="Customize schedule uniquely for this date"
-                >
-                  <Edit2 size={11} />
-                  <span>{language === 'am' ? 'ይህንን ቀን ለይተህ አዘጋጅ' : 'Customize for this Day'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowDefaultsModal(true)}
-                  className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                  title="Manage default templates for all weekdays"
-                >
-                  <Settings size={11} />
-                  <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Toast Feedback */}
         {toastMessage && (
@@ -1174,7 +1178,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       >
                         <SubjectIcon size={12} />
                       </div>
-                      <span className={`text-xs font-black uppercase tracking-wider truncate ${
+                      <span className={`text-xs font-black uppercase tracking-wider whitespace-nowrap ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}>
                         {group.translatedTitle}
@@ -1188,41 +1192,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                         e.stopPropagation();
                         setSelectedCategoryId(group.id);
                       }}
-                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer"
+                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0"
                       title={language === 'am' ? 'ሙሉ እቅድ ክፈት' : 'Open category detail view'}
                     >
                       <ExternalLink size={10} />
                     </button>
                   </div>
 
-                  {/* Right: Move Up/Down, Progress Badge, Quick Add & Expand Little Sign */}
+                  {/* Right: Progress Badge, Quick Add & Expand Little Sign */}
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    {/* Quick Reorder Up / Down Buttons */}
-                    <div className="flex items-center gap-0.5 opacity-40 hover:opacity-100 transition">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveSubject(group.id, 'up');
-                        }}
-                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
-                        title={language === 'am' ? 'ወደ ላይ ውሰድ' : 'Move up'}
-                      >
-                        <ChevronUp size={11} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveSubject(group.id, 'down');
-                        }}
-                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
-                        title={language === 'am' ? 'ወደ ታች ውሰድ' : 'Move down'}
-                      >
-                        <ChevronDown size={11} />
-                      </button>
-                    </div>
-
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
                       group.isAllDone 
                         ? 'bg-emerald-500/25 text-emerald-800 dark:text-emerald-200' 
