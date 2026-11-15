@@ -341,18 +341,18 @@
       "targetMetric": "100% Core Modules",
       "startDate": "2026-10-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 75,
+      "progressPercentage": 0,
       "isCompleted": false,
       "milestones": [
         {
           "id": "m1",
           "title": "Mobile Navigation Refactor",
-          "isCompleted": true
+          "isCompleted": false
         },
         {
           "id": "m2",
           "title": "Devotion & Focus Systems",
-          "isCompleted": true
+          "isCompleted": false
         },
         {
           "id": "m3",
@@ -371,9 +371,26 @@
       "targetMetric": "50h Practice Logged",
       "startDate": "2026-10-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 60,
+      "progressPercentage": 0,
       "isCompleted": false,
-      "id": "goal-1794592578664"
+      "id": "goal-1794592578664",
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": false
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": false
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ]
     },
     {
       "title": "Master Forex & Algorithmic Trading Execution",
@@ -383,9 +400,26 @@
       "targetMetric": "15% Alpha",
       "startDate": "2026-01-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 70,
+      "progressPercentage": 0,
       "isCompleted": false,
-      "id": "goal-1794592578664"
+      "id": "goal-1794592578664",
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": false
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": false
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ]
     },
     {
       "title": "10 Master Oil Paintings & Studio Portfolio",
@@ -395,9 +429,26 @@
       "targetMetric": "10 Canvases",
       "startDate": "2026-01-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 80,
+      "progressPercentage": 0,
       "isCompleted": false,
-      "id": "goal-1794592578664"
+      "id": "goal-1794592578664",
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": false
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": false
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ]
     }
   ],
   "sessions": [],
