@@ -135,10 +135,20 @@ class MobileTimerEngine {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         handleSync();
+      } else if (document.visibilityState === 'hidden') {
+        // When app is closed, minimized, or switched away from, auto-popout PiP floating window
+        if (this.state.isActive && this.state.isRunning && !this.state.isPipActive) {
+          this.requestPictureInPictureDirect().catch(() => {});
+        }
       }
     });
 
     window.addEventListener('focus', handleSync);
+    window.addEventListener('pagehide', () => {
+      if (this.state.isActive && this.state.isRunning && !this.state.isPipActive) {
+        this.requestPictureInPictureDirect().catch(() => {});
+      }
+    });
   }
 
   // High-precision recalculation based on actual timestamps
@@ -548,6 +558,10 @@ class MobileTimerEngine {
       video.muted = true;
       video.playsInline = true;
       video.autoplay = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('autopictureinpicture', '');
+      (video as any).autoPictureInPicture = true;
       video.style.position = 'fixed';
       video.style.top = '-9999px';
       video.style.left = '-9999px';
@@ -644,6 +658,37 @@ class MobileTimerEngine {
   isPictureInPictureSupported(): boolean {
     if (typeof document === 'undefined') return false;
     return !!(document.pictureInPictureEnabled || (document.createElement('video') as any).webkitSupportsPresentationMode);
+  }
+
+  async requestPictureInPictureDirect(): Promise<boolean> {
+    try {
+      const video = this.ensurePipVideo();
+      if (!video) return false;
+
+      this.renderCanvasFrame();
+
+      if (document.pictureInPictureElement) {
+        return true;
+      }
+
+      if (video.requestPictureInPicture) {
+        await video.play().catch(() => {});
+        await video.requestPictureInPicture();
+        this.state.isPipActive = true;
+        this.notify();
+        return true;
+      } else if ((video as any).webkitSetPresentationMode) {
+        await video.play().catch(() => {});
+        (video as any).webkitSetPresentationMode('picture-in-picture');
+        this.state.isPipActive = true;
+        this.notify();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('PiP direct request failed:', e);
+      return false;
+    }
   }
 
   async togglePictureInPicture(): Promise<boolean> {

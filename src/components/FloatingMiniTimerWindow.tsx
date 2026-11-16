@@ -18,7 +18,7 @@ export const FloatingMiniTimerWindow: React.FC = () => {
   const { activeTab, setActiveTab, language } = useLivotion();
   const [timerState, setTimerState] = useState<MobileTimerState>(() => mobileTimerEngine.getState());
 
-  // Window position for floating mode
+  // Window position for floating card mode
   const [position, setPosition] = useState<{ x: number; y: number }>(() => {
     try {
       const saved = localStorage.getItem('neva_floating_timer_pos_v1');
@@ -29,13 +29,30 @@ export const FloatingMiniTimerWindow: React.FC = () => {
         }
       }
     } catch (e) {}
-    // Default position: top right on desktop, top-center on mobile
     if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return { x: Math.max(12, Math.floor((window.innerWidth - 270) / 2)), y: 48 };
+      return { x: Math.max(12, Math.floor((window.innerWidth - 272) / 2)), y: 48 };
     }
     return { x: typeof window !== 'undefined' ? window.innerWidth - 290 : 20, y: 30 };
   });
 
+  // Minimized Pill position (freely draggable anywhere on screen)
+  const [minimizedPos, setMinimizedPos] = useState<{ x: number; y: number }>(() => {
+    try {
+      const saved = localStorage.getItem('neva_minimized_timer_pos_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return { x: Math.max(8, Math.floor((window.innerWidth - 280) / 2)), y: 12 };
+    }
+    return { x: typeof window !== 'undefined' ? Math.max(10, Math.floor((window.innerWidth - 320) / 2)) : 30, y: 14 };
+  });
+
+  // Drag tracking refs for Floating Card
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({
     startX: 0,
@@ -45,6 +62,16 @@ export const FloatingMiniTimerWindow: React.FC = () => {
   });
   const hasMovedRef = useRef(false);
 
+  // Drag tracking refs for Minimized Pill
+  const isDraggingMiniRef = useRef(false);
+  const dragStartMiniRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({
+    startX: 0,
+    startY: 0,
+    initialX: 0,
+    initialY: 0,
+  });
+  const hasMovedMiniRef = useRef(false);
+
   useEffect(() => {
     const unsubscribe = mobileTimerEngine.subscribe((state) => {
       setTimerState(state);
@@ -52,20 +79,22 @@ export const FloatingMiniTimerWindow: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  // Save position whenever it updates
+  // Save floating position whenever it updates
   useEffect(() => {
     try {
       localStorage.setItem('neva_floating_timer_pos_v1', JSON.stringify(position));
     } catch (e) {}
   }, [position]);
 
+  // Save minimized position whenever it updates
+  useEffect(() => {
+    try {
+      localStorage.setItem('neva_minimized_timer_pos_v1', JSON.stringify(minimizedPos));
+    } catch (e) {}
+  }, [minimizedPos]);
+
   // If no timer is active or mode is 'hidden', don't render anything
   if (!timerState.isActive || timerState.windowMode === 'hidden') {
-    return null;
-  }
-
-  // If in island mode and user is already looking at practice tab, suppress the island pill so it doesn't duplicate
-  if (timerState.windowMode === 'island' && activeTab === 'practice') {
     return null;
   }
 
@@ -114,17 +143,19 @@ export const FloatingMiniTimerWindow: React.FC = () => {
     setActiveTab('practice');
   };
 
-  const handleSwitchToFloating = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSwitchToFloating = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     mobileTimerEngine.setWindowMode('floating');
   };
 
-  const handleSwitchToIsland = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSwitchToIsland = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     mobileTimerEngine.setWindowMode('island');
   };
 
-  // Drag handlers for the floating little window
+  // ----------------------------------------------------------------------------------
+  // Drag handlers for the floating little window card
+  // ----------------------------------------------------------------------------------
   const handleDragStart = (clientX: number, clientY: number) => {
     isDraggingRef.current = true;
     hasMovedRef.current = false;
@@ -145,8 +176,8 @@ export const FloatingMiniTimerWindow: React.FC = () => {
       hasMovedRef.current = true;
     }
 
-    const windowWidth = 270;
-    const windowHeight = 135;
+    const windowWidth = 272;
+    const windowHeight = 140;
     const maxX = Math.max(0, window.innerWidth - windowWidth - 10);
     const maxY = Math.max(0, window.innerHeight - windowHeight - 10);
 
@@ -160,7 +191,6 @@ export const FloatingMiniTimerWindow: React.FC = () => {
     isDraggingRef.current = false;
   };
 
-  // Touch Drag Listeners
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
@@ -173,7 +203,6 @@ export const FloatingMiniTimerWindow: React.FC = () => {
     }
   };
 
-  // Mouse Drag Listeners
   const onMouseDown = (e: React.MouseEvent) => {
     if (e.button === 0) {
       handleDragStart(e.clientX, e.clientY);
@@ -191,6 +220,83 @@ export const FloatingMiniTimerWindow: React.FC = () => {
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
     }
+  };
+
+  // ----------------------------------------------------------------------------------
+  // Drag handlers for the MINIMIZED pill (Draggable Minimized Mode)
+  // ----------------------------------------------------------------------------------
+  const handleMiniDragStart = (clientX: number, clientY: number) => {
+    isDraggingMiniRef.current = true;
+    hasMovedMiniRef.current = false;
+    dragStartMiniRef.current = {
+      startX: clientX,
+      startY: clientY,
+      initialX: minimizedPos.x,
+      initialY: minimizedPos.y,
+    };
+  };
+
+  const handleMiniDragMove = (clientX: number, clientY: number) => {
+    if (!isDraggingMiniRef.current) return;
+    const deltaX = clientX - dragStartMiniRef.current.startX;
+    const deltaY = clientY - dragStartMiniRef.current.startY;
+
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+      hasMovedMiniRef.current = true;
+    }
+
+    const pillWidth = 280;
+    const pillHeight = 44;
+    const maxX = Math.max(0, window.innerWidth - pillWidth - 8);
+    const maxY = Math.max(0, window.innerHeight - pillHeight - 12);
+
+    const newX = Math.min(maxX, Math.max(8, dragStartMiniRef.current.initialX + deltaX));
+    const newY = Math.min(maxY, Math.max(8, dragStartMiniRef.current.initialY + deltaY));
+
+    setMinimizedPos({ x: newX, y: newY });
+  };
+
+  const handleMiniDragEnd = () => {
+    isDraggingMiniRef.current = false;
+  };
+
+  const onMiniTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      handleMiniDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const onMiniTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      handleMiniDragMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const onMiniMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) {
+      handleMiniDragStart(e.clientX, e.clientY);
+
+      const onMouseMove = (ev: MouseEvent) => {
+        handleMiniDragMove(ev.clientX, ev.clientY);
+      };
+
+      const onMouseUp = () => {
+        handleMiniDragEnd();
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    }
+  };
+
+  const handleMiniPillClick = (e: React.MouseEvent) => {
+    // If the user was dragging the pill, do not trigger the expand click
+    if (hasMovedMiniRef.current) {
+      return;
+    }
+    handleSwitchToFloating(e);
   };
 
   // System Badge Label
@@ -255,12 +361,12 @@ export const FloatingMiniTimerWindow: React.FC = () => {
               <GripHorizontal size={14} />
             </div>
 
-            {/* Minimize to Island */}
+            {/* Minimize to Draggable Island Pill */}
             <button
               type="button"
               onClick={handleSwitchToIsland}
               className="w-5 h-5 rounded-full hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition cursor-pointer"
-              title={language === 'am' ? 'ወደ ላይኛው አይላንድ ቀንስ' : 'Minimize to Top Island'}
+              title={language === 'am' ? 'ወደ ትንሽ ተንሳፋፊ አይላንድ ቀንስ' : 'Minimize to Draggable Pill'}
             >
               <Minimize2 size={11} />
             </button>
@@ -361,70 +467,95 @@ export const FloatingMiniTimerWindow: React.FC = () => {
   }
 
   // ----------------------------------------------------------------------------------
-  // MODE B: TOP DYNAMIC ISLAND PILL (Docked top banner)
+  // MODE B: DRAGGABLE MINIMIZED PILL (Freely Draggable Anywhere on Screen!)
   // ----------------------------------------------------------------------------------
   return (
     <div
       id="neva-dynamic-island-banner"
-      className="fixed top-2 sm:top-3 inset-x-0 z-[999] flex justify-center px-3 pointer-events-none animate-fadeIn"
+      style={{
+        position: 'fixed',
+        left: `${minimizedPos.x}px`,
+        top: `${minimizedPos.y}px`,
+        zIndex: 9999,
+        touchAction: 'none',
+      }}
+      className="animate-fadeIn select-none"
     >
       <div
-        onClick={handleSwitchToFloating}
-        className="pointer-events-auto flex items-center justify-between gap-3 px-3.5 sm:px-4 py-2 rounded-full bg-slate-900/95 dark:bg-black/95 text-white shadow-xl border border-white/15 backdrop-blur-md max-w-md w-full transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer group"
+        onTouchStart={onMiniTouchStart}
+        onTouchMove={onMiniTouchMove}
+        onTouchEnd={handleMiniDragEnd}
+        onMouseDown={onMiniMouseDown}
+        onClick={handleMiniPillClick}
+        className="flex items-center justify-between gap-2 sm:gap-2.5 px-3 py-1.5 sm:py-2 rounded-full bg-slate-900/95 dark:bg-black/95 text-white shadow-2xl border border-white/20 backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-[0.99] cursor-grab active:cursor-grabbing group min-w-[250px] sm:min-w-[280px]"
       >
-        {/* Left: Animated Icon + Title */}
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="relative flex items-center justify-center w-7 h-7 rounded-full bg-white/10 shrink-0">
+        {/* Left: Drag Grip & Animated Indicator */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="text-white/40 group-hover:text-white/70 transition shrink-0" title="Drag anywhere">
+            <GripHorizontal size={13} />
+          </div>
+
+          <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-white/10 shrink-0">
             {timerState.isRunning ? (
               <span className="absolute inset-0 rounded-full bg-emerald-400/30 animate-ping" />
             ) : null}
-            <Clock size={15} className={timerState.isRunning ? 'text-emerald-400' : 'text-amber-400'} />
+            <Clock size={13} className={timerState.isRunning ? 'text-emerald-400' : 'text-amber-400'} />
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 truncate max-w-[80px] sm:max-w-[100px]">
                 {getSystemLabel()}
               </span>
-              {timerState.taskTitle ? (
-                <span className="text-xs text-slate-300 font-medium truncate max-w-[110px] sm:max-w-[170px]">
-                  • {timerState.taskTitle}
-                </span>
-              ) : null}
             </div>
           </div>
         </div>
 
-        {/* Right: Digital Time Display + Floating Window Popout + Play/Pause & Stop */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <span className="font-mono font-black text-sm sm:text-base text-white tracking-tight">
-            {timeFormatted}
-          </span>
+        {/* Center: Live Digits */}
+        <div className="font-mono font-black text-sm sm:text-base text-white tracking-tight shrink-0 px-1">
+          {timeFormatted}
+        </div>
 
-          {/* Switch to Floating Little Window Button */}
+        {/* Right: Quick Action Buttons */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* PiP Popout */}
           <button
             type="button"
-            onClick={handleSwitchToFloating}
-            className="px-2 py-1 rounded-full bg-white/10 hover:bg-purple-600/80 text-[10px] font-semibold text-slate-200 hover:text-white flex items-center gap-1 transition active:scale-90 cursor-pointer"
-            title={language === 'am' ? 'ተንሳፋፊ ትንሽ መስኮት አሳይ' : 'Pop out into Floating Little Window'}
+            onClick={handleTogglePiP}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition active:scale-90 cursor-pointer ${
+              timerState.isPipActive
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white'
+            }`}
+            title={language === 'am' ? 'ተንሳፋፊ መስኮት (PiP)' : 'Picture-in-Picture Popout'}
           >
-            <Maximize2 size={10} />
-            <span className="hidden xs:inline">
-              {language === 'am' ? 'መስኮት' : 'Window'}
-            </span>
+            <Tv size={11} />
+          </button>
+
+          {/* Expand to Little Window Card */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSwitchToFloating();
+            }}
+            className="w-6 h-6 rounded-full bg-white/10 hover:bg-purple-600/80 flex items-center justify-center text-slate-300 hover:text-white transition active:scale-90 cursor-pointer"
+            title={language === 'am' ? 'መስኮት ዘርጋ' : 'Expand to Card Window'}
+          >
+            <Maximize2 size={11} />
           </button>
 
           {/* Quick Play/Pause */}
           <button
             type="button"
             onClick={handleTogglePlay}
-            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition active:scale-90 cursor-pointer"
+            className="w-6 h-6 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition active:scale-90 cursor-pointer"
             title={timerState.isRunning ? 'Pause' : 'Resume'}
           >
             {timerState.isRunning ? (
-              <Pause size={12} className="fill-white" />
+              <Pause size={11} className="fill-white" />
             ) : (
-              <Play size={12} className="fill-white ml-0.5" />
+              <Play size={11} className="fill-white ml-0.5" />
             )}
           </button>
 
@@ -432,10 +563,10 @@ export const FloatingMiniTimerWindow: React.FC = () => {
           <button
             type="button"
             onClick={handleStop}
-            className="w-7 h-7 rounded-full bg-white/10 hover:bg-rose-500/80 flex items-center justify-center text-slate-400 hover:text-white transition active:scale-90 cursor-pointer"
+            className="w-6 h-6 rounded-full bg-white/10 hover:bg-rose-500/80 flex items-center justify-center text-slate-400 hover:text-white transition active:scale-90 cursor-pointer"
             title="Stop Timer"
           >
-            <X size={13} />
+            <X size={11} />
           </button>
         </div>
       </div>
