@@ -201,6 +201,28 @@
       "completed": false,
       "color": "#8b5cf6",
       "id": "task-1794636710974"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "finger exercises ",
+      "startTime": "03:30 PM",
+      "durationMin": 10,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794831872926-1",
+          "text": "Initial set up",
+          "done": false
+        },
+        {
+          "id": "c-1794831872926-2",
+          "text": "Execute deliberate focus",
+          "done": false
+        }
+      ],
+      "id": "task-1794831872926"
     }
   ],
   "workouts": [
