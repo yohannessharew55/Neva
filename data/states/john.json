@@ -276,7 +276,7 @@
       "title": "Puzzle training",
       "startTime": "01:00 AM",
       "durationMin": 30,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -324,7 +324,7 @@
       "title": "15+10 game and analysis",
       "startTime": "01:00 AM",
       "durationMin": 30,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
