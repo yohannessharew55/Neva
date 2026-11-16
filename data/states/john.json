@@ -270,174 +270,6 @@
         }
       ],
       "id": "task-1794647622674"
-    },
-    {
-      "domain": "CHESS",
-      "title": "Puzzle training",
-      "startTime": "01:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794831636484-0-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-0-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-0-ilt5",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "CHESS",
-      "title": "Aagard book",
-      "startTime": "01:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794831636484-1-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-1-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-1-b62e",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "CHESS",
-      "title": "15+10 game and analysis",
-      "startTime": "01:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794831636484-2-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-2-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-2-pivu",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Warmup exercise",
-      "startTime": "12:00 PM",
-      "durationMin": 20,
-      "completed": true,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794831636484-3-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-3-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-3-92an",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Lick of the day",
-      "startTime": "12:00 PM",
-      "durationMin": 15,
-      "completed": true,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794831636484-4-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-4-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-4-wa45",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Song practice",
-      "startTime": "12:00 PM",
-      "durationMin": 45,
-      "completed": true,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794831636484-5-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-5-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-5-g9xl",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Freeplay",
-      "startTime": "12:00 PM",
-      "durationMin": 15,
-      "completed": true,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1794831636484-6-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794831636484-6-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794831636484-6-dz4t",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
     }
   ],
   "workouts": [
@@ -509,18 +341,18 @@
       "targetMetric": "100% Core Modules",
       "startDate": "2026-10-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 0,
+      "progressPercentage": 75,
       "isCompleted": false,
       "milestones": [
         {
           "id": "m1",
           "title": "Mobile Navigation Refactor",
-          "isCompleted": false
+          "isCompleted": true
         },
         {
           "id": "m2",
           "title": "Devotion & Focus Systems",
-          "isCompleted": false
+          "isCompleted": true
         },
         {
           "id": "m3",
@@ -539,26 +371,9 @@
       "targetMetric": "50h Practice Logged",
       "startDate": "2026-10-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 0,
+      "progressPercentage": 60,
       "isCompleted": false,
-      "id": "goal-1794592578664",
-      "milestones": [
-        {
-          "id": "m1",
-          "title": "Mobile Navigation Refactor",
-          "isCompleted": false
-        },
-        {
-          "id": "m2",
-          "title": "Devotion & Focus Systems",
-          "isCompleted": false
-        },
-        {
-          "id": "m3",
-          "title": "Real-time schedule based horizons",
-          "isCompleted": false
-        }
-      ]
+      "id": "goal-1794592578664"
     },
     {
       "title": "Master Forex & Algorithmic Trading Execution",
@@ -568,26 +383,9 @@
       "targetMetric": "15% Alpha",
       "startDate": "2026-01-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 0,
+      "progressPercentage": 70,
       "isCompleted": false,
-      "id": "goal-1794592578664",
-      "milestones": [
-        {
-          "id": "m1",
-          "title": "Mobile Navigation Refactor",
-          "isCompleted": false
-        },
-        {
-          "id": "m2",
-          "title": "Devotion & Focus Systems",
-          "isCompleted": false
-        },
-        {
-          "id": "m3",
-          "title": "Real-time schedule based horizons",
-          "isCompleted": false
-        }
-      ]
+      "id": "goal-1794592578664"
     },
     {
       "title": "10 Master Oil Paintings & Studio Portfolio",
@@ -597,26 +395,9 @@
       "targetMetric": "10 Canvases",
       "startDate": "2026-01-01",
       "endDate": "2026-12-31",
-      "progressPercentage": 0,
+      "progressPercentage": 80,
       "isCompleted": false,
-      "id": "goal-1794592578664",
-      "milestones": [
-        {
-          "id": "m1",
-          "title": "Mobile Navigation Refactor",
-          "isCompleted": false
-        },
-        {
-          "id": "m2",
-          "title": "Devotion & Focus Systems",
-          "isCompleted": false
-        },
-        {
-          "id": "m3",
-          "title": "Real-time schedule based horizons",
-          "isCompleted": false
-        }
-      ]
+      "id": "goal-1794592578664"
     }
   ],
   "sessions": [],
@@ -776,23 +557,15 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "mint",
+  "dailyStickyColor": "rose",
   "iosNotes": [
-    {
-      "id": "note-1794699138884",
-      "title": "GrowUp",
-      "body": "Spiritual tracking app ",
-      "folder": "Ideas",
-      "pinned": false,
-      "updatedAt": "2026-11-14T23:32:47.414Z"
-    },
     {
       "id": "note-1",
       "title": "Neva Mastery OS • Core Directives",
       "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
       "folder": "Work",
       "pinned": true,
-      "updatedAt": "2026-11-14T21:21:25.647Z"
+      "updatedAt": "2026-11-16T18:53:25.570Z"
     },
     {
       "id": "note-2",
@@ -800,7 +573,7 @@
       "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
       "folder": "Ideas",
       "pinned": false,
-      "updatedAt": "2026-11-13T22:21:25.647Z"
+      "updatedAt": "2026-11-15T19:53:25.571Z"
     },
     {
       "id": "note-3",
@@ -808,7 +581,7 @@
       "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
       "folder": "Work",
       "pinned": false,
-      "updatedAt": "2026-11-12T22:21:25.647Z"
+      "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ]
 }
