@@ -12,6 +12,7 @@ import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 import { iosNativeBridge } from '../utils/iosNativeBridge';
+import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { FocusSoundModal } from './FocusSoundModal';
 
 type FocusSystemType = 'pomodoro' | 'ultradian' | 'desktime' | 'sprint' | 'custom' | 'stopwatch';
@@ -119,6 +120,7 @@ export const PracticeFlowView: React.FC = () => {
   // Reset timer immediately when changing system, custom minutes, or pomodoro length (zero splash, instant switch)
   const applySystem = (system: FocusSystemType, pLength: number = pomodoroLength, customM: number = customMinutes, _taskName?: string) => {
     setIsTimerRunning(false);
+    mobileTimerEngine.stop();
     setSelectedSystem(system);
     setPhase('focus');
 
@@ -170,6 +172,7 @@ export const PracticeFlowView: React.FC = () => {
   const switchPhase = (targetPhase: IntervalPhase) => {
     soundEngine.stopAmbience();
     iosNativeBridge.cancelAlarm('focus-timer');
+    mobileTimerEngine.stop();
     const durations = getSystemDurations(selectedSystem, pomodoroLength, customMinutes);
     let duration = durations.focus;
     if (targetPhase === 'short_break') duration = durations.shortBreak;
@@ -188,29 +191,33 @@ export const PracticeFlowView: React.FC = () => {
     } catch (e) {}
   }, [recentSessions]);
 
-  // Main countdown / stopwatch timer effect
+  // Subscribe to mobileTimerEngine (timestamp-accurate, wake-lock enabled, lock-screen active)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        if (selectedSystem === 'stopwatch') {
-          setStopwatchSeconds((prev) => prev + 1);
+    const unsubscribe = mobileTimerEngine.subscribe((engineState) => {
+      if (engineState.isActive) {
+        setIsTimerRunning(engineState.isRunning);
+        if (engineState.mode === 'stopwatch') {
+          setSelectedSystem('stopwatch');
+          setStopwatchSeconds(engineState.stopwatchSeconds);
         } else {
-          setSecondsRemaining((prev) => {
-            if (prev <= 1) {
-              // Timer completed!
-              handleTimerComplete();
-              return 0;
-            }
-            return prev - 1;
-          });
+          setSecondsRemaining(engineState.secondsRemaining);
+          setTotalDurationSeconds(engineState.totalDurationSeconds);
+          setPhase(engineState.phase);
+          if (engineState.system && engineState.system !== 'stopwatch') {
+            setSelectedSystem(engineState.system as FocusSystemType);
+          }
         }
-      }, 1000);
-    }
+        if (engineState.taskTitle) {
+          setActiveTaskTitle(engineState.taskTitle);
+        }
+        if (engineState.category) {
+          setSelectedCategory(engineState.category);
+        }
+      }
+    });
 
-    return () => clearInterval(interval);
-  }, [isTimerRunning, selectedSystem, phase, pomodoroCycle]);
+    return unsubscribe;
+  }, []);
 
   // Handle countdown completion
   const handleTimerComplete = () => {
@@ -291,36 +298,44 @@ export const PracticeFlowView: React.FC = () => {
 
   // Controls
   const toggleStartPause = () => {
-    setIsTimerRunning((prev) => {
-      const next = !prev;
-      if (next) {
-        soundEngine.playStartSound();
-        soundEngine.startAmbience();
-        iosNativeBridge.haptic('medium');
+    if (!isTimerRunning) {
+      setIsTimerRunning(true);
+      soundEngine.playStartSound();
+      soundEngine.startAmbience();
+      iosNativeBridge.haptic('medium');
 
-        if (selectedSystem !== 'stopwatch' && secondsRemaining > 0) {
-          iosNativeBridge.scheduleFocusAlarm(
-            'focus-timer',
-            language === 'am' ? 'የትኩረት ሰዓት ተጠናቀቀ!' : 'Focus Block Complete!',
-            activeTaskTitle
-              ? `${activeTaskTitle} - ${language === 'am' ? 'በስኬት ተጠናቋል!' : 'Completed with excellence!'}`
-              : (language === 'am' ? 'የጥልቅ ስራ ሰዓትዎ ተጠናቋል። አሁን ጥቂት ያርፉ።' : 'Deep work session complete. Take a mindful break.'),
-            secondsRemaining
-          );
-        }
+      if (selectedSystem === 'stopwatch') {
+        mobileTimerEngine.startStopwatch({
+          initialElapsedSeconds: stopwatchSeconds,
+          taskTitle: activeTaskTitle || undefined,
+          category: selectedCategory,
+          system: 'stopwatch'
+        });
       } else {
-        soundEngine.stopAmbience();
-        iosNativeBridge.haptic('light');
-        iosNativeBridge.cancelAlarm('focus-timer');
+        mobileTimerEngine.startCountdown({
+          durationSeconds: totalDurationSeconds,
+          initialRemainingSeconds: secondsRemaining,
+          taskTitle: activeTaskTitle || undefined,
+          category: selectedCategory,
+          system: selectedSystem,
+          phase,
+          onComplete: handleTimerComplete
+        });
       }
-      return next;
-    });
+    } else {
+      setIsTimerRunning(false);
+      soundEngine.stopAmbience();
+      iosNativeBridge.haptic('light');
+      mobileTimerEngine.pause();
+    }
   };
 
   const handleReset = () => {
     setIsTimerRunning(false);
     soundEngine.stopAmbience();
     iosNativeBridge.cancelAlarm('focus-timer');
+    mobileTimerEngine.stop();
+
     if (selectedSystem === 'stopwatch') {
       setStopwatchSeconds(0);
     } else {
@@ -335,10 +350,15 @@ export const PracticeFlowView: React.FC = () => {
 
   const adjustSeconds = (deltaSeconds: number) => {
     if (selectedSystem === 'stopwatch') {
-      setStopwatchSeconds((prev) => Math.max(0, prev + deltaSeconds));
+      const next = Math.max(0, stopwatchSeconds + deltaSeconds);
+      setStopwatchSeconds(next);
+      mobileTimerEngine.updateStopwatchSeconds(next);
     } else {
-      setSecondsRemaining((prev) => Math.max(10, prev + deltaSeconds));
-      setTotalDurationSeconds((prev) => Math.max(10, prev + deltaSeconds));
+      const next = Math.max(10, secondsRemaining + deltaSeconds);
+      const nextTotal = Math.max(10, totalDurationSeconds + deltaSeconds);
+      setSecondsRemaining(next);
+      setTotalDurationSeconds(nextTotal);
+      mobileTimerEngine.updateRemainingSeconds(next, nextTotal);
     }
   };
 

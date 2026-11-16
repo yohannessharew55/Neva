@@ -27,6 +27,7 @@ import {
   initialDailyStickyNotes
 } from '../data/seedData';
 import { soundEngine } from '../utils/audio';
+import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { 
   syncStateToCloud, 
   fetchStateFromCloud, 
@@ -1025,47 +1026,100 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Timer loop
+  const targetEndTimeRef = useRef<number | null>(null);
+
+  // Timer loop with timestamp accuracy, wake-lock & lock-screen sync
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            soundEngine.playSound(activeTask?.soundProfile || soundProfile);
+      if (!targetEndTimeRef.current) {
+        targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+      }
+
+      const syncTime = () => {
+        if (!targetEndTimeRef.current) return;
+        const now = Date.now();
+        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - now) / 1000));
+        setSecondsRemaining(diff);
+
+        if (diff <= 0) {
+          targetEndTimeRef.current = null;
+          setIsRunning(false);
+          soundEngine.playSound(activeTask?.soundProfile || soundProfile);
+          try {
             confetti({
               particleCount: 80,
               spread: 70,
               origin: { y: 0.6 },
             });
-            setIsRunning(false);
-            if (activeTask) {
-              toggleTaskCompletion(activeTask.id);
-            }
-            return 0;
+          } catch (e) {}
+          if (activeTask) {
+            toggleTaskCompletion(activeTask.id);
           }
-          return prev - 1;
-        });
-      }, 1000);
+          mobileTimerEngine.stop();
+        }
+      };
+
+      interval = setInterval(syncTime, 1000);
+
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          syncTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibility);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibility);
+      };
+    } else {
+      targetEndTimeRef.current = null;
     }
-    return () => clearInterval(interval);
-  }, [isRunning, secondsRemaining, activeTask, soundProfile]);
+  }, [isRunning, activeTask, soundProfile]);
 
   const startTask = (task: ScheduleTask) => {
     setActiveTask(task);
-    setSecondsRemaining(task.durationMin * 60);
+    const secs = task.durationMin * 60;
+    setSecondsRemaining(secs);
+    targetEndTimeRef.current = Date.now() + secs * 1000;
     setIsRunning(true);
     soundEngine.playSound('SOLFEGGIO_432');
+
+    mobileTimerEngine.startCountdown({
+      durationSeconds: secs,
+      initialRemainingSeconds: secs,
+      taskTitle: task.title,
+      category: task.domain || 'task',
+      system: 'task',
+      phase: 'focus',
+      onComplete: () => {
+        setIsRunning(false);
+        toggleTaskCompletion(task.id);
+      }
+    });
   };
 
   const toggleTimer = () => {
-    setIsRunning(!isRunning);
+    setIsRunning((prev) => {
+      const next = !prev;
+      if (next) {
+        targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+        mobileTimerEngine.resume();
+      } else {
+        targetEndTimeRef.current = null;
+        mobileTimerEngine.pause();
+      }
+      return next;
+    });
   };
 
   const stopTimer = () => {
     setIsRunning(false);
     setActiveTask(null);
     setSecondsRemaining(0);
+    targetEndTimeRef.current = null;
+    mobileTimerEngine.stop();
   };
 
   const toggleTaskCompletion = (taskId: string) => {

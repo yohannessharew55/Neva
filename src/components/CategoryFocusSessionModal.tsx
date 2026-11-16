@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, Pause, RotateCcw, Check, SkipForward, SkipBack, 
   X, Sparkles, Volume2, VolumeX, CheckCircle2, Award, 
@@ -100,22 +100,46 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
     }
   };
 
-  // Timer countdown loop
+  const targetEndTimeRef = useRef<number | null>(null);
+
+  // Timer countdown loop with timestamp accuracy & screen wakeLock
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isOpen && isRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            handleBlockTimerComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+
+      if ('wakeLock' in navigator) {
+        (navigator as any).wakeLock.request('screen').catch(() => {});
+      }
+
+      const syncTime = () => {
+        if (!targetEndTimeRef.current) return;
+        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - Date.now()) / 1000));
+        setSecondsRemaining(diff);
+
+        if (diff <= 0) {
+          targetEndTimeRef.current = null;
+          handleBlockTimerComplete();
+        }
+      };
+
+      interval = setInterval(syncTime, 1000);
+
+      const handleVis = () => {
+        if (document.visibilityState === 'visible') {
+          syncTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVis);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVis);
+      };
+    } else {
+      targetEndTimeRef.current = null;
     }
-    return () => clearInterval(interval);
-  }, [isOpen, isRunning, secondsRemaining, activeBlockIndex, categoryTasks]);
+  }, [isOpen, isRunning, activeBlockIndex, categoryTasks]);
 
   // When timer ends correctly for the active block:
   // 1. Mark task as checked

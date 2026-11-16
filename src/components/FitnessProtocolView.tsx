@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Dumbbell, Clock, CheckCircle2, Square, 
   Play, Pause, RotateCcw, Plus, Edit3, Trash2, 
@@ -63,22 +63,45 @@ export const FitnessProtocolView: React.FC = () => {
     { id: 'ACTIVE_RECOVERY', label: 'Active Recovery & Deload' },
   ];
 
+  const targetEndTimeRef = useRef<number | null>(null);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isRestTimerRunning && restSeconds > 0) {
-      timer = setInterval(() => {
-        setRestSeconds((prev) => {
-          if (prev <= 1) {
-            soundEngine.playSound('DIGITAL_ALERT');
-            setIsRestTimerRunning(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      targetEndTimeRef.current = Date.now() + restSeconds * 1000;
+
+      if ('wakeLock' in navigator) {
+        (navigator as any).wakeLock.request('screen').catch(() => {});
+      }
+
+      const syncTime = () => {
+        if (!targetEndTimeRef.current) return;
+        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - Date.now()) / 1000));
+        setRestSeconds(diff);
+        if (diff <= 0) {
+          targetEndTimeRef.current = null;
+          soundEngine.playSound('DIGITAL_ALERT');
+          setIsRestTimerRunning(false);
+        }
+      };
+
+      timer = setInterval(syncTime, 1000);
+
+      const handleVis = () => {
+        if (document.visibilityState === 'visible') {
+          syncTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVis);
+
+      return () => {
+        clearInterval(timer);
+        document.removeEventListener('visibilitychange', handleVis);
+      };
+    } else {
+      targetEndTimeRef.current = null;
     }
-    return () => clearInterval(timer);
-  }, [isRestTimerRunning, restSeconds]);
+  }, [isRestTimerRunning]);
 
   const startRestTimer = (seconds: number) => {
     setInitialRestSeconds(seconds);

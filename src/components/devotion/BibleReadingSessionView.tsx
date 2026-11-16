@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, Play, Pause, RotateCcw, Check, Clock, 
   Calendar, Flame, Sparkles, Plus, Trash2, Volume2, VolumeX,
@@ -95,28 +95,52 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
     } catch (e) {}
   }, [readingSessions]);
 
-  // Timer Countdown logic
+  const targetEndTimeRef = useRef<number | null>(null);
+
+  // Timer Countdown logic with timestamp accuracy & wake-lock
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            setIsCompleted(true);
-            try {
-              soundEngine.playSound('CHIME_MEDITATION');
-              confetti({ particleCount: 60, spread: 70 });
-            } catch (e) {}
-            return 0;
-          }
-          return prev - 1;
-        });
-        setElapsedSeconds((prev) => prev + 1);
-      }, 1000);
+      targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+
+      if ('wakeLock' in navigator) {
+        (navigator as any).wakeLock.request('screen').catch(() => {});
+      }
+
+      const syncTime = () => {
+        if (!targetEndTimeRef.current) return;
+        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - Date.now()) / 1000));
+        setSecondsRemaining(diff);
+        setElapsedSeconds(Math.max(0, (timerMinutes * 60) - diff));
+
+        if (diff <= 0) {
+          targetEndTimeRef.current = null;
+          setIsRunning(false);
+          setIsCompleted(true);
+          try {
+            soundEngine.playSound('CHIME_MEDITATION');
+            confetti({ particleCount: 60, spread: 70 });
+          } catch (e) {}
+        }
+      };
+
+      interval = setInterval(syncTime, 1000);
+
+      const handleVis = () => {
+        if (document.visibilityState === 'visible') {
+          syncTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVis);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVis);
+      };
+    } else {
+      targetEndTimeRef.current = null;
     }
-    return () => clearInterval(interval);
-  }, [isRunning, secondsRemaining]);
+  }, [isRunning, timerMinutes]);
 
   const setPreset = (mins: number) => {
     setTimerMinutes(mins);

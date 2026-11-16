@@ -7,6 +7,7 @@ import { DevotionProtocolView } from './components/DevotionProtocolView';
 import { PrecisionNutritionView } from './components/PrecisionNutritionView';
 import { StrategicHorizonsView } from './components/StrategicHorizonsView';
 import { PracticeFlowView } from './components/PracticeFlowView';
+import { TopDynamicTimerBanner } from './components/TopDynamicTimerBanner';
 import { CategoryDetailView } from './components/CategoryDetailView';
 import { MergedCalendarGalleryView } from './components/MergedCalendarGalleryView';
 import { MergedGoalsView } from './components/MergedGoalsView';
@@ -136,6 +137,7 @@ export const App: React.FC = () => {
     <ErrorBoundary>
       <LivotionProvider>
         <SplashMotionIntro />
+        <TopDynamicTimerBanner />
         <div className="min-h-screen max-w-full overflow-x-clip bg-[#fcfbf9] text-slate-800 dark:bg-[#0b0f17] dark:text-slate-100 flex flex-col w-full font-sans transition-colors selection:bg-[#0082ff] selection:text-white">
           <Navbar />
           <DeviceSyncModal />

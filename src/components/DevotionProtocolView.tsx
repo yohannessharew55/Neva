@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BookOpen, Heart, Sparkles, CheckCircle2, Square, 
   Play, Pause, RotateCcw, Plus, Trash2, Check, 
@@ -410,35 +410,59 @@ export const DevotionProtocolView: React.FC = () => {
     localStorage.setItem('livotion_devotion_prayers_v1', JSON.stringify(prayers));
   }, [prayers]);
 
-  // Contemplative Timer countdown
+  const targetEndTimeRef = useRef<number | null>(null);
+
+  // Contemplative Timer countdown with timestamp accuracy & wake-lock
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning && secondsRemaining > 0) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            setIsTimerRunning(false);
-            setTimerCompleted(true);
-            try {
-              soundEngine.playPencil();
-            } catch (e) {}
-            // Automatically log devotion practice session
-            if (timerMinutes > 0) {
-              logSession({
-                categoryId: 'devotion',
-                title: 'Contemplative Prayer & Meditation',
-                durationMinutes: timerMinutes,
-                notes: 'Completed dedicated spiritual silence & prayer session'
-              });
-            }
-            return 0;
+      targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+
+      if ('wakeLock' in navigator) {
+        (navigator as any).wakeLock.request('screen').catch(() => {});
+      }
+
+      const syncTime = () => {
+        if (!targetEndTimeRef.current) return;
+        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - Date.now()) / 1000));
+        setSecondsRemaining(diff);
+
+        if (diff <= 0) {
+          targetEndTimeRef.current = null;
+          setIsTimerRunning(false);
+          setTimerCompleted(true);
+          try {
+            soundEngine.playPencil();
+          } catch (e) {}
+          // Automatically log devotion practice session
+          if (timerMinutes > 0) {
+            logSession({
+              categoryId: 'devotion',
+              title: 'Contemplative Prayer & Meditation',
+              durationMinutes: timerMinutes,
+              notes: 'Completed dedicated spiritual silence & prayer session'
+            });
           }
-          return prev - 1;
-        });
-      }, 1000);
+        }
+      };
+
+      interval = setInterval(syncTime, 1000);
+
+      const handleVis = () => {
+        if (document.visibilityState === 'visible') {
+          syncTime();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVis);
+
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVis);
+      };
+    } else {
+      targetEndTimeRef.current = null;
     }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, secondsRemaining, timerMinutes, logSession]);
+  }, [isTimerRunning, timerMinutes, logSession]);
 
   const setTimerPreset = (minutes: number) => {
     setTimerMinutes(minutes);
