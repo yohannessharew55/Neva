@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
+import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { ExerciseCategory, MovementItem } from '../types';
 
 export const FitnessProtocolView: React.FC = () => {
@@ -70,9 +71,18 @@ export const FitnessProtocolView: React.FC = () => {
     if (isRestTimerRunning && restSeconds > 0) {
       targetEndTimeRef.current = Date.now() + restSeconds * 1000;
 
-      if ('wakeLock' in navigator) {
-        (navigator as any).wakeLock.request('screen').catch(() => {});
-      }
+      // Broadcast to mobileTimerEngine for Floating Little Window, PiP & Lock Screen
+      mobileTimerEngine.startCountdown({
+        durationSeconds: initialRestSeconds || restSeconds,
+        initialRemainingSeconds: restSeconds,
+        taskTitle: 'Workout Rest Interval',
+        category: 'fitness',
+        system: 'fitness-rest',
+        phase: 'short_break',
+        onComplete: () => {
+          setIsRestTimerRunning(false);
+        },
+      });
 
       const syncTime = () => {
         if (!targetEndTimeRef.current) return;
@@ -100,8 +110,11 @@ export const FitnessProtocolView: React.FC = () => {
       };
     } else {
       targetEndTimeRef.current = null;
+      if (mobileTimerEngine.getState().system === 'fitness-rest') {
+        mobileTimerEngine.pause();
+      }
     }
-  }, [isRestTimerRunning]);
+  }, [isRestTimerRunning, initialRestSeconds]);
 
   const startRestTimer = (seconds: number) => {
     setInitialRestSeconds(seconds);

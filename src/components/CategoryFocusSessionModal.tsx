@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { soundEngine } from '../utils/audio';
+import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 
 interface CategoryFocusSessionModalProps {
   categoryId: string;
@@ -67,6 +68,9 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
   useEffect(() => {
     if (!isOpen) {
       setIsRunning(false);
+      if (mobileTimerEngine.getState().system === 'category-block') {
+        mobileTimerEngine.stop();
+      }
       return;
     }
 
@@ -102,15 +106,28 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
 
   const targetEndTimeRef = useRef<number | null>(null);
 
-  // Timer countdown loop with timestamp accuracy & screen wakeLock
+  // Timer countdown loop with mobileTimerEngine synchronization
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isOpen && isRunning && secondsRemaining > 0) {
+    if (!isOpen) {
+      targetEndTimeRef.current = null;
+      return;
+    }
+
+    if (isRunning && secondsRemaining > 0) {
       targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
 
-      if ('wakeLock' in navigator) {
-        (navigator as any).wakeLock.request('screen').catch(() => {});
-      }
+      // Broadcast to mobileTimerEngine (powers Floating Little Window, PiP & Lock Screen)
+      mobileTimerEngine.startCountdown({
+        durationSeconds: (activeBlock?.durationMin || 25) * 60,
+        initialRemainingSeconds: secondsRemaining,
+        taskTitle: activeBlock?.title || `${getCategoryTitleTranslated(categoryId)} Focus`,
+        category: categoryId,
+        system: 'category-block',
+        phase: 'focus',
+        onComplete: () => {
+          handleBlockTimerComplete();
+        },
+      });
 
       const syncTime = () => {
         if (!targetEndTimeRef.current) return;
@@ -123,7 +140,7 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
         }
       };
 
-      interval = setInterval(syncTime, 1000);
+      const interval = setInterval(syncTime, 1000);
 
       const handleVis = () => {
         if (document.visibilityState === 'visible') {
@@ -138,6 +155,9 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
       };
     } else {
       targetEndTimeRef.current = null;
+      if (mobileTimerEngine.getState().system === 'category-block') {
+        mobileTimerEngine.pause();
+      }
     }
   }, [isOpen, isRunning, activeBlockIndex, categoryTasks]);
 

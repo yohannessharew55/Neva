@@ -3,14 +3,16 @@
 // 1. Screen Wake Lock (keeps phone awake while timer/stopwatch is active, prevents dimming/sleep)
 // 2. High-precision timestamp timing (Date.now() targetEndTime & startTime, immune to iOS background throttling)
 // 3. iOS Lock Screen Now Playing widget & MediaSession API (shows live ticking countdown / stopwatch on lock screen with controls)
-// 4. Silent HTML5 audio loop (maintains background execution & iOS Now Playing media session on lock screen)
-// 5. Visibility change & focus listeners (instantly resyncs exact time on phone wake/unlock)
-// 6. Global event broadcaster for app-wide UI & Dynamic Island banner
+// 4. Picture-in-Picture (PiP) Little Window stream via Canvas -> Video (pops out a floating mini-window on iOS and desktop)
+// 5. Silent HTML5 audio loop (maintains background execution & iOS Now Playing media session on lock screen)
+// 6. Visibility change & focus listeners (instantly resyncs exact time on phone wake/unlock)
+// 7. Draggable floating mini window & Dynamic Island top banner
 
 import { soundEngine } from './audio';
 import { iosNativeBridge } from './iosNativeBridge';
 
 export type TimerMode = 'countdown' | 'stopwatch';
+export type WindowPresentationMode = 'island' | 'floating' | 'hidden';
 
 export interface MobileTimerState {
   isActive: boolean;
@@ -25,6 +27,8 @@ export interface MobileTimerState {
   stopwatchSeconds: number;
   targetEndTime: number | null; // Date.now() timestamp when countdown ends
   stopwatchStartTime: number | null; // Date.now() timestamp when stopwatch started
+  windowMode: WindowPresentationMode;
+  isPipActive: boolean;
 }
 
 type TimerListener = (state: MobileTimerState) => void;
@@ -43,6 +47,8 @@ class MobileTimerEngine {
     stopwatchSeconds: 0,
     targetEndTime: null,
     stopwatchStartTime: null,
+    windowMode: 'island',
+    isPipActive: false,
   };
 
   private listeners: Set<TimerListener> = new Set();
@@ -50,6 +56,10 @@ class MobileTimerEngine {
   private wakeLock: any = null;
   private silentAudio: HTMLAudioElement | null = null;
   private onCompleteCallback: (() => void) | null = null;
+
+  // Picture-in-Picture Canvas & Video elements
+  private pipCanvas: HTMLCanvasElement | null = null;
+  private pipVideo: HTMLVideoElement | null = null;
 
   constructor() {
     this.restoreFromStorage();
@@ -67,7 +77,6 @@ class MobileTimerEngine {
         // If it was running, recalculate time based on timestamps
         if (this.state.isActive && this.state.isRunning) {
           this.syncWithTimestamp();
-          // Resume background ticking
           this.startTicking();
         }
       }
@@ -105,6 +114,11 @@ class MobileTimerEngine {
     return { ...this.state };
   }
 
+  setWindowMode(mode: WindowPresentationMode) {
+    this.state.windowMode = mode;
+    this.notify();
+  }
+
   // Setup visibility change & window focus listeners to catch up on unlock
   private setupVisibilityListener() {
     if (typeof window === 'undefined') return;
@@ -114,6 +128,7 @@ class MobileTimerEngine {
         this.syncWithTimestamp();
         this.requestWakeLock();
         this.updateLockScreenMediaSession();
+        this.renderCanvasFrame();
       }
     };
 
@@ -163,7 +178,7 @@ class MobileTimerEngine {
         });
       }
     } catch (e) {
-      // Wake lock can fail if low battery or background tab, which is safe to ignore
+      // Wake lock can fail if low battery or background tab
     }
   }
 
@@ -182,7 +197,6 @@ class MobileTimerEngine {
     if (typeof window === 'undefined') return;
     try {
       if (!this.silentAudio) {
-        // Ultra-short 1-second silent WAV base64
         const silentWav =
           'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
         const audio = new Audio(silentWav);
@@ -193,9 +207,7 @@ class MobileTimerEngine {
         this.silentAudio = audio;
       }
 
-      this.silentAudio.play().catch(() => {
-        // Audio play might need user touch gesture initially
-      });
+      this.silentAudio.play().catch(() => {});
     } catch (e) {}
   }
 
@@ -226,6 +238,7 @@ class MobileTimerEngine {
     this.onCompleteCallback = options.onComplete || null;
 
     this.state = {
+      ...this.state,
       isActive: true,
       isRunning: true,
       mode: 'countdown',
@@ -244,6 +257,7 @@ class MobileTimerEngine {
     this.ensureBackgroundAudio();
     this.startTicking();
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
 
     // Schedule native time-sensitive alarm for screen-lock
@@ -271,6 +285,7 @@ class MobileTimerEngine {
     this.onCompleteCallback = null;
 
     this.state = {
+      ...this.state,
       isActive: true,
       isRunning: true,
       mode: 'stopwatch',
@@ -289,6 +304,7 @@ class MobileTimerEngine {
     this.ensureBackgroundAudio();
     this.startTicking();
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
   }
 
@@ -296,7 +312,6 @@ class MobileTimerEngine {
   pause() {
     if (!this.state.isRunning) return;
 
-    // Snapshot exact remaining/elapsed before pausing
     this.syncWithTimestamp();
 
     this.state.isRunning = false;
@@ -308,6 +323,7 @@ class MobileTimerEngine {
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
   }
 
@@ -335,6 +351,7 @@ class MobileTimerEngine {
     this.ensureBackgroundAudio();
     this.startTicking();
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
   }
 
@@ -352,10 +369,15 @@ class MobileTimerEngine {
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
     this.clearLockScreenMediaSession();
+
+    if (this.state.isPipActive && document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch(() => {});
+    }
+
     this.notify();
   }
 
-  // Set remaining seconds manually (e.g. when user changes minutes or skips)
+  // Set remaining seconds manually
   updateRemainingSeconds(seconds: number, totalSeconds?: number) {
     this.state.secondsRemaining = seconds;
     if (totalSeconds !== undefined) {
@@ -365,6 +387,7 @@ class MobileTimerEngine {
       this.state.targetEndTime = Date.now() + seconds * 1000;
     }
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
   }
 
@@ -375,7 +398,19 @@ class MobileTimerEngine {
       this.state.stopwatchStartTime = Date.now() - seconds * 1000;
     }
     this.updateLockScreenMediaSession();
+    this.renderCanvasFrame();
     this.notify();
+  }
+
+  private formatTime(totalSeconds: number): string {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
 
   // Internal ticker loop
@@ -385,6 +420,7 @@ class MobileTimerEngine {
     this.timerInterval = setInterval(() => {
       this.syncWithTimestamp();
       this.updateLockScreenMediaSession();
+      this.renderCanvasFrame();
     }, 1000);
   }
 
@@ -405,6 +441,7 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     this.clearLockScreenMediaSession();
+    this.renderCanvasFrame();
 
     try {
       soundEngine.playAlarmSound();
@@ -427,16 +464,10 @@ class MobileTimerEngine {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
 
     try {
-      const formatTime = (secs: number) => {
-        const m = Math.floor(secs / 60);
-        const s = secs % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-      };
-
       const isStopwatch = this.state.mode === 'stopwatch';
       const timeStr = isStopwatch
-        ? formatTime(this.state.stopwatchSeconds)
-        : formatTime(this.state.secondsRemaining);
+        ? this.formatTime(this.state.stopwatchSeconds)
+        : this.formatTime(this.state.secondsRemaining);
 
       const title = isStopwatch
         ? `⏱️ Stopwatch: ${timeStr}`
@@ -448,7 +479,7 @@ class MobileTimerEngine {
 
       const album = isStopwatch
         ? 'Live Open Stopwatch'
-        : `Focus Countdown (${formatTime(this.state.totalDurationSeconds)})`;
+        : `Focus Countdown (${this.formatTime(this.state.totalDurationSeconds)})`;
 
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
@@ -460,7 +491,6 @@ class MobileTimerEngine {
         ],
       });
 
-      // Update position state for live scrub / progress on iOS Lock Screen
       if ('setPositionState' in navigator.mediaSession) {
         const total = isStopwatch
           ? Math.max(this.state.stopwatchSeconds + 60, 3600)
@@ -476,7 +506,6 @@ class MobileTimerEngine {
         });
       }
 
-      // Configure media action handlers for lock screen buttons
       navigator.mediaSession.setActionHandler('play', () => {
         this.resume();
       });
@@ -488,9 +517,7 @@ class MobileTimerEngine {
       navigator.mediaSession.setActionHandler('stop', () => {
         this.stop();
       });
-    } catch (e) {
-      // MediaSession error safe fallback
-    }
+    } catch (e) {}
   }
 
   private clearLockScreenMediaSession() {
@@ -501,6 +528,154 @@ class MobileTimerEngine {
         navigator.mediaSession.setPositionState(null as any);
       }
     } catch (e) {}
+  }
+
+  // --- Picture-in-Picture (PiP) Little Window Video Stream ---
+
+  private ensurePipVideo(): HTMLVideoElement | null {
+    if (typeof document === 'undefined') return null;
+    if (this.pipVideo) return this.pipVideo;
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 480;
+      canvas.height = 270;
+      canvas.style.display = 'none';
+      document.body.appendChild(canvas);
+      this.pipCanvas = canvas;
+
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      video.style.position = 'fixed';
+      video.style.top = '-9999px';
+      video.style.left = '-9999px';
+      video.style.width = '1px';
+      video.style.height = '1px';
+      video.style.opacity = '0';
+      video.style.pointerEvents = 'none';
+      document.body.appendChild(video);
+      this.pipVideo = video;
+
+      this.renderCanvasFrame();
+
+      if ((canvas as any).captureStream) {
+        const stream = (canvas as any).captureStream(10);
+        video.srcObject = stream;
+        video.play().catch(() => {});
+      }
+
+      video.addEventListener('enterpictureinpicture', () => {
+        this.state.isPipActive = true;
+        this.notify();
+      });
+
+      video.addEventListener('leavepictureinpicture', () => {
+        this.state.isPipActive = false;
+        this.notify();
+      });
+
+      return video;
+    } catch (e) {
+      console.warn('PiP setup error', e);
+      return null;
+    }
+  }
+
+  renderCanvasFrame() {
+    if (!this.pipCanvas) return;
+    const ctx = this.pipCanvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = this.pipCanvas.width;
+    const height = this.pipCanvas.height;
+
+    // Background gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, '#090d16');
+    bgGrad.addColorStop(0.5, '#0f172a');
+    bgGrad.addColorStop(1, '#020617');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Border stroke
+    ctx.strokeStyle = this.state.isRunning ? 'rgba(16, 185, 129, 0.45)' : 'rgba(245, 158, 11, 0.45)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, width - 4, height - 4);
+
+    const isStopwatch = this.state.mode === 'stopwatch';
+    const displaySecs = isStopwatch ? this.state.stopwatchSeconds : this.state.secondsRemaining;
+    const timeStr = this.formatTime(displaySecs);
+
+    // Top status pill
+    ctx.fillStyle = this.state.isRunning ? '#10b981' : '#f59e0b';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'left';
+    const badgeText = isStopwatch
+      ? `⏱️ STOPWATCH • ${this.state.isRunning ? 'RUNNING' : 'PAUSED'}`
+      : `⏱️ ${this.state.system.toUpperCase()} • ${this.state.phase.toUpperCase()}`;
+    ctx.fillText(badgeText, 28, 44);
+
+    // Task title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const taskText = this.state.taskTitle || `${this.state.category.toUpperCase()} • NEVA OS`;
+    ctx.fillText(taskText.length > 30 ? taskText.slice(0, 28) + '...' : taskText, 28, 72);
+
+    // Digital digits
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 76px -apple-system, BlinkMacSystemFont, "SF Pro Display", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(timeStr, width / 2, 168);
+
+    // Progress bar
+    if (!isStopwatch && this.state.totalDurationSeconds > 0) {
+      const progress = Math.min(1, Math.max(0, 1 - (this.state.secondsRemaining / this.state.totalDurationSeconds)));
+      const barY = height - 18;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fillRect(24, barY, width - 48, 8);
+
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(24, barY, (width - 48) * progress, 8);
+    }
+  }
+
+  isPictureInPictureSupported(): boolean {
+    if (typeof document === 'undefined') return false;
+    return !!(document.pictureInPictureEnabled || (document.createElement('video') as any).webkitSupportsPresentationMode);
+  }
+
+  async togglePictureInPicture(): Promise<boolean> {
+    try {
+      const video = this.ensurePipVideo();
+      if (!video) return false;
+
+      this.renderCanvasFrame();
+
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        this.state.isPipActive = false;
+        this.notify();
+        return false;
+      } else if (video.requestPictureInPicture) {
+        await video.play().catch(() => {});
+        await video.requestPictureInPicture();
+        this.state.isPipActive = true;
+        this.notify();
+        return true;
+      } else if ((video as any).webkitSetPresentationMode) {
+        await video.play().catch(() => {});
+        (video as any).webkitSetPresentationMode('picture-in-picture');
+        this.state.isPipActive = true;
+        this.notify();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('PiP request failed:', e);
+      return false;
+    }
   }
 }
 

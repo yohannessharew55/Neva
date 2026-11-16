@@ -5,7 +5,7 @@ import {
   SkipForward, Clock, History, Award, Shield, BookOpen,
   Dumbbell, Swords, Palette, Music, Building2, TrendingUp,
   Check, Brain, Maximize2, Minimize2, Activity, Waves,
-  Volume2, Bell, Smartphone
+  Volume2, Bell, Smartphone, Tv
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLivotion } from '../context/LivotionContext';
@@ -997,6 +997,22 @@ export const PracticeFlowView: React.FC = () => {
                 {language === 'am' ? 'ድምፅ' : 'Sound'}
               </span>
             </button>
+
+            {/* Little Window / PiP Button */}
+            <button
+              type="button"
+              onClick={() => {
+                mobileTimerEngine.setWindowMode('floating');
+                mobileTimerEngine.togglePictureInPicture();
+              }}
+              className="p-3 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-2xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              title={language === 'am' ? 'ትንሽ መስኮት / PiP አሳይ' : 'Pop out Little Window / PiP'}
+            >
+              <Tv size={18} />
+              <span className="hidden sm:inline text-xs font-bold">
+                {language === 'am' ? 'ትንሽ መስኮት' : 'Little Window'}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -1394,6 +1410,18 @@ export const PracticeFlowView: React.FC = () => {
                 title="Focus Sound & Alarm Chooser"
               >
                 <Volume2 size={20} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  mobileTimerEngine.setWindowMode('floating');
+                  mobileTimerEngine.togglePictureInPicture();
+                }}
+                className="p-3.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-2xl transition cursor-pointer"
+                title={language === 'am' ? 'ትንሽ መስኮት / PiP' : 'Little Window / PiP'}
+              >
+                <Tv size={20} />
               </button>
 
               <button

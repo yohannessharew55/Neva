@@ -7,6 +7,7 @@ import {
 import confetti from 'canvas-confetti';
 import { BIBLE_BOOKS, BibleBook, BibleReadingSession } from '../../data/bibleData';
 import { soundEngine } from '../../utils/audio';
+import { mobileTimerEngine } from '../../utils/mobileTimerEngine';
 
 interface BibleReadingSessionViewProps {
   language: string;
@@ -97,15 +98,25 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
 
   const targetEndTimeRef = useRef<number | null>(null);
 
-  // Timer Countdown logic with timestamp accuracy & wake-lock
+  // Timer Countdown logic with timestamp accuracy & wake-lock & Little Window/Lockscreen sync
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning && secondsRemaining > 0) {
       targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
 
-      if ('wakeLock' in navigator) {
-        (navigator as any).wakeLock.request('screen').catch(() => {});
-      }
+      // Broadcast to mobileTimerEngine for Floating Little Window, PiP & Lock Screen
+      mobileTimerEngine.startCountdown({
+        durationSeconds: timerMinutes * 60,
+        initialRemainingSeconds: secondsRemaining,
+        taskTitle: `${selectedBook} ${chapterStart}-${chapterEnd} Reading`,
+        category: 'devotion',
+        system: 'bible-reading',
+        phase: 'focus',
+        onComplete: () => {
+          setIsRunning(false);
+          setIsCompleted(true);
+        },
+      });
 
       const syncTime = () => {
         if (!targetEndTimeRef.current) return;
@@ -139,8 +150,11 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
       };
     } else {
       targetEndTimeRef.current = null;
+      if (mobileTimerEngine.getState().system === 'bible-reading') {
+        mobileTimerEngine.pause();
+      }
     }
-  }, [isRunning, timerMinutes]);
+  }, [isRunning, timerMinutes, selectedBook, chapterStart, chapterEnd]);
 
   const setPreset = (mins: number) => {
     setTimerMinutes(mins);
@@ -148,6 +162,9 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
     setIsRunning(false);
     setIsCompleted(false);
     setElapsedSeconds(0);
+    if (mobileTimerEngine.getState().system === 'bible-reading') {
+      mobileTimerEngine.stop();
+    }
   };
 
   const toggleTimer = () => {
@@ -165,6 +182,9 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
     setSecondsRemaining(timerMinutes * 60);
     setIsCompleted(false);
     setElapsedSeconds(0);
+    if (mobileTimerEngine.getState().system === 'bible-reading') {
+      mobileTimerEngine.stop();
+    }
   };
 
   const formatTime = (totalSec: number) => {

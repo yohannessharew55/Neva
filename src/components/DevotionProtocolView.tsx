@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
+import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { FitnessProtocolView } from './FitnessProtocolView';
 import { BIBLE_QUOTES_LIBRARY, BibleVerse } from '../data/bibleData';
 import { VerseMemorizePaperCard } from './devotion/VerseMemorizePaperCard';
@@ -412,15 +413,25 @@ export const DevotionProtocolView: React.FC = () => {
 
   const targetEndTimeRef = useRef<number | null>(null);
 
-  // Contemplative Timer countdown with timestamp accuracy & wake-lock
+  // Contemplative Timer countdown with timestamp accuracy & wake-lock & Little Window/Lockscreen sync
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerRunning && secondsRemaining > 0) {
       targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
 
-      if ('wakeLock' in navigator) {
-        (navigator as any).wakeLock.request('screen').catch(() => {});
-      }
+      // Broadcast to mobileTimerEngine for Floating Little Window, PiP & Lock Screen
+      mobileTimerEngine.startCountdown({
+        durationSeconds: timerMinutes * 60,
+        initialRemainingSeconds: secondsRemaining,
+        taskTitle: language === 'am' ? 'የፀጥታ ጸሎትና ማሰላሰል' : 'Contemplative Prayer & Meditation',
+        category: 'devotion',
+        system: 'silence',
+        phase: 'focus',
+        onComplete: () => {
+          setIsTimerRunning(false);
+          setTimerCompleted(true);
+        },
+      });
 
       const syncTime = () => {
         if (!targetEndTimeRef.current) return;
@@ -461,6 +472,9 @@ export const DevotionProtocolView: React.FC = () => {
       };
     } else {
       targetEndTimeRef.current = null;
+      if (mobileTimerEngine.getState().system === 'silence') {
+        mobileTimerEngine.pause();
+      }
     }
   }, [isTimerRunning, timerMinutes, logSession]);
 
@@ -469,6 +483,9 @@ export const DevotionProtocolView: React.FC = () => {
     setSecondsRemaining(minutes * 60);
     setIsTimerRunning(false);
     setTimerCompleted(false);
+    if (mobileTimerEngine.getState().system === 'silence') {
+      mobileTimerEngine.stop();
+    }
   };
 
   const toggleTimer = () => {
@@ -483,6 +500,9 @@ export const DevotionProtocolView: React.FC = () => {
     setIsTimerRunning(false);
     setSecondsRemaining(timerMinutes * 60);
     setTimerCompleted(false);
+    if (mobileTimerEngine.getState().system === 'silence') {
+      mobileTimerEngine.stop();
+    }
   };
 
   const formatTime = (totalSeconds: number) => {
