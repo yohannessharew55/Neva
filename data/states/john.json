@@ -348,7 +348,7 @@
       "title": "Warmup exercise",
       "startTime": "12:00 PM",
       "durationMin": 20,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -372,7 +372,7 @@
       "title": "Lick of the day",
       "startTime": "12:00 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -396,7 +396,7 @@
       "title": "Song practice",
       "startTime": "12:00 PM",
       "durationMin": 45,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -420,7 +420,7 @@
       "title": "Freeplay",
       "startTime": "12:00 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
