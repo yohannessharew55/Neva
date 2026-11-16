@@ -527,6 +527,19 @@ class MobileTimerEngine {
       navigator.mediaSession.setActionHandler('stop', () => {
         this.stop();
       });
+
+      // Support hardware & lock screen / Dynamic Island track controls for stop & toggle
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        this.stop();
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        if (this.state.isRunning) {
+          this.pause();
+        } else {
+          this.resume();
+        }
+      });
     } catch (e) {}
   }
 
@@ -590,6 +603,19 @@ class MobileTimerEngine {
         this.notify();
       });
 
+      // Allow pausing and resuming from the native PiP floating window outside the app
+      video.addEventListener('pause', () => {
+        if (this.state.isRunning) {
+          this.pause();
+        }
+      });
+
+      video.addEventListener('play', () => {
+        if (!this.state.isRunning && this.state.isActive) {
+          this.resume();
+        }
+      });
+
       return video;
     } catch (e) {
       console.warn('PiP setup error', e);
@@ -625,7 +651,7 @@ class MobileTimerEngine {
     ctx.fillStyle = '#141416';
     ctx.fill();
     ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 159, 10, 0.28)';
     ctx.stroke();
 
     // Circle 1: Left Pause / Play Button
@@ -642,19 +668,19 @@ class MobileTimerEngine {
       ctx.strokeStyle = '#ff9f0a';
       ctx.stroke();
 
-      // Pause bars in amber
+      // Pause bars in orange
       ctx.fillStyle = '#ff9f0a';
       ctx.fillRect(c1x - 9, c1y - 12, 6, 24);
       ctx.fillRect(c1x + 3, c1y - 12, 6, 24);
     } else {
-      ctx.fillStyle = '#082a1a';
+      ctx.fillStyle = '#3a2704';
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#34d399';
+      ctx.strokeStyle = '#ff9f0a';
       ctx.stroke();
 
-      // Play triangle in green
-      ctx.fillStyle = '#34d399';
+      // Play triangle in orange
+      ctx.fillStyle = '#ff9f0a';
       ctx.beginPath();
       ctx.moveTo(c1x - 8, c1y - 13);
       ctx.lineTo(c1x + 12, c1y);

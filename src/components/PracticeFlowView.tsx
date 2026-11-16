@@ -381,17 +381,17 @@ export const PracticeFlowView: React.FC = () => {
     return Math.min(100, Math.max(0, progress));
   };
 
-  // Color theme according to system & phase
+  // Color theme according to system & phase (Orange Clock Theme)
   const getThemeColor = () => {
     if (phase === 'short_break' || phase === 'long_break') return '#10b981'; // Emerald break
     switch (selectedSystem) {
-      case 'pomodoro': return '#ef4444'; // Tomato Red
-      case 'ultradian': return '#8b5cf6'; // Violet / Purple
-      case 'desktime': return '#06b6d4'; // Cyan
-      case 'sprint': return '#f59e0b'; // Amber
-      case 'custom': return '#0082ff'; // Royal Blue
-      case 'stopwatch': return '#6366f1'; // Indigo
-      default: return '#0082ff';
+      case 'pomodoro': return '#ff9f0a'; // iOS Timer Orange
+      case 'ultradian': return '#ff9f0a';
+      case 'desktime': return '#ff9f0a';
+      case 'sprint': return '#ff9f0a';
+      case 'custom': return '#ff9f0a';
+      case 'stopwatch': return '#ff9f0a';
+      default: return '#ff9f0a';
     }
   };
 

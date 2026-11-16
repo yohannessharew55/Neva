@@ -370,25 +370,21 @@ export const FloatingMiniTimerWindow: React.FC = () => {
         onTouchMove={onTouchMove}
         onTouchEnd={handleDragEnd}
         onMouseDown={onMouseDown}
-        className="flex items-center justify-between gap-3 px-3.5 sm:px-4 py-2.5 rounded-full bg-black/95 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8)] border border-white/15 backdrop-blur-2xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-grab active:cursor-grabbing group min-w-[320px] sm:min-w-[345px] h-[66px] sm:h-[70px]"
+        className="flex items-center justify-between gap-3 px-3.5 sm:px-4 py-2.5 rounded-full bg-black/95 text-white shadow-[0_16px_40px_rgba(0,0,0,0.85),0_0_20px_rgba(255,159,10,0.15)] border border-[#ff9f0a]/25 backdrop-blur-2xl transition-all hover:scale-[1.01] active:scale-[0.99] cursor-grab active:cursor-grabbing group min-w-[320px] sm:min-w-[345px] h-[66px] sm:h-[70px]"
       >
         {/* Left Side: Circular Amber Pause/Play & Circular Dark Cancel Buttons */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Circular Button 1: Pause / Resume */}
+          {/* Circular Button 1: Pause / Resume (Pure Orange Theme) */}
           <button
             type="button"
             onClick={handleTogglePlay}
-            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition active:scale-90 cursor-pointer touch-manipulation ${
-              timerState.isRunning
-                ? 'bg-[#332406] hover:bg-[#443008] active:bg-[#4d3609] text-[#ff9f0a] border border-[#ff9f0a]/35 shadow-[0_0_12px_rgba(255,159,10,0.25)]'
-                : 'bg-[#092b1a] hover:bg-[#0c3822] active:bg-[#0f4429] text-[#34d399] border border-[#34d399]/35 shadow-[0_0_12px_rgba(52,211,153,0.25)]'
-            }`}
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition active:scale-90 cursor-pointer touch-manipulation bg-[#332406] hover:bg-[#443008] active:bg-[#4d3609] text-[#ff9f0a] border border-[#ff9f0a]/40 shadow-[0_0_12px_rgba(255,159,10,0.25)]"
             title={timerState.isRunning ? 'Pause Timer' : 'Resume Timer'}
           >
             {timerState.isRunning ? (
               <Pause size={19} className="fill-[#ff9f0a] text-[#ff9f0a]" />
             ) : (
-              <Play size={19} className="fill-[#34d399] text-[#34d399] ml-0.5" />
+              <Play size={19} className="fill-[#ff9f0a] text-[#ff9f0a] ml-0.5" />
             )}
           </button>
 
