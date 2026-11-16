@@ -480,12 +480,12 @@ class MobileTimerEngine {
         : this.formatTime(this.state.secondsRemaining);
 
       const title = isStopwatch
-        ? `⏱️ Stopwatch: ${timeStr}`
-        : `⏱️ ${timeStr} • ${this.state.phase.toUpperCase()}`;
+        ? `Stopwatch  ${timeStr}`
+        : `Timer  ${timeStr}`;
 
       const artist = this.state.taskTitle
-        ? `${this.state.taskTitle} • NEVA OS`
-        : `${this.state.category.toUpperCase()} • NEVA Flow`;
+        ? `${this.state.taskTitle} • NEVA`
+        : `${this.state.system.toUpperCase()} • NEVA Flow`;
 
       const album = isStopwatch
         ? 'Live Open Stopwatch'
@@ -605,53 +605,107 @@ class MobileTimerEngine {
     const width = this.pipCanvas.width;
     const height = this.pipCanvas.height;
 
-    // Background gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#090d16');
-    bgGrad.addColorStop(0.5, '#0f172a');
-    bgGrad.addColorStop(1, '#020617');
-    ctx.fillStyle = bgGrad;
+    // Pitch black background matching iOS Live Activity
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
-
-    // Border stroke
-    ctx.strokeStyle = this.state.isRunning ? 'rgba(16, 185, 129, 0.45)' : 'rgba(245, 158, 11, 0.45)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, width - 4, height - 4);
 
     const isStopwatch = this.state.mode === 'stopwatch';
     const displaySecs = isStopwatch ? this.state.stopwatchSeconds : this.state.secondsRemaining;
     const timeStr = this.formatTime(displaySecs);
 
-    // Top status pill
-    ctx.fillStyle = this.state.isRunning ? '#10b981' : '#f59e0b';
-    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'left';
-    const badgeText = isStopwatch
-      ? `⏱️ STOPWATCH • ${this.state.isRunning ? 'RUNNING' : 'PAUSED'}`
-      : `⏱️ ${this.state.system.toUpperCase()} • ${this.state.phase.toUpperCase()}`;
-    ctx.fillText(badgeText, 28, 44);
+    // Draw iOS Live Activity capsule pill
+    const pillX = 16;
+    const pillY = 32;
+    const pillW = width - 32;
+    const pillH = height - 64;
+    const pillR = 36;
 
-    // Task title
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const taskText = this.state.taskTitle || `${this.state.category.toUpperCase()} • NEVA OS`;
-    ctx.fillText(taskText.length > 30 ? taskText.slice(0, 28) + '...' : taskText, 28, 72);
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
+    ctx.fillStyle = '#141416';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.stroke();
 
-    // Digital digits
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 76px -apple-system, BlinkMacSystemFont, "SF Pro Display", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(timeStr, width / 2, 168);
+    // Circle 1: Left Pause / Play Button
+    const c1x = pillX + 54;
+    const c1y = pillY + pillH / 2;
+    const cr = 30;
 
-    // Progress bar
+    ctx.beginPath();
+    ctx.arc(c1x, c1y, cr, 0, Math.PI * 2);
+    if (this.state.isRunning) {
+      ctx.fillStyle = '#3a2704';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ff9f0a';
+      ctx.stroke();
+
+      // Pause bars in amber
+      ctx.fillStyle = '#ff9f0a';
+      ctx.fillRect(c1x - 9, c1y - 12, 6, 24);
+      ctx.fillRect(c1x + 3, c1y - 12, 6, 24);
+    } else {
+      ctx.fillStyle = '#082a1a';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#34d399';
+      ctx.stroke();
+
+      // Play triangle in green
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath();
+      ctx.moveTo(c1x - 8, c1y - 13);
+      ctx.lineTo(c1x + 12, c1y);
+      ctx.lineTo(c1x - 8, c1y + 13);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Circle 2: Cancel / Stop Button
+    const c2x = c1x + 72;
+    const c2y = c1y;
+    ctx.beginPath();
+    ctx.arc(c2x, c2y, cr, 0, Math.PI * 2);
+    ctx.fillStyle = '#2c2c2e';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.stroke();
+
+    // White X
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(c2x - 9, c2y - 9);
+    ctx.lineTo(c2x + 9, c2y + 9);
+    ctx.moveTo(c2x + 9, c2y - 9);
+    ctx.lineTo(c2x - 9, c2y + 9);
+    ctx.stroke();
+
+    // Right Side: Label "Timer" & Amber Digits
+    const labelText = isStopwatch ? 'Stopwatch' : 'Timer';
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ff9f0a';
+    ctx.font = 'bold 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", monospace';
+    ctx.fillText(timeStr, pillX + pillW - 28, c1y + 20);
+
+    const textWidth = ctx.measureText(timeStr).width;
+    ctx.fillStyle = 'rgba(255, 159, 10, 0.8)';
+    ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+    ctx.fillText(labelText, pillX + pillW - 38 - textWidth, c1y + 10);
+
+    // Progress bar for countdown
     if (!isStopwatch && this.state.totalDurationSeconds > 0) {
-      const progress = Math.min(1, Math.max(0, 1 - (this.state.secondsRemaining / this.state.totalDurationSeconds)));
-      const barY = height - 18;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.fillRect(24, barY, width - 48, 8);
+      const progress = Math.min(1, Math.max(0, 1 - this.state.secondsRemaining / this.state.totalDurationSeconds));
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(pillX + 32, pillY + pillH - 8, pillW - 64, 4);
 
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(24, barY, (width - 48) * progress, 8);
+      ctx.fillStyle = '#ff9f0a';
+      ctx.fillRect(pillX + 32, pillY + pillH - 8, (pillW - 64) * progress, 4);
     }
   }
 
