@@ -141,22 +141,11 @@ class MobileTimerEngine {
       } else if (document.visibilityState === 'hidden') {
         // When app is closed, minimized, or screen locked:
         if (this.state.isActive && this.state.isRunning) {
-          const isStopwatch = this.state.mode === 'stopwatch';
-          const timeStr = isStopwatch
-            ? this.formatTime(this.state.stopwatchSeconds)
-            : this.formatTime(this.state.secondsRemaining);
-
-          // 1. Post to phone's notification bar
-          iosNativeBridge.updateActiveTimerNotification(
-            isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
-            `${this.state.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
-          );
-
-          // 2. Keep background audio and Lock Screen media session active
+          // 1. Keep background audio and Lock Screen media session active (shows hover clock on lock screen)
           this.ensureBackgroundAudio();
           this.updateLockScreenMediaSession();
 
-          // 3. Auto-popout PiP floating window if supported
+          // 2. Auto-popout PiP floating window to hover on top of phone
           if (!this.state.isPipActive) {
             this.requestPictureInPictureDirect().catch(() => {});
           }
@@ -167,15 +156,8 @@ class MobileTimerEngine {
     window.addEventListener('focus', handleSync);
     window.addEventListener('pagehide', () => {
       if (this.state.isActive && this.state.isRunning) {
-        const isStopwatch = this.state.mode === 'stopwatch';
-        const timeStr = isStopwatch
-          ? this.formatTime(this.state.stopwatchSeconds)
-          : this.formatTime(this.state.secondsRemaining);
-        iosNativeBridge.updateActiveTimerNotification(
-          isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
-          `${this.state.taskTitle || 'NEVA Flow'} • Running in background`
-        );
         this.ensureBackgroundAudio();
+        this.updateLockScreenMediaSession();
         if (!this.state.isPipActive) {
           this.requestPictureInPictureDirect().catch(() => {});
         }
@@ -334,13 +316,6 @@ class MobileTimerEngine {
         remaining
       );
     }
-
-    // Immediately post active timer to phone's notification bar
-    const timeStr = this.formatTime(remaining);
-    iosNativeBridge.updateActiveTimerNotification(
-      `⏱️ Timer: ${timeStr} Remaining`,
-      `${options.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
-    );
   }
 
   // Start or resume open stopwatch session
@@ -378,13 +353,6 @@ class MobileTimerEngine {
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
-
-    // Immediately post active stopwatch to phone's notification bar
-    const timeStr = this.formatTime(elapsed);
-    iosNativeBridge.updateActiveTimerNotification(
-      `⏱️ Stopwatch: ${timeStr}`,
-      `${options.taskTitle || 'NEVA Flow'} • Running in background`
-    );
   }
 
   // Pause active timer or stopwatch
@@ -401,7 +369,6 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
-    iosNativeBridge.clearActiveTimerNotification();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
@@ -433,15 +400,6 @@ class MobileTimerEngine {
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
-
-    const isStopwatch = this.state.mode === 'stopwatch';
-    const timeStr = isStopwatch
-      ? this.formatTime(this.state.stopwatchSeconds)
-      : this.formatTime(this.state.secondsRemaining);
-    iosNativeBridge.updateActiveTimerNotification(
-      isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
-      `${this.state.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
-    );
   }
 
   // Reset or Stop timer completely
@@ -457,7 +415,6 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
-    iosNativeBridge.clearActiveTimerNotification();
     this.clearLockScreenMediaSession();
 
     if (this.state.isPipActive && document.pictureInPictureElement) {

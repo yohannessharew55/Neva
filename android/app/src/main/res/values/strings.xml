@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NEVA</string>
+    <string name="title_activity_main">NEVA</string>
+    <string name="package_name">com.neva.livotion</string>
+    <string name="custom_url_scheme">com.neva.livotion</string>
+</resources>
