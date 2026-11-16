@@ -300,7 +300,7 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1794859007649"
     }
@@ -590,7 +590,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "rose",
+  "dailyStickyColor": "canary",
   "iosNotes": [
     {
       "id": "note-1",
