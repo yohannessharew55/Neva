@@ -55,6 +55,9 @@ class MobileTimerEngine {
   private timerInterval: any = null;
   private wakeLock: any = null;
   private silentAudio: HTMLAudioElement | null = null;
+  private audioCtx: AudioContext | null = null;
+  private audioOsc: OscillatorNode | null = null;
+  private audioGain: GainNode | null = null;
   private onCompleteCallback: (() => void) | null = null;
 
   // Picture-in-Picture Canvas & Video elements
@@ -136,17 +139,46 @@ class MobileTimerEngine {
       if (document.visibilityState === 'visible') {
         handleSync();
       } else if (document.visibilityState === 'hidden') {
-        // When app is closed, minimized, or switched away from, auto-popout PiP floating window
-        if (this.state.isActive && this.state.isRunning && !this.state.isPipActive) {
-          this.requestPictureInPictureDirect().catch(() => {});
+        // When app is closed, minimized, or screen locked:
+        if (this.state.isActive && this.state.isRunning) {
+          const isStopwatch = this.state.mode === 'stopwatch';
+          const timeStr = isStopwatch
+            ? this.formatTime(this.state.stopwatchSeconds)
+            : this.formatTime(this.state.secondsRemaining);
+
+          // 1. Post to phone's notification bar
+          iosNativeBridge.updateActiveTimerNotification(
+            isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
+            `${this.state.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
+          );
+
+          // 2. Keep background audio and Lock Screen media session active
+          this.ensureBackgroundAudio();
+          this.updateLockScreenMediaSession();
+
+          // 3. Auto-popout PiP floating window if supported
+          if (!this.state.isPipActive) {
+            this.requestPictureInPictureDirect().catch(() => {});
+          }
         }
       }
     });
 
     window.addEventListener('focus', handleSync);
     window.addEventListener('pagehide', () => {
-      if (this.state.isActive && this.state.isRunning && !this.state.isPipActive) {
-        this.requestPictureInPictureDirect().catch(() => {});
+      if (this.state.isActive && this.state.isRunning) {
+        const isStopwatch = this.state.mode === 'stopwatch';
+        const timeStr = isStopwatch
+          ? this.formatTime(this.state.stopwatchSeconds)
+          : this.formatTime(this.state.secondsRemaining);
+        iosNativeBridge.updateActiveTimerNotification(
+          isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
+          `${this.state.taskTitle || 'NEVA Flow'} • Running in background`
+        );
+        this.ensureBackgroundAudio();
+        if (!this.state.isPipActive) {
+          this.requestPictureInPictureDirect().catch(() => {});
+        }
       }
     });
   }
@@ -207,17 +239,37 @@ class MobileTimerEngine {
     if (typeof window === 'undefined') return;
     try {
       if (!this.silentAudio) {
-        const silentWav =
-          'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-        const audio = new Audio(silentWav);
+        const audio = new Audio('/silence.wav');
         audio.loop = true;
         audio.preload = 'auto';
         (audio as any).playsInline = true;
-        audio.volume = 0.001;
+        audio.volume = 0.05;
         this.silentAudio = audio;
       }
 
       this.silentAudio.play().catch(() => {});
+
+      // Maintain Web Audio sub-audible oscillator to keep JS event loop running in background
+      try {
+        if (!this.audioCtx) {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioCtx) {
+            this.audioCtx = new AudioCtx();
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.frequency.setValueAtTime(10, this.audioCtx.currentTime); // 10Hz sub-audible
+            gain.gain.setValueAtTime(0.0001, this.audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            osc.start();
+            this.audioOsc = osc;
+            this.audioGain = gain;
+          }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume().catch(() => {});
+        }
+      } catch (e) {}
     } catch (e) {}
   }
 
@@ -226,6 +278,9 @@ class MobileTimerEngine {
       if (this.silentAudio) {
         this.silentAudio.pause();
         this.silentAudio.currentTime = 0;
+      }
+      if (this.audioCtx && this.audioCtx.state === 'running') {
+        this.audioCtx.suspend().catch(() => {});
       }
     } catch (e) {}
   }
@@ -279,6 +334,13 @@ class MobileTimerEngine {
         remaining
       );
     }
+
+    // Immediately post active timer to phone's notification bar
+    const timeStr = this.formatTime(remaining);
+    iosNativeBridge.updateActiveTimerNotification(
+      `⏱️ Timer: ${timeStr} Remaining`,
+      `${options.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
+    );
   }
 
   // Start or resume open stopwatch session
@@ -316,6 +378,13 @@ class MobileTimerEngine {
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
+
+    // Immediately post active stopwatch to phone's notification bar
+    const timeStr = this.formatTime(elapsed);
+    iosNativeBridge.updateActiveTimerNotification(
+      `⏱️ Stopwatch: ${timeStr}`,
+      `${options.taskTitle || 'NEVA Flow'} • Running in background`
+    );
   }
 
   // Pause active timer or stopwatch
@@ -332,6 +401,7 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
+    iosNativeBridge.clearActiveTimerNotification();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
@@ -363,6 +433,15 @@ class MobileTimerEngine {
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
+
+    const isStopwatch = this.state.mode === 'stopwatch';
+    const timeStr = isStopwatch
+      ? this.formatTime(this.state.stopwatchSeconds)
+      : this.formatTime(this.state.secondsRemaining);
+    iosNativeBridge.updateActiveTimerNotification(
+      isStopwatch ? `⏱️ Stopwatch: ${timeStr}` : `⏱️ Timer: ${timeStr} Remaining`,
+      `${this.state.taskTitle || 'NEVA Flow'} • Running in background (Tap to open)`
+    );
   }
 
   // Reset or Stop timer completely
@@ -378,6 +457,7 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
+    iosNativeBridge.clearActiveTimerNotification();
     this.clearLockScreenMediaSession();
 
     if (this.state.isPipActive && document.pictureInPictureElement) {
@@ -451,11 +531,18 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     this.clearLockScreenMediaSession();
+    iosNativeBridge.clearActiveTimerNotification();
     this.renderCanvasFrame();
 
     try {
       soundEngine.playAlarmSound();
       iosNativeBridge.haptic('heavy');
+      iosNativeBridge.scheduleFocusAlarm(
+        'focus-completed-alert',
+        '⏰ Focus Session Finished!',
+        this.state.taskTitle ? `${this.state.taskTitle} session complete.` : 'Your focus block is finished. Mindful breath.',
+        1
+      );
     } catch (e) {}
 
     if (this.onCompleteCallback) {
@@ -496,10 +583,13 @@ class MobileTimerEngine {
         artist,
         album,
         artwork: [
-          { src: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
         ],
       });
+
+      navigator.mediaSession.playbackState = this.state.isRunning ? 'playing' : 'paused';
 
       if ('setPositionState' in navigator.mediaSession) {
         const total = isStopwatch
@@ -547,6 +637,7 @@ class MobileTimerEngine {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
     try {
       navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
       if ('setPositionState' in navigator.mediaSession) {
         navigator.mediaSession.setPositionState(null as any);
       }

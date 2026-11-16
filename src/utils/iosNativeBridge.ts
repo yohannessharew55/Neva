@@ -124,6 +124,9 @@ class IOSNativeBridge {
 
     if (this.isNativeApp()) {
       try {
+        // Request permissions if not yet granted
+        await LocalNotifications.requestPermissions().catch(() => {});
+
         // Schedule native time-sensitive alarm
         await LocalNotifications.schedule({
           notifications: [
@@ -161,6 +164,51 @@ class IOSNativeBridge {
     }
 
     return false;
+  }
+
+  // Post or update the active ongoing timer in the phone's notification bar / center
+  async updateActiveTimerNotification(title: string, body: string): Promise<boolean> {
+    if (this.isNativeApp()) {
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: 99901,
+              title,
+              body,
+              schedule: { at: new Date(Date.now() + 100) },
+              sound: undefined,
+              actionTypeId: 'TIMER_ACTIVE',
+              extra: { active: true }
+            }
+          ]
+        });
+        return true;
+      } catch (e) {
+        console.warn('updateActiveTimerNotification error:', e);
+      }
+    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, {
+          body,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'neva_active_timer',
+          silent: true
+        });
+        return true;
+      } catch (e) {}
+    }
+    return false;
+  }
+
+  // Clear the active timer from the notification bar
+  async clearActiveTimerNotification(): Promise<void> {
+    if (this.isNativeApp()) {
+      try {
+        await LocalNotifications.cancel({ notifications: [{ id: 99901 }] });
+      } catch (e) {}
+    }
   }
 
   // Cancel alarm
