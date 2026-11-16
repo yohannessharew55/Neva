@@ -292,6 +292,17 @@
         }
       ],
       "id": "task-1794858942586"
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859007649"
     }
   ],
   "workouts": [
