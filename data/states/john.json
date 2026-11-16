@@ -270,6 +270,28 @@
         }
       ],
       "id": "task-1794647622674"
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794858942586-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794858942586-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794858942586"
     }
   ],
   "workouts": [
