@@ -275,7 +275,7 @@
       "domain": "DEVOTION_PRAYER",
       "title": "Pray",
       "startTime": "11:00 PM",
-      "durationMin": 45,
+      "durationMin": 30,
       "completed": false,
       "color": "#a855f7",
       "badge": "Devotion",
