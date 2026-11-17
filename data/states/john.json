@@ -114,6 +114,18 @@
         "technique": "",
         "subject": ""
       }
+    },
+    {
+      "id": "domain-forex_trading",
+      "domainType": "FOREX_TRADING",
+      "title": "Forex Trading",
+      "currentTier": "Level 1: Novice Initiation",
+      "weeklyTargetHours": 5,
+      "accentColor": "#10b981",
+      "currentHours": 0,
+      "config": {
+        "monthlyTargetMetric": "Verified standard execution"
+      }
     }
   ],
   "tasks": [],
@@ -176,7 +188,19 @@
     }
   ],
   "meals": [],
-  "goals": [],
+  "goals": [
+    {
+      "id": "goal-forex_trading",
+      "domainId": "domain-forex_trading",
+      "horizon": "MONTHLY",
+      "title": "Forex Trading Core Monthly Milestone",
+      "targetMetric": "Verified standard execution",
+      "startDate": "2026-11-17",
+      "endDate": "2026-12-17",
+      "progressPercentage": 0,
+      "isCompleted": false
+    }
+  ],
   "sessions": [],
   "reviews": [],
   "categoryPlans": {
@@ -339,6 +363,33 @@
       "stickyNoteColor": "mint",
       "dailyPlans": [],
       "triple8Type": "living"
+    },
+    "forex_trading": {
+      "id": "forex_trading",
+      "title": "Forex Trading",
+      "color": "#10b981",
+      "weeklyTargetHours": 5,
+      "currentWeeklyHours": 0,
+      "baseWeeklyHours": 0,
+      "baseMonthlyHours": 0,
+      "weeklyScheduleSummary": [
+        "Mon/Wed/Fri: Core Deep Work Session",
+        "Tue/Thu: Technical Review & Practice"
+      ],
+      "monthlyGoalTitle": "Forex Trading Core Monthly Milestone",
+      "monthlyTargetMetric": "Verified standard execution",
+      "monthlyProgress": 0,
+      "monthlyTargetHours": 20,
+      "triple8Type": "career",
+      "inProgressItems": [
+        "Initial mastery syllabus setup and immersion",
+        "Daily consistent practice habit baseline"
+      ],
+      "achievedItems": [],
+      "upcomingItems": [
+        "Advanced sprint and performance benchmark evaluation"
+      ],
+      "isCustom": true
     }
   },
   "dailyStickyNotes": [],
