@@ -477,7 +477,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
