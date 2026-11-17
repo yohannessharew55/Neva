@@ -128,7 +128,33 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "title": "Puzzle",
+      "startTime": "11:30 PM",
+      "durationMin": 45,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "soundProfile": "SOLFEGGIO_432",
+      "completed": false,
+      "checklist": [
+        {
+          "id": "c-1794948096110-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-1794948096110-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ],
+      "date": "2026-11-17",
+      "dayOfWeek": 2,
+      "id": "task-1794948101512"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
@@ -393,7 +419,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "sky",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
