@@ -52,19 +52,6 @@
       }
     },
     {
-      "id": "dom-4",
-      "domainType": "FOREX_TRADING",
-      "title": "Forex Trading",
-      "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
-      "currentHours": 0,
-      "accentColor": "#059669",
-      "config": {
-        "sessions": [],
-        "pairs": []
-      }
-    },
-    {
       "id": "dom-5",
       "domainType": "ARCHITECTURE_DESIGN",
       "title": "Architectural Design",
@@ -294,17 +281,6 @@
       "id": "task-1794858942586"
     },
     {
-      "title": "Et",
-      "startTime": "Flexible",
-      "durationMin": 25,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "completed": true,
-      "soundProfile": "SOLFEGGIO_432",
-      "id": "task-1794859007649"
-    },
-    {
       "domain": "CHESS",
       "title": "Puzzle training",
       "startTime": "01:00 AM",
@@ -497,19 +473,6 @@
       "dayOfWeek": 1
     },
     {
-      "title": "Et",
-      "startTime": "Flexible",
-      "durationMin": 25,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "completed": true,
-      "soundProfile": "SOLFEGGIO_432",
-      "id": "task-1794859102709-8-b65w",
-      "date": "2026-11-16",
-      "dayOfWeek": 1
-    },
-    {
       "domain": "CHESS",
       "title": "Puzzle training",
       "startTime": "01:00 AM",
@@ -698,19 +661,6 @@
         }
       ],
       "id": "task-1794895375661-7-qcrr",
-      "date": "2026-11-17",
-      "dayOfWeek": 2
-    },
-    {
-      "title": "Et",
-      "startTime": "Flexible",
-      "durationMin": 25,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "completed": false,
-      "soundProfile": "SOLFEGGIO_432",
-      "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
       "dayOfWeek": 2
     },
@@ -963,25 +913,6 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "cyan",
-      "dailyPlans": []
-    },
-    "trading": {
-      "id": "trading",
-      "title": "Trading",
-      "color": "#10b981",
-      "weeklyTargetHours": 5,
-      "currentWeeklyHours": 0,
-      "baseWeeklyHours": 0,
-      "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
-      "monthlyGoalTitle": "",
-      "monthlyTargetMetric": "",
-      "monthlyProgress": 0,
-      "monthlyTargetHours": 20,
-      "inProgressItems": [],
-      "achievedItems": [],
-      "upcomingItems": [],
-      "stickyNoteColor": "mint",
       "dailyPlans": []
     },
     "devotion": {
