@@ -130,9 +130,9 @@
   ],
   "tasks": [
     {
-      "title": "Puzzle",
+      "title": "Puzzle drills",
       "startTime": "11:30 PM",
-      "durationMin": 45,
+      "durationMin": 15,
       "domain": "CHESS",
       "badge": "Chess",
       "color": "#8b5cf6",
