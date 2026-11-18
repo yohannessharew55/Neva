@@ -139,6 +139,31 @@
         }
       ],
       "id": "task-1795037021039"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagards calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795037051714-0-0",
+          "text": "Initial setup & context",
+          "done": true
+        },
+        {
+          "id": "c-1795037051714-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795037051713-0-i903",
+      "date": "2026-11-19",
+      "dayOfWeek": 4
     }
   ],
   "workouts": [
