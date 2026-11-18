@@ -122,7 +122,7 @@
       "title": "Aagards calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "priority": "DEEP_WORK",
