@@ -230,6 +230,228 @@
       "checklist": [],
       "notes": "Do it guler mato (Weekly Routine)",
       "id": "task-1795040243334"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-16",
+      "dayOfWeek": 1,
+      "id": "task-1795040550302"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-17",
+      "dayOfWeek": 2,
+      "id": "task-1795040550302"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-18",
+      "dayOfWeek": 3,
+      "id": "task-1795040550302"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-19",
+      "dayOfWeek": 4,
+      "id": "task-1795040550302"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-20",
+      "dayOfWeek": 5,
+      "id": "task-1795040550302"
+    },
+    {
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#10b981",
+      "badge": "Trading",
+      "domain": "TRADING",
+      "checklist": [],
+      "date": "2026-11-21",
+      "dayOfWeek": 6,
+      "id": "task-1795040550302"
+    },
+    {
+      "id": "stream-slot-trading-1-0",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 1,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-1-0-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-1-0-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-trading-2-1",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 2,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-2-1-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-2-1-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-trading-3-2",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 3,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-3-2-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-3-2-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-trading-4-3",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 4,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-4-3-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-4-3-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-trading-5-4",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 5,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-5-4-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-5-4-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-trading-6-5",
+      "title": "London / NY Open Execution Session",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "dayOfWeek": 6,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-trading-6-5-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-trading-6-5-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
     }
   ],
   "workouts": [
@@ -405,7 +627,14 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Mon 08:00 AM: London / NY Open Execution Session (60m)",
+        "Tue 08:00 AM: London / NY Open Execution Session (60m)",
+        "Wed 08:00 AM: London / NY Open Execution Session (60m)",
+        "Thu 08:00 AM: London / NY Open Execution Session (60m)",
+        "Fri 08:00 AM: London / NY Open Execution Session (60m)",
+        "Sat 08:00 AM: London / NY Open Execution Session (60m)"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
