@@ -571,8 +571,8 @@
     {
       "id": "stream-slot-chess-1-0",
       "title": "Calculation",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
+      "startTime": "08:00 AM",
+      "durationMin": 45,
       "completed": false,
       "domain": "CHESS",
       "badge": "Chess",
@@ -593,31 +593,7 @@
       ]
     },
     {
-      "id": "stream-slot-chess-1-1",
-      "title": "Calculation",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 1,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-1-1-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-1-1-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-chess-2-2",
+      "id": "stream-slot-chess-2-1",
       "title": "Calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
@@ -629,19 +605,19 @@
       "soundProfile": "SOLFEGGIO_432",
       "checklist": [
         {
-          "id": "c-chess-2-2-1",
+          "id": "c-chess-2-1-1",
           "text": "Warm-up & context immersion",
           "done": false
         },
         {
-          "id": "c-chess-2-2-2",
+          "id": "c-chess-2-1-2",
           "text": "Deliberate high-focus execution",
           "done": false
         }
       ]
     },
     {
-      "id": "stream-slot-chess-4-3",
+      "id": "stream-slot-chess-4-2",
       "title": "Calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
@@ -653,19 +629,19 @@
       "soundProfile": "SOLFEGGIO_432",
       "checklist": [
         {
-          "id": "c-chess-4-3-1",
+          "id": "c-chess-4-2-1",
           "text": "Warm-up & context immersion",
           "done": false
         },
         {
-          "id": "c-chess-4-3-2",
+          "id": "c-chess-4-2-2",
           "text": "Deliberate high-focus execution",
           "done": false
         }
       ]
     },
     {
-      "id": "stream-slot-chess-5-4",
+      "id": "stream-slot-chess-5-3",
       "title": "Calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
@@ -677,19 +653,19 @@
       "soundProfile": "SOLFEGGIO_432",
       "checklist": [
         {
-          "id": "c-chess-5-4-1",
+          "id": "c-chess-5-3-1",
           "text": "Warm-up & context immersion",
           "done": false
         },
         {
-          "id": "c-chess-5-4-2",
+          "id": "c-chess-5-3-2",
           "text": "Deliberate high-focus execution",
           "done": false
         }
       ]
     },
     {
-      "id": "stream-slot-chess-6-5",
+      "id": "stream-slot-chess-6-4",
       "title": "Calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
@@ -701,12 +677,12 @@
       "soundProfile": "SOLFEGGIO_432",
       "checklist": [
         {
-          "id": "c-chess-6-5-1",
+          "id": "c-chess-6-4-1",
           "text": "Warm-up & context immersion",
           "done": false
         },
         {
-          "id": "c-chess-6-5-2",
+          "id": "c-chess-6-4-2",
           "text": "Deliberate high-focus execution",
           "done": false
         }
@@ -817,7 +793,6 @@
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
       "weeklyScheduleSummary": [
-        "Mon 07:00 AM: Calculation",
         "Mon 08:00 AM: Calculation (45m)",
         "Tue 08:00 AM: Calculation (45m)",
         "Thu 08:00 AM: Calculation (45m)",
