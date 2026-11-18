@@ -711,6 +711,28 @@
       "date": "2026-11-18",
       "dayOfWeek": 3,
       "id": "task-1795003033829"
+    },
+    {
+      "domain": "OIL_PAINTING",
+      "title": "fdfd",
+      "startTime": "03:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#e11d48",
+      "badge": "Art",
+      "checklist": [
+        {
+          "id": "c-1795003105108-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795003105108-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795003105108"
     }
   ],
   "workouts": [
