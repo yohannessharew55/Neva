@@ -245,55 +245,6 @@
           "done": false
         }
       ],
-      "id": "task-1795002909786-0-03j7",
-      "date": "2025-11-18",
-      "dayOfWeek": 2
-    },
-    {
-      "domain": "CHESS",
-      "title": "Rapid chess",
-      "startTime": "03:00 PM",
-      "durationMin": 60,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1795002909786-1-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1795002909786-1-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795002909786-1-lbv6",
-      "date": "2025-11-18",
-      "dayOfWeek": 2
-    },
-    {
-      "domain": "CHESS",
-      "title": "Aagard’s Calculation",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "priority": "DEEP_WORK",
-      "checklist": [
-        {
-          "id": "c-1795002909786-0-0",
-          "text": "Initial setup & context",
-          "done": false
-        },
-        {
-          "id": "c-1795002909786-0-1",
-          "text": "High focus execution",
-          "done": false
-        }
-      ],
       "id": "task-1795002909786-0-3lvl",
       "date": "2025-11-20",
       "dayOfWeek": 4
