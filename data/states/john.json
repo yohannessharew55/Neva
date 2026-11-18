@@ -223,6 +223,447 @@
         }
       ],
       "id": "task-1795002777670"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-03j7",
+      "date": "2025-11-18",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-lbv6",
+      "date": "2025-11-18",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-3lvl",
+      "date": "2025-11-20",
+      "dayOfWeek": 4
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-pto8",
+      "date": "2025-11-20",
+      "dayOfWeek": 4
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-bp0x",
+      "date": "2025-11-19",
+      "dayOfWeek": 3
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-ntvz",
+      "date": "2025-11-19",
+      "dayOfWeek": 3
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-35n7",
+      "date": "2025-11-21",
+      "dayOfWeek": 5
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-kclf",
+      "date": "2025-11-21",
+      "dayOfWeek": 5
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-h9lu",
+      "date": "2025-11-22",
+      "dayOfWeek": 6
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-doek",
+      "date": "2025-11-22",
+      "dayOfWeek": 6
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-2fb9",
+      "date": "2025-11-24",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-yrab",
+      "date": "2025-11-24",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-z140",
+      "date": "2025-11-26",
+      "dayOfWeek": 3
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-9qlp",
+      "date": "2025-11-26",
+      "dayOfWeek": 3
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-2ds9",
+      "date": "2025-11-25",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-t73p",
+      "date": "2025-11-25",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard’s Calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795002909786-0-0",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-0-1",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-0-u5yq",
+      "date": "2025-11-27",
+      "dayOfWeek": 4
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002909786-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002909786-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002909786-1-enos",
+      "date": "2025-11-27",
+      "dayOfWeek": 4
     }
   ],
   "workouts": [
