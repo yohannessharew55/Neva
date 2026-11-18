@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 12,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -713,7 +713,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 12,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
@@ -886,7 +886,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "sky",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
