@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -279,7 +279,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
