@@ -201,6 +201,28 @@
         }
       ],
       "id": "task-1795002730596"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Rapid chess",
+      "startTime": "03:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795002777670-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795002777670-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795002777670"
     }
   ],
   "workouts": [
