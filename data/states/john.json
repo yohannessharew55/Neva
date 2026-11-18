@@ -718,12 +718,13 @@
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
       "weeklyScheduleSummary": [
-        "Mon 07:00 AM: Chess Focus",
+        "Mon 07:00 AM: Calculation",
         "Tue 07:00 AM: calculation",
         "Wed 07:00 AM: Chess Focus",
-        "Thu 07:00 AM: Chess Focus",
-        "Fri 07:00 AM: Chess Focus",
-        "Sat 07:00 AM: Chess Focus"
+        "Thu 07:00 AM: Calculation",
+        "Fri 07:00 AM: Calculation",
+        "Sat 07:00 AM: Calculation",
+        "Tue 07:00 AM: Calculation"
       ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
@@ -885,7 +886,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "sky",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
