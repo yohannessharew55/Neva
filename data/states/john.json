@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -116,7 +116,31 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "domain": "CHESS",
+      "title": "Aagards calculation",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "priority": "DEEP_WORK",
+      "checklist": [
+        {
+          "id": "c-1795037021039-1",
+          "text": "Initial setup & context",
+          "done": false
+        },
+        {
+          "id": "c-1795037021039-2",
+          "text": "High focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795037021039"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
@@ -204,7 +228,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
