@@ -640,6 +640,29 @@
       "id": "task-1795002991175"
     },
     {
+      "title": "Puzzle drill",
+      "startTime": "03:00 PM",
+      "durationMin": 15,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "soundProfile": "SOLFEGGIO_432",
+      "completed": false,
+      "checklist": [
+        {
+          "id": "c-1795003032722-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-1795003032722-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795003033829"
+    },
+    {
       "title": "Aagard’Calculation",
       "startTime": "03:00 PM",
       "durationMin": 45,
@@ -663,29 +686,6 @@
       "date": "2026-11-18",
       "dayOfWeek": 3,
       "id": "task-1795002991176"
-    },
-    {
-      "title": "Puzzle drill",
-      "startTime": "03:00 PM",
-      "durationMin": 15,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "soundProfile": "SOLFEGGIO_432",
-      "completed": false,
-      "checklist": [
-        {
-          "id": "c-1795003032722-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-1795003032722-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795003033829"
     },
     {
       "title": "Puzzle drill",
