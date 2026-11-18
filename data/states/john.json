@@ -122,29 +122,6 @@
       "title": "Aagards calculation",
       "startTime": "08:00 AM",
       "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "priority": "DEEP_WORK",
-      "checklist": [
-        {
-          "id": "c-1795037021039-1",
-          "text": "Initial setup & context",
-          "done": false
-        },
-        {
-          "id": "c-1795037021039-2",
-          "text": "High focus execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795037021039"
-    },
-    {
-      "domain": "CHESS",
-      "title": "Aagards calculation",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
       "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
@@ -164,6 +141,30 @@
       "id": "task-1795037051713-0-i903",
       "date": "2026-11-19",
       "dayOfWeek": 4
+    },
+    {
+      "id": "stream-slot-chess-6-0",
+      "title": "Rapid Practice with Engine Review",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 6,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-6-0-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-6-0-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
     }
   ],
   "workouts": [
@@ -257,7 +258,9 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Sat 08:00 AM: Rapid Practice with Engine Review (45m)"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
