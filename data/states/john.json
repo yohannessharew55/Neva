@@ -94,7 +94,7 @@
       "domainType": "GUITAR",
       "title": "Guitar & Music Practice",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentHours": 0,
       "accentColor": "#EC4899",
       "config": {
@@ -423,7 +423,7 @@
       "id": "music",
       "title": "Music & Guitar",
       "color": "#ec4899",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 6,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
