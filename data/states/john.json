@@ -168,6 +168,126 @@
       "checklist": [],
       "notes": "Weekly Routine",
       "id": "task-1795070593099"
+    },
+    {
+      "id": "stream-slot-chess-1-0",
+      "title": "Chess Focus",
+      "startTime": "07:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 1,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-1-0-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-1-0-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-chess-2-1",
+      "title": "Chess Focus",
+      "startTime": "07:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 2,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-2-1-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-2-1-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-chess-4-2",
+      "title": "Chess Focus",
+      "startTime": "07:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 4,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-4-2-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-4-2-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-chess-5-3",
+      "title": "Chess Focus",
+      "startTime": "07:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 5,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-5-3-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-5-3-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "stream-slot-chess-6-4",
+      "title": "Chess Focus",
+      "startTime": "07:00 AM",
+      "durationMin": 60,
+      "completed": false,
+      "domain": "CHESS",
+      "badge": "Chess",
+      "color": "#8b5cf6",
+      "dayOfWeek": 6,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": [
+        {
+          "id": "c-chess-6-4-1",
+          "text": "Warm-up & context immersion",
+          "done": false
+        },
+        {
+          "id": "c-chess-6-4-2",
+          "text": "Deliberate high-focus execution",
+          "done": false
+        }
+      ]
     }
   ],
   "workouts": [
@@ -261,7 +381,13 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Mon 07:00 AM: Chess Focus",
+        "Tue 07:00 AM: Chess Focus",
+        "Thu 07:00 AM: Chess Focus",
+        "Fri 07:00 AM: Chess Focus",
+        "Sat 07:00 AM: Chess Focus"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
