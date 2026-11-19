@@ -116,7 +116,60 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "title": "Overall body workout",
+      "domain": "PHYSICAL_FITNESS",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ef4444",
+      "badge": "Exercise",
+      "completed": false,
+      "date": "2026-11-16",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795070593099"
+    },
+    {
+      "title": "Overall body workout",
+      "domain": "PHYSICAL_FITNESS",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ef4444",
+      "badge": "Exercise",
+      "completed": false,
+      "date": "2026-11-17",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795070593099"
+    },
+    {
+      "title": "Overall body workout",
+      "domain": "PHYSICAL_FITNESS",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ef4444",
+      "badge": "Exercise",
+      "completed": false,
+      "date": "2026-11-19",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795070593099"
+    },
+    {
+      "title": "Overall body workout",
+      "domain": "PHYSICAL_FITNESS",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ef4444",
+      "badge": "Exercise",
+      "completed": false,
+      "date": "2026-11-20",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795070593099"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
