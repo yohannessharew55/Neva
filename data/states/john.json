@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 5,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -116,344 +116,7 @@
       }
     }
   ],
-  "tasks": [
-    {
-      "domain": "CHESS",
-      "title": "Aagards calculation",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": true,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "priority": "DEEP_WORK",
-      "checklist": [
-        {
-          "id": "c-1795037051714-0-0",
-          "text": "Initial setup & context",
-          "done": true
-        },
-        {
-          "id": "c-1795037051714-0-1",
-          "text": "High focus execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795037051713-0-i903",
-      "date": "2026-11-19",
-      "dayOfWeek": 4
-    },
-    {
-      "id": "stream-slot-chess-6-0",
-      "title": "Rapid Practice with Engine Review",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 6,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-6-0-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-6-0-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-15",
-      "checklist": [],
-      "notes": "Do it guler mato (Weekly Routine)",
-      "id": "task-1795040243333"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Do it guler mato (Weekly Routine)",
-      "id": "task-1795040243334"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-18",
-      "checklist": [],
-      "notes": "Do it guler mato (Weekly Routine)",
-      "id": "task-1795040243334"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Do it guler mato (Weekly Routine)",
-      "id": "task-1795040243334"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Do it guler mato (Weekly Routine)",
-      "id": "task-1795040243334"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-16",
-      "dayOfWeek": 1,
-      "id": "task-1795040550302"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-17",
-      "dayOfWeek": 2,
-      "id": "task-1795040550302"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-18",
-      "dayOfWeek": 3,
-      "id": "task-1795040550302"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-19",
-      "dayOfWeek": 4,
-      "id": "task-1795040550302"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-20",
-      "dayOfWeek": 5,
-      "id": "task-1795040550302"
-    },
-    {
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": true,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-21",
-      "dayOfWeek": 6,
-      "id": "task-1795040550302"
-    },
-    {
-      "id": "stream-slot-trading-1-0",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 1,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-1-0-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-1-0-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-trading-2-1",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 2,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-2-1-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-2-1-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-trading-3-2",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 3,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-3-2-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-3-2-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-trading-4-3",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 4,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-4-3-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-4-3-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-trading-5-4",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 5,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-5-4-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-5-4-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-trading-6-5",
-      "title": "London / NY Open Execution Session",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 6,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-trading-6-5-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-trading-6-5-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    }
-  ],
+  "tasks": [],
   "workouts": [
     {
       "id": "wo-1",
@@ -541,13 +204,11 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 5,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Sat 08:00 AM: Rapid Practice with Engine Review (45m)"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -562,7 +223,7 @@
     "art": {
       "id": "art",
       "title": "Art & Painting",
-      "color": "#10b981",
+      "color": "#e11d48",
       "weeklyTargetHours": 5,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
@@ -627,14 +288,7 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Mon 08:00 AM: London / NY Open Execution Session (60m)",
-        "Tue 08:00 AM: London / NY Open Execution Session (60m)",
-        "Wed 08:00 AM: London / NY Open Execution Session (60m)",
-        "Thu 08:00 AM: London / NY Open Execution Session (60m)",
-        "Fri 08:00 AM: London / NY Open Execution Session (60m)",
-        "Sat 08:00 AM: London / NY Open Execution Session (60m)"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -688,7 +342,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "sky",
+  "dailyStickyColor": "canary",
   "iosNotes": [
     {
       "id": "note-1",
@@ -696,7 +350,7 @@
       "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
       "folder": "Work",
       "pinned": true,
-      "updatedAt": "2026-11-16T18:53:25.570Z"
+      "updatedAt": "2026-11-19T05:41:47.609Z"
     },
     {
       "id": "note-2",
@@ -704,7 +358,7 @@
       "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
       "folder": "Ideas",
       "pinned": false,
-      "updatedAt": "2026-11-15T19:53:25.571Z"
+      "updatedAt": "2026-11-18T06:41:47.609Z"
     },
     {
       "id": "note-3",
@@ -712,7 +366,7 @@
       "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
       "folder": "Work",
       "pinned": false,
-      "updatedAt": "2026-11-14T19:53:25.571Z"
+      "updatedAt": "2026-11-17T06:41:47.609Z"
     }
   ]
 }
