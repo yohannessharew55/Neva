@@ -264,7 +264,7 @@
       "domain": "GUITAR",
       "startTime": "09:00",
       "durationMin": 180,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "id": "task-1795208974194-1-ozfv",
       "date": "2026-11-21",
@@ -275,7 +275,7 @@
       "title": "finger exercises ",
       "startTime": "03:30 PM",
       "durationMin": 10,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
