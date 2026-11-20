@@ -288,58 +288,6 @@
           "done": false
         }
       ]
-    },
-    {
-      "title": "Travis picking",
-      "domain": "GUITAR",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#ec4899",
-      "badge": "Music",
-      "completed": false,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070834904"
-    },
-    {
-      "title": "Travis picking",
-      "domain": "GUITAR",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#ec4899",
-      "badge": "Music",
-      "completed": false,
-      "date": "2026-11-18",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070834904"
-    },
-    {
-      "title": "Travis picking",
-      "domain": "GUITAR",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#ec4899",
-      "badge": "Music",
-      "completed": false,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070834904"
-    },
-    {
-      "title": "Travis picking",
-      "domain": "GUITAR",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#ec4899",
-      "badge": "Music",
-      "completed": false,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070834904"
     }
   ],
   "workouts": [
@@ -573,7 +521,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "canary",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
