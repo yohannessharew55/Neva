@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Play, Pause, Clock, RotateCcw,
   Palette, Music, Swords, ChessKnight, Building2, TrendingUp,
   Shield, ChevronRight, ChevronDown, ChevronUp, Dumbbell, BookOpen, Settings, Layers, Sparkles,
-  ExternalLink, ChevronLeft, Zap
+  ExternalLink, Zap
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -41,8 +41,6 @@ export const TodayCockpitV2: React.FC = () => {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [isPillarsExpanded, setIsPillarsExpanded] = useState(false);
-  const [selectedFocusCategory, setSelectedFocusCategory] = useState<string | null>(null);
-  const [focusTaskIndex, setFocusTaskIndex] = useState(0);
   const [customDuration, setCustomDuration] = useState<number | null>(null);
 
   const getDomainTypesForCat = (catId: string): DomainType[] => {
@@ -116,14 +114,20 @@ export const TodayCockpitV2: React.FC = () => {
       }
     }
     switch (task.domain) {
-      case 'PHYSICAL_FITNESS': return 'exercise';
+      case 'PHYSICAL_FITNESS':
+      case 'EXERCISE': return 'exercise';
       case 'CHESS': return 'chess';
-      case 'OIL_PAINTING': return 'art';
-      case 'GUITAR': return 'music';
+      case 'OIL_PAINTING':
+      case 'ART': return 'art';
+      case 'GUITAR':
+      case 'MUSIC': return 'music';
       case 'ARCHITECTURE_DESIGN':
-      case 'SITE_SUPERVISION': return 'architecture';
-      case 'FOREX_TRADING': return 'trading';
-      case 'DEVOTION_PRAYER': return 'devotion';
+      case 'SITE_SUPERVISION':
+      case 'ARCHITECTURE': return 'architecture';
+      case 'FOREX_TRADING':
+      case 'TRADING': return 'trading';
+      case 'DEVOTION_PRAYER':
+      case 'DEVOTION': return 'devotion';
       default: return 'buffer';
     }
   };
@@ -151,32 +155,48 @@ export const TodayCockpitV2: React.FC = () => {
     return hours * 60 + minutes;
   };
 
-  // Up Next / Active task:
-  // Dynamically points to the first uncompleted task of the top-most category in the sticky note!
-  // If Music & Guitar is dragged above Chess, it picks Music & Guitar (e.g. warmup exercise). If Chess is dragged to top, it picks Chess!
-  let computedNextTask: ScheduleTask | undefined;
-  // Active categories that have tasks scheduled for today
-  const categoriesWithTodayTasks = orderedCategoryKeys.filter((catKey) => {
-    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey);
+  // Up Next Focus Task:
+  // Automatically determined and changes dynamically based on the current time and main category priorities!
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const getCategoryOrderIndex = (task: ScheduleTask): number => {
+    const catKey = getCategoryKeyForTask(task);
+    const idx = orderedCategoryKeys.indexOf(catKey);
+    return idx === -1 ? 999 : idx;
+  };
+
+  // Find uncompleted tasks for today
+  const uncompletedTasks = dayTasks.filter((t) => !t.completed);
+
+  // Automatically determine the next upcoming task:
+  // 1. Prioritize tasks starting within 30 min ago or upcoming today (chronological)
+  // 2. Otherwise sort by sticky note category hierarchy
+  // 3. Within same category, sort by start time
+  const sortedPendingTasks = [...uncompletedTasks].sort((a, b) => {
+    const timeA = parseTimeToMinutes(a.startTime);
+    const timeB = parseTimeToMinutes(b.startTime);
+
+    const aIsNowOrFuture = timeA > 0 && timeA >= (currentMinutes - 30);
+    const bIsNowOrFuture = timeB > 0 && timeB >= (currentMinutes - 30);
+
+    if (aIsNowOrFuture && !bIsNowOrFuture) return -1;
+    if (!aIsNowOrFuture && bIsNowOrFuture) return 1;
+
+    const catA = getCategoryOrderIndex(a);
+    const catB = getCategoryOrderIndex(b);
+    if (catA !== catB) return catA - catB;
+
+    return timeA - timeB;
   });
 
-  // Default to top-most category with pending tasks, or fallback
-  const defaultCategoryKey = orderedCategoryKeys.find((catKey) => {
-    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey && !t.completed);
-  }) || categoriesWithTodayTasks[0] || 'chess';
+  // Automatically selected active task and its main category
+  const activeFocusTask = sortedPendingTasks[0] || dayTasks.find((t) => !t.completed) || dayTasks[0];
+  const activeFocusCategoryKey = activeFocusTask ? getCategoryKeyForTask(activeFocusTask) : (orderedCategoryKeys[0] || 'chess');
 
-  const activeFocusCategoryKey = selectedFocusCategory && categoriesWithTodayTasks.includes(selectedFocusCategory)
-    ? selectedFocusCategory
-    : defaultCategoryKey;
-
-  // Tasks in this active focus category for today
-  const tasksInActiveCategory = dayTasks.filter((t) => getCategoryKeyForTask(t) === activeFocusCategoryKey);
-  const pendingTasksInActiveCategory = tasksInActiveCategory.filter((t) => !t.completed);
-  const candidateTasks = pendingTasksInActiveCategory.length > 0 ? pendingTasksInActiveCategory : tasksInActiveCategory;
-  candidateTasks.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
-
-  const safeTaskIndex = Math.min(focusTaskIndex, Math.max(0, candidateTasks.length - 1));
-  const activeFocusTask = candidateTasks[safeTaskIndex] || dayTasks.find((t) => !t.completed) || dayTasks[0];
+  // Reset custom duration when the active task changes automatically
+  useEffect(() => {
+    setCustomDuration(null);
+  }, [activeFocusTask?.id]);
 
   const getCategoryTheme = (catKey: string) => {
     switch (catKey) {
@@ -339,41 +359,23 @@ export const TodayCockpitV2: React.FC = () => {
           </div>
 
           <div className="relative z-10 space-y-3.5">
-            {/* 1. Category Switcher Chips (Changes based on main categories!) */}
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
-                {categoriesWithTodayTasks.map((catKey) => {
-                  const catTheme = getCategoryTheme(catKey);
-                  const CatIcon = catTheme.Icon;
-                  const isSelected = catKey === activeFocusCategoryKey;
-                  return (
-                    <button
-                      key={catKey}
-                      type="button"
-                      onClick={() => {
-                        setSelectedFocusCategory(catKey);
-                        setFocusTaskIndex(0);
-                        setCustomDuration(null);
-                        try { soundEngine.playPencil(); } catch {}
-                      }}
-                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
-                        isSelected
-                          ? `${catTheme.badgeBg} shadow-xs scale-102 ring-1 ${catTheme.borderColor}`
-                          : 'bg-black/5 dark:bg-white/5 opacity-60 hover:opacity-100 hover:bg-black/10'
-                      }`}
-                    >
-                      <CatIcon size={12} strokeWidth={2.5} />
-                      <span>{catTheme.title}</span>
-                    </button>
-                  );
-                })}
+            {/* 1. Header: Automatic Category Badge & Direct Stream Link */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-2xs transition-all ${currentTheme.badgeBg}`}>
+                  <WatermarkIcon size={13} strokeWidth={2.5} />
+                  <span>{currentTheme.title}</span>
+                </span>
+                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:inline">
+                  {language === 'am' ? 'ቀጣይ የትኩረት ብሎክ' : 'Up Next Focus Block'}
+                </span>
               </div>
 
               {/* Direct Link to Category Master Page */}
               <button
                 type="button"
                 onClick={() => setSelectedCategoryId(activeFocusCategoryKey)}
-                className="text-[10px] font-mono font-bold opacity-60 hover:opacity-100 hover:text-[#0082ff] flex items-center gap-1 transition cursor-pointer shrink-0 ml-auto"
+                className="text-[10px] font-mono font-bold opacity-60 hover:opacity-100 hover:text-[#0082ff] flex items-center gap-1 transition cursor-pointer shrink-0"
                 title={language === 'am' ? `${currentTheme.title} ገጽ ክፈት` : `Open ${currentTheme.title} Stream`}
               >
                 <span>{language === 'am' ? 'ወደ ዘርፍ' : 'Stream'}</span>
@@ -385,11 +387,10 @@ export const TodayCockpitV2: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    {language === 'am' ? 'ቀጣይ የትኩረት ብሎክ' : 'Up Next Today'}
+                  <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 sm:hidden">
+                    {language === 'am' ? 'ቀጣይ የትኩረት ብሎክ' : 'Up Next'}
                   </span>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span className={`text-[10px] font-bold ${currentTheme.accentText}`}>
+                  <span className={`text-[11px] font-bold ${currentTheme.accentText}`}>
                     {currentTheme.tagline}
                   </span>
                 </div>
@@ -407,35 +408,6 @@ export const TodayCockpitV2: React.FC = () => {
                   <span>
                     {(customDuration || activeFocusTask.durationMin)} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
                   </span>
-                  
-                  {/* Task Cycler if multiple tasks in this category */}
-                  {candidateTasks.length > 1 && (
-                    <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 rounded-lg px-1.5 py-0.5 ml-1 text-[10px] font-mono font-bold">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFocusTaskIndex((prev) => (prev > 0 ? prev - 1 : candidateTasks.length - 1));
-                          setCustomDuration(null);
-                        }}
-                        className="opacity-60 hover:opacity-100 cursor-pointer p-0.5"
-                        title="Previous task"
-                      >
-                        <ChevronLeft size={11} />
-                      </button>
-                      <span>{safeTaskIndex + 1}/{candidateTasks.length}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFocusTaskIndex((prev) => (prev < candidateTasks.length - 1 ? prev + 1 : 0));
-                          setCustomDuration(null);
-                        }}
-                        className="opacity-60 hover:opacity-100 cursor-pointer p-0.5"
-                        title="Next task"
-                      >
-                        <ChevronRight size={11} />
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
 
