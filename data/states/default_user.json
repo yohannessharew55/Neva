@@ -260,6 +260,17 @@
       "dayOfWeek": 6
     },
     {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1795208974194-1-ozfv",
+      "date": "2026-11-21",
+      "dayOfWeek": 6
+    },
+    {
       "domain": "GUITAR",
       "title": "finger exercises ",
       "startTime": "03:30 PM",
@@ -280,17 +291,6 @@
         }
       ],
       "id": "task-1795208974194-3-h3kr",
-      "date": "2026-11-21",
-      "dayOfWeek": 6
-    },
-    {
-      "title": "Acoustic Guitar & Repertoire",
-      "domain": "GUITAR",
-      "startTime": "09:00",
-      "durationMin": 180,
-      "completed": false,
-      "color": "#ec4899",
-      "id": "task-1795208974194-1-ozfv",
       "date": "2026-11-21",
       "dayOfWeek": 6
     }
