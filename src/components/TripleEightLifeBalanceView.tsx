@@ -1,20 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { 
   PieChart, Clock, Moon, Briefcase, Heart, 
-  Palette, Music, Swords, Sparkles, Plus, 
+  Palette, Music, Swords, ChessKnight, Sparkles, Plus, 
   Trash2, Play, CheckCircle2, Sun, Zap, 
   ChevronRight, Calendar, ArrowLeft, SlidersHorizontal,
   Dumbbell, BookOpen, Coffee, Info,
-  Edit2, Check, X, RotateCcw, ChevronDown, ChevronUp, Settings
+  Edit2, Check, X, RotateCcw, ChevronDown, ChevronUp, Settings,
+  Building2, TrendingUp, Layers
 } from 'lucide-react';
-import { useLivotion } from '../context/LivotionContext';
+import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { gregorianToEthiopian, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
 
-// Triple 8 Pillars
-export type TripleEightPillar = 'sleep' | 'career' | 'living';
+// Triple 8 Pillars: 8h Career • 8h Hobby • 8h Living = 24h Equilibrium
+export type TripleEightPillar = 'career' | 'hobby' | 'living';
 
 export interface ActivitySlice {
   id: string;
@@ -36,15 +37,21 @@ export interface QuickPreset {
   iconType: 'swords' | 'music' | 'dumbbell' | 'palette' | 'book' | 'sparkles' | 'coffee' | 'briefcase' | 'zap';
 }
 
-const DEFAULT_LIVING_PRESETS: QuickPreset[] = [
-  { id: 'p-chess', label: 'Chess', hours: 3.0, domain: 'CHESS', categoryId: 'chess', color: '#8b5cf6', iconType: 'swords' },
-  { id: 'p-music', label: 'Music', hours: 3.0, domain: 'GUITAR', categoryId: 'music', color: '#ec4899', iconType: 'music' },
-  { id: 'p-gym', label: 'Gym', hours: 1.0, domain: 'PHYSICAL_FITNESS', categoryId: 'exercise', color: '#ef4444', iconType: 'dumbbell' },
-];
-
 const DEFAULT_CAREER_PRESETS: QuickPreset[] = [
   { id: 'p-arch', label: 'Architecture', hours: 2.0, domain: 'ARCHITECTURE_DESIGN', categoryId: 'architecture', color: '#0082ff', iconType: 'briefcase' },
   { id: 'p-trade', label: 'Trading', hours: 1.0, domain: 'FOREX_TRADING', categoryId: 'trading', color: '#10b981', iconType: 'zap' },
+];
+
+const DEFAULT_HOBBY_PRESETS: QuickPreset[] = [
+  { id: 'p-chess', label: 'Chess', hours: 3.0, domain: 'CHESS', categoryId: 'chess', color: '#8b5cf6', iconType: 'swords' },
+  { id: 'p-music', label: 'Music & Guitar', hours: 2.5, domain: 'GUITAR', categoryId: 'music', color: '#ec4899', iconType: 'music' },
+  { id: 'p-art', label: 'Art & Painting', hours: 2.0, domain: 'OIL_PAINTING', categoryId: 'art', color: '#f59e0b', iconType: 'palette' },
+];
+
+const DEFAULT_LIVING_PRESETS: QuickPreset[] = [
+  { id: 'p-gym', label: 'Gym & Fitness', hours: 1.0, domain: 'PHYSICAL_FITNESS', categoryId: 'exercise', color: '#ef4444', iconType: 'dumbbell' },
+  { id: 'p-devotion', label: 'Devotion', hours: 0.75, domain: 'DEVOTION_PRAYER', categoryId: 'devotion', color: '#06b6d4', iconType: 'book' },
+  { id: 'p-sleep', label: 'Sleep & Recovery', hours: 6.25, domain: 'OPEN_MULTIPURPOSE', categoryId: 'buffer', color: '#6366f1', iconType: 'sparkles' },
 ];
 
 export const TripleEightLifeBalanceView: React.FC = () => {
@@ -53,6 +60,8 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     getDaySchedule,
     categoryPlans,
     categoryOrder,
+    updateCategoryPlan,
+    openManageCategoriesModal,
     addTask, 
     updateTask,
     deleteTask, 
@@ -99,45 +108,34 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     return tasks;
   }, [daySchedule, tasks]);
 
-  // Targets for the 3 Pillars (default 8.0h each, user customizable)
-  const [pillarTargets, setPillarTargets] = useState<{ sleep: number; career: number; living: number }>(() => {
+  // Targets for the 3 Golden Pillars (default 8.0h each, summing to exactly 24.0h)
+  const [pillarTargets, setPillarTargets] = useState<{ career: number; hobby: number; living: number }>(() => {
     try {
-      const saved = localStorage.getItem('neva_triple8_targets_v1');
+      const saved = localStorage.getItem('neva_triple8_targets_v2');
       if (saved) return JSON.parse(saved);
+      const oldSaved = localStorage.getItem('neva_triple8_targets_v1');
+      if (oldSaved) {
+        const old = JSON.parse(oldSaved);
+        return { career: old.career || 8.0, hobby: 8.0, living: old.living || 8.0 };
+      }
     } catch {}
-    return { sleep: 8.0, career: 8.0, living: 8.0 };
+    return { career: 8.0, hobby: 8.0, living: 8.0 };
   });
 
-  const updatePillarTarget = (pillar: 'sleep' | 'career' | 'living', hours: number) => {
+  const updatePillarTarget = (pillar: 'career' | 'hobby' | 'living', hours: number) => {
     const clamped = Math.max(0.5, Math.min(18, parseFloat(hours.toFixed(1))));
     const next = { ...pillarTargets, [pillar]: clamped };
     setPillarTargets(next);
     try {
-      localStorage.setItem('neva_triple8_targets_v1', JSON.stringify(next));
+      localStorage.setItem('neva_triple8_targets_v2', JSON.stringify(next));
     } catch {}
     try { soundEngine.playPencil(); } catch {}
   };
 
-  // Quick Add Presets State (User Customizable)
-  const [livingPresets, setLivingPresets] = useState<QuickPreset[]>(() => {
-    try {
-      const saved = localStorage.getItem('neva_triple8_living_presets_v1');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return DEFAULT_LIVING_PRESETS;
-  });
-
-  const saveLivingPresets = (next: QuickPreset[]) => {
-    setLivingPresets(next);
-    try {
-      localStorage.setItem('neva_triple8_living_presets_v1', JSON.stringify(next));
-    } catch {}
-    try { soundEngine.playPencil(); } catch {}
-  };
-
+  // Quick Add Presets State for the 3 Pillars
   const [careerPresets, setCareerPresets] = useState<QuickPreset[]>(() => {
     try {
-      const saved = localStorage.getItem('neva_triple8_career_presets_v1');
+      const saved = localStorage.getItem('neva_triple8_career_presets_v2');
       if (saved) return JSON.parse(saved);
     } catch {}
     return DEFAULT_CAREER_PRESETS;
@@ -146,24 +144,44 @@ export const TripleEightLifeBalanceView: React.FC = () => {
   const saveCareerPresets = (next: QuickPreset[]) => {
     setCareerPresets(next);
     try {
-      localStorage.setItem('neva_triple8_career_presets_v1', JSON.stringify(next));
+      localStorage.setItem('neva_triple8_career_presets_v2', JSON.stringify(next));
     } catch {}
     try { soundEngine.playPencil(); } catch {}
   };
 
-  // Editing UI states for Pillar 3 (Living)
-  const [isEditingLivingTarget, setIsEditingLivingTarget] = useState(false);
-  const [isEditingLivingPresets, setIsEditingLivingPresets] = useState(false);
-  const [isExpandedLivingTasks, setIsExpandedLivingTasks] = useState(false);
-  const [customLivingTitle, setCustomLivingTitle] = useState('');
-  const [customLivingHours, setCustomLivingHours] = useState('1.0');
-  const [customLivingCategory, setCustomLivingCategory] = useState('chess');
-  const [newPresetLabel, setNewPresetLabel] = useState('');
-  const [newPresetHours, setNewPresetHours] = useState('2.0');
-  const [newPresetCategory, setNewPresetCategory] = useState('chess');
+  const [hobbyPresets, setHobbyPresets] = useState<QuickPreset[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_triple8_hobby_presets_v2');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_HOBBY_PRESETS;
+  });
 
-  // Editing UI states for Pillar 1 (Sleep) & Pillar 2 (Career)
-  const [isEditingSleepTarget, setIsEditingSleepTarget] = useState(false);
+  const saveHobbyPresets = (next: QuickPreset[]) => {
+    setHobbyPresets(next);
+    try {
+      localStorage.setItem('neva_triple8_hobby_presets_v2', JSON.stringify(next));
+    } catch {}
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const [livingPresets, setLivingPresets] = useState<QuickPreset[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_triple8_living_presets_v2');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_LIVING_PRESETS;
+  });
+
+  const saveLivingPresets = (next: QuickPreset[]) => {
+    setLivingPresets(next);
+    try {
+      localStorage.setItem('neva_triple8_living_presets_v2', JSON.stringify(next));
+    } catch {}
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  // Editing UI states for Pillar 1 (Career)
   const [isEditingCareerTarget, setIsEditingCareerTarget] = useState(false);
   const [isEditingCareerPresets, setIsEditingCareerPresets] = useState(false);
   const [isExpandedCareerTasks, setIsExpandedCareerTasks] = useState(false);
@@ -171,31 +189,43 @@ export const TripleEightLifeBalanceView: React.FC = () => {
   const [customCareerHours, setCustomCareerHours] = useState('1.5');
   const [customCareerCategory, setCustomCareerCategory] = useState('architecture');
 
-  // Quick Add Activity Modal State
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newHours, setNewHours] = useState('2.0');
-  const [newPillar, setNewPillar] = useState<TripleEightPillar>('living');
-  const [newCategoryType, setNewCategoryType] = useState('chess');
+  // Editing UI states for Pillar 2 (Hobby)
+  const [isEditingHobbyTarget, setIsEditingHobbyTarget] = useState(false);
+  const [isEditingHobbyPresets, setIsEditingHobbyPresets] = useState(false);
+  const [isExpandedHobbyTasks, setIsExpandedHobbyTasks] = useState(false);
+  const [customHobbyTitle, setCustomHobbyTitle] = useState('');
+  const [customHobbyHours, setCustomHobbyHours] = useState('2.0');
+  const [customHobbyCategory, setCustomHobbyCategory] = useState('chess');
+
+  // Editing UI states for Pillar 3 (Living)
+  const [isEditingLivingTarget, setIsEditingLivingTarget] = useState(false);
+  const [isEditingLivingPresets, setIsEditingLivingPresets] = useState(false);
+  const [isExpandedLivingTasks, setIsExpandedLivingTasks] = useState(false);
+  const [customLivingTitle, setCustomLivingTitle] = useState('');
+  const [customLivingHours, setCustomLivingHours] = useState('1.0');
+  const [customLivingCategory, setCustomLivingCategory] = useState('exercise');
 
   // Ethiopian Date string for today
   const ethDate = gregorianToEthiopian(today);
   const dayNameEn = dayNames[selectedDayIndex];
-  const dayNameAm = AMHARIC_DAYS[selectedDayIndex]?.am || dayNameEn;
 
-  // Helper to map a task to its Main Stream Subject / Category
+  // Helper to map a task to its Main Stream Subject / Category and resolved Triple-8 Pillar
   const getStreamForTask = (task: ScheduleTask): { streamId: string; streamTitle: string; pillar: TripleEightPillar; color: string; icon: any } => {
+    // 1. Badge exact or partial match with categoryPlans
     if (task.badge) {
       const badgeLower = task.badge.toLowerCase();
       for (const [id, plan] of Object.entries(categoryPlans || {})) {
-        if (badgeLower.includes(id) || plan.title.toLowerCase().includes(badgeLower)) {
-          const isCareer = id === 'architecture' || id === 'trading' || id === 'career' || id === 'work';
+        if (badgeLower.includes(id.toLowerCase()) || plan.title.toLowerCase().includes(badgeLower)) {
+          const streamType: TripleEightPillar = plan.triple8Type || (
+            ['architecture', 'trading', 'career', 'work'].includes(id) ? 'career' :
+            ['chess', 'music', 'art', 'guitar', 'painting'].includes(id) ? 'hobby' : 'living'
+          );
           return {
             streamId: id,
             streamTitle: plan.title,
-            pillar: isCareer ? 'career' : 'living',
+            pillar: streamType,
             color: plan.color,
-            icon: isCareer ? Briefcase : (id === 'chess' ? Swords : id === 'music' ? Music : Sparkles)
+            icon: streamType === 'career' ? Briefcase : streamType === 'hobby' ? (id === 'chess' ? ChessKnight : id === 'music' ? Music : Palette) : (id === 'exercise' ? Dumbbell : id === 'devotion' ? BookOpen : Heart)
           };
         }
       }
@@ -204,91 +234,33 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     const d = (task.domain || '').toUpperCase();
     const tLower = (task.title || '').toLowerCase();
 
-    // Living: Chess
-    if (d.includes('CHESS') || tLower.includes('chess') || tLower.includes('puzzle') || tLower.includes('aagard')) {
-      const plan = categoryPlans?.['chess'];
-      return {
-        streamId: 'chess',
-        streamTitle: plan?.title || (language === 'am' ? 'ቼስ' : 'Chess'),
-        pillar: 'living',
-        color: plan?.color || '#8b5cf6',
-        icon: Swords
-      };
+    // 2. Iterate each category plan to find matched subject
+    for (const [id, plan] of Object.entries(categoryPlans || {})) {
+      const pTitle = plan.title.toLowerCase();
+      if (
+        tLower.includes(pTitle) ||
+        (id === 'chess' && (d.includes('CHESS') || tLower.includes('chess') || tLower.includes('puzzle') || tLower.includes('aagard'))) ||
+        (id === 'music' && (d.includes('GUITAR') || d.includes('MUSIC') || tLower.includes('music') || tLower.includes('guitar') || tLower.includes('warmup') || tLower.includes('lick'))) ||
+        (id === 'exercise' && (d.includes('FITNESS') || d.includes('EXERCISE') || tLower.includes('gym') || tLower.includes('workout'))) ||
+        (id === 'art' && (d.includes('PAINTING') || d.includes('ART') || tLower.includes('art'))) ||
+        (id === 'devotion' && (d.includes('DEVOTION') || d.includes('PRAYER') || tLower.includes('prayer') || tLower.includes('scripture'))) ||
+        (id === 'trading' && (d.includes('TRADING') || d.includes('FOREX') || tLower.includes('trading') || tLower.includes('market'))) ||
+        (id === 'architecture' && (d.includes('ARCHITECTURE') || d.includes('SITE') || tLower.includes('arch') || tLower.includes('design') || tLower.includes('client')))
+      ) {
+        const streamType: TripleEightPillar = plan.triple8Type || (
+          ['architecture', 'trading', 'career', 'work'].includes(id) ? 'career' :
+          ['chess', 'music', 'art', 'guitar', 'painting'].includes(id) ? 'hobby' : 'living'
+        );
+        return {
+          streamId: id,
+          streamTitle: plan.title,
+          pillar: streamType,
+          color: plan.color,
+          icon: streamType === 'career' ? Briefcase : streamType === 'hobby' ? (id === 'chess' ? ChessKnight : id === 'music' ? Music : Palette) : (id === 'exercise' ? Dumbbell : id === 'devotion' ? BookOpen : Heart)
+        };
+      }
     }
 
-    // Living: Music & Guitar
-    if (d.includes('GUITAR') || d.includes('MUSIC') || tLower.includes('music') || tLower.includes('guitar') || tLower.includes('warmup') || tLower.includes('lick') || tLower.includes('song') || tLower.includes('freeplay')) {
-      const plan = categoryPlans?.['music'];
-      return {
-        streamId: 'music',
-        streamTitle: plan?.title || (language === 'am' ? 'ሙዚቃና ጊታር' : 'Music & Guitar'),
-        pillar: 'living',
-        color: plan?.color || '#ec4899',
-        icon: Music
-      };
-    }
-
-    // Living: Fitness / Exercise
-    if (d.includes('FITNESS') || d.includes('EXERCISE') || tLower.includes('gym') || tLower.includes('workout')) {
-      const plan = categoryPlans?.['exercise'];
-      return {
-        streamId: 'exercise',
-        streamTitle: plan?.title || (language === 'am' ? 'ስፖርትና ብቃት' : 'Exercise & Fitness'),
-        pillar: 'living',
-        color: plan?.color || '#ef4444',
-        icon: Dumbbell
-      };
-    }
-
-    // Living: Art
-    if (d.includes('PAINTING') || d.includes('ART') || tLower.includes('art')) {
-      const plan = categoryPlans?.['art'];
-      return {
-        streamId: 'art',
-        streamTitle: plan?.title || (language === 'am' ? 'ስዕልና ጥበብ' : 'Art & Painting'),
-        pillar: 'living',
-        color: plan?.color || '#f59e0b',
-        icon: Palette
-      };
-    }
-
-    // Living: Devotion & Prayer
-    if (d.includes('DEVOTION') || d.includes('PRAYER') || tLower.includes('prayer') || tLower.includes('scripture')) {
-      const plan = categoryPlans?.['devotion'];
-      return {
-        streamId: 'devotion',
-        streamTitle: plan?.title || (language === 'am' ? 'መንፈሳዊ ጸሎት' : 'Devotion & Prayer'),
-        pillar: 'living',
-        color: plan?.color || '#06b6d4',
-        icon: BookOpen
-      };
-    }
-
-    // Career: Trading
-    if (d.includes('TRADING') || d.includes('FOREX') || tLower.includes('trading') || tLower.includes('market')) {
-      const plan = categoryPlans?.['trading'];
-      return {
-        streamId: 'trading',
-        streamTitle: plan?.title || (language === 'am' ? 'ትሬዲንግ' : 'Trading & Markets'),
-        pillar: 'career',
-        color: plan?.color || '#10b981',
-        icon: Zap
-      };
-    }
-
-    // Career: Architecture / Design / Work
-    if (d.includes('ARCHITECTURE') || d.includes('SITE') || tLower.includes('arch') || tLower.includes('client') || tLower.includes('code') || tLower.includes('career') || tLower.includes('work')) {
-      const plan = categoryPlans?.['architecture'];
-      return {
-        streamId: 'architecture',
-        streamTitle: plan?.title || (language === 'am' ? 'አርክቴክቸርና ዲዛይን' : 'Architecture & Design'),
-        pillar: 'career',
-        color: plan?.color || '#0082ff',
-        icon: Briefcase
-      };
-    }
-
-    // Default Living buffer
     return {
       streamId: 'living-other',
       streamTitle: language === 'am' ? 'ዕለታዊ እንቅስቃሴ' : 'Living & Leisure',
@@ -298,13 +270,15 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     };
   };
 
-  // Compile All Slices for the 24-Hour Day: MAIN STREAMS ONLY (No over-detailed micro-tasks)
+  // Compile All Slices for the 24-Hour Day: Syncs strictly with each stream's triple8Type
   const { slices, pillarTotals, balanceScore } = useMemo(() => {
     let careerTotal = 0;
+    let hobbyTotal = 0;
     let livingTotal = 0;
 
-    const careerStreamMap = new Map<string, { id: string; name: string; pillar: TripleEightPillar; hours: number; color: string; icon: any }>();
-    const livingStreamMap = new Map<string, { id: string; name: string; pillar: TripleEightPillar; hours: number; color: string; icon: any }>();
+    const careerStreamMap = new Map<string, ActivitySlice>();
+    const hobbyStreamMap = new Map<string, ActivitySlice>();
+    const livingStreamMap = new Map<string, ActivitySlice>();
 
     activeDayTasks.forEach((t) => {
       const durHours = (t.durationMin || 60) / 60;
@@ -324,6 +298,20 @@ export const TripleEightLifeBalanceView: React.FC = () => {
         } else {
           careerStreamMap.get(streamId)!.hours += durHours;
         }
+      } else if (pillar === 'hobby') {
+        hobbyTotal += durHours;
+        if (!hobbyStreamMap.has(streamId)) {
+          hobbyStreamMap.set(streamId, {
+            id: `stream-${streamId}`,
+            name: streamTitle,
+            pillar: 'hobby',
+            hours: durHours,
+            color,
+            icon
+          });
+        } else {
+          hobbyStreamMap.get(streamId)!.hours += durHours;
+        }
       } else {
         livingTotal += durHours;
         if (!livingStreamMap.has(streamId)) {
@@ -341,60 +329,74 @@ export const TripleEightLifeBalanceView: React.FC = () => {
       }
     });
 
-    // Compute unallocated buffers according to user targets
-    const careerRemaining = Math.max(0, pillarTargets.career - careerTotal);
-    const livingRemaining = Math.max(0, pillarTargets.living - livingTotal);
+    // Compute unallocated buffers preserving strictly 24.0 total hours
+    const totalScheduledHours = careerTotal + hobbyTotal + livingTotal;
+    const availableBuffer = Math.max(0, 24.0 - totalScheduledHours);
+
+    // Compute ideal capacity targets for unallocated portions
+    const idealCareerRem = Math.max(0, pillarTargets.career - careerTotal);
+    const idealHobbyRem = Math.max(0, pillarTargets.hobby - hobbyTotal);
+    const idealLivingRem = Math.max(0, pillarTargets.living - livingTotal);
+    const idealRemSum = idealCareerRem + idealHobbyRem + idealLivingRem;
+
+    // Distribute unallocated buffer proportionally without exceeding 24h
+    let careerRemaining = 0;
+    let hobbyRemaining = 0;
+    let livingRemaining = 0;
+
+    if (availableBuffer > 0) {
+      if (idealRemSum > 0) {
+        careerRemaining = (idealCareerRem / idealRemSum) * availableBuffer;
+        hobbyRemaining = (idealHobbyRem / idealRemSum) * availableBuffer;
+        livingRemaining = (idealLivingRem / idealRemSum) * availableBuffer;
+      } else {
+        // Equal split if all targets reached but day has spare buffer
+        careerRemaining = availableBuffer / 3;
+        hobbyRemaining = availableBuffer / 3;
+        livingRemaining = availableBuffer / 3;
+      }
+    }
 
     let rawSlices: ActivitySlice[] = [];
 
     if (streamViewMode === 'pillars') {
-      // 3 Golden Pillars View (Sleep 8h • Career 8h • Living 8h)
+      // 3 Golden Pillars View (Career 8h • Hobby 8h • Living 8h = 24h)
       rawSlices = [
         {
-          id: 'pillar-sleep',
-          name: language === 'am' ? 'ምሰሶ 1: እንቅልፍና እረፍት' : 'Pillar 1: Sleep & Restoration',
-          pillar: 'sleep',
-          hours: pillarTargets.sleep,
-          color: '#4f46e5',
-          icon: Moon
-        },
-        {
           id: 'pillar-career',
-          name: language === 'am' ? 'ምሰሶ 2: ሙያና ስራ' : 'Pillar 2: Career & Craft',
+          name: language === 'am' ? 'ምሰሶ 1: ስራና ሙያ (Career 8h)' : 'Pillar 1: Career & Craft (8h)',
           pillar: 'career',
           hours: pillarTargets.career,
           color: '#0082ff',
           icon: Briefcase
         },
         {
+          id: 'pillar-hobby',
+          name: language === 'am' ? 'ምሰሶ 2: ተሰጥኦና መዝናኛ (Hobby 8h)' : 'Pillar 2: Hobbies & Passions (8h)',
+          pillar: 'hobby',
+          hours: pillarTargets.hobby,
+          color: '#8b5cf6',
+          icon: Palette
+        },
+        {
           id: 'pillar-living',
-          name: language === 'am' ? 'ምሰሶ 3: የግል ህይወትና መዝናኛ' : 'Pillar 3: Living & Vitality',
+          name: language === 'am' ? 'ምሰሶ 3: የግል ኑሮና እረፍት (Living 8h)' : 'Pillar 3: Living & Vitality (8h)',
           pillar: 'living',
           hours: pillarTargets.living,
-          color: '#ec4899',
+          color: '#10b981',
           icon: Heart
         }
       ];
     } else {
-      // Main Streams View (Aggregated Categories ONLY - Zero Granular Task Clutter)
-      // 1. Sleep Stream
-      rawSlices.push({
-        id: 'stream-sleep',
-        name: language === 'am' ? 'ዕለታዊ እንቅልፍ እና ዕረፍት' : 'Sleep & Biological Restoration',
-        pillar: 'sleep',
-        hours: pillarTargets.sleep,
-        color: '#4f46e5',
-        icon: Moon
-      });
-
-      // 2. Career Streams
+      // Main Streams View: Grouped by Career -> Hobby -> Living
+      // 1. Career Streams
       if (careerStreamMap.size > 0) {
         careerStreamMap.forEach((stream) => rawSlices.push(stream));
       }
-      if (careerRemaining > 0) {
+      if (careerRemaining > 0.05) {
         rawSlices.push({
           id: 'stream-career-capacity',
-          name: language === 'am' ? 'ክፍት የስራ ሰዓት' : 'Available Career Focus Capacity',
+          name: language === 'am' ? 'ክፍት የስራ ሰዓት' : 'Available Career Capacity',
           pillar: 'career',
           hours: careerRemaining,
           color: '#93c5fd',
@@ -402,63 +404,70 @@ export const TripleEightLifeBalanceView: React.FC = () => {
         });
       }
 
-      // 3. Living Streams (Sorted by categoryOrder)
-      const sortedLivingStreams = Array.from(livingStreamMap.values()).sort((a, b) => {
-        const idA = a.id.replace('stream-', '');
-        const idB = b.id.replace('stream-', '');
-        const idxA = categoryOrder?.indexOf(idA) ?? -1;
-        const idxB = categoryOrder?.indexOf(idB) ?? -1;
-        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        if (idxA !== -1) return -1;
-        if (idxB !== -1) return 1;
-        return 0;
-      });
+      // 2. Hobby Streams
+      if (hobbyStreamMap.size > 0) {
+        hobbyStreamMap.forEach((stream) => rawSlices.push(stream));
+      }
+      if (hobbyRemaining > 0.05) {
+        rawSlices.push({
+          id: 'stream-hobby-capacity',
+          name: language === 'am' ? 'ክፍት የተሰጥኦ ሰዓት' : 'Available Hobby Capacity',
+          pillar: 'hobby',
+          hours: hobbyRemaining,
+          color: '#d8b4fe',
+          icon: Sparkles
+        });
+      }
 
-      sortedLivingStreams.forEach((stream) => rawSlices.push(stream));
-
-      if (livingRemaining > 0) {
+      // 3. Living Streams
+      if (livingStreamMap.size > 0) {
+        livingStreamMap.forEach((stream) => rawSlices.push(stream));
+      }
+      if (livingRemaining > 0.05) {
         rawSlices.push({
           id: 'stream-living-buffer',
-          name: language === 'am' ? 'ክፍት የዕለት ፋታና እረፍት' : 'Free Leisure & Life Buffer',
+          name: language === 'am' ? 'ክፍት የዕለት ፋታና እረፍት' : 'Free Living & Rest Buffer',
           pillar: 'living',
           hours: livingRemaining,
-          color: '#fed7aa',
+          color: '#a7f3d0',
           icon: Coffee
         });
       }
     }
 
-    // Normalize slices to exactly 24.0 hours for flawless geometry
-    const totalCalculated = rawSlices.reduce((acc, s) => acc + s.hours, 0);
+    // Normalize slices to guarantee EXACTLY 24.0 hours for flawless wheel geometry
+    const totalCalculated = rawSlices.reduce((acc, s) => acc + s.hours, 0) || 24;
     const normalizedSlices = rawSlices.map(s => ({
       ...s,
-      normalizedHours: (s.hours / Math.max(1, totalCalculated)) * 24.0
+      hours: (s.hours / totalCalculated) * 24.0,
+      normalizedHours: (s.hours / totalCalculated) * 24.0
     }));
 
-    // Balance Harmony Score
-    const sleepDiff = Math.abs(pillarTargets.sleep - 8.0);
+    // Balance Harmony Score across the 3 pillars
     const careerDiff = Math.abs(careerTotal - pillarTargets.career);
+    const hobbyDiff = Math.abs(hobbyTotal - pillarTargets.hobby);
     const livingDiff = Math.abs(livingTotal - pillarTargets.living);
-    const totalDeviation = (sleepDiff + careerDiff + livingDiff) / 24.0;
+    const totalDeviation = (careerDiff + hobbyDiff + livingDiff) / 24.0;
     const score = Math.max(50, Math.round((1 - totalDeviation) * 100));
 
     return {
       slices: normalizedSlices,
       pillarTotals: {
-        sleep: pillarTargets.sleep,
         career: careerTotal,
+        hobby: hobbyTotal,
         living: livingTotal,
         careerTarget: pillarTargets.career,
+        hobbyTarget: pillarTargets.hobby,
         livingTarget: pillarTargets.living,
-        sleepTarget: pillarTargets.sleep,
         careerRemaining,
+        hobbyRemaining,
         livingRemaining
       },
       balanceScore: score
     };
-  }, [activeDayTasks, pillarTargets, streamViewMode, categoryOrder, language]);
+  }, [activeDayTasks, pillarTargets, streamViewMode, categoryOrder, language, categoryPlans]);
 
-  // Helper to generate SVG pie slice path
+  // Helper to generate SVG pie slice path with full 360 circle support
   const generatePieSlicePath = (
     centerX: number,
     centerY: number,
@@ -467,7 +476,28 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     startAngleDeg: number,
     endAngleDeg: number
   ) => {
+    const span = endAngleDeg - startAngleDeg;
+    if (span <= 0.001) return '';
+
     const toRad = (deg: number) => (deg - 90) * (Math.PI / 180);
+
+    // Full 360 circle (or nearly complete) needs two 180-deg arcs to prevent SVG collapse
+    if (span >= 359.95) {
+      const midAngle = startAngleDeg + 180;
+      const r1 = toRad(startAngleDeg);
+      const r2 = toRad(midAngle);
+      const x1 = centerX + outerRadius * Math.cos(r1);
+      const y1 = centerY + outerRadius * Math.sin(r1);
+      const x2 = centerX + outerRadius * Math.cos(r2);
+      const y2 = centerY + outerRadius * Math.sin(r2);
+      const ix1 = centerX + innerRadius * Math.cos(r1);
+      const iy1 = centerY + innerRadius * Math.sin(r1);
+      const ix2 = centerX + innerRadius * Math.cos(r2);
+      const iy2 = centerY + innerRadius * Math.sin(r2);
+
+      return `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 0 1 ${x2} ${y2} A ${outerRadius} ${outerRadius} 0 0 1 ${x1} ${y1} M ${ix1} ${iy1} A ${innerRadius} ${innerRadius} 0 0 0 ${ix2} ${iy2} A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1} Z`;
+    }
+
     const startRad = toRad(startAngleDeg);
     const endRad = toRad(endAngleDeg);
 
@@ -481,23 +511,25 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     const x4 = centerX + innerRadius * Math.cos(startRad);
     const y4 = centerY + innerRadius * Math.sin(startRad);
 
-    const largeArc = endAngleDeg - startAngleDeg > 180 ? 1 : 0;
+    const largeArc = span > 180 ? 1 : 0;
 
     return `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
   };
 
-  // Compute SVG arcs
+  // Compute SVG arcs: tightly bounded from 0 to exactly 360 deg
   let accumulatedAngle = 0;
-  const chartSlicesWithAngles = slices.map((slice) => {
-    const sliceAngle = (slice.hours / 24.0) * 360;
+  const totalSliceHours = slices.reduce((acc, s) => acc + s.hours, 0) || 24;
+  const chartSlicesWithAngles = slices.map((slice, index) => {
+    const isLast = index === slices.length - 1;
+    const sliceAngle = (slice.hours / totalSliceHours) * 360;
     const startAngle = accumulatedAngle;
-    const endAngle = accumulatedAngle + sliceAngle;
-    accumulatedAngle += sliceAngle;
+    const endAngle = isLast ? 360.0 : Math.min(360.0, accumulatedAngle + sliceAngle);
+    accumulatedAngle = endAngle;
     return {
       ...slice,
       startAngle,
       endAngle,
-      percentOfDay: ((slice.hours / 24.0) * 100).toFixed(1)
+      percentOfDay: ((slice.hours / totalSliceHours) * 100).toFixed(1)
     };
   });
 
@@ -507,22 +539,13 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     let domain: DomainType = 'OPEN_MULTIPURPOSE';
     let color = '#0082ff';
 
-    if (categoryId === 'chess') {
-      domain = 'CHESS';
-      color = '#8b5cf6';
-    } else if (categoryId === 'music') {
-      domain = 'GUITAR';
-      color = '#ec4899';
-    } else if (categoryId === 'architecture') {
-      domain = 'ARCHITECTURE_DESIGN';
-      color = '#0082ff';
-    } else if (categoryId === 'exercise') {
-      domain = 'PHYSICAL_FITNESS';
-      color = '#ef4444';
-    } else if (categoryId === 'trading') {
-      domain = 'FOREX_TRADING';
-      color = '#10b981';
-    }
+    if (categoryId === 'chess') { domain = 'CHESS'; color = '#8b5cf6'; }
+    else if (categoryId === 'music') { domain = 'GUITAR'; color = '#ec4899'; }
+    else if (categoryId === 'architecture') { domain = 'ARCHITECTURE_DESIGN'; color = '#0082ff'; }
+    else if (categoryId === 'exercise') { domain = 'PHYSICAL_FITNESS'; color = '#ef4444'; }
+    else if (categoryId === 'trading') { domain = 'FOREX_TRADING'; color = '#10b981'; }
+    else if (categoryId === 'art') { domain = 'OIL_PAINTING'; color = '#f59e0b'; }
+    else if (categoryId === 'devotion') { domain = 'DEVOTION_PRAYER'; color = '#06b6d4'; }
 
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     addTask({
@@ -537,12 +560,16 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     try { soundEngine.playSound('CHIME_MEDITATION'); } catch {}
   };
 
-  const livingTasks = useMemo(() => {
-    return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'living');
-  }, [activeDayTasks, categoryPlans]);
-
   const careerTasks = useMemo(() => {
     return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'career');
+  }, [activeDayTasks, categoryPlans]);
+
+  const hobbyTasks = useMemo(() => {
+    return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'hobby');
+  }, [activeDayTasks, categoryPlans]);
+
+  const livingTasks = useMemo(() => {
+    return activeDayTasks.filter(t => getStreamForTask(t).pillar === 'living');
   }, [activeDayTasks, categoryPlans]);
 
   const handleAdjustTaskDuration = (taskId: string, deltaMin: number) => {
@@ -558,34 +585,10 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     try { soundEngine.playPencil(); } catch {}
   };
 
-  const handleAdjustPresetHours = (pillar: 'living' | 'career', presetId: string, delta: number) => {
-    if (pillar === 'living') {
-      const next = livingPresets.map(p => {
-        if (p.id !== presetId) return p;
-        return { ...p, hours: Math.max(0.5, Math.min(12, parseFloat((p.hours + delta).toFixed(1)))) };
-      });
-      saveLivingPresets(next);
-    } else {
-      const next = careerPresets.map(p => {
-        if (p.id !== presetId) return p;
-        return { ...p, hours: Math.max(0.5, Math.min(12, parseFloat((p.hours + delta).toFixed(1)))) };
-      });
-      saveCareerPresets(next);
-    }
-  };
-
-  const handleRemovePreset = (pillar: 'living' | 'career', presetId: string) => {
-    if (pillar === 'living') {
-      saveLivingPresets(livingPresets.filter(p => p.id !== presetId));
-    } else {
-      saveCareerPresets(careerPresets.filter(p => p.id !== presetId));
-    }
-  };
-
   const handleAddPresetBlock = (preset: QuickPreset) => {
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     addTask({
-      title: `${preset.label} Practice & Session`,
+      title: `${preset.label} Session`,
       startTime: 'Flexible',
       durationMin: Math.round(preset.hours * 60),
       domain: preset.domain,
@@ -595,81 +598,15 @@ export const TripleEightLifeBalanceView: React.FC = () => {
       date: todayStr,
       checklist: [
         { id: `c-${Date.now()}-1`, text: 'Warm-up & context setup', done: false },
-        { id: `c-${Date.now()}-2`, text: 'Deep deliberate execution', done: false },
+        { id: `c-${Date.now()}-2`, text: 'Core deliberate execution', done: false },
       ]
     });
     try { soundEngine.playSound('CHIME_MEDITATION'); } catch {}
   };
 
-  const handleAddNewLivingPreset = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPresetLabel.trim()) return;
-    const durHours = parseFloat(newPresetHours) || 2.0;
-    let iconType: QuickPreset['iconType'] = 'sparkles';
-    let domain: DomainType = 'CHESS';
-    let color = '#8b5cf6';
-    if (newPresetCategory === 'chess') {
-      iconType = 'swords';
-      domain = 'CHESS';
-      color = '#8b5cf6';
-    } else if (newPresetCategory === 'music') {
-      iconType = 'music';
-      domain = 'GUITAR';
-      color = '#ec4899';
-    } else if (newPresetCategory === 'exercise') {
-      iconType = 'dumbbell';
-      domain = 'PHYSICAL_FITNESS';
-      color = '#ef4444';
-    } else if (newPresetCategory === 'art') {
-      iconType = 'palette';
-      domain = 'OIL_PAINTING';
-      color = '#f59e0b';
-    } else if (newPresetCategory === 'devotion') {
-      iconType = 'book';
-      domain = 'DEVOTION_PRAYER';
-      color = '#06b6d4';
-    }
-    const newPreset: QuickPreset = {
-      id: `p-${Date.now()}`,
-      label: newPresetLabel.trim(),
-      hours: durHours,
-      domain,
-      categoryId: newPresetCategory,
-      color,
-      iconType
-    };
-    saveLivingPresets([...livingPresets, newPreset]);
-    setNewPresetLabel('');
-    try { soundEngine.playPencil(); } catch {}
-  };
-
-  const handleAddCustomLivingActivity = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customLivingTitle.trim()) return;
-    const durHours = parseFloat(customLivingHours) || 1.0;
-    let domain: DomainType = 'CHESS';
-    let color = '#8b5cf6';
-    if (customLivingCategory === 'chess') { domain = 'CHESS'; color = '#8b5cf6'; }
-    else if (customLivingCategory === 'music') { domain = 'GUITAR'; color = '#ec4899'; }
-    else if (customLivingCategory === 'exercise') { domain = 'PHYSICAL_FITNESS'; color = '#ef4444'; }
-    else if (customLivingCategory === 'art') { domain = 'OIL_PAINTING'; color = '#f59e0b'; }
-    else if (customLivingCategory === 'devotion') { domain = 'DEVOTION_PRAYER'; color = '#06b6d4'; }
-
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    addTask({
-      title: customLivingTitle.trim(),
-      startTime: 'Flexible',
-      durationMin: Math.round(durHours * 60),
-      domain,
-      badge: 'Living',
-      color,
-      completed: false,
-      date: todayStr,
-      checklist: [
-        { id: `c-${Date.now()}-1`, text: 'High-focus deliberate immersion', done: false }
-      ]
-    });
-    setCustomLivingTitle('');
+  // Change Stream Type directly in Triple-8 view
+  const handleSetStreamType = (streamId: string, newType: TripleEightPillar) => {
+    updateCategoryPlan(streamId, { triple8Type: newType });
     try { soundEngine.playPencil(); } catch {}
   };
 
@@ -686,6 +623,11 @@ export const TripleEightLifeBalanceView: React.FC = () => {
     }
   };
 
+  // Active Category List from Context
+  const allStreamsList = useMemo(() => {
+    return Object.values(categoryPlans || {});
+  }, [categoryPlans]);
+
   return (
     <div className="w-full max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 animate-fadeIn pb-28 md:pb-12 text-slate-800 dark:text-slate-100">
       
@@ -700,7 +642,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
           </button>
           <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
           <span className="text-xs font-bold text-slate-400 hidden sm:inline">
-            {language === 'am' ? 'የ24 ሰዓት የሶስት 8ቶች (8/8/8) ሚዛን' : '24-Hour Triple-8 Life Balance'}
+            {language === 'am' ? 'የ24 ሰዓት የሶስት 8ቶች (8/8/8) ሚዛን' : '24-Hour Triple-8 Life Balance (Career • Hobby • Living)'}
           </span>
         </div>
 
@@ -731,41 +673,41 @@ export const TripleEightLifeBalanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* Hero Banner: The Triple 8 Rule (8/8/8) Explanation */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white shadow-xl relative overflow-hidden">
+      {/* Hero Banner: The Triple 8 Rule (Career 8h • Hobby 8h • Living 8h = 24h) */}
+      <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-600 text-white shadow-xl relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold uppercase tracking-wider bg-white/20 backdrop-blur-xs border border-white/25">
-                {language === 'am' ? 'የህይወት ሚዛን ህግ' : 'The 8 / 8 / 8 Life Balance'}
+                {language === 'am' ? 'የሶስት 8ቶች ሚዛን ህግ' : 'The Golden 8 / 8 / 8 Equilibrium'}
               </span>
               <span className="text-xs opacity-80 font-mono">
                 {dayNameEn} • {ethDate.monthNameAmharic} {ethDate.day}
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-              {language === 'am' ? 'የ24 ሰዓት የሶስት 8ቶች ክፍፍል' : '24 Hours • Triple Eights Life Equilibrium'}
+              {language === 'am' ? 'የ24 ሰዓት ሚዛን፡ ስራ (8h) • ተሰጥኦ (8h) • ኑሮ (8h)' : '24 Hours • Career (8h) • Hobby (8h) • Living (8h)'}
             </h1>
             <p className="text-xs sm:text-sm text-blue-100 max-w-2xl leading-relaxed">
               {language === 'am' 
-                ? 'በአንድ ቀን ውስጥ ያሉ 24 ሰዓታት በሶስት እኩል 8 ሰዓታት ይከፈላሉ፡ 8 ሰዓት ለእረፍትና እንቅልፍ፣ 8 ሰዓት ለስራና ሙያዊ ልህቀት፣ እና 8 ሰዓት ለግል ህይወት፣ ቼስ፣ ሙዚቃና መዝናኛ።'
-                : 'One day holds exactly 24 hours partitioned by the Golden Rule of 8/8/8: 8 hours for Sleep & Recovery, 8 hours for Career & Craft, and 8 hours for Living, Hobbies (Chess, Music) & Personal Growth.'}
+                ? 'ዋና ዋና ዘርፎችዎን በሶስት ወርቃማ ምድቦች (ስራ/ሙያ፣ ተሰጥኦ/መዝናኛ፣ እና የግል ኑሮ/እረፍት) ይመድቡ። ተግባራትዎ ወዲያውኑ ወደ 24 ሰዓት ቻርት ይሰምራሉ።'
+                : 'Every stream is categorized into one of three synchronized pillars: Career (Work & Craft), Hobby (Creative Passions & Chess), or Living (Health, Rest & Vitality).'}
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 self-start md:self-auto">
             <div className="text-center px-2 border-r border-white/20">
               <span className="block text-2xl font-black font-mono">8h</span>
-              <span className="text-[10px] uppercase font-bold text-blue-200">Sleep</span>
+              <span className="text-[10px] uppercase font-bold text-blue-200">Career</span>
             </div>
             <div className="text-center px-2 border-r border-white/20">
               <span className="block text-2xl font-black font-mono">8h</span>
-              <span className="text-[10px] uppercase font-bold text-blue-200">Career</span>
+              <span className="text-[10px] uppercase font-bold text-purple-200">Hobby</span>
             </div>
             <div className="text-center px-2">
               <span className="block text-2xl font-black font-mono">8h</span>
-              <span className="text-[10px] uppercase font-bold text-blue-200">Hobbies</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-200">Living</span>
             </div>
           </div>
         </div>
@@ -798,325 +740,316 @@ export const TripleEightLifeBalanceView: React.FC = () => {
         })}
       </div>
 
-      {/* Main Grid: Interactive Graphical Chart (Left) & Pillar Breakdowns (Right) */}
+      {/* Main Grid: Interactive Wheel (Left) & 3 Golden Pillars (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
-        {/* LEFT COLUMN: THE GRAPHICAL 24-HOUR PIE / DIAL (7 cols) */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col items-center">
+        {/* LEFT COLUMN: THE GRAPHICAL 24-HOUR PIE / DIAL & STREAM CLASSIFIER (7 cols) */}
+        <div className="lg:col-span-7 space-y-4">
           
-          <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-2 flex-wrap gap-2">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <PieChart size={18} className="text-[#0082ff]" />
-                <span>{language === 'am' ? 'የ24 ሰዓት የክብ ቻርት' : '24-Hour Equilibrium Wheel'}</span>
-              </h2>
-              <span className="text-[11px] text-slate-400">
-                {language === 'am' ? 'ዋና ዋና ዘርፎች ብቻ • ዝርዝር ለማየት ክፍተቱን ይንኩ' : 'Main Streams Only • Touch any stream to inspect slice metrics'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Segmented Mode Switcher: Main Streams vs 3 Pillars */}
-              <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                <button
-                  type="button"
-                  onClick={() => { setStreamViewMode('streams'); setActiveHoverSlice(null); }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    streamViewMode === 'streams'
-                      ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
-                  }`}
-                >
-                  {language === 'am' ? 'ዋና ዋና ዘርፎች' : 'Main Streams'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setStreamViewMode('pillars'); setActiveHoverSlice(null); }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    streamViewMode === 'pillars'
-                      ? 'bg-white dark:bg-slate-900 text-indigo-500 shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
-                  }`}
-                >
-                  {language === 'am' ? '3 ምሰሶዎች (8/8/8)' : '3 Pillars (8/8/8)'}
-                </button>
+          <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col items-center">
+            
+            <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-2 flex-wrap gap-2">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <PieChart size={18} className="text-[#0082ff]" />
+                  <span>{language === 'am' ? 'የ24 ሰዓት የክብ ቻርት' : '24-Hour Equilibrium Wheel'}</span>
+                </h2>
+                <span className="text-[11px] text-slate-400">
+                  {language === 'am' ? 'በስራ፣ ተሰጥኦና ኑሮ የተከፋፈለ 24 ሰዓት' : 'Synchronized with Career • Hobby • Living'}
+                </span>
               </div>
 
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-black">
-                {balanceScore}% {language === 'am' ? 'ሚዛናዊነት' : 'Harmony'}
-              </span>
-            </div>
-          </div>
-
-          {/* SVG Pie Chart Canvas */}
-          <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-square flex items-center justify-center my-3 select-none">
-            <svg 
-              viewBox="0 0 400 400" 
-              className="w-full h-full transform transition-all duration-300 drop-shadow-md"
-            >
-              <defs>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-
-              {/* Outer Minute/Hour Tick Marks for Authentic Clock Aesthetics */}
-              {Array.from({ length: 24 }).map((_, i) => {
-                const angle = (i / 24) * 360 - 90;
-                const rad = angle * (Math.PI / 180);
-                const x1 = 200 + 185 * Math.cos(rad);
-                const y1 = 200 + 185 * Math.sin(rad);
-                const x2 = 200 + 192 * Math.cos(rad);
-                const y2 = 200 + 192 * Math.sin(rad);
-                return (
-                  <line 
-                    key={i} 
-                    x1={x1} 
-                    y1={y1} 
-                    x2={x2} 
-                    y2={y2} 
-                    stroke="currentColor" 
-                    className="text-slate-300 dark:text-slate-700" 
-                    strokeWidth={i % 6 === 0 ? 2 : 1}
-                  />
-                );
-              })}
-
-              {/* 24 Hour Numeric Clock Labels */}
-              {chartMode === 'clock24' && [0, 6, 12, 18].map((hour) => {
-                const angle = (hour / 24) * 360 - 90;
-                const rad = angle * (Math.PI / 180);
-                const x = 200 + 172 * Math.cos(rad);
-                const y = 200 + 172 * Math.sin(rad);
-                return (
-                  <text 
-                    key={hour} 
-                    x={x} 
-                    y={y + 4} 
-                    textAnchor="middle" 
-                    className="text-[10px] font-mono font-bold fill-slate-400"
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Segmented Mode Switcher: Main Streams vs 3 Pillars */}
+                <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                  <button
+                    type="button"
+                    onClick={() => { setStreamViewMode('streams'); setActiveHoverSlice(null); }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      streamViewMode === 'streams'
+                        ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
+                    }`}
                   >
-                    {String(hour).padStart(2, '0')}:00
-                  </text>
-                );
-              })}
-
-              {/* Donut Slices */}
-              {chartSlicesWithAngles.map((slice) => {
-                const isHovered = activeHoverSlice?.id === slice.id;
-                const path = generatePieSlicePath(
-                  200, 
-                  200, 
-                  chartMode === 'donut' ? 95 : 75, 
-                  chartMode === 'donut' ? (isHovered ? 165 : 155) : (isHovered ? 160 : 150), 
-                  slice.startAngle, 
-                  slice.endAngle
-                );
-
-                return (
-                  <path
-                    key={slice.id}
-                    d={path}
-                    fill={slice.color}
-                    className="cursor-pointer transition-all duration-200 stroke-white dark:stroke-[#121927] stroke-2 hover:opacity-90 active:scale-98"
-                    onMouseEnter={() => setActiveHoverSlice(slice)}
-                    onMouseLeave={() => setActiveHoverSlice(null)}
-                    onClick={() => setActiveHoverSlice(slice)}
-                  />
-                );
-              })}
-
-              {/* Center Wheel Dial */}
-              <circle 
-                cx="200" 
-                cy="200" 
-                r={chartMode === 'donut' ? 85 : 68} 
-                className="fill-white dark:fill-[#0c121e] stroke-slate-200 dark:stroke-slate-800" 
-                strokeWidth="2"
-              />
-            </svg>
-
-            {/* Inner Center Badge / Active Slice Info */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
-              {activeHoverSlice ? (
-                <div className="space-y-0.5 animate-fadeIn">
-                  <span 
-                    className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white inline-block"
-                    style={{ backgroundColor: activeHoverSlice.color }}
+                    {language === 'am' ? 'ዋና ዋና ዘርፎች' : 'Main Streams'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setStreamViewMode('pillars'); setActiveHoverSlice(null); }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      streamViewMode === 'pillars'
+                        ? 'bg-white dark:bg-slate-900 text-purple-600 shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-900 dark:text-slate-400'
+                    }`}
                   >
-                    {activeHoverSlice.pillar}
-                  </span>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white max-w-[140px] truncate">
-                    {activeHoverSlice.name}
-                  </h4>
-                  <span className="text-xl sm:text-2xl font-black font-mono text-[#0082ff] block">
-                    {activeHoverSlice.hours.toFixed(1)}h
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono block">
-                    {((activeHoverSlice.hours / 24.0) * 100).toFixed(1)}% of 24h
-                  </span>
+                    {language === 'am' ? '3 ምሰሶዎች (8/8/8)' : '3 Pillars (8/8/8)'}
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-0.5">
-                  <span className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-slate-400 block">
-                    TOTAL DAY
-                  </span>
-                  <span className="text-3xl font-black font-mono text-slate-900 dark:text-white block">
-                    24<span className="text-sm font-bold text-slate-400">h</span>
-                  </span>
-                  <div className="flex items-center justify-center gap-1 text-[10px] font-mono font-bold text-slate-500">
-                    <span className="text-indigo-500">8h</span> • <span className="text-blue-500">8h</span> • <span className="text-amber-500">8h</span>
-                  </div>
-                  <span className="text-[9px] text-emerald-500 font-bold block">
-                    Equilibrium
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Slices Legend Grid: Main Streams only! */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-            {chartSlicesWithAngles.map((slice) => {
-              const isSelected = activeHoverSlice?.id === slice.id;
-              return (
-                <button
-                  key={slice.id}
-                  onClick={() => setActiveHoverSlice(isSelected ? null : slice)}
-                  className={`p-2.5 rounded-xl text-left transition cursor-pointer flex items-center gap-2.5 border ${
-                    isSelected 
-                      ? 'border-[#0082ff] bg-blue-500/10 shadow-2xs ring-1 ring-[#0082ff]/50' 
-                      : 'border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`}
-                >
-                  <span 
-                    className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs ring-2 ring-white dark:ring-slate-900" 
-                    style={{ backgroundColor: slice.color }} 
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block truncate text-xs">
-                      {slice.name}
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-black">
+                  {balanceScore}% {language === 'am' ? 'ሚዛናዊነት' : 'Harmony'}
+                </span>
+              </div>
+            </div>
+
+            {/* SVG Pie Chart Canvas */}
+            <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-square flex items-center justify-center my-3 select-none">
+              <svg 
+                viewBox="0 0 400 400" 
+                className="w-full h-full transform transition-all duration-300 drop-shadow-md"
+              >
+                {/* Outer Tick Marks */}
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const angle = (i / 24) * 360 - 90;
+                  const rad = angle * (Math.PI / 180);
+                  const x1 = 200 + 185 * Math.cos(rad);
+                  const y1 = 200 + 185 * Math.sin(rad);
+                  const x2 = 200 + 192 * Math.cos(rad);
+                  const y2 = 200 + 192 * Math.sin(rad);
+                  return (
+                    <line 
+                      key={i} 
+                      x1={x1} 
+                      y1={y1} 
+                      x2={x2} 
+                      y2={y2} 
+                      stroke="currentColor" 
+                      className="text-slate-300 dark:text-slate-700" 
+                      strokeWidth={i % 6 === 0 ? 2 : 1}
+                    />
+                  );
+                })}
+
+                {/* 24 Hour Numeric Clock Labels */}
+                {chartMode === 'clock24' && [0, 6, 12, 18].map((hour) => {
+                  const angle = (hour / 24) * 360 - 90;
+                  const rad = angle * (Math.PI / 180);
+                  const x = 200 + 172 * Math.cos(rad);
+                  const y = 200 + 172 * Math.sin(rad);
+                  return (
+                    <text 
+                      key={hour} 
+                      x={x} 
+                      y={y + 4} 
+                      textAnchor="middle" 
+                      className="text-[10px] font-mono font-bold fill-slate-400"
+                    >
+                      {String(hour).padStart(2, '0')}:00
+                    </text>
+                  );
+                })}
+
+                {/* Donut Slices */}
+                {chartSlicesWithAngles.map((slice) => {
+                  const isHovered = activeHoverSlice?.id === slice.id;
+                  const path = generatePieSlicePath(
+                    200, 
+                    200, 
+                    chartMode === 'donut' ? 95 : 75, 
+                    chartMode === 'donut' ? (isHovered ? 165 : 155) : (isHovered ? 160 : 150), 
+                    slice.startAngle, 
+                    slice.endAngle
+                  );
+
+                  return (
+                    <path
+                      key={slice.id}
+                      d={path}
+                      fill={slice.color}
+                      className="cursor-pointer transition-all duration-200 stroke-white dark:stroke-[#121927] stroke-2 hover:opacity-90 active:scale-98"
+                      onMouseEnter={() => setActiveHoverSlice(slice)}
+                      onMouseLeave={() => setActiveHoverSlice(null)}
+                      onClick={() => setActiveHoverSlice(slice)}
+                    />
+                  );
+                })}
+
+                {/* Center Wheel Dial */}
+                <circle 
+                  cx="200" 
+                  cy="200" 
+                  r={chartMode === 'donut' ? 85 : 68} 
+                  className="fill-white dark:fill-[#0c121e] stroke-slate-200 dark:stroke-slate-800" 
+                  strokeWidth="2"
+                />
+              </svg>
+
+              {/* Inner Center Badge / Active Slice Info */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                {activeHoverSlice ? (
+                  <div className="space-y-0.5 animate-fadeIn">
+                    <span 
+                      className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white inline-block"
+                      style={{ backgroundColor: activeHoverSlice.color }}
+                    >
+                      {activeHoverSlice.pillar}
+                    </span>
+                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white max-w-[140px] truncate">
+                      {activeHoverSlice.name}
+                    </h4>
+                    <span className="text-xl sm:text-2xl font-black font-mono text-[#0082ff] block">
+                      {activeHoverSlice.hours.toFixed(1)}h
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono block">
-                      {slice.hours.toFixed(1)}h ({slice.percentOfDay}%)
+                      {((activeHoverSlice.hours / 24.0) * 100).toFixed(1)}% of 24h
                     </span>
                   </div>
-                </button>
-              );
-            })}
+                ) : (
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-slate-400 block">
+                      TOTAL DAY
+                    </span>
+                    <span className="text-3xl font-black font-mono text-slate-900 dark:text-white block">
+                      24<span className="text-sm font-bold text-slate-400">h</span>
+                    </span>
+                    <div className="flex items-center justify-center gap-1 text-[10px] font-mono font-bold text-slate-500">
+                      <span className="text-blue-500">{pillarTotals.career.toFixed(1)}h Work</span> • <span className="text-purple-500">{pillarTotals.hobby.toFixed(1)}h Hobby</span> • <span className="text-emerald-500">{pillarTotals.living.toFixed(1)}h Living</span>
+                    </div>
+                    <span className="text-[9px] text-emerald-500 font-bold block">
+                      {balanceScore >= 80 ? (language === 'am' ? 'ሚዛናዊ' : 'Equilibrium') : `${balanceScore}% ${language === 'am' ? 'ሚዛናዊነት' : 'Harmony'}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Slices Legend Grid */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              {chartSlicesWithAngles.map((slice) => {
+                const isSelected = activeHoverSlice?.id === slice.id;
+                return (
+                  <button
+                    key={slice.id}
+                    onClick={() => setActiveHoverSlice(isSelected ? null : slice)}
+                    className={`p-2.5 rounded-xl text-left transition cursor-pointer flex items-center gap-2.5 border ${
+                      isSelected 
+                        ? 'border-[#0082ff] bg-blue-500/10 shadow-2xs ring-1 ring-[#0082ff]/50' 
+                        : 'border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span 
+                      className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs ring-2 ring-white dark:ring-slate-900" 
+                      style={{ backgroundColor: slice.color }} 
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 block truncate text-xs">
+                        {slice.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono block">
+                        {slice.hours.toFixed(1)}h ({slice.percentOfDay}%)
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+          </div>
+
+          {/* STREAM CLASSIFICATION & TRIPLE-8 SYNC CARD */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Layers size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    {language === 'am' ? 'የዋና ዘርፎች የ24 ሰዓት ምድብ ምርጫ' : 'Stream Classification & Triple-8 Sync'}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {language === 'am' ? 'እያንዳንዱን ዘርፍ ወደ ስራ፣ ተሰጥኦ ወይም ኑሮ ይመድቡ' : 'Choose whether each stream counts as Career, Hobby, or Living'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openManageCategoriesModal()}
+                className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              >
+                <Settings size={12} />
+                <span>{language === 'am' ? 'አስተዳድር' : 'Manage'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {allStreamsList.map((cat) => {
+                const currentType: TripleEightPillar = cat.triple8Type || (
+                  ['architecture', 'trading', 'career', 'work'].includes(cat.id) ? 'career' :
+                  ['chess', 'music', 'art', 'guitar', 'painting'].includes(cat.id) ? 'hobby' : 'living'
+                );
+
+                return (
+                  <div 
+                    key={cat.id} 
+                    className="p-3 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span 
+                        className="w-3 h-3 rounded-full shrink-0 shadow-2xs" 
+                        style={{ backgroundColor: cat.color }} 
+                      />
+                      <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
+                        {cat.title}
+                      </span>
+                    </div>
+
+                    {/* 3-Way Segmented Choice Pill */}
+                    <div className="inline-flex p-0.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 shrink-0 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => handleSetStreamType(cat.id, 'career')}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 ${
+                          currentType === 'career'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'text-slate-500 hover:text-blue-600'
+                        }`}
+                        title="Count as Career (8h Pillar)"
+                      >
+                        <Briefcase size={10} />
+                        <span>Career</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetStreamType(cat.id, 'hobby')}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 ${
+                          currentType === 'hobby'
+                            ? 'bg-purple-600 text-white shadow-2xs'
+                            : 'text-slate-500 hover:text-purple-600'
+                        }`}
+                        title="Count as Hobby (8h Pillar)"
+                      >
+                        <Palette size={10} />
+                        <span>Hobby</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSetStreamType(cat.id, 'living')}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1 ${
+                          currentType === 'living'
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'text-slate-500 hover:text-emerald-600'
+                        }`}
+                        title="Count as Living (8h Pillar)"
+                      >
+                        <Heart size={10} />
+                        <span>Living</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
         </div>
 
-        {/* RIGHT COLUMN: THE 3 GOLDEN PILLARS (5 cols) */}
+        {/* RIGHT COLUMN: THE 3 GOLDEN PILLARS (Career 8h • Hobby 8h • Living 8h) (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           
-          {/* 1. PILLAR 1: SLEEP & BIOLOGICAL RESTORATION */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-indigo-200/80 dark:border-indigo-900/50 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <Moon size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 font-mono uppercase tracking-wider">Pillar 1</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-slate-400">Target: {pillarTargets.sleep.toFixed(1)}h</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingSleepTarget(!isEditingSleepTarget)}
-                        className="p-0.5 rounded hover:bg-indigo-100 dark:hover:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 cursor-pointer"
-                        title="Edit Target Sleep Hours"
-                      >
-                        <Edit2 size={10} />
-                      </button>
-                    </div>
-                  </div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                    {language === 'am' ? 'እንቅልፍና ባዮሎጂያዊ እረፍት' : 'Sleep & Recovery'}
-                  </h3>
-                </div>
-              </div>
-
-              <span className="text-base font-black font-mono text-indigo-600 dark:text-indigo-400">
-                {pillarTotals.sleep.toFixed(1)}h
-              </span>
-            </div>
-
-            {/* Editable Sleep Target Drawer */}
-            {isEditingSleepTarget && (
-              <div className="p-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800 space-y-2 animate-fadeIn">
-                <div className="flex items-center justify-between text-xs font-bold text-indigo-900 dark:text-indigo-200">
-                  <span>Adjust Target Sleep Hours:</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingSleepTarget(false)}
-                    className="p-1 px-2 rounded-md bg-indigo-600 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Check size={11} strokeWidth={3} /> <span>Done</span>
-                  </button>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => updatePillarTarget('sleep', pillarTargets.sleep - 0.5)}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-indigo-100"
-                  >
-                    -
-                  </button>
-                  <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-700 rounded-lg font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">
-                    {pillarTargets.sleep.toFixed(1)} hrs
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => updatePillarTarget('sleep', pillarTargets.sleep + 0.5)}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-indigo-100"
-                  >
-                    +
-                  </button>
-                  {[6, 7, 7.5, 8, 8.5, 9].map(h => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => updatePillarTarget('sleep', h)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition ${
-                        pillarTargets.sleep === h
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50'
-                      }`}
-                    >
-                      {h}h
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Progress Bar */}
-            <div className="space-y-1">
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (pillarTotals.sleep / pillarTargets.sleep) * 100)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span>{language === 'am' ? 'ባዮሎጂያዊ እድሳት' : 'Circadian Restoration'}</span>
-                <span>{((pillarTotals.sleep / pillarTargets.sleep) * 100).toFixed(0)}% Allocated</span>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {language === 'am' 
-                ? 'የተሟላ እንቅልፍ ለአንጎል ማደስ፣ ለሰውነት ጥንካሬና ለቀጣዩ ቀን ትኩረት ወሳኝ ነው።'
-                : 'Dedicated hours for circadian sleep, neurological recovery, and deep biological recharge.'}
-            </p>
-          </div>
-
-          {/* 2. PILLAR 2: CAREER & CRAFT */}
+          {/* 1. PILLAR 1: CAREER & CRAFT MASTERY */}
           <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-blue-200/80 dark:border-blue-900/50 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1125,7 +1058,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-[#0082ff] font-mono uppercase tracking-wider">Pillar 2</span>
+                    <span className="text-xs font-bold text-[#0082ff] font-mono uppercase tracking-wider">Pillar 1</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff]" />
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] font-bold text-slate-400">Target: {pillarTargets.career.toFixed(1)}h</span>
@@ -1140,7 +1073,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
                     </div>
                   </div>
                   <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                    {language === 'am' ? 'ሙያ፣ ስራና ጥልቅ ልህቀት' : 'Career & Craft Mastery'}
+                    {language === 'am' ? 'ሙያ፣ ስራና ጥልቅ ልህቀት' : 'Career & Professional Craft'}
                   </h3>
                 </div>
               </div>
@@ -1154,7 +1087,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
             {isEditingCareerTarget && (
               <div className="p-2.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800 space-y-2 animate-fadeIn">
                 <div className="flex items-center justify-between text-xs font-bold text-blue-900 dark:text-blue-200">
-                  <span>Adjust Career Target Hours:</span>
+                  <span>Adjust Career Target:</span>
                   <button
                     type="button"
                     onClick={() => setIsEditingCareerTarget(false)}
@@ -1213,271 +1146,40 @@ export const TripleEightLifeBalanceView: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Action Pills to add career work */}
+            {/* Quick Action Presets */}
             <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <button
-                onClick={() => handleAddQuickBlock('Architecture Focus Block', 2.0, 'career', 'architecture')}
-                className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-[#0082ff] text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
-              >
-                <Plus size={11} /> <span>+2h Architecture</span>
-              </button>
-              <button
-                onClick={() => handleAddQuickBlock('Trading Session Block', 1.0, 'career', 'trading')}
-                className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
-              >
-                <Plus size={11} /> <span>+1h Trading</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 3. PILLAR 3: LIVING, HOBBIES & VITALITY (Fully Editable) */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-amber-200/80 dark:border-amber-900/50 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Heart size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono uppercase tracking-wider">Pillar 3</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-slate-400">Target: {pillarTargets.living.toFixed(1)}h</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingLivingTarget(!isEditingLivingTarget)}
-                        className="p-0.5 rounded hover:bg-amber-100 dark:hover:bg-amber-950/60 text-amber-600 dark:text-amber-400 cursor-pointer"
-                        title="Edit Target Living Hours"
-                      >
-                        <Edit2 size={10} />
-                      </button>
-                    </div>
-                  </div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                    {language === 'am' ? 'የግል ህይወት፣ ቼስ፣ ሙዚቃና መዝናኛ' : 'Living, Hobbies & Vitality'}
-                  </h3>
-                </div>
-              </div>
-
-              <span className="text-base font-black font-mono text-amber-600 dark:text-amber-400">
-                {pillarTotals.living.toFixed(1)} / {pillarTargets.living.toFixed(1)}h
-              </span>
-            </div>
-
-            {/* Editable Target Living Hours Drawer */}
-            {isEditingLivingTarget && (
-              <div className="p-2.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 space-y-2 animate-fadeIn">
-                <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
-                  <span>Adjust Living Target Hours:</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingLivingTarget(false)}
-                    className="p-1 px-2 rounded-md bg-amber-500 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Check size={11} strokeWidth={3} /> <span>Done</span>
-                  </button>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => updatePillarTarget('living', pillarTargets.living - 0.5)}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-amber-100"
-                  >
-                    -
-                  </button>
-                  <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-lg font-mono font-black text-amber-600 dark:text-amber-400 text-xs">
-                    {pillarTargets.living.toFixed(1)} hrs
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => updatePillarTarget('living', pillarTargets.living + 0.5)}
-                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-amber-100"
-                  >
-                    +
-                  </button>
-                  {[5, 6, 7, 8, 9, 10].map(h => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => updatePillarTarget('living', h)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition ${
-                        pillarTargets.living === h
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800 text-slate-600 dark:text-slate-300 hover:bg-amber-50'
-                      }`}
-                    >
-                      {h}h
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Progress Bar */}
-            <div className="space-y-1">
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (pillarTotals.living / pillarTargets.living) * 100)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                <span>{pillarTotals.livingRemaining > 0 ? `${pillarTotals.livingRemaining.toFixed(1)}h leisure left` : 'Fully Allocated'}</span>
-                <span>{((pillarTotals.living / pillarTargets.living) * 100).toFixed(0)}% Utilized</span>
-              </div>
-            </div>
-
-            {/* Quick Presets for Living */}
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                  {language === 'am' ? 'ፈጣን የልምምድ ሰዓት አክል' : 'Quick Add to Today’s Wheel:'}
-                </span>
+              {careerPresets.map((preset) => (
                 <button
-                  type="button"
-                  onClick={() => setIsEditingLivingPresets(!isEditingLivingPresets)}
-                  className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  key={preset.id}
+                  onClick={() => handleAddPresetBlock(preset)}
+                  className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-[#0082ff] text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
                 >
-                  <Settings size={10} />
-                  <span>{isEditingLivingPresets ? 'Close Settings' : 'Customize Presets'}</span>
+                  <Plus size={11} /> <span>+{preset.hours.toFixed(0)}h {preset.label}</span>
                 </button>
-              </div>
-
-              {/* Dynamic Presets list */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {livingPresets.map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={() => handleAddPresetBlock(preset)}
-                    className="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
-                    style={{
-                      backgroundColor: `${preset.color}15`,
-                      borderColor: `${preset.color}30`,
-                      color: preset.color
-                    }}
-                  >
-                    {renderPresetIcon(preset.iconType)}
-                    <span>+{preset.hours.toFixed(0)}h {preset.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Preset Customizer Drawer */}
-              {isEditingLivingPresets && (
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3 animate-fadeIn">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                    <span>Manage Quick Add Buttons:</span>
-                    <button
-                      type="button"
-                      onClick={() => saveLivingPresets(DEFAULT_LIVING_PRESETS)}
-                      className="text-[10px] text-slate-400 hover:text-amber-600 flex items-center gap-1 cursor-pointer"
-                      title="Reset presets to default"
-                    >
-                      <RotateCcw size={10} /> <span>Reset Defaults</span>
-                    </button>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    {livingPresets.map((preset) => (
-                      <div key={preset.id} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span style={{ color: preset.color }}>{renderPresetIcon(preset.iconType)}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{preset.label}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleAdjustPresetHours('living', preset.id, -0.5)}
-                            className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-700 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-slate-200"
-                          >
-                            -
-                          </button>
-                          <span className="font-mono font-bold w-9 text-center text-slate-600 dark:text-slate-300">{preset.hours.toFixed(1)}h</span>
-                          <button
-                            type="button"
-                            onClick={() => handleAdjustPresetHours('living', preset.id, 0.5)}
-                            className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-700 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-slate-200"
-                          >
-                            +
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePreset('living', preset.id)}
-                            className="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer ml-1"
-                            title="Delete Preset"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Add New Preset Form */}
-                  <form onSubmit={handleAddNewLivingPreset} className="flex items-center gap-1.5 pt-1 flex-wrap">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Preset label (e.g. Reading)"
-                      value={newPresetLabel}
-                      onChange={(e) => setNewPresetLabel(e.target.value)}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs flex-1 min-w-[120px] outline-none focus:border-amber-500"
-                    />
-                    <select
-                      value={newPresetHours}
-                      onChange={(e) => setNewPresetHours(e.target.value)}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono outline-none"
-                    >
-                      <option value="0.5">0.5h</option>
-                      <option value="1.0">1.0h</option>
-                      <option value="1.5">1.5h</option>
-                      <option value="2.0">2.0h</option>
-                      <option value="3.0">3.0h</option>
-                      <option value="4.0">4.0h</option>
-                    </select>
-                    <select
-                      value={newPresetCategory}
-                      onChange={(e) => setNewPresetCategory(e.target.value)}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none"
-                    >
-                      <option value="chess">Chess</option>
-                      <option value="music">Music</option>
-                      <option value="exercise">Gym/Fitness</option>
-                      <option value="art">Art</option>
-                      <option value="devotion">Devotion</option>
-                    </select>
-                    <button
-                      type="submit"
-                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold cursor-pointer"
-                    >
-                      + Add
-                    </button>
-                  </form>
-                </div>
-              )}
+              ))}
             </div>
 
-            {/* Inspect / Edit Living Activities Drawer */}
+            {/* Inspect / Edit Career Activities Drawer */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
-                onClick={() => setIsExpandedLivingTasks(!isExpandedLivingTasks)}
-                className="w-full flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer"
+                onClick={() => setIsExpandedCareerTasks(!isExpandedCareerTasks)}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#0082ff] dark:hover:text-[#0082ff] cursor-pointer"
               >
-                <span>Inspect / Edit Allocated Activities ({livingTasks.length})</span>
-                {isExpandedLivingTasks ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                <span>Allocated Career Activities ({careerTasks.length})</span>
+                {isExpandedCareerTasks ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
 
-              {isExpandedLivingTasks && (
+              {isExpandedCareerTasks && (
                 <div className="mt-2.5 space-y-2 animate-fadeIn">
-                  {livingTasks.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 italic">No living activities logged yet today.</p>
+                  {careerTasks.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic">No career tasks scheduled yet today.</p>
                   ) : (
                     <div className="space-y-1.5">
-                      {livingTasks.map((t) => (
+                      {careerTasks.map((t) => (
                         <div key={t.id} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color || '#8b5cf6' }} />
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color || '#0082ff' }} />
                             <span className="font-bold truncate text-slate-800 dark:text-slate-200">{t.title}</span>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
@@ -1489,7 +1191,7 @@ export const TripleEightLifeBalanceView: React.FC = () => {
                             >
                               -
                             </button>
-                            <span className="font-mono font-bold text-[11px] w-12 text-center text-amber-600 dark:text-amber-400">
+                            <span className="font-mono font-bold text-[11px] w-12 text-center text-blue-600 dark:text-blue-400">
                               {formatTaskDuration(t.durationMin || 60)}
                             </span>
                             <button
@@ -1513,35 +1215,348 @@ export const TripleEightLifeBalanceView: React.FC = () => {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          </div>
 
-                  {/* Quick Add Custom Living Activity */}
-                  <form onSubmit={handleAddCustomLivingActivity} className="flex items-center gap-1.5 pt-1.5">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Custom activity title..."
-                      value={customLivingTitle}
-                      onChange={(e) => setCustomLivingTitle(e.target.value)}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs flex-1 outline-none focus:border-amber-500"
-                    />
-                    <select
-                      value={customLivingHours}
-                      onChange={(e) => setCustomLivingHours(e.target.value)}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono outline-none"
-                    >
-                      <option value="0.5">0.5h</option>
-                      <option value="1.0">1.0h</option>
-                      <option value="1.5">1.5h</option>
-                      <option value="2.0">2.0h</option>
-                      <option value="3.0">3.0h</option>
-                    </select>
+          {/* 2. PILLAR 2: HOBBIES & CREATIVE PASSIONS */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-purple-200/80 dark:border-purple-900/50 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <Palette size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 font-mono uppercase tracking-wider">Pillar 2</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-slate-400">Target: {pillarTargets.hobby.toFixed(1)}h</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingHobbyTarget(!isEditingHobbyTarget)}
+                        className="p-0.5 rounded hover:bg-purple-100 dark:hover:bg-purple-950/60 text-purple-600 dark:text-purple-400 cursor-pointer"
+                        title="Edit Target Hobby Hours"
+                      >
+                        <Edit2 size={10} />
+                      </button>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    {language === 'am' ? 'ተሰጥኦ፣ ቼስ፣ ሙዚቃና ስዕል' : 'Hobbies, Chess & Passions'}
+                  </h3>
+                </div>
+              </div>
+
+              <span className="text-base font-black font-mono text-purple-600 dark:text-purple-400">
+                {pillarTotals.hobby.toFixed(1)} / {pillarTargets.hobby.toFixed(1)}h
+              </span>
+            </div>
+
+            {/* Editable Hobby Target Drawer */}
+            {isEditingHobbyTarget && (
+              <div className="p-2.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800 space-y-2 animate-fadeIn">
+                <div className="flex items-center justify-between text-xs font-bold text-purple-900 dark:text-purple-200">
+                  <span>Adjust Hobby Target:</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingHobbyTarget(false)}
+                    className="p-1 px-2 rounded-md bg-purple-600 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Check size={11} strokeWidth={3} /> <span>Done</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => updatePillarTarget('hobby', pillarTargets.hobby - 0.5)}
+                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-purple-100"
+                  >
+                    -
+                  </button>
+                  <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-purple-300 dark:border-purple-700 rounded-lg font-mono font-black text-purple-600 dark:text-purple-400 text-xs">
+                    {pillarTargets.hobby.toFixed(1)} hrs
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updatePillarTarget('hobby', pillarTargets.hobby + 0.5)}
+                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-purple-100"
+                  >
+                    +
+                  </button>
+                  {[4, 6, 8, 9, 10].map(h => (
                     <button
-                      type="submit"
-                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold cursor-pointer"
+                      key={h}
+                      type="button"
+                      onClick={() => updatePillarTarget('hobby', h)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition ${
+                        pillarTargets.hobby === h
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-slate-600 dark:text-slate-300 hover:bg-purple-50'
+                      }`}
                     >
-                      + Add
+                      {h}h
                     </button>
-                  </form>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (pillarTotals.hobby / pillarTargets.hobby) * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>{pillarTotals.hobbyRemaining > 0 ? `${pillarTotals.hobbyRemaining.toFixed(1)}h creative leisure left` : 'Fully Allocated'}</span>
+                <span>{((pillarTotals.hobby / pillarTargets.hobby) * 100).toFixed(0)}% Utilized</span>
+              </div>
+            </div>
+
+            {/* Quick Action Presets */}
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
+              {hobbyPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleAddPresetBlock(preset)}
+                  className="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-600 dark:text-purple-400 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Plus size={11} /> <span>+{preset.hours.toFixed(0)}h {preset.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Inspect / Edit Hobby Activities Drawer */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsExpandedHobbyTasks(!isExpandedHobbyTasks)}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer"
+              >
+                <span>Allocated Hobby Activities ({hobbyTasks.length})</span>
+                {isExpandedHobbyTasks ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              {isExpandedHobbyTasks && (
+                <div className="mt-2.5 space-y-2 animate-fadeIn">
+                  {hobbyTasks.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic">No hobby activities scheduled yet today.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {hobbyTasks.map((t) => (
+                        <div key={t.id} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color || '#8b5cf6' }} />
+                            <span className="font-bold truncate text-slate-800 dark:text-slate-200">{t.title}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustTaskDuration(t.id, -30)}
+                              className="w-5 h-5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100"
+                              title="Decrease 30m"
+                            >
+                              -
+                            </button>
+                            <span className="font-mono font-bold text-[11px] w-12 text-center text-purple-600 dark:text-purple-400">
+                              {formatTaskDuration(t.durationMin || 60)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustTaskDuration(t.id, 30)}
+                              className="w-5 h-5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100"
+                              title="Increase 30m"
+                            >
+                              +
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteActivity(t.id)}
+                              className="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer ml-0.5"
+                              title="Delete activity"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3. PILLAR 3: LIVING, HEALTH & VITALITY */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#121927] border border-emerald-200/80 dark:border-emerald-900/50 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Heart size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono uppercase tracking-wider">Pillar 3</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-slate-400">Target: {pillarTargets.living.toFixed(1)}h</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingLivingTarget(!isEditingLivingTarget)}
+                        className="p-0.5 rounded hover:bg-emerald-100 dark:hover:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                        title="Edit Target Living Hours"
+                      >
+                        <Edit2 size={10} />
+                      </button>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    {language === 'am' ? 'የግል ኑሮ፣ ስፖርት፣ ጸሎትና እረፍት' : 'Living, Health & Restoration'}
+                  </h3>
+                </div>
+              </div>
+
+              <span className="text-base font-black font-mono text-emerald-600 dark:text-emerald-400">
+                {pillarTotals.living.toFixed(1)} / {pillarTargets.living.toFixed(1)}h
+              </span>
+            </div>
+
+            {/* Editable Living Target Drawer */}
+            {isEditingLivingTarget && (
+              <div className="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800 space-y-2 animate-fadeIn">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                  <span>Adjust Living Target:</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingLivingTarget(false)}
+                    className="p-1 px-2 rounded-md bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Check size={11} strokeWidth={3} /> <span>Done</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => updatePillarTarget('living', pillarTargets.living - 0.5)}
+                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-emerald-100"
+                  >
+                    -
+                  </button>
+                  <span className="px-3 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-lg font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">
+                    {pillarTargets.living.toFixed(1)} hrs
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updatePillarTarget('living', pillarTargets.living + 0.5)}
+                    className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 font-mono font-bold flex items-center justify-center cursor-pointer hover:bg-emerald-100"
+                  >
+                    +
+                  </button>
+                  {[5, 6, 7, 8, 9, 10].map(h => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => updatePillarTarget('living', h)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold cursor-pointer transition ${
+                        pillarTargets.living === h
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50'
+                      }`}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (pillarTotals.living / pillarTargets.living) * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>{pillarTotals.livingRemaining > 0 ? `${pillarTotals.livingRemaining.toFixed(1)}h rest/recovery left` : 'Fully Allocated'}</span>
+                <span>{((pillarTotals.living / pillarTargets.living) * 100).toFixed(0)}% Utilized</span>
+              </div>
+            </div>
+
+            {/* Quick Action Presets */}
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
+              {livingPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleAddPresetBlock(preset)}
+                  className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Plus size={11} /> <span>+{preset.hours.toFixed(1)}h {preset.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Inspect / Edit Living Activities Drawer */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsExpandedLivingTasks(!isExpandedLivingTasks)}
+                className="w-full flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
+              >
+                <span>Allocated Living Activities ({livingTasks.length})</span>
+                {isExpandedLivingTasks ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              {isExpandedLivingTasks && (
+                <div className="mt-2.5 space-y-2 animate-fadeIn">
+                  {livingTasks.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic">No living activities logged yet today.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {livingTasks.map((t) => (
+                        <div key={t.id} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.color || '#10b981' }} />
+                            <span className="font-bold truncate text-slate-800 dark:text-slate-200">{t.title}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustTaskDuration(t.id, -30)}
+                              className="w-5 h-5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100"
+                              title="Decrease 30m"
+                            >
+                              -
+                            </button>
+                            <span className="font-mono font-bold text-[11px] w-12 text-center text-emerald-600 dark:text-emerald-400">
+                              {formatTaskDuration(t.durationMin || 60)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleAdjustTaskDuration(t.id, 30)}
+                              className="w-5 h-5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100"
+                              title="Increase 30m"
+                            >
+                              +
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteActivity(t.id)}
+                              className="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer ml-0.5"
+                              title="Delete activity"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

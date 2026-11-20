@@ -5,7 +5,15 @@ dist
 .vercel/cache
 *.log
 scratch
+scratch/**
+android
+android/**
 ios
+ios/**
 .github
 *.ipa
+*.apk
+*.zip
 public/*.ipa
+public/*.apk
+public/*.zip

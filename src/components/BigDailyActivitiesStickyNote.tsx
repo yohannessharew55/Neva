@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Check, Play, Plus, Clock, Wind, 
-  Trash2, ChevronDown, ChevronUp, Palette, Maximize2, Minimize2,
-  Dumbbell, Swords, Music, Building2, TrendingUp, 
+  Check, Play, Clock, Wind, 
+  Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Palette, Maximize2, Minimize2,
+  Dumbbell, Swords, ChessKnight, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
-  ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar
+  ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar, Compass
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -16,7 +16,7 @@ import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeMo
 import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
 
-type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
+type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 
 const THEMES: Record<StickyColorTheme, {
   name: string;
@@ -34,115 +34,196 @@ const THEMES: Record<StickyColorTheme, {
   ruledLineColor: string;
   marginLineColor: string;
   shadowColor: string;
+  cardBg?: string;
+  buttonBg?: string;
+  inputBg?: string;
 }> = {
   canary: {
     name: 'Classic Canary Yellow',
     dotColor: '#fde047',
-    paperBg: 'bg-[#fef9c3] dark:bg-[#2a2305]',
-    paperBorder: 'border-[#fef08a] dark:border-amber-700/60',
-    textPrimary: 'text-amber-950 dark:text-amber-100',
-    textSecondary: 'text-amber-800/80 dark:text-amber-300/80',
-    tapeBg: 'bg-amber-100/70 dark:bg-amber-900/40',
-    tapeBorder: 'border-amber-200/80 dark:border-amber-700/50',
-    hourBadgeBg: 'bg-amber-200/80 dark:bg-amber-900/70',
-    hourBadgeText: 'text-amber-950 dark:text-amber-200',
-    checkBorder: 'border-amber-400 dark:border-amber-600',
+    paperBg: 'bg-[#fef9c3]',
+    paperBorder: 'border-[#fef08a]',
+    textPrimary: 'text-amber-950',
+    textSecondary: 'text-amber-800/80',
+    tapeBg: 'bg-amber-100/70',
+    tapeBorder: 'border-amber-200/80',
+    hourBadgeBg: 'bg-amber-200/80',
+    hourBadgeText: 'text-amber-950',
+    checkBorder: 'border-amber-400',
     checkBgDone: 'bg-amber-600 text-white',
     ruledLineColor: 'rgba(217, 119, 6, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(180, 83, 9, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
   },
   peach: {
     name: 'Warm Peach',
     dotColor: '#fdba74',
-    paperBg: 'bg-[#ffedd5] dark:bg-[#2b1406]',
-    paperBorder: 'border-[#fed7aa] dark:border-orange-700/60',
-    textPrimary: 'text-orange-950 dark:text-orange-100',
-    textSecondary: 'text-orange-800/80 dark:text-orange-300/80',
-    tapeBg: 'bg-orange-100/70 dark:bg-orange-900/40',
-    tapeBorder: 'border-orange-200/80 dark:border-orange-700/50',
-    hourBadgeBg: 'bg-orange-200/80 dark:bg-orange-900/70',
-    hourBadgeText: 'text-orange-950 dark:text-orange-200',
-    checkBorder: 'border-orange-400 dark:border-orange-600',
+    paperBg: 'bg-[#ffedd5]',
+    paperBorder: 'border-[#fed7aa]',
+    textPrimary: 'text-orange-950',
+    textSecondary: 'text-orange-800/80',
+    tapeBg: 'bg-orange-100/70',
+    tapeBorder: 'border-orange-200/80',
+    hourBadgeBg: 'bg-orange-200/80',
+    hourBadgeText: 'text-orange-950',
+    checkBorder: 'border-orange-400',
     checkBgDone: 'bg-orange-600 text-white',
     ruledLineColor: 'rgba(234, 88, 12, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(194, 65, 12, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
   },
   mint: {
     name: 'Mint Green',
     dotColor: '#86efac',
-    paperBg: 'bg-[#dcfce7] dark:bg-[#072414]',
-    paperBorder: 'border-[#bbf7d0] dark:border-emerald-700/60',
-    textPrimary: 'text-emerald-950 dark:text-emerald-100',
-    textSecondary: 'text-emerald-800/80 dark:text-emerald-300/80',
-    tapeBg: 'bg-emerald-100/70 dark:bg-emerald-900/40',
-    tapeBorder: 'border-emerald-200/80 dark:border-emerald-700/50',
-    hourBadgeBg: 'bg-emerald-200/80 dark:bg-emerald-900/70',
-    hourBadgeText: 'text-emerald-950 dark:text-emerald-200',
-    checkBorder: 'border-emerald-400 dark:border-emerald-600',
+    paperBg: 'bg-[#dcfce7]',
+    paperBorder: 'border-[#bbf7d0]',
+    textPrimary: 'text-emerald-950',
+    textSecondary: 'text-emerald-800/80',
+    tapeBg: 'bg-emerald-100/70',
+    tapeBorder: 'border-emerald-200/80',
+    hourBadgeBg: 'bg-emerald-200/80',
+    hourBadgeText: 'text-emerald-950',
+    checkBorder: 'border-emerald-400',
     checkBgDone: 'bg-emerald-600 text-white',
     ruledLineColor: 'rgba(5, 150, 105, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(4, 120, 87, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
   },
   sky: {
     name: 'Sky Blue',
     dotColor: '#7dd3fc',
-    paperBg: 'bg-[#e0f2fe] dark:bg-[#062235]',
-    paperBorder: 'border-[#bae6fd] dark:border-sky-700/60',
-    textPrimary: 'text-sky-950 dark:text-sky-100',
-    textSecondary: 'text-sky-800/80 dark:text-sky-300/80',
-    tapeBg: 'bg-sky-100/70 dark:bg-sky-900/40',
-    tapeBorder: 'border-sky-200/80 dark:border-sky-700/50',
-    hourBadgeBg: 'bg-sky-200/80 dark:bg-sky-900/70',
-    hourBadgeText: 'text-sky-950 dark:text-sky-200',
-    checkBorder: 'border-sky-400 dark:border-sky-600',
+    paperBg: 'bg-[#e0f2fe]',
+    paperBorder: 'border-[#bae6fd]',
+    textPrimary: 'text-sky-950',
+    textSecondary: 'text-sky-800/80',
+    tapeBg: 'bg-sky-100/70',
+    tapeBorder: 'border-sky-200/80',
+    hourBadgeBg: 'bg-sky-200/80',
+    hourBadgeText: 'text-sky-950',
+    checkBorder: 'border-sky-400',
     checkBgDone: 'bg-sky-600 text-white',
     ruledLineColor: 'rgba(2, 132, 199, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(3, 105, 161, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
   },
   rose: {
     name: 'Soft Rose',
     dotColor: '#fda4af',
-    paperBg: 'bg-[#ffe4e6] dark:bg-[#2b0814]',
-    paperBorder: 'border-[#fecdd3] dark:border-rose-700/60',
-    textPrimary: 'text-rose-950 dark:text-rose-100',
-    textSecondary: 'text-rose-800/80 dark:text-rose-300/80',
-    tapeBg: 'bg-rose-100/70 dark:bg-rose-900/40',
-    tapeBorder: 'border-rose-200/80 dark:border-rose-700/50',
-    hourBadgeBg: 'bg-rose-200/80 dark:bg-rose-900/70',
-    hourBadgeText: 'text-rose-950 dark:text-rose-200',
-    checkBorder: 'border-rose-400 dark:border-rose-600',
+    paperBg: 'bg-[#ffe4e6]',
+    paperBorder: 'border-[#fecdd3]',
+    textPrimary: 'text-rose-950',
+    textSecondary: 'text-rose-800/80',
+    tapeBg: 'bg-rose-100/70',
+    tapeBorder: 'border-rose-200/80',
+    hourBadgeBg: 'bg-rose-200/80',
+    hourBadgeText: 'text-rose-950',
+    checkBorder: 'border-rose-400',
     checkBgDone: 'bg-rose-600 text-white',
     ruledLineColor: 'rgba(225, 29, 72, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(190, 18, 60, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
   },
   lavender: {
     name: 'Pastel Lavender',
     dotColor: '#d8b4fe',
-    paperBg: 'bg-[#f3e8ff] dark:bg-[#220730]',
-    paperBorder: 'border-[#e9d5ff] dark:border-purple-700/60',
-    textPrimary: 'text-purple-950 dark:text-purple-100',
-    textSecondary: 'text-purple-800/80 dark:text-purple-300/80',
-    tapeBg: 'bg-purple-100/70 dark:bg-purple-900/40',
-    tapeBorder: 'border-purple-200/80 dark:border-purple-700/50',
-    hourBadgeBg: 'bg-purple-200/80 dark:bg-purple-900/70',
-    hourBadgeText: 'text-purple-950 dark:text-purple-200',
-    checkBorder: 'border-purple-400 dark:border-purple-600',
+    paperBg: 'bg-[#f3e8ff]',
+    paperBorder: 'border-[#e9d5ff]',
+    textPrimary: 'text-purple-950',
+    textSecondary: 'text-purple-800/80',
+    tapeBg: 'bg-purple-100/70',
+    tapeBorder: 'border-purple-200/80',
+    hourBadgeBg: 'bg-purple-200/80',
+    hourBadgeText: 'text-purple-950',
+    checkBorder: 'border-purple-400',
     checkBgDone: 'bg-purple-600 text-white',
     ruledLineColor: 'rgba(147, 51, 234, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(126, 34, 206, 0.22)',
+    cardBg: 'bg-white/70',
+    buttonBg: 'bg-white/80 hover:bg-black/5 text-slate-800',
+    inputBg: 'bg-white/90 text-slate-900',
+  },
+  darkgrey: {
+    name: 'Dark Slate Grey',
+    dotColor: '#334155',
+    paperBg: 'bg-[#1e293b]',
+    paperBorder: 'border-[#334155]',
+    textPrimary: 'text-slate-100',
+    textSecondary: 'text-slate-400',
+    tapeBg: 'bg-slate-700/60',
+    tapeBorder: 'border-slate-600/70',
+    hourBadgeBg: 'bg-slate-700/80',
+    hourBadgeText: 'text-slate-100',
+    checkBorder: 'border-slate-500',
+    checkBgDone: 'bg-[#0082ff] text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(244, 63, 94, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.6)',
+    cardBg: 'bg-slate-900/60',
+    buttonBg: 'bg-slate-800 hover:bg-slate-700 text-slate-100 border-white/10',
+    inputBg: 'bg-slate-900 text-slate-100 border-slate-700',
+  },
+  charcoal: {
+    name: 'Charcoal Dark Grey',
+    dotColor: '#262626',
+    paperBg: 'bg-[#18181b]',
+    paperBorder: 'border-[#27272a]',
+    textPrimary: 'text-zinc-100',
+    textSecondary: 'text-zinc-400',
+    tapeBg: 'bg-zinc-800/60',
+    tapeBorder: 'border-zinc-700/70',
+    hourBadgeBg: 'bg-zinc-800/80',
+    hourBadgeText: 'text-zinc-100',
+    checkBorder: 'border-zinc-600',
+    checkBgDone: 'bg-emerald-600 text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(239, 68, 68, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.7)',
+    cardBg: 'bg-black/40',
+    buttonBg: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border-white/10',
+    inputBg: 'bg-zinc-900 text-zinc-100 border-zinc-700',
+  },
+  graphite: {
+    name: 'Graphite Dark Grey',
+    dotColor: '#374151',
+    paperBg: 'bg-[#111827]',
+    paperBorder: 'border-[#1f2937]',
+    textPrimary: 'text-gray-100',
+    textSecondary: 'text-gray-400',
+    tapeBg: 'bg-gray-800/60',
+    tapeBorder: 'border-gray-700/70',
+    hourBadgeBg: 'bg-gray-800/80',
+    hourBadgeText: 'text-gray-100',
+    checkBorder: 'border-gray-600',
+    checkBgDone: 'bg-purple-600 text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(244, 63, 94, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.65)',
+    cardBg: 'bg-gray-900/70',
+    buttonBg: 'bg-gray-800 hover:bg-gray-700 text-gray-100 border-white/10',
+    inputBg: 'bg-gray-900 text-gray-100 border-gray-700',
   },
 };
 
 const getCategoryIcon = (catId: string) => {
   switch (catId) {
     case 'exercise': return Dumbbell;
-    case 'chess': return Swords;
+    case 'chess': return ChessKnight;
     case 'art': return Palette;
     case 'music': return Music;
     case 'architecture': return Building2;
@@ -173,6 +254,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     updateTask,
     activeTask,
     categoryPlans,
+    deleteCategoryPlan,
     setSelectedCategoryId,
     getCategoryTitleTranslated,
     language,
@@ -191,14 +273,66 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     reorderTasks,
     dailyStickyColor,
     setDailyStickyColor,
+    setActiveTab,
+    theme: appTheme,
   } = useLivotion();
 
-  const colorTheme = (dailyStickyColor as StickyColorTheme) || 'canary';
+  // Active viewing date state with Quick-Swipe & day step support
+  const [currentDate, setCurrentDate] = useState<Date>(() => targetDate || new Date());
+
+  useEffect(() => {
+    if (targetDate) {
+      setCurrentDate(targetDate);
+    }
+  }, [targetDate]);
+
+  const handlePrevDay = () => {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 1);
+      return d;
+    });
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const handleNextDay = () => {
+    setCurrentDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 1);
+      return d;
+    });
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const handleResetToToday = () => {
+    setCurrentDate(new Date());
+    try { soundEngine.playPencil(); } catch {}
+  };
+
+  const colorTheme: StickyColorTheme = React.useMemo(() => {
+    if (dailyStickyColor && (dailyStickyColor in THEMES)) {
+      const savedExplicit = localStorage.getItem('neva_daily_sticky_color_custom');
+      if (appTheme === 'dark' && (!savedExplicit || dailyStickyColor === 'canary')) {
+        return 'darkgrey';
+      }
+      return dailyStickyColor as StickyColorTheme;
+    }
+    return appTheme === 'dark' ? 'darkgrey' : 'canary';
+  }, [dailyStickyColor, appTheme]);
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
-  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({
+    devotion: true,
+    exercise: true,
+    chess: true,
+    art: true,
+    music: true,
+    architecture: true,
+    trading: true,
+    buffer: true,
+  });
 
   // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
   const lastTouchTimeRef = useRef<number>(0);
@@ -229,7 +363,20 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (e.changedTouches.length === 1) {
       const endX = e.changedTouches[0].clientX;
       const endY = e.changedTouches[0].clientY;
-      const moveDistance = Math.hypot(endX - touchStartPosRef.current.x, endY - touchStartPosRef.current.y);
+      const deltaX = endX - touchStartPosRef.current.x;
+      const deltaY = endY - touchStartPosRef.current.y;
+      const moveDistance = Math.hypot(deltaX, deltaY);
+
+      // Horizontal Quick-Swipe Detection (swipe left = next day, swipe right = previous day)
+      if (Math.abs(deltaX) >= 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+        if (deltaX < 0) {
+          handleNextDay();
+        } else {
+          handlePrevDay();
+        }
+        return;
+      }
+
       // Generous jitter tolerance for mobile fingers (up to 35px)
       if (moveDistance > 35) return;
 
@@ -341,26 +488,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     });
   };
 
-  // Quick Add State
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string>('music');
-  const [newStartTime, setNewStartTime] = useState(() => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() + 15);
-    let hours = d.getHours();
-    const minutes = d.getMinutes() < 30 ? '00' : '30';
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    return `${hours < 10 ? '0' + hours : hours}:${minutes} ${ampm}`;
-  });
-  const [newDurationMin, setNewDurationMin] = useState<number>(45);
-
   const theme = THEMES[colorTheme];
 
   // Dual Date Calculation
-  const today = targetDate || new Date();
+  const today = currentDate;
   const activeDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const nowObj = new Date();
   const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
@@ -403,7 +534,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       case 'PHYSICAL_FITNESS':
         return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', icon: Dumbbell };
       case 'CHESS':
-        return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', icon: Swords };
+        return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', icon: ChessKnight };
       case 'OIL_PAINTING':
         return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', icon: Palette };
       case 'GUITAR':
@@ -551,9 +682,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
       if (pendingScopeAction.action === 'edit') {
         setEditingTaskId(null);
-      } else if (pendingScopeAction.action === 'create') {
-        setNewTitle('');
-        setIsAdding(false);
       }
 
       if (scope === 'this_day_only') {
@@ -632,9 +760,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Calculate grouped subjects with their tasks
   const subjectGroups = allCategoryKeys
+    .filter((catKey) => categoryPlans && categoryPlans[catKey])
     .map((catKey) => {
       const plan = categoryPlans[catKey];
-      const catTasks = sortedTasks.filter((t) => getCategoryForTask(t).id === catKey);
+      const catTasks = sortedTasks.filter((t) => (getCategoryForTask(t)?.id || '') === catKey);
       
       const filteredTasks = catTasks.filter((t) => {
         if (filterMode === 'remaining') return !t.completed;
@@ -652,9 +781,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
       return {
         id: catKey,
-        title: plan.title,
-        translatedTitle: getCategoryTitleTranslated(catKey, plan.title),
-        color: plan.color,
+        title: plan?.title || catKey,
+        translatedTitle: getCategoryTitleTranslated(catKey, plan?.title || catKey),
+        color: plan?.color || '#0082ff',
         icon: getCategoryIcon(catKey),
         tasks: catTasks,
         displayedTasks: filteredTasks,
@@ -678,37 +807,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const totalDayMinutes = dayTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0);
   const totalHours = (totalDayMinutes / 60).toFixed(1);
   const formattedDayDuration = formatTaskDuration(totalDayMinutes);
-
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    const catPlan = categoryPlans[selectedCategoryKey] || categoryPlans['music'];
-    const domain = getDomainForCategory(selectedCategoryKey);
-
-    setPendingScopeAction({
-      isOpen: true,
-      action: 'create',
-      title: language === 'am' ? 'አዲስ ብሎክ / ተግባር አክል' : 'Add Block to Schedule',
-      itemDescription: `"${newTitle.trim()}" under ${catPlan?.title || 'Main Stream'} (${newStartTime} • ${newDurationMin}m)`,
-      newTaskData: {
-        title: newTitle.trim(),
-        startTime: newStartTime.trim() || 'Flexible',
-        durationMin: Number(newDurationMin),
-        domain,
-        badge: catPlan?.title?.split(' ')[0] || 'Focus',
-        color: catPlan?.color || '#0082ff',
-        soundProfile: 'SOLFEGGIO_432',
-        completed: false,
-        checklist: [
-          { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
-          { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
-        ],
-      },
-    });
-
-    setExpandedSubjects((prev) => ({ ...prev, [selectedCategoryKey]: true }));
-  };
 
   const handleCopyTodayRoutine = () => {
     const todayTasks = tasks.filter((t) => t.date ? t.date === todayStr : isViewingToday);
@@ -747,12 +845,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         toggleTaskCompletion(t.id);
       }
     });
-  };
-
-  const handleOpenAddForSubject = (catKey: string) => {
-    setSelectedCategoryKey(catKey);
-    setIsAdding(true);
-    setExpandedSubjects((prev) => ({ ...prev, [catKey]: true }));
   };
 
   return (
@@ -827,26 +919,61 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           onTouchStart={handlePaperTouchStart}
           onTouchEnd={handlePaperTouchEnd}
           onDoubleClick={handlePaperDoubleClick}
-          className="relative z-10 border-b border-black/10 dark:border-white/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none"
+          className="relative z-10 border-b border-black/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none"
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to view full screen')}
         >
           <div className="flex items-center justify-between gap-2 pr-7 sm:pr-8">
-            <div className="pointer-events-none">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[9px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10">
-                  {dateBanner}
-                </span>
-                <span className="text-xs font-bold font-handwriting opacity-85">
-                  {language === 'am' ? 'የዕለት ተግባራት' : 'Daily Activities'}
-                </span>
-              </div>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap z-20">
+              {/* Previous Day Chevron */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevDay();
+                }}
+                className="w-6 h-6 rounded-md bg-black/5 hover:bg-black/10 active:scale-90 flex items-center justify-center transition cursor-pointer text-current pointer-events-auto"
+                title={language === 'am' ? 'ያለፈው ቀን (ወደ ቀኝ ያንሸራትቱ)' : 'Previous Day (Swipe Right)'}
+                aria-label="Previous Day"
+              >
+                <ChevronLeft size={13} strokeWidth={2.5} />
+              </button>
 
-              <h2 className="text-base sm:text-lg font-extrabold tracking-tight mt-0.5 font-sans flex items-center gap-1.5">
-                <span>{language === 'am' ? 'የዕለት የማስፈጸሚያ ዝርዝር' : 'Daily Execution To-Do'}</span>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/15">
-                  {totalCount}
-                </span>
-              </h2>
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 border border-black/5 select-none">
+                {dateBanner}
+              </span>
+
+              {/* Next Day Chevron */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextDay();
+                }}
+                className="w-6 h-6 rounded-md bg-black/5 hover:bg-black/10 active:scale-90 flex items-center justify-center transition cursor-pointer text-current pointer-events-auto"
+                title={language === 'am' ? 'ቀጣይ ቀን (ወደ ግራ ያንሸራትቱ)' : 'Next Day (Swipe Left)'}
+                aria-label="Next Day"
+              >
+                <ChevronRight size={13} strokeWidth={2.5} />
+              </button>
+
+              {/* Return to Today Button */}
+              {!isViewingToday && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleResetToToday();
+                  }}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#0082ff] text-white shadow-2xs hover:bg-[#0070df] active:scale-95 transition cursor-pointer pointer-events-auto animate-fadeIn"
+                  title={language === 'am' ? 'ወደ ዛሬ ተመለስ' : 'Return to Today'}
+                >
+                  {language === 'am' ? 'ዛሬ' : 'Today'}
+                </button>
+              )}
+
+              <span className="text-sm font-bold font-handwriting opacity-85 select-none hidden sm:inline">
+                {language === 'am' ? 'የዕለት ተግባራት' : 'Daily Activities'}
+              </span>
             </div>
 
             {/* Palette & Full-Screen Controls */}
@@ -858,14 +985,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     e.stopPropagation();
                     setShowColorPalette(!showColorPalette);
                   }}
-                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 flex items-center justify-center"
+                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-95 flex items-center justify-center text-current"
                   title="Change Color"
                 >
                   <Palette size={14} />
                 </button>
 
                 {showColorPalette && (
-                  <div className="absolute right-0 top-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-xl flex items-center gap-1.5 z-40">
+                  <div className="absolute right-0 top-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-2xl flex items-center gap-1.5 z-40 backdrop-blur-md">
                     {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
                       <button
                         key={cKey}
@@ -873,10 +1000,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                         onClick={(e) => {
                           e.stopPropagation();
                           setDailyStickyColor(cKey);
+                          try { localStorage.setItem('neva_daily_sticky_color_custom', 'true'); } catch {}
                           setShowColorPalette(false);
                         }}
-                        className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
-                          colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-80 hover:opacity-100'
+                        className={`w-5.5 h-5.5 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
+                          colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
                         }`}
                         style={{ backgroundColor: THEMES[cKey].dotColor }}
                         title={THEMES[cKey].name}
@@ -894,7 +1022,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   setIsFullScreen(!isFullScreen);
                   try { soundEngine.playPencil(); } catch {}
                 }}
-                className="p-1.5 sm:p-2 min-w-[32px] min-h-[32px] rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-90 text-current flex items-center justify-center relative z-20 shadow-2xs"
+                className="p-1.5 sm:p-2 min-w-[32px] min-h-[32px] rounded-xl bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-90 text-current flex items-center justify-center relative z-20 shadow-2xs"
                 title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
                 aria-label="Toggle Full Screen"
               >
@@ -908,7 +1036,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     e.stopPropagation();
                     onClose();
                   }}
-                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
+                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-95 text-current flex items-center justify-center"
                   title={language === 'am' ? 'ዝጋ' : 'Close'}
                 >
                   <X size={14} />
@@ -922,8 +1050,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         {showScheduleBar && (
           <div className={`relative z-20 mb-2.5 px-3 py-2 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 backdrop-blur-xs transition-all shadow-2xs font-sans ${
             isCustomDay 
-              ? 'bg-amber-500/10 dark:bg-amber-950/30 border-amber-500/30 text-amber-950 dark:text-amber-100'
-              : 'bg-blue-500/10 dark:bg-blue-950/30 border-blue-500/30 text-blue-950 dark:text-blue-100'
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
+              : 'bg-blue-500/10 border-blue-500/30 text-blue-950'
           }`}>
             <div className="flex items-center gap-2">
               <span className="text-base sm:text-lg">{isCustomDay ? '⭐' : '📅'}</span>
@@ -936,8 +1064,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </span>
                   <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
                     isCustomDay 
-                      ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200' 
-                      : 'bg-blue-500/20 text-blue-900 dark:text-blue-200'
+                      ? 'bg-amber-500/20 text-amber-900' 
+                      : 'bg-blue-500/20 text-blue-900'
                   }`}>
                     {isCustomDay ? (language === 'am' ? 'ልዩ' : 'Custom') : (language === 'am' ? 'ነባሪ' : 'Default')}
                   </span>
@@ -968,7 +1096,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={handleResetDayToDefault}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Reset this day back to the default routine template"
                   >
                     <RotateCcw size={11} />
@@ -978,7 +1106,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={() => setShowApplyModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-black/5 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Apply this day schedule to other dates"
                   >
                     <Copy size={11} />
@@ -1000,7 +1128,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={() => setShowDefaultsModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-black/5 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-black/5 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Manage default templates for all weekdays"
                   >
                     <Settings size={11} />
@@ -1014,7 +1142,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
         {/* Toast Feedback */}
         {toastMessage && (
-          <div className="relative z-20 mb-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-1.5 animate-fadeIn">
+          <div className="relative z-20 mb-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 text-xs font-bold flex items-center gap-1.5 animate-fadeIn">
             <Check size={14} />
             <span>{toastMessage}</span>
           </div>
@@ -1026,58 +1154,37 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           <div className={`absolute -top-2 left-6 sm:left-10 w-20 sm:w-28 h-3.5 ${theme.tapeBg} ${theme.tapeBorder} backdrop-blur-xs border-y border-dashed rounded-xs shadow-2xs rotate-1 pointer-events-none z-30`} />
 
           {/* Mini Sticky Note / Sticker Body (Harmonized with sticky color) */}
-          <div className={`relative rounded-2xl bg-white/70 dark:bg-black/40 ${theme.paperBorder} border p-2.5 sm:p-3.5 shadow-md shadow-black/5 ${theme.textPrimary} overflow-hidden`}>
+          <div className={`relative rounded-2xl ${theme.cardBg || 'bg-white/70'} ${theme.paperBorder} border p-2.5 sm:p-3.5 shadow-md shadow-black/5 ${theme.textPrimary} overflow-hidden`}>
             
             {/* Subtle Ruled Texture for Authentic Sticky Note Paper Feel */}
             <div 
-              className="absolute inset-0 pointer-events-none select-none opacity-30 dark:opacity-15"
+              className="absolute inset-0 pointer-events-none select-none opacity-30"
               style={{
-                backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(0,0,0,0.08) 20px)',
+                backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 19px, ${theme.ruledLineColor} 20px)`,
               }}
             />
 
-            {/* Sticker Top Bar: Sticker Title */}
-            <div className="relative z-10 flex items-center justify-between gap-2 pb-1.5 border-b border-black/10 dark:border-white/10">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs">{isSunday ? '🌿' : '🏷️'}</span>
-                <span className={`text-[10px] font-mono font-black uppercase tracking-wider ${theme.textPrimary}`}>
-                  {isSunday 
-                    ? (language === 'am' ? 'የዕሁድ ዕረፍትና ማስተንተን' : 'SUNDAY REST & RECHARGE')
-                    : (language === 'am' ? 'የዕለት ማጠቃለያ ስቲከር' : 'TODAY EXECUTION STICKER')}
-                </span>
-              </div>
-            </div>
-
             {/* Metrics summary & Filter Pills */}
             {isSunday && totalCount === 0 ? (
-              <div className="relative z-10 py-2 text-xs font-mono font-bold flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+              <div className="relative z-10 py-1 text-xs font-mono font-bold flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-emerald-800">
                   <span className="text-sm">☕</span>
                   <span className="font-sans font-extrabold text-xs sm:text-sm">
                     {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-900 dark:text-emerald-200">
+                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-900">
                     {language === 'am' ? 'ዕረፍት' : 'Rest Day & Relax'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsAdding(!isAdding)}
-                    className="p-1 min-w-[24px] min-h-[24px] rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white flex items-center justify-center cursor-pointer transition active:scale-95 shadow-2xs"
-                    title={language === 'am' ? 'ተግባር አክል' : 'Add Sunday Task'}
-                    aria-label="Add Sunday Task"
-                  >
-                    <Plus size={12} strokeWidth={3} />
-                  </button>
                 </div>
               </div>
             ) : (
-              <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold pt-2 ${theme.textSecondary}`}>
+              <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold ${theme.textSecondary}`}>
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                  <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900 dark:text-white">{formattedDayDuration}</strong></span>
+                  <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900">{formattedDayDuration}</strong></span>
                   <span className="opacity-40">•</span>
-                  <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700 dark:text-emerald-400">{completedCount} ({progressPercent}%)</strong></span>
+                  <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700">{completedCount} ({progressPercent}%)</strong></span>
                   <span className="opacity-40">•</span>
                   <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
                 </div>
@@ -1089,7 +1196,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                       filterMode === 'all' 
                         ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
                     }`}
                   >
                     {t('all')} ({totalCount})
@@ -1100,7 +1207,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                       filterMode === 'remaining' 
                         ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
                     }`}
                   >
                     {t('remaining')} ({totalCount - completedCount})
@@ -1111,26 +1218,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
                       filterMode === 'completed' 
                         ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10'
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
                     }`}
                   >
                     {t('done')} ({completedCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsAdding(!isAdding)}
-                    className="p-1 min-w-[24px] min-h-[24px] rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white flex items-center justify-center cursor-pointer transition active:scale-95 shadow-2xs ml-0.5"
-                    title={language === 'am' ? 'ተግባር አክል' : 'Add Task'}
-                    aria-label="Add Task"
-                  >
-                    <Plus size={12} strokeWidth={3} />
                   </button>
                 </div>
               </div>
             )}
 
             {/* Progress Line */}
-            <div className="relative z-10 w-full bg-black/10 dark:bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
+            <div className="relative z-10 w-full bg-black/10 h-1.5 rounded-full overflow-hidden mt-2">
               <div 
                 className="h-full bg-gradient-to-r from-emerald-500 via-[#0082ff] to-[#0082ff] transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
@@ -1138,102 +1236,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             </div>
           </div>
         </div>
-
-        {/* Quick Add Form with Main Stream Subject Selector */}
-        {isAdding && (() => {
-          const SelectedSubjectIcon = getCategoryIcon(selectedCategoryKey);
-          return (
-            <form 
-              onSubmit={handleCreateTask}
-              className="mb-3 p-2.5 sm:p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 space-y-2 relative z-10 text-xs w-full max-w-full overflow-hidden"
-            >
-              {/* Row 1: Task Title Input */}
-              <div className="w-full">
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={language === 'am' ? 'አዲስ ዕለታዊ የትኩረት ተግባር...' : 'New daily focus activity...'}
-                  className="w-full px-3 py-1.5 sm:py-2 rounded-xl text-xs bg-white/90 dark:bg-black/40 border border-black/15 dark:border-white/15 outline-none font-medium placeholder:opacity-60 focus:border-[#0082ff] shadow-2xs"
-                />
-              </div>
-
-              {/* Row 2: Subject Icon Selector, Time, Duration & Icon-Only Action Buttons */}
-              <div className="flex items-center justify-between gap-1.5 flex-wrap w-full max-w-full">
-                {/* Left Controls: Subject with Icon only, Start Time, Duration */}
-                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  {/* Subject Selector with Icon ONLY */}
-                  <div 
-                    className="flex items-center gap-1 bg-white/90 dark:bg-black/40 border border-black/15 dark:border-white/15 rounded-xl px-2 py-1 text-xs"
-                    title={language === 'am' ? 'ዘርፍ ይምረጡ' : 'Select Stream'}
-                  >
-                    <SelectedSubjectIcon 
-                      size={13} 
-                      style={{ color: categoryPlans[selectedCategoryKey]?.color || '#0082ff' }}
-                      className="shrink-0"
-                    />
-                    <select
-                      value={selectedCategoryKey}
-                      onChange={(e) => setSelectedCategoryKey(e.target.value)}
-                      className="bg-transparent text-[11px] font-bold outline-none cursor-pointer max-w-[90px] sm:max-w-none truncate"
-                    >
-                      {allCategoryKeys.map((cKey) => {
-                        const plan = categoryPlans[cKey];
-                        return (
-                          <option key={cKey} value={cKey} className="text-black">
-                            {getCategoryTitleTranslated(cKey, plan.title)}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-
-                  {/* Start Time */}
-                  <div className="flex items-center gap-1 bg-white/90 dark:bg-black/40 border border-black/15 dark:border-white/15 rounded-xl px-2 py-1 text-xs">
-                    <Clock size={11} className="opacity-50 shrink-0" />
-                    <input
-                      type="text"
-                      value={newStartTime}
-                      onChange={(e) => setNewStartTime(e.target.value)}
-                      placeholder="02:00 PM"
-                      className="w-16 bg-transparent text-[11px] font-mono outline-none text-center font-bold"
-                    />
-                  </div>
-
-                  {/* Duration with Custom Minute Support */}
-                  <DurationPicker
-                    value={newDurationMin}
-                    onChange={setNewDurationMin}
-                    size="sm"
-                  />
-                </div>
-
-                {/* Right: Only Icons for Actions - Cancel (X) & Add (Check) */}
-                <div className="flex items-center gap-1 ml-auto shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsAdding(false)}
-                    className="p-1.5 rounded-xl opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer flex items-center justify-center text-slate-600 dark:text-slate-300"
-                    title={language === 'am' ? 'ሰርዝ' : 'Cancel'}
-                    aria-label="Cancel"
-                  >
-                    <X size={15} />
-                  </button>
-                  <button
-                    type="submit"
-                    className="p-1.5 px-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl shadow-xs cursor-pointer active:scale-95 transition-transform flex items-center justify-center"
-                    title={language === 'am' ? 'መዝግብ' : 'Add task'}
-                    aria-label="Add task"
-                  >
-                    <Check size={15} strokeWidth={3} />
-                  </button>
-                </div>
-              </div>
-            </form>
-          );
-        })()}
 
         {/* Scrollable Tasks grouped by Main Stream Subjects */}
         <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1 relative z-10">
@@ -1284,17 +1286,17 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     draggedSubjectId === group.id
                       ? 'opacity-40 scale-[0.98] border-dashed border-[#0082ff] bg-blue-50/20'
                       : dragOverSubjectId === group.id
-                      ? 'border-2 border-[#0082ff] bg-blue-50/40 dark:bg-blue-950/30 scale-[1.01]'
+                      ? 'border-2 border-[#0082ff] bg-blue-50/60 scale-[1.01]'
                       : group.isAllDone 
-                      ? 'bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10 opacity-75' 
-                      : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
+                      ? 'bg-black/10 border-black/10 opacity-75' 
+                      : 'bg-black/5 border-black/10 hover:border-black/20'
                   }`}
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
                   <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 mr-2 overflow-hidden">
                     {/* Drag Handle: Desktop mouse grab & Mobile touch handle */}
                     <div
-                      className="text-black/30 dark:text-white/30 hover:text-black/80 dark:hover:text-white/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
+                      className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
                       title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
                       onTouchStart={(e) => handleTouchStart(e, group.id)}
                       onTouchMove={handleTouchMove}
@@ -1350,24 +1352,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     </button>
                   </div>
 
-                  {/* Right: Progress Badge, Quick Add & Expand Little Sign */}
+                  {/* Right: Progress Badge & Expand Little Sign */}
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 ${
                       group.isAllDone 
-                        ? 'bg-emerald-500/25 text-emerald-800 dark:text-emerald-200' 
+                        ? 'bg-emerald-500/25 text-emerald-800' 
                         : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
                     }`}>
                       {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
                     </span>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenAddForSubject(group.id)}
-                      className="p-1 rounded-md opacity-60 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer"
-                      title={`Add task under ${group.translatedTitle}`}
-                    >
-                      <Plus size={12} />
-                    </button>
 
                     {/* Expand Little Sign on the Main Stream */}
                     <button
@@ -1375,8 +1368,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       onClick={() => toggleSubjectExpand(group.id)}
                       className={`p-1 rounded-md transition cursor-pointer flex items-center justify-center ${
                         isExpanded 
-                          ? 'bg-black/10 dark:bg-white/15 opacity-100 scale-105' 
-                          : 'opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10'
+                          ? 'bg-black/10 opacity-100 scale-105' 
+                          : 'opacity-70 hover:opacity-100 hover:bg-black/10'
                       }`}
                       title={isExpanded ? (language === 'am' ? 'ንዑስ ተግባራትን ሰብስብ' : 'Collapse sub-tasks') : (language === 'am' ? 'ንዑስ ተግባራትን ዘርጋ' : 'Expand sub-tasks')}
                       aria-label={isExpanded ? 'Collapse sub-tasks' : 'Expand sub-tasks'}
@@ -1390,62 +1383,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </div>
                 </div>
 
-                {/* 2. Nested Sub-Sticky Note for Tasks under this Main Stream Subject */}
+                {/* Tasks under this Main Stream Subject - directly on the main sticky */}
                 {isExpanded && (
-                  <div className="relative mt-2.5 mb-1.5 mx-0.5 sm:mx-1 transition-all duration-200">
-                    {/* Washi Tape Strip at top of this inner sticky note */}
-                    <div className="w-20 sm:w-28 h-3.5 bg-amber-200/90 dark:bg-amber-400/25 border-y border-dashed border-amber-400/60 dark:border-white/20 rounded-xs shadow-2xs rotate-[-0.6deg] mx-auto -mb-1.5 relative z-20 select-none flex items-center justify-center pointer-events-none">
-                      <span className="text-[7.5px] font-mono font-black uppercase tracking-wider text-amber-900/80 dark:text-amber-200/90 truncate px-1">
-                        {group.translatedTitle}
-                      </span>
-                    </div>
-
-                    {/* Sub-Sticky Note Paper Container */}
-                    <div 
-                      className="relative rounded-2xl bg-[#fffdf0]/95 dark:bg-[#182234]/95 border border-amber-300/85 dark:border-slate-700/80 p-2 sm:p-3 shadow-md shadow-amber-950/10 dark:shadow-black/40 text-slate-800 dark:text-slate-100 space-y-1.5 overflow-hidden"
-                      style={{
-                        boxShadow: '0 4px 14px -2px rgba(217, 119, 6, 0.12), 0 2px 4px -1px rgba(0,0,0,0.06)'
-                      }}
-                    >
-                      {/* Subtle Ruled Lined Paper Texture */}
-                      <div 
-                        className="absolute inset-0 pointer-events-none select-none opacity-25 dark:opacity-10"
-                        style={{
-                          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(0,0,0,0.06) 20px)',
-                        }}
-                      />
-
-                      {/* Sub-Sticky Header Bar */}
-                      <div className="relative z-10 flex items-center justify-between gap-1.5 pb-1.5 border-b border-amber-200/80 dark:border-slate-700/70">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-xs">📌</span>
-                          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-200 truncate">
-                            {language === 'am' ? `${group.translatedTitle} ብሎኮች` : `${group.translatedTitle} BLOCKS`}
-                          </span>
-                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 dark:bg-amber-900/50 text-amber-950 dark:text-amber-200 shrink-0">
-                            {group.tasks.length}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] font-mono font-bold opacity-75">
-                            {group.formattedDuration}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenAddForSubject(group.id)}
-                            className="px-2 py-0.5 rounded-lg bg-amber-200/70 hover:bg-amber-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-amber-950 dark:text-amber-100 transition cursor-pointer flex items-center gap-1 text-[9px] font-bold active:scale-95 shadow-2xs"
-                            title={language === 'am' ? 'ብሎክ አክል' : 'Add Block'}
-                          >
-                            <Plus size={10} strokeWidth={2.5} />
-                            <span>{language === 'am' ? 'አክል' : 'Add'}</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Task Block Cards inside this Sub-Sticky Note */}
-                      <div className="relative z-10 space-y-1 pt-0.5">
-                        {group.displayedTasks.map((task) => {
+                  <div className="space-y-1.5 pt-2 pb-1 pl-1 sm:pl-2 transition-all duration-200">
+                    {group.displayedTasks.map((task) => {
                           const formattedDuration = formatTaskDuration(task.durationMin);
                           const isSubtasksOpen = !!expandedSubtasks[task.id];
                           const hasSubtasks = task.checklist && task.checklist.length > 0;
@@ -1459,7 +1400,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               <form
                                 key={task.id}
                                 onSubmit={(e) => handleSaveEditTask(task.id, e)}
-                                className="p-2.5 rounded-xl bg-white dark:bg-black/60 border border-amber-300/80 dark:border-white/15 space-y-2 shadow-2xs my-1"
+                                className="p-2.5 rounded-xl bg-white border border-amber-300/80 space-y-2 shadow-2xs my-1"
                               >
                                 <input
                                   type="text"
@@ -1468,18 +1409,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   value={editTitle}
                                   onChange={(e) => setEditTitle(e.target.value)}
                                   placeholder="Task title..."
-                                  className="w-full px-2 py-1 rounded-lg text-xs font-bold bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 outline-none focus:border-[#0082ff]"
+                                  className="w-full px-2 py-1 rounded-lg text-xs font-bold bg-white border border-black/10 outline-none focus:border-[#0082ff] text-slate-900"
                                 />
                                 <div className="flex items-center justify-between gap-1.5 flex-wrap">
                                   <div className="flex items-center gap-1.5">
-                                    <div className="flex items-center gap-1 bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-lg px-2 py-0.5 text-xs">
+                                    <div className="flex items-center gap-1 bg-white border border-black/10 rounded-lg px-2 py-0.5 text-xs text-slate-900">
                                       <Clock size={10} className="opacity-50" />
                                       <input
                                         type="text"
                                         value={editStartTime}
                                         onChange={(e) => setEditStartTime(e.target.value)}
                                         placeholder="09:00 PM"
-                                        className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold"
+                                        className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold text-slate-900"
                                       />
                                     </div>
                                     <DurationPicker
@@ -1492,7 +1433,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     <button
                                       type="button"
                                       onClick={() => setEditingTaskId(null)}
-                                      className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-slate-600 dark:text-slate-300"
+                                      className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 transition cursor-pointer text-slate-600"
                                       title={language === 'am' ? 'ተው' : 'Cancel'}
                                       aria-label="Cancel"
                                     >
@@ -1556,12 +1497,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                 draggedTaskId === task.id
                                   ? 'opacity-40 scale-98 border-dashed border-[#0082ff]'
                                   : dragOverTaskId === task.id
-                                  ? 'border-[#0082ff] bg-blue-50/70 dark:bg-blue-950/40 shadow-xs'
+                                  ? 'border-[#0082ff] bg-blue-50/70 shadow-xs'
                                   : task.completed 
-                                  ? 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 opacity-55' 
+                                  ? 'bg-black/5 border-black/5 opacity-55' 
                                   : isActive 
-                                    ? 'bg-white/95 dark:bg-black/50 border-[#0082ff] shadow-2xs'
-                                    : 'bg-white/85 dark:bg-black/30 hover:bg-white dark:hover:bg-black/45 border-amber-200/70 dark:border-white/10'
+                                    ? 'bg-white/95 border-[#0082ff] shadow-2xs'
+                                    : 'bg-white/85 hover:bg-white border-amber-200/70'
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2 text-xs">
@@ -1633,7 +1574,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   <button
                                     type="button"
                                     onClick={() => startEditTask(task)}
-                                    className="p-1 rounded text-slate-500 hover:text-[#0082ff] dark:hover:text-[#0082ff] hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                                    className="p-1 rounded text-slate-500 hover:text-[#0082ff] hover:bg-black/5 transition cursor-pointer"
                                     title={language === 'am' ? 'ቀይር' : 'Edit task'}
                                   >
                                     <Edit2 size={11} />
@@ -1658,7 +1599,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteTask(task)}
-                                    className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                                    className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 transition cursor-pointer"
                                     title="Delete Task"
                                   >
                                     <Trash2 size={11} />
@@ -1668,7 +1609,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                               {/* Checklist subtasks if expanded */}
                               {isSubtasksOpen && hasSubtasks && task.checklist && (
-                                <div className="mt-1.5 pt-1.5 border-t border-black/5 dark:border-white/10 pl-6 space-y-1 text-[11px]">
+                                <div className="mt-1.5 pt-1.5 border-t border-black/5 pl-6 space-y-1 text-[11px]">
                                   {task.checklist.map((item) => (
                                     <div 
                                       key={item.id} 
@@ -1676,7 +1617,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                       className="flex items-center gap-1.5 cursor-pointer opacity-75 hover:opacity-100"
                                     >
                                       <div className={`w-3 h-3 rounded-xs border flex items-center justify-center text-[8px] ${
-                                        item.done ? 'bg-current text-white dark:text-black border-transparent' : 'border-current'
+                                        item.done ? 'bg-current text-white border-transparent' : 'border-current'
                                       }`}>
                                         {item.done && <Check size={8} />}
                                       </div>
@@ -1690,8 +1631,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                             </div>
                           );
                         })}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
@@ -1699,69 +1638,70 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           })}
 
           {/* Sunday Rest Day Card: Shown on Sundays when no devotion/Sunday activities are scheduled */}
-          {isSunday && subjectGroups.length === 0 && !isAdding && (
-            <div className="py-8 px-4 text-center select-none rounded-3xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/25 backdrop-blur-xs space-y-4 shadow-xs my-2 animate-fade-in">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/15 dark:bg-emerald-500/25 flex items-center justify-center text-3xl shadow-inner">
+          {isSunday && subjectGroups.length === 0 && (
+            <div className="py-8 px-4 text-center select-none rounded-3xl border border-emerald-500/20 bg-emerald-50/70 backdrop-blur-xs space-y-4 shadow-xs my-2 animate-fade-in">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/15 flex items-center justify-center text-3xl shadow-inner">
                 🌿
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg sm:text-xl font-black font-sans tracking-tight text-emerald-950 dark:text-emerald-100">
+                <h3 className="text-lg sm:text-xl font-black font-sans tracking-tight text-emerald-950">
                   {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
                 </h3>
-                <p className="text-xs sm:text-sm font-medium opacity-80 max-w-md mx-auto text-emerald-900/80 dark:text-emerald-200/80 leading-relaxed font-sans">
+                <p className="text-xs sm:text-sm font-medium opacity-80 max-w-md mx-auto text-emerald-900/80 leading-relaxed font-sans">
                   {language === 'am' 
                     ? 'እሁድ የተመደበው የዕረፍትና የመረጋጊያ ቀንዎ ነው። አዕምሮዎን ያሳርፉ፣ ጸጥታን ይለማመዱ እና ለሚመጣው አዲስ ሳምንት ራስዎን ያድሱ።' 
                     : 'Sunday is your designated rest day. Relax, reflect, recharge, and enjoy peaceful moments with loved ones.'}
                 </p>
               </div>
-
-              {/* Devotion & Gentle Sunday activities */}
-              <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => handleOpenAddForSubject('devotion')}
-                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
-                >
-                  <Plus size={13} strokeWidth={2.5} />
-                  <span>{language === 'am' ? 'የጸሎት / የዕሁድ ተግባር አክል' : 'Add Devotion / Sunday Task'}</span>
-                </button>
-              </div>
             </div>
           )}
 
-          {/* Weekday Empty State: Prompt user to choose a Main Stream Subject to schedule */}
-          {!isSunday && subjectGroups.length === 0 && !isAdding && (
-            <div className="py-6 px-3 text-center space-y-3 select-none border border-dashed border-black/15 dark:border-white/15 rounded-2xl">
-              <p className="font-hand text-sm sm:text-base font-bold opacity-80">
-                {language === 'am' ? 'ምንም የተመዘገበ ተግባር የለም። ከዋና ዋናዎቹ ክፍሎች አንዱን ይምረጡ፡' : 'No activities scheduled yet. Schedule your first focus block for:'}
-              </p>
+          {/* Weekday Empty State: Pure execution notice reflecting Main Streams & Planner */}
+          {!isSunday && subjectGroups.length === 0 && (
+            <div className="py-10 px-4 text-center space-y-4 select-none animate-fadeIn">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-black/5 flex items-center justify-center text-2xl shadow-inner">
+                📋
+              </div>
+              <div className="space-y-1.5">
+                <h4 className="font-sans text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+                  {language === 'am' ? 'ለዚህ ቀን የተመዘገበ የዘርፍ ፕሮግራም የለም' : 'No Stream Blocks Scheduled for this Day'}
+                </h4>
+                <p className="text-xs font-mono opacity-60 max-w-sm mx-auto leading-relaxed">
+                  {language === 'am'
+                    ? 'በዋና ዘርፎች (Main Streams) ወይም በታክቲካል ፕላነር የተመዘገቡ ፕሮግራሞችና ተግባራት በቀጥታ በዚህ ሰሌዳ ላይ ይቀርባሉ።'
+                    : 'Blocks and routines registered in your Main Stream programs or Tactical Planner directly display here.'}
+                </p>
+              </div>
 
-              {/* Main Stream Subjects Quick-Starter Pills */}
-              <div className="flex items-center justify-center flex-wrap gap-1.5 pt-1">
-                {allCategoryKeys.map((cKey) => {
-                  const plan = categoryPlans[cKey];
-                  const Icon = getCategoryIcon(cKey);
-                  return (
-                    <button
-                      key={cKey}
-                      type="button"
-                      onClick={() => handleOpenAddForSubject(cKey)}
-                      className="px-2.5 py-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/60 hover:bg-white/90 dark:bg-black/20 dark:hover:bg-black/40 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
-                    >
-                      <Icon size={12} style={{ color: plan.color }} />
-                      <span>{getCategoryTitleTranslated(cKey, plan.title)}</span>
-                    </button>
-                  );
-                })}
+              <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('calendar')}
+                  className="px-4 py-2 rounded-xl bg-[#0082ff] hover:bg-blue-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                >
+                  <Calendar size={13} />
+                  <span>{language === 'am' ? 'ታክቲካል ፕላነር ክፈት' : 'Open Tactical Planner'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const firstCat = allCategoryKeys.find((k) => categoryPlans && categoryPlans[k]);
+                    if (firstCat) setSelectedCategoryId(firstCat);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold border border-black/10 dark:border-white/10 cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                >
+                  <Compass size={13} />
+                  <span>{language === 'am' ? 'ዋና ዘርፎችን ተመልከት' : 'View Main Streams'}</span>
+                </button>
               </div>
 
               {/* One-click option to copy today's routine to this day for independent editing */}
               {!isViewingToday && (
-                <div className="pt-2 border-t border-black/10 dark:border-white/10 mt-2">
+                <div className="pt-1">
                   <button
                     type="button"
                     onClick={handleCopyTodayRoutine}
-                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500/90 hover:bg-amber-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
                   >
                     <span>📋</span>
                     <span>{language === 'am' ? 'የዛሬውን ፕሮግራም ወደዚህ ቀን ቅዳ' : "Copy Today's Routine to this Day"}</span>
@@ -1775,20 +1715,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             onTouchStart={handlePaperTouchStart}
             onTouchEnd={handlePaperTouchEnd}
             onDoubleClick={handlePaperDoubleClick}
-            className="w-full py-8 mt-2 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation group/taparea min-h-[70px]"
+            className="w-full py-4 mt-1 cursor-pointer select-none touch-manipulation min-h-[36px]"
             title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ለማየት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double tap paper to expand full screen')}
-          >
-            <div className="flex items-center gap-1.5 opacity-35 group-hover/taparea:opacity-75 transition-opacity">
-              <span className="text-[10px]">{isSunday ? '🌿' : '✏️'}</span>
-              <span className="text-[9px] font-mono tracking-wider font-semibold uppercase">
-                {isSunday && totalCount === 0
-                  ? (language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ • ለማስፋት/ለመውጣት ሁለት ጊዜ ይንኩ' : 'Rest Day and Relax • Double-tap paper to expand/exit')
-                  : (isFullScreen 
-                    ? (language === 'am' ? 'ከሙሉ ገጽ ለመውጣት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to exit full screen')
-                    : (language === 'am' ? 'በሙሉ ገጽ ለማስፋት ወረቀቱን ሁለት ጊዜ ይንኩ' : 'Double-tap paper to expand full screen'))}
-              </span>
-            </div>
-          </div>
+          />
         </div>
       </div>
       </div>

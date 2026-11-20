@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neva-cache-v2';
+const CACHE_NAME = 'neva-cache-v1.0.9-20261117-1400';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Instantly take over without waiting for user to close tabs
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS).catch(() => {}))
@@ -19,18 +20,30 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            console.log('[SW] Deleting stale cache:', key);
+            return caches.delete(key);
+          }
         })
       )
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(() => {
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'NEW_VERSION_ACTIVATED', cache: CACHE_NAME });
+        });
+      });
+    })
   );
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Never cache API sync/auth endpoints - let network & cloudSync.ts handle them
-  if (url.pathname.startsWith('/api/')) {
+  // Never cache API sync/auth endpoints or version.json - always fresh over network
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('version.json')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => new Response('{"offline":true}', { headers: { 'Content-Type': 'application/json' } }))
+    );
     return;
   }
 
@@ -56,20 +69,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (JS, CSS, images, fonts) - Stale-While-Revalidate
+  // Static assets (JS, CSS, images, fonts) - Network-first for Vite hashed assets, fallback to cache
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        return new Response('Asset offline', { status: 503 });
+      })
   );
 });

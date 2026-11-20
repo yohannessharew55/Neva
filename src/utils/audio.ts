@@ -4,6 +4,7 @@
 export type StartSoundType = 'none' | 'gentle_bell' | 'tibetan_bowl' | 'zen_gong' | 'crystal_chime';
 export type AlarmSoundType = 'none' | 'tibetan_bowl' | 'temple_bell' | 'zen_gong' | 'sacred_chimes' | 'digital_alert' | 'gentle_harp';
 export type AmbienceType = 'none' | 'alpha432' | 'rain' | 'forest_stream' | 'white_noise';
+export type TouchSoundType = 'pencil' | 'pop' | 'click' | 'chime' | 'wood' | 'none';
 
 export interface FocusSoundSettings {
   startSound: StartSoundType;
@@ -12,6 +13,10 @@ export interface FocusSoundSettings {
   masterVolume: number; // 0.0 to 1.0
   ambienceVolume: number; // 0.0 to 1.0
   vibrationEnabled: boolean;
+  // Tactile touch feedback settings
+  touchSoundType: TouchSoundType;
+  touchSoundVolume: number; // 0.0 to 1.0
+  touchSoundEnabled: boolean;
 }
 
 export const DEFAULT_SOUND_SETTINGS: FocusSoundSettings = {
@@ -20,7 +25,10 @@ export const DEFAULT_SOUND_SETTINGS: FocusSoundSettings = {
   ambience: 'none',
   masterVolume: 0.8,
   ambienceVolume: 0.4,
-  vibrationEnabled: true
+  vibrationEnabled: true,
+  touchSoundType: 'pencil',
+  touchSoundVolume: 0.7,
+  touchSoundEnabled: true,
 };
 
 class SoundEngine {
@@ -306,24 +314,147 @@ class SoundEngine {
     } catch (e) {}
   }
 
-  // Subtle UI click / pencil sound
-  playPencil(): void {
-    const settings = this.getSettings();
-    if (settings.masterVolume <= 0) return;
+  // High-fidelity tactile touch feedback sounds
+  playPencilRaw(vol = 0.7): void {
     try {
       const ctx = this.getAudioContext();
+      if (!ctx) return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(1800, now);
-      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.setValueAtTime(vol * 0.08, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.04);
     } catch (e) {}
+  }
+
+  playPop(vol = 0.7): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(1250, now + 0.03);
+      gain.gain.setValueAtTime(vol * 0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } catch (e) {}
+  }
+
+  playClick(vol = 0.7): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = 'square';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(2400, now);
+      osc2.frequency.setValueAtTime(3600, now);
+      gain.gain.setValueAtTime(vol * 0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.025);
+      osc2.stop(now + 0.025);
+    } catch (e) {}
+  }
+
+  playChime(vol = 0.7): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      [1318.5, 1975.5].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.02);
+        gain.gain.setValueAtTime(vol * 0.08, now + idx * 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.02);
+        osc.stop(now + 0.22);
+      });
+    } catch (e) {}
+  }
+
+  playWood(vol = 0.7): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(760, now);
+      osc.frequency.exponentialRampToValueAtTime(480, now + 0.05);
+      gain.gain.setValueAtTime(vol * 0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    } catch (e) {}
+  }
+
+  // Unified Touch / Tap sound dispatcher
+  playTouchSound(customType?: TouchSoundType, customVol?: number): void {
+    const settings = this.getSettings();
+    if (settings.touchSoundEnabled === false) return;
+
+    const type = customType || settings.touchSoundType || 'pencil';
+    if (type === 'none') return;
+
+    const baseVol = customVol !== undefined ? customVol : (settings.touchSoundVolume ?? 0.7);
+    const effectiveVol = Math.max(0, Math.min(1, baseVol * (settings.masterVolume ?? 0.8)));
+    if (effectiveVol <= 0) return;
+
+    // Haptic tick if enabled
+    if (settings.vibrationEnabled !== false && typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(8); } catch {}
+    }
+
+    switch (type) {
+      case 'pop':
+        this.playPop(effectiveVol);
+        break;
+      case 'click':
+        this.playClick(effectiveVol);
+        break;
+      case 'chime':
+        this.playChime(effectiveVol);
+        break;
+      case 'wood':
+        this.playWood(effectiveVol);
+        break;
+      case 'pencil':
+      default:
+        this.playPencilRaw(effectiveVol);
+        break;
+    }
+  }
+
+  // Backward-compatible playPencil now routes through playTouchSound!
+  playPencil(): void {
+    this.playTouchSound();
   }
 
   // Play Focus Start Sound based on profile

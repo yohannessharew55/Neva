@@ -3,7 +3,7 @@ import {
   Play, Pause, RotateCcw, Timer, CheckCircle2, 
   Sparkles, Coffee, Flame, Zap, Sliders, Plus, Minus,
   SkipForward, Clock, History, Award, Shield, BookOpen,
-  Dumbbell, Swords, Palette, Music, Building2, TrendingUp,
+  Dumbbell, Swords, ChessKnight, Palette, Music, Building2, TrendingUp,
   Check, Brain, Maximize2, Minimize2, Activity, Waves,
   Volume2, Bell, Smartphone, Tv
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { ScheduleTask } from '../types';
 import { soundEngine } from '../utils/audio';
 import { iosNativeBridge } from '../utils/iosNativeBridge';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
+import { timerNotificationService } from '../utils/timerNotificationService';
 import { FocusSoundModal } from './FocusSoundModal';
 
 type FocusSystemType = 'pomodoro' | 'ultradian' | 'desktime' | 'sprint' | 'custom' | 'stopwatch';
@@ -60,6 +61,10 @@ export const PracticeFlowView: React.FC = () => {
   const [totalDurationSeconds, setTotalDurationSeconds] = useState<number>(25 * 60);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [stopwatchSeconds, setStopwatchSeconds] = useState<number>(0);
+
+  // Flexible Dynamic Clock Color Theme Override (null = auto sync with system/task)
+  const [customThemeColor, setCustomThemeColor] = useState<string | null>(null);
+  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState<boolean>(false);
 
   // Session Note
   const [sessionNote, setSessionNote] = useState<string>('');
@@ -133,6 +138,15 @@ export const PracticeFlowView: React.FC = () => {
       setSecondsRemaining(durations.focus);
       setTotalDurationSeconds(durations.focus);
     }
+
+    // Flexibly change clock theme color to match system (unless user manually chose a color)
+    if (!customThemeColor) {
+      const sysColor =
+        system === 'pomodoro' ? '#ff453a' :
+        system === 'ultradian' ? '#af52de' :
+        system === 'custom' ? '#30d158' : '#5e5ce6';
+      mobileTimerEngine.setThemeColor(sysColor);
+    }
   };
 
   // Map Task to Focus Category and launch with tailored rhythm
@@ -151,15 +165,21 @@ export const PracticeFlowView: React.FC = () => {
 
     setSelectedCategory(matchedCategory);
 
-    // Choose optimal rhythm: if task duration >= 75m use Ultradian, else custom or current
+    // Flexibly change clock theme color to match task category
+    if (!customThemeColor) {
+      const cat = categoryOptions.find((c) => c.id === matchedCategory);
+      if (cat) {
+        mobileTimerEngine.setThemeColor(cat.color);
+      }
+    }
+
+    // Choose optimal rhythm: if task duration >= 75m use Ultradian, else pomodoro or custom
     let targetSystem: FocusSystemType = selectedSystem;
     if (task.durationMin >= 75) {
       targetSystem = 'ultradian';
     } else if (task.durationMin === 25 || task.durationMin === 50) {
       targetSystem = 'pomodoro';
       setPomodoroLength(task.durationMin);
-    } else if (task.durationMin <= 15) {
-      targetSystem = 'sprint';
     } else {
       targetSystem = 'custom';
       setCustomMinutes(task.durationMin);
@@ -303,13 +323,15 @@ export const PracticeFlowView: React.FC = () => {
       soundEngine.playStartSound();
       soundEngine.startAmbience();
       iosNativeBridge.haptic('medium');
+      timerNotificationService.requestPermission().catch(() => {});
 
       if (selectedSystem === 'stopwatch') {
         mobileTimerEngine.startStopwatch({
           initialElapsedSeconds: stopwatchSeconds,
           taskTitle: activeTaskTitle || undefined,
           category: selectedCategory,
-          system: 'stopwatch'
+          system: 'stopwatch',
+          themeColor: getThemeColor(),
         });
       } else {
         mobileTimerEngine.startCountdown({
@@ -319,6 +341,7 @@ export const PracticeFlowView: React.FC = () => {
           category: selectedCategory,
           system: selectedSystem,
           phase,
+          themeColor: getThemeColor(),
           onComplete: handleTimerComplete
         });
       }
@@ -381,17 +404,27 @@ export const PracticeFlowView: React.FC = () => {
     return Math.min(100, Math.max(0, progress));
   };
 
-  // Color theme according to system & phase (Orange Clock Theme)
+  // Flexible dynamic color theme according to system, task, phase, and user preference
   const getThemeColor = () => {
-    if (phase === 'short_break' || phase === 'long_break') return '#10b981'; // Emerald break
+    // 1. If user locked a custom color preference
+    if (customThemeColor) return customThemeColor;
+
+    // 2. Rest / Break phase
+    if (phase === 'short_break' || phase === 'long_break') return '#34d399'; // Mint break
+
+    // 3. Task specific category color (if running a tagged task)
+    if (selectedCategory && selectedCategory !== 'buffer') {
+      const cat = categoryOptions.find((c) => c.id === selectedCategory);
+      if (cat) return cat.color;
+    }
+
+    // 4. Default signature color for each clock system
     switch (selectedSystem) {
-      case 'pomodoro': return '#ff9f0a'; // iOS Timer Orange
-      case 'ultradian': return '#ff9f0a';
-      case 'desktime': return '#ff9f0a';
-      case 'sprint': return '#ff9f0a';
-      case 'custom': return '#ff9f0a';
-      case 'stopwatch': return '#ff9f0a';
-      default: return '#ff9f0a';
+      case 'pomodoro': return '#ff453a'; // Flame Tomato Red
+      case 'ultradian': return '#af52de'; // Cognitive Purple / Violet (90/20)
+      case 'custom': return '#30d158'; // Apple Vivid Emerald Green
+      case 'stopwatch': return '#5e5ce6'; // Precision Sapphire Indigo
+      default: return '#30d158';
     }
   };
 
@@ -399,17 +432,16 @@ export const PracticeFlowView: React.FC = () => {
     switch (sys) {
       case 'pomodoro': return '🍅';
       case 'ultradian': return '🧠';
-      case 'desktime': return '⚡';
-      case 'sprint': return '🚀';
       case 'custom': return '🎯';
       case 'stopwatch': return '⏱️';
+      default: return '⏱️';
     }
   };
 
   const categoryOptions = [
     { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', color: '#a855f7', icon: BookOpen },
     { id: 'exercise', label: language === 'am' ? 'ስፖርት' : 'Exercise', color: '#ef4444', icon: Dumbbell },
-    { id: 'chess', label: language === 'am' ? 'ቼዝ' : 'Chess', color: '#6366f1', icon: Swords },
+    { id: 'chess', label: language === 'am' ? 'ቼዝ' : 'Chess', color: '#6366f1', icon: ChessKnight },
     { id: 'art', label: language === 'am' ? 'ስዕል' : 'Art', color: '#ec4899', icon: Palette },
     { id: 'music', label: language === 'am' ? 'ሙዚቃ' : 'Music', color: '#f59e0b', icon: Music },
     { id: 'architecture', label: language === 'am' ? 'አርክቴክቸር' : 'Architecture', color: '#06b6d4', icon: Building2 },
@@ -417,7 +449,7 @@ export const PracticeFlowView: React.FC = () => {
     { id: 'buffer', label: language === 'am' ? 'አጠቃላይ' : 'General Focus', color: '#64748b', icon: Shield },
   ];
 
-  const currentCategoryObj = categoryOptions.find((c) => c.id === selectedCategory) || categoryOptions[7];
+  const currentCategoryObj = categoryOptions.find((c) => c.id === selectedCategory) || categoryOptions[0] || { id: 'buffer', label: 'Focus', color: '#0082ff', icon: Shield };
   const CategoryIcon = currentCategoryObj.icon;
 
   const currentDisplaySeconds = selectedSystem === 'stopwatch' ? stopwatchSeconds : secondsRemaining;
@@ -437,160 +469,114 @@ export const PracticeFlowView: React.FC = () => {
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {language === 'am'
               ? 'የቲማቲም ዘዴ (ፖሞዶሮ)፣ የ90/20 ጥልቅ የትኩረት ሥርዓት፣ እና ብጁ የደቂቃ ቆጣሪ።'
-              : 'Choose the Pomodoro Tomato system, Ultradian rhythm, 52/17 performance rule, or custom countdown.'}
+              : 'Choose the Pomodoro Tomato system, Ultradian rhythm, Custom countdown, or Open Stopwatch.'}
           </p>
         </div>
       </div>
 
-      {/* Focus System Switcher Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      {/* Focus System Switcher Tabs - 4 Core Spacious Systems */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         
         {/* 1. Pomodoro / Tomato System */}
         <button
-          onClick={() => applySystem('pomodoro', 25, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+          type="button"
+          onClick={() => applySystem('pomodoro', pomodoroLength, customMinutes)}
+          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'pomodoro'
-              ? 'bg-red-50/80 dark:bg-red-950/30 border-red-300 dark:border-red-800/80 shadow-xs ring-2 ring-red-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+              ? 'bg-red-50/90 dark:bg-red-950/40 border-red-300 dark:border-red-800 shadow-xs ring-2 ring-red-400/30 -translate-y-0.5'
+              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xl">🍅</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300">
-              25m / 5m
+            <span className="text-2xl sm:text-3xl">🍅</span>
+            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300">
+              {pomodoroLength}m / {pomodoroLength === 50 ? '10m' : '5m'}
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'የቲማቲም ዘዴ' : 'Tomato System'}
+          <div className="mt-2.5">
+            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+              {language === 'am' ? 'የቲማቲም ዘዴ' : 'Pomodoro Flow'}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              Pomodoro 4-Cycle
+            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              {language === 'am' ? '25ደ/50ደ ዑደት' : '25m / 50m Cycles'}
             </div>
           </div>
         </button>
 
         {/* 2. Ultradian 90/20 Protocol */}
         <button
+          type="button"
           onClick={() => applySystem('ultradian', pomodoroLength, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'ultradian'
-              ? 'bg-purple-50/80 dark:bg-purple-950/30 border-purple-300 dark:border-purple-800/80 shadow-xs ring-2 ring-purple-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+              ? 'bg-purple-50/90 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 shadow-xs ring-2 ring-purple-400/30 -translate-y-0.5'
+              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xl">🧠</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
+            <span className="text-2xl sm:text-3xl">🧠</span>
+            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
               90m / 20m
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'የ90/20 ጥልቅ ዘዴ' : 'Ultradian Flow'}
+          <div className="mt-2.5">
+            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+              {language === 'am' ? 'የ90/20 ጥልቅ ዘዴ' : 'Deep Work Flow'}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              Peak Neurobiology
-            </div>
-          </div>
-        </button>
-
-        {/* 3. 52/17 Rule */}
-        <button
-          onClick={() => applySystem('desktime', pomodoroLength, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
-            selectedSystem === 'desktime'
-              ? 'bg-cyan-50/80 dark:bg-cyan-950/30 border-cyan-300 dark:border-cyan-800/80 shadow-xs ring-2 ring-cyan-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xl">⚡</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-cyan-100 text-cyan-700 dark:bg-cyan-950/80 dark:text-cyan-300">
-              52m / 17m
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-              52/17 Rule
-            </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              DeskTime Metric
+            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              {language === 'am' ? 'የተፈጥሮ ሪትም' : 'Ultradian Rhythm'}
             </div>
           </div>
         </button>
 
-        {/* 4. Quick Sprint 15/5 */}
+        {/* 3. Custom Countdown */}
         <button
-          onClick={() => applySystem('sprint', pomodoroLength, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
-            selectedSystem === 'sprint'
-              ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/80 shadow-xs ring-2 ring-amber-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xl">🚀</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300">
-              15m / 5m
-            </span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'ፈጣን ስፕሪንት' : 'Power Sprint'}
-            </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              Micro Burst
-            </div>
-          </div>
-        </button>
-
-        {/* 5. Custom Countdown */}
-        <button
+          type="button"
           onClick={() => applySystem('custom', pomodoroLength, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'custom'
-              ? 'bg-blue-50/80 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800/80 shadow-xs ring-2 ring-blue-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+              ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 shadow-xs ring-2 ring-blue-400/30 -translate-y-0.5'
+              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xl">🎯</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+            <span className="text-2xl sm:text-3xl">🎯</span>
+            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
               {customMinutes}m
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
+          <div className="mt-2.5">
+            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
               {language === 'am' ? 'ብጁ ቆጣሪ' : 'Custom Minutes'}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              Set Exact Time
+            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              {language === 'am' ? 'የሚፈልጉትን ደቂቃ ይምረጡ' : 'Set Any Duration'}
             </div>
           </div>
         </button>
 
-        {/* 6. Open Stopwatch */}
+        {/* 4. Open Stopwatch */}
         <button
+          type="button"
           onClick={() => applySystem('stopwatch', pomodoroLength, customMinutes)}
-          className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'stopwatch'
-              ? 'bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-800/80 shadow-xs ring-2 ring-indigo-400/30'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+              ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-800 shadow-xs ring-2 ring-indigo-400/30 -translate-y-0.5'
+              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xl">⏱️</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
+            <span className="text-2xl sm:text-3xl">⏱️</span>
+            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
               Open
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'ክፍት ቆጣሪ' : 'Stopwatch'}
+          <div className="mt-2.5">
+            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+              {language === 'am' ? 'ክፍት ስቶፕዎች' : 'Stopwatch'}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              Count Up
+            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              {language === 'am' ? 'ቆጥሮ የሚጨምር' : 'Open Count Up'}
             </div>
           </div>
         </button>
@@ -675,12 +661,10 @@ export const PracticeFlowView: React.FC = () => {
               <span className="text-xl">{getSystemIcon(selectedSystem)}</span>
               <div>
                 <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 block">
-                  {selectedSystem === 'pomodoro' ? (language === 'am' ? 'የቲማቲም ዘዴ' : 'Pomodoro Tomato') :
-                   selectedSystem === 'ultradian' ? 'Ultradian 90/20 Flow' :
-                   selectedSystem === 'desktime' ? '52/17 Performance' :
-                   selectedSystem === 'sprint' ? '15m Power Sprint' :
+                  {selectedSystem === 'pomodoro' ? (language === 'am' ? 'የቲማቲም ዘዴ' : 'Pomodoro Flow') :
+                   selectedSystem === 'ultradian' ? (language === 'am' ? 'የ90/20 ጥልቅ ዘዴ' : 'Deep Work Flow') :
                    selectedSystem === 'custom' ? (language === 'am' ? `ብጁ ${customMinutes} ደቂቃ` : `Custom ${customMinutes}m`) :
-                   'Open Flow Stopwatch'}
+                   (language === 'am' ? 'ክፍት ስቶፕዎች' : 'Open Stopwatch')}
                 </span>
                 {activeTaskTitle && (
                   <span className="text-[10px] text-[#0082ff] font-bold truncate max-w-[200px] block">
@@ -706,6 +690,21 @@ export const PracticeFlowView: React.FC = () => {
                 </span>
               )}
 
+              {/* Dynamic Color Palette Chooser */}
+              <button
+                type="button"
+                onClick={() => setIsColorPaletteOpen((prev) => !prev)}
+                className="p-1.5 rounded-xl transition cursor-pointer active:scale-95 shadow-2xs flex items-center gap-1 border"
+                style={{
+                  backgroundColor: isColorPaletteOpen ? `${themeColor}22` : 'transparent',
+                  borderColor: isColorPaletteOpen ? themeColor : 'rgba(148, 163, 184, 0.25)',
+                  color: themeColor
+                }}
+                title={language === 'am' ? 'የትኩረት ሰዓት ቀለም ምርጫ' : 'Clock Theme & Widget Color'}
+              >
+                <Palette size={15} />
+              </button>
+
               {/* Sound & Alarm Settings Button */}
               <button
                 type="button"
@@ -727,6 +726,64 @@ export const PracticeFlowView: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Quick Color Palette Drawer */}
+          {isColorPaletteOpen && (
+            <div className="w-full mt-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 z-10 animate-fadeIn">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {language === 'am' ? 'የሰዓትና የዊድጄት ቀለም፡' : 'Clock & Widget Color:'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomThemeColor(null);
+                    mobileTimerEngine.setThemeColor('');
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
+                    !customThemeColor
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                      : 'bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-300'
+                  }`}
+                >
+                  ⚡ AUTO
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { id: 'green', label: 'Emerald Green', color: '#30d158' },
+                  { id: 'orange', label: 'iOS Orange', color: '#ff9f0a' },
+                  { id: 'red', label: 'Tomato Red', color: '#ff453a' },
+                  { id: 'purple', label: 'Cognitive Purple', color: '#af52de' },
+                  { id: 'cyan', label: 'Sky Cyan', color: '#32ade6' },
+                  { id: 'indigo', label: 'Sapphire Indigo', color: '#5e5ce6' },
+                  { id: 'pink', label: 'Rose Pink', color: '#ec4899' },
+                  { id: 'mint', label: 'Break Mint', color: '#34d399' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setCustomThemeColor(item.color);
+                      mobileTimerEngine.setThemeColor(item.color);
+                    }}
+                    className="w-6 h-6 rounded-full border-2 transition transform active:scale-90 flex items-center justify-center cursor-pointer"
+                    style={{
+                      backgroundColor: item.color,
+                      borderColor: (customThemeColor || themeColor) === item.color ? '#ffffff' : 'transparent',
+                      boxShadow: (customThemeColor || themeColor) === item.color ? `0 0 10px ${item.color}` : 'none'
+                    }}
+                    title={item.label}
+                  >
+                    {(customThemeColor || themeColor) === item.color && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Pomodoro Tomato Cycles Indicator (if pomodoro selected) */}
           {selectedSystem === 'pomodoro' && (
@@ -1011,6 +1068,22 @@ export const PracticeFlowView: React.FC = () => {
               <Tv size={18} />
               <span className="hidden sm:inline text-xs font-bold">
                 {language === 'am' ? 'ትንሽ መስኮት' : 'Little Window'}
+              </span>
+            </button>
+
+            {/* Sync to Apple System Clock Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const mins = Math.max(1, Math.round(totalDurationSeconds / 60));
+                iosNativeBridge.openSystemTimer(mins);
+              }}
+              className="p-3 bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/40 dark:hover:bg-orange-900/40 text-orange-600 dark:text-orange-400 rounded-2xl transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              title={language === 'am' ? 'ወደ iPhone ሲስተም ሰዓት ቆጣሪ ላክ' : 'Start Apple System Timer Widget'}
+            >
+              <Smartphone size={18} />
+              <span className="hidden sm:inline text-xs font-bold">
+                {language === 'am' ? 'የiPhone ሰዓት' : 'iPhone Clock'}
               </span>
             </button>
           </div>

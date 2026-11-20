@@ -17,7 +17,11 @@ import { IosNotesAppView } from './components/IosNotesAppView';
 import { TripleEightLifeBalanceView } from './components/TripleEightLifeBalanceView';
 import { IosBottomTabBar } from './components/IosBottomTabBar';
 import { DeviceSyncModal } from './components/DeviceSyncModal';
+import { ManageCategoriesModal } from './components/ManageCategoriesModal';
+import { SettingsModal } from './components/SettingsModal';
+import { AutoUpdateBanner } from './components/AutoUpdateBanner';
 import { SplashMotionIntro } from './components/SplashMotionIntro';
+import { TimerCompletionModal } from './components/TimerCompletionModal';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -72,10 +76,16 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
 }
 
 const MainContent: React.FC = () => {
-  const { activeTab, selectedCategoryId } = useLivotion();
+  const { activeTab, selectedCategoryId, categoryPlans } = useLivotion();
 
   // If a valid category deep-dive is selected (from menu or category click), show its big dedicated page!
-  if (selectedCategoryId && selectedCategoryId !== 'null' && selectedCategoryId !== 'undefined') {
+  if (
+    selectedCategoryId && 
+    selectedCategoryId !== 'null' && 
+    selectedCategoryId !== 'undefined' && 
+    categoryPlans && 
+    categoryPlans[selectedCategoryId]
+  ) {
     return (
       <main className="flex-1 w-full animate-fadeIn pb-24 md:pb-8">
         <CategoryDetailView />
@@ -85,21 +95,25 @@ const MainContent: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
-      case 'notes-gallery':
       case 'calendar':
-        return <MergedCalendarGalleryView />;
+        return <IntegratedCalendarView />;
+      case 'notes-gallery':
+        return <DailyStickyNotesGalleryView />;
+      case 'triple-eight':
+      case 'triple8':
+        return <TripleEightLifeBalanceView />;
       case 'fitness':
+        return <FitnessProtocolView />;
       case 'devotion':
-      case 'nutrition':
         return <DevotionProtocolView />;
+      case 'nutrition':
+        return <PrecisionNutritionView />;
       case 'goals':
-        return <MergedGoalsView />;
+        return <IntegratedCalendarView initialHorizon="goals" />;
       case 'practice':
         return <PracticeFlowView />;
       case 'notes':
         return <IosNotesAppView />;
-      case 'triple-eight':
-        return <TripleEightLifeBalanceView />;
       case 'cockpit':
       default:
         return <TodayCockpitV2 />;
@@ -137,10 +151,14 @@ export const App: React.FC = () => {
     <ErrorBoundary>
       <LivotionProvider>
         <SplashMotionIntro />
+        <AutoUpdateBanner />
         <FloatingMiniTimerWindow />
+        <TimerCompletionModal />
         <div className="min-h-screen max-w-full overflow-x-clip bg-[#fcfbf9] text-slate-800 dark:bg-[#0b0f17] dark:text-slate-100 flex flex-col w-full font-sans transition-colors selection:bg-[#0082ff] selection:text-white">
           <Navbar />
           <DeviceSyncModal />
+          <ManageCategoriesModal />
+          <SettingsModal />
           <MainContent />
           <IosBottomTabBar />
           <AppFooter />

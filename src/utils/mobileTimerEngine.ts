@@ -10,6 +10,7 @@
 
 import { soundEngine } from './audio';
 import { iosNativeBridge } from './iosNativeBridge';
+import { timerNotificationService } from './timerNotificationService';
 
 export type TimerMode = 'countdown' | 'stopwatch';
 export type WindowPresentationMode = 'island' | 'floating' | 'hidden';
@@ -22,6 +23,7 @@ export interface MobileTimerState {
   phase: 'focus' | 'short_break' | 'long_break';
   taskTitle: string;
   category: string;
+  themeColor?: string; // Flexible dynamic clock & task theme color
   totalDurationSeconds: number;
   secondsRemaining: number;
   stopwatchSeconds: number;
@@ -122,6 +124,72 @@ class MobileTimerEngine {
     this.notify();
   }
 
+  hexToRgb(hex: string): { r: number; g: number; b: number } {
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map((x) => x + x).join('');
+    const num = parseInt(c, 16);
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255,
+    };
+  }
+
+  getThemeColor(): string {
+    if (this.state.themeColor) {
+      return this.state.themeColor;
+    }
+    if (this.state.phase === 'short_break' || this.state.phase === 'long_break') {
+      return '#34d399'; // Refreshing Mint for breaks
+    }
+    // Specific task category colors
+    if (this.state.category) {
+      switch (this.state.category) {
+        case 'devotion':
+        case 'bible-reading':
+        case 'silence':
+          return '#af52de'; // Sacred Violet / Purple
+        case 'exercise':
+        case 'fitness':
+          return '#ff453a'; // Crimson Red
+        case 'chess':
+          return '#5e5ce6'; // Indigo Sapphire
+        case 'art':
+          return '#ec4899'; // Vibrant Rose Pink
+        case 'music':
+          return '#ff9f0a'; // Warm Amber/Orange
+        case 'architecture':
+          return '#32ade6'; // Laser Sky Cyan
+        case 'trading':
+          return '#30d158'; // Market Emerald Green
+      }
+    }
+    // Clock system default signature colors
+    switch (this.state.system) {
+      case 'pomodoro':
+        return '#ff453a'; // Flame Tomato Red
+      case 'ultradian':
+        return '#af52de'; // Cognitive Violet (90/20)
+      case 'desktime':
+        return '#ff9f0a'; // High Energy Amber/Orange (52/17)
+      case 'sprint':
+        return '#32ade6'; // Laser Sky Cyan (25/5)
+      case 'custom':
+        return '#30d158'; // Apple Vivid Emerald Green
+      case 'stopwatch':
+        return '#5e5ce6'; // Precision Sapphire Indigo
+      default:
+        return '#30d158';
+    }
+  }
+
+  setThemeColor(color: string) {
+    this.state.themeColor = color;
+    this.renderCanvasFrame();
+    this.updateLockScreenMediaSession();
+    this.notify();
+  }
+
   // Setup visibility change & window focus listeners to catch up on unlock
   private setupVisibilityListener() {
     if (typeof window === 'undefined') return;
@@ -141,14 +209,9 @@ class MobileTimerEngine {
       } else if (document.visibilityState === 'hidden') {
         // When app is closed, minimized, or screen locked:
         if (this.state.isActive && this.state.isRunning) {
-          // 1. Keep background audio and Lock Screen media session active (shows hover clock on lock screen)
+          // Keep background audio and Lock Screen media session active (without firing any notification)
           this.ensureBackgroundAudio();
           this.updateLockScreenMediaSession();
-
-          // 2. Auto-popout PiP floating window to hover on top of phone
-          if (!this.state.isPipActive) {
-            this.requestPictureInPictureDirect().catch(() => {});
-          }
         }
       }
     });
@@ -158,9 +221,6 @@ class MobileTimerEngine {
       if (this.state.isActive && this.state.isRunning) {
         this.ensureBackgroundAudio();
         this.updateLockScreenMediaSession();
-        if (!this.state.isPipActive) {
-          this.requestPictureInPictureDirect().catch(() => {});
-        }
       }
     });
   }
@@ -216,17 +276,33 @@ class MobileTimerEngine {
     } catch (e) {}
   }
 
-  // Ensure silent audio is playing so iOS WebKit doesn't sleep & allows Lock Screen widget
+  // Ensure audio is playing so iOS WebKit doesn't sleep & keeps Lock Screen & Notification Centre active
   private ensureBackgroundAudio() {
     if (typeof window === 'undefined') return;
     try {
       if (!this.silentAudio) {
-        const audio = new Audio('/silence.wav');
-        audio.loop = true;
-        audio.preload = 'auto';
-        (audio as any).playsInline = true;
-        audio.volume = 0.05;
-        this.silentAudio = audio;
+        let existingAudio = document.getElementById('neva-background-audio-runner') as HTMLAudioElement;
+        if (!existingAudio) {
+          existingAudio = document.createElement('audio');
+          existingAudio.id = 'neva-background-audio-runner';
+          existingAudio.src = '/silence.wav';
+          existingAudio.loop = true;
+          existingAudio.preload = 'auto';
+          existingAudio.volume = 0.1;
+          existingAudio.muted = false;
+          (existingAudio as any).playsInline = true;
+          existingAudio.setAttribute('playsinline', '');
+          existingAudio.setAttribute('webkit-playsinline', '');
+          existingAudio.style.position = 'fixed';
+          existingAudio.style.top = '-9999px';
+          existingAudio.style.left = '-9999px';
+          existingAudio.style.width = '1px';
+          existingAudio.style.height = '1px';
+          existingAudio.style.opacity = '0';
+          existingAudio.style.pointerEvents = 'none';
+          document.body.appendChild(existingAudio);
+        }
+        this.silentAudio = existingAudio;
       }
 
       this.silentAudio.play().catch(() => {});
@@ -275,6 +351,7 @@ class MobileTimerEngine {
     category?: string;
     system?: string;
     phase?: 'focus' | 'short_break' | 'long_break';
+    themeColor?: string;
     onComplete?: () => void;
   }) {
     const total = options.durationSeconds;
@@ -293,6 +370,7 @@ class MobileTimerEngine {
       phase: options.phase || 'focus',
       taskTitle: options.taskTitle || '',
       category: options.category || 'deep-work',
+      themeColor: options.themeColor || this.state.themeColor || undefined,
       totalDurationSeconds: total,
       secondsRemaining: remaining,
       stopwatchSeconds: 0,
@@ -302,13 +380,23 @@ class MobileTimerEngine {
 
     this.requestWakeLock();
     this.ensureBackgroundAudio();
+    this.ensurePipVideo();
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
 
-    // Schedule native time-sensitive alarm for screen-lock
+    // Schedule native time-sensitive alarm and timerNotificationService
     if (remaining > 0) {
+      timerNotificationService.scheduleTimerAlarm({
+        targetEndTime: targetEnd,
+        title: options.taskTitle || `${(options.system || 'Focus').toUpperCase()} Session`,
+        category: options.category || 'Focus',
+        categoryColor: options.themeColor || this.state.themeColor,
+        durationMinutes: Math.round(total / 60) || Math.ceil(remaining / 60),
+        system: options.system,
+        phase: options.phase,
+      });
       iosNativeBridge.scheduleFocusAlarm(
         'focus-timer',
         '⏰ Focus Block Complete!',
@@ -324,6 +412,7 @@ class MobileTimerEngine {
     taskTitle?: string;
     category?: string;
     system?: string;
+    themeColor?: string;
   }) {
     const elapsed = options.initialElapsedSeconds || 0;
     const now = Date.now();
@@ -340,6 +429,7 @@ class MobileTimerEngine {
       phase: 'focus',
       taskTitle: options.taskTitle || '',
       category: options.category || 'deep-work',
+      themeColor: options.themeColor || this.state.themeColor || undefined,
       totalDurationSeconds: 0,
       secondsRemaining: 0,
       stopwatchSeconds: elapsed,
@@ -349,6 +439,7 @@ class MobileTimerEngine {
 
     this.requestWakeLock();
     this.ensureBackgroundAudio();
+    this.ensurePipVideo();
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
@@ -369,6 +460,7 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
+    timerNotificationService.cancelTimerAlarm().catch(() => {});
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
     this.notify();
@@ -382,6 +474,15 @@ class MobileTimerEngine {
     if (this.state.mode === 'countdown') {
       this.state.targetEndTime = now + this.state.secondsRemaining * 1000;
       if (this.state.secondsRemaining > 0) {
+        timerNotificationService.scheduleTimerAlarm({
+          targetEndTime: this.state.targetEndTime,
+          title: this.state.taskTitle || `${(this.state.system || 'Focus').toUpperCase()} Session`,
+          category: this.state.category || 'Focus',
+          categoryColor: this.state.themeColor,
+          durationMinutes: Math.round(this.state.totalDurationSeconds / 60) || Math.ceil(this.state.secondsRemaining / 60),
+          system: this.state.system,
+          phase: this.state.phase,
+        });
         iosNativeBridge.scheduleFocusAlarm(
           'focus-timer',
           '⏰ Focus Block Complete!',
@@ -396,6 +497,7 @@ class MobileTimerEngine {
     this.state.isRunning = true;
     this.requestWakeLock();
     this.ensureBackgroundAudio();
+    this.ensurePipVideo();
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
@@ -415,6 +517,7 @@ class MobileTimerEngine {
     this.releaseWakeLock();
     this.stopBackgroundAudio();
     iosNativeBridge.cancelAlarm('focus-timer');
+    timerNotificationService.cancelTimerAlarm().catch(() => {});
     this.clearLockScreenMediaSession();
 
     if (this.state.isPipActive && document.pictureInPictureElement) {
@@ -494,6 +597,15 @@ class MobileTimerEngine {
     try {
       soundEngine.playAlarmSound();
       iosNativeBridge.haptic('heavy');
+      timerNotificationService.handleTimerEnd({
+        title: this.state.taskTitle || `${this.state.system.toUpperCase()} Focus Session`,
+        category: this.state.category,
+        categoryColor: this.state.themeColor,
+        durationMinutes: Math.round(this.state.totalDurationSeconds / 60) || 25,
+        system: this.state.system,
+        phase: this.state.phase,
+        completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
       iosNativeBridge.scheduleFocusAlarm(
         'focus-completed-alert',
         '⏰ Focus Session Finished!',
@@ -641,6 +753,7 @@ class MobileTimerEngine {
         video.play().catch(() => {});
       }
 
+      // Video PiP status listeners (Note: Do not bind video pause to timer pause, as mobile OSs pause hidden videos in the background)
       video.addEventListener('enterpictureinpicture', () => {
         this.state.isPipActive = true;
         this.notify();
@@ -649,19 +762,6 @@ class MobileTimerEngine {
       video.addEventListener('leavepictureinpicture', () => {
         this.state.isPipActive = false;
         this.notify();
-      });
-
-      // Allow pausing and resuming from the native PiP floating window outside the app
-      video.addEventListener('pause', () => {
-        if (this.state.isRunning) {
-          this.pause();
-        }
-      });
-
-      video.addEventListener('play', () => {
-        if (!this.state.isRunning && this.state.isActive) {
-          this.resume();
-        }
       });
 
       return video;
@@ -687,6 +787,9 @@ class MobileTimerEngine {
     const displaySecs = isStopwatch ? this.state.stopwatchSeconds : this.state.secondsRemaining;
     const timeStr = this.formatTime(displaySecs);
 
+    const activeColor = this.getThemeColor();
+    const rgb = this.hexToRgb(activeColor);
+
     // Draw iOS Live Activity capsule pill
     const pillX = 16;
     const pillY = 32;
@@ -699,7 +802,7 @@ class MobileTimerEngine {
     ctx.fillStyle = '#141416';
     ctx.fill();
     ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 159, 10, 0.28)';
+    ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.45)`;
     ctx.stroke();
 
     // Circle 1: Left Pause / Play Button
@@ -709,26 +812,20 @@ class MobileTimerEngine {
 
     ctx.beginPath();
     ctx.arc(c1x, c1y, cr, 0, Math.PI * 2);
-    if (this.state.isRunning) {
-      ctx.fillStyle = '#3a2704';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ff9f0a';
-      ctx.stroke();
+    ctx.fillStyle = `rgba(${Math.round(rgb.r * 0.18)}, ${Math.round(rgb.g * 0.18)}, ${Math.round(rgb.b * 0.18)}, 0.95)`;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = activeColor;
+    ctx.stroke();
 
-      // Pause bars in orange
-      ctx.fillStyle = '#ff9f0a';
+    if (this.state.isRunning) {
+      // Pause bars in dynamic activeColor
+      ctx.fillStyle = activeColor;
       ctx.fillRect(c1x - 9, c1y - 12, 6, 24);
       ctx.fillRect(c1x + 3, c1y - 12, 6, 24);
     } else {
-      ctx.fillStyle = '#3a2704';
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ff9f0a';
-      ctx.stroke();
-
-      // Play triangle in orange
-      ctx.fillStyle = '#ff9f0a';
+      // Play triangle in dynamic activeColor
+      ctx.fillStyle = activeColor;
       ctx.beginPath();
       ctx.moveTo(c1x - 8, c1y - 13);
       ctx.lineTo(c1x + 12, c1y);
@@ -759,16 +856,16 @@ class MobileTimerEngine {
     ctx.lineTo(c2x - 9, c2y + 9);
     ctx.stroke();
 
-    // Right Side: Label "Timer" & Amber Digits
+    // Right Side: Label "Timer" & Dynamic Colored Digits
     const labelText = isStopwatch ? 'Stopwatch' : 'Timer';
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#ff9f0a';
+    ctx.fillStyle = activeColor;
     ctx.font = 'bold 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", monospace';
     ctx.fillText(timeStr, pillX + pillW - 28, c1y + 20);
 
     const textWidth = ctx.measureText(timeStr).width;
-    ctx.fillStyle = 'rgba(255, 159, 10, 0.8)';
+    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.9)`;
     ctx.font = '500 24px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
     ctx.fillText(labelText, pillX + pillW - 38 - textWidth, c1y + 10);
 
@@ -778,7 +875,7 @@ class MobileTimerEngine {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
       ctx.fillRect(pillX + 32, pillY + pillH - 8, pillW - 64, 4);
 
-      ctx.fillStyle = '#ff9f0a';
+      ctx.fillStyle = activeColor;
       ctx.fillRect(pillX + 32, pillY + pillH - 8, (pillW - 64) * progress, 4);
     }
   }

@@ -253,22 +253,23 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ isOpen
 
   tasks.forEach((t) => {
     const matchedCat = Object.values(categoryPlans).find((c) => 
-      t.domain.toLowerCase().includes(c.id.toLowerCase())
-    ) || categoryPlans['buffer'];
+      c && t.domain.toLowerCase().includes(c.id.toLowerCase())
+    ) || categoryPlans['buffer'] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
 
     generatedReminders.push({
       id: `daily-${t.id}`,
       type: 'daily',
       title: t.title,
-      categoryTitle: matchedCat.title,
-      categoryColor: t.color || matchedCat.color,
+      categoryTitle: matchedCat?.title || 'Focus',
+      categoryColor: t.color || matchedCat?.color || '#0082ff',
       timeOrCadence: `${t.startTime} (${t.durationMin}m)`,
       details: t.completed ? 'Completed for today' : 'Scheduled focus block today',
       dismissed: dismissedIds.includes(`daily-${t.id}`) || t.completed,
     });
   });
 
-  Object.values(categoryPlans).forEach((cat) => {
+  Object.values(categoryPlans).filter(Boolean).forEach((cat) => {
+    if (!cat || !cat.id) return;
     const metrics = getCategoryLiveMetrics(cat.id);
     const matchingSlot = cat.weeklyScheduleSummary.find((s) => 
       s.toLowerCase().includes(todayShort.toLowerCase()) || s.toLowerCase().includes('daily')

@@ -31,15 +31,15 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   canary: {
     name: 'Classic Canary Yellow',
     dotColor: '#fde047',
-    paperBg: 'bg-[#fef9c3] dark:bg-[#2a2305]',
-    paperBorder: 'border-[#fef08a] dark:border-amber-700/60',
-    textPrimary: 'text-amber-950 dark:text-amber-100',
-    textSecondary: 'text-amber-800/80 dark:text-amber-300/80',
-    tapeBg: 'bg-amber-100/70 dark:bg-amber-900/40',
-    tapeBorder: 'border-amber-200/80 dark:border-amber-700/50',
-    hourBadgeBg: 'bg-amber-200/80 dark:bg-amber-900/70',
-    hourBadgeText: 'text-amber-950 dark:text-amber-200',
-    checkBorder: 'border-amber-400 dark:border-amber-600',
+    paperBg: 'bg-[#fef9c3]',
+    paperBorder: 'border-[#fef08a]',
+    textPrimary: 'text-amber-950',
+    textSecondary: 'text-amber-800/80',
+    tapeBg: 'bg-amber-100/70',
+    tapeBorder: 'border-amber-200/80',
+    hourBadgeBg: 'bg-amber-200/80',
+    hourBadgeText: 'text-amber-950',
+    checkBorder: 'border-amber-400',
     checkBgDone: 'bg-amber-600 text-white',
     ruledLineColor: 'rgba(217, 119, 6, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
@@ -49,15 +49,15 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   peach: {
     name: 'Warm Peach',
     dotColor: '#fdba74',
-    paperBg: 'bg-[#ffedd5] dark:bg-[#2b1406]',
-    paperBorder: 'border-[#fed7aa] dark:border-orange-700/60',
-    textPrimary: 'text-orange-950 dark:text-orange-100',
-    textSecondary: 'text-orange-800/80 dark:text-orange-300/80',
-    tapeBg: 'bg-orange-100/70 dark:bg-orange-900/40',
-    tapeBorder: 'border-orange-200/80 dark:border-orange-700/50',
-    hourBadgeBg: 'bg-orange-200/80 dark:bg-orange-900/70',
-    hourBadgeText: 'text-orange-950 dark:text-orange-200',
-    checkBorder: 'border-orange-400 dark:border-orange-600',
+    paperBg: 'bg-[#ffedd5]',
+    paperBorder: 'border-[#fed7aa]',
+    textPrimary: 'text-orange-950',
+    textSecondary: 'text-orange-800/80',
+    tapeBg: 'bg-orange-100/70',
+    tapeBorder: 'border-orange-200/80',
+    hourBadgeBg: 'bg-orange-200/80',
+    hourBadgeText: 'text-orange-950',
+    checkBorder: 'border-orange-400',
     checkBgDone: 'bg-orange-600 text-white',
     ruledLineColor: 'rgba(234, 88, 12, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
@@ -67,15 +67,15 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   mint: {
     name: 'Pastel Mint',
     dotColor: '#86efac',
-    paperBg: 'bg-[#dcfce7] dark:bg-[#072513]',
-    paperBorder: 'border-[#bbf7d0] dark:border-emerald-700/60',
-    textPrimary: 'text-emerald-950 dark:text-emerald-100',
-    textSecondary: 'text-emerald-800/80 dark:text-emerald-300/80',
-    tapeBg: 'bg-emerald-100/70 dark:bg-emerald-900/40',
-    tapeBorder: 'border-emerald-200/80 dark:border-emerald-700/50',
-    hourBadgeBg: 'bg-emerald-200/80 dark:bg-emerald-900/70',
-    hourBadgeText: 'text-emerald-950 dark:text-emerald-200',
-    checkBorder: 'border-emerald-400 dark:border-emerald-600',
+    paperBg: 'bg-[#dcfce7]',
+    paperBorder: 'border-[#bbf7d0]',
+    textPrimary: 'text-emerald-950',
+    textSecondary: 'text-emerald-800/80',
+    tapeBg: 'bg-emerald-100/70',
+    tapeBorder: 'border-emerald-200/80',
+    hourBadgeBg: 'bg-emerald-200/80',
+    hourBadgeText: 'text-emerald-950',
+    checkBorder: 'border-emerald-400',
     checkBgDone: 'bg-emerald-600 text-white',
     ruledLineColor: 'rgba(5, 150, 105, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
@@ -85,15 +85,15 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   sky: {
     name: 'Sky Blue',
     dotColor: '#7dd3fc',
-    paperBg: 'bg-[#e0f2fe] dark:bg-[#072336]',
-    paperBorder: 'border-[#bae6fd] dark:border-sky-700/60',
-    textPrimary: 'text-sky-950 dark:text-sky-100',
-    textSecondary: 'text-sky-800/80 dark:text-sky-300/80',
-    tapeBg: 'bg-sky-100/70 dark:bg-sky-900/40',
-    tapeBorder: 'border-sky-200/80 dark:border-sky-700/50',
-    hourBadgeBg: 'bg-sky-200/80 dark:bg-sky-900/70',
-    hourBadgeText: 'text-sky-950 dark:text-sky-200',
-    checkBorder: 'border-sky-400 dark:border-sky-600',
+    paperBg: 'bg-[#e0f2fe]',
+    paperBorder: 'border-[#bae6fd]',
+    textPrimary: 'text-sky-950',
+    textSecondary: 'text-sky-800/80',
+    tapeBg: 'bg-sky-100/70',
+    tapeBorder: 'border-sky-200/80',
+    hourBadgeBg: 'bg-sky-200/80',
+    hourBadgeText: 'text-sky-950',
+    checkBorder: 'border-sky-400',
     checkBgDone: 'bg-sky-600 text-white',
     ruledLineColor: 'rgba(2, 132, 199, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
@@ -103,15 +103,15 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   rose: {
     name: 'Soft Rose',
     dotColor: '#fda4af',
-    paperBg: 'bg-[#ffe4e6] dark:bg-[#2b0814]',
-    paperBorder: 'border-[#fecdd3] dark:border-rose-700/60',
-    textPrimary: 'text-rose-950 dark:text-rose-100',
-    textSecondary: 'text-rose-800/80 dark:text-rose-300/80',
-    tapeBg: 'bg-rose-100/70 dark:bg-rose-900/40',
-    tapeBorder: 'border-rose-200/80 dark:border-rose-700/50',
-    hourBadgeBg: 'bg-rose-200/80 dark:bg-rose-900/70',
-    hourBadgeText: 'text-rose-950 dark:text-rose-200',
-    checkBorder: 'border-rose-400 dark:border-rose-600',
+    paperBg: 'bg-[#ffe4e6]',
+    paperBorder: 'border-[#fecdd3]',
+    textPrimary: 'text-rose-950',
+    textSecondary: 'text-rose-800/80',
+    tapeBg: 'bg-rose-100/70',
+    tapeBorder: 'border-rose-200/80',
+    hourBadgeBg: 'bg-rose-200/80',
+    hourBadgeText: 'text-rose-950',
+    checkBorder: 'border-rose-400',
     checkBgDone: 'bg-rose-600 text-white',
     ruledLineColor: 'rgba(225, 29, 72, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
@@ -121,20 +121,74 @@ const THEME_STYLES: Record<StickyNoteThemeColor, {
   lavender: {
     name: 'Pastel Lavender',
     dotColor: '#d8b4fe',
-    paperBg: 'bg-[#f3e8ff] dark:bg-[#220730]',
-    paperBorder: 'border-[#e9d5ff] dark:border-purple-700/60',
-    textPrimary: 'text-purple-950 dark:text-purple-100',
-    textSecondary: 'text-purple-800/80 dark:text-purple-300/80',
-    tapeBg: 'bg-purple-100/70 dark:bg-purple-900/40',
-    tapeBorder: 'border-purple-200/80 dark:border-purple-700/50',
-    hourBadgeBg: 'bg-purple-200/80 dark:bg-purple-900/70',
-    hourBadgeText: 'text-purple-950 dark:text-purple-200',
-    checkBorder: 'border-purple-400 dark:border-purple-600',
+    paperBg: 'bg-[#f3e8ff]',
+    paperBorder: 'border-[#e9d5ff]',
+    textPrimary: 'text-purple-950',
+    textSecondary: 'text-purple-800/80',
+    tapeBg: 'bg-purple-100/70',
+    tapeBorder: 'border-purple-200/80',
+    hourBadgeBg: 'bg-purple-200/80',
+    hourBadgeText: 'text-purple-950',
+    checkBorder: 'border-purple-400',
     checkBgDone: 'bg-purple-600 text-white',
     ruledLineColor: 'rgba(147, 51, 234, 0.08)',
     marginLineColor: 'rgba(225, 29, 72, 0.15)',
     shadowColor: 'rgba(126, 34, 206, 0.22)',
     accentStar: 'text-purple-500 fill-purple-400',
+  },
+  darkgrey: {
+    name: 'Dark Slate Grey',
+    dotColor: '#334155',
+    paperBg: 'bg-[#1e293b]',
+    paperBorder: 'border-[#334155]',
+    textPrimary: 'text-slate-100',
+    textSecondary: 'text-slate-400',
+    tapeBg: 'bg-slate-700/60',
+    tapeBorder: 'border-slate-600/70',
+    hourBadgeBg: 'bg-slate-700/80',
+    hourBadgeText: 'text-slate-100',
+    checkBorder: 'border-slate-500',
+    checkBgDone: 'bg-[#0082ff] text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(244, 63, 94, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.6)',
+    accentStar: 'text-amber-400 fill-amber-400',
+  },
+  charcoal: {
+    name: 'Charcoal Dark Grey',
+    dotColor: '#262626',
+    paperBg: 'bg-[#18181b]',
+    paperBorder: 'border-[#27272a]',
+    textPrimary: 'text-zinc-100',
+    textSecondary: 'text-zinc-400',
+    tapeBg: 'bg-zinc-800/60',
+    tapeBorder: 'border-zinc-700/70',
+    hourBadgeBg: 'bg-zinc-800/80',
+    hourBadgeText: 'text-zinc-100',
+    checkBorder: 'border-zinc-600',
+    checkBgDone: 'bg-emerald-600 text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(239, 68, 68, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.7)',
+    accentStar: 'text-amber-400 fill-amber-400',
+  },
+  graphite: {
+    name: 'Graphite Dark Grey',
+    dotColor: '#374151',
+    paperBg: 'bg-[#111827]',
+    paperBorder: 'border-[#1f2937]',
+    textPrimary: 'text-gray-100',
+    textSecondary: 'text-gray-400',
+    tapeBg: 'bg-gray-800/60',
+    tapeBorder: 'border-gray-700/70',
+    hourBadgeBg: 'bg-gray-800/80',
+    hourBadgeText: 'text-gray-100',
+    checkBorder: 'border-gray-600',
+    checkBgDone: 'bg-purple-600 text-white',
+    ruledLineColor: 'rgba(255, 255, 255, 0.05)',
+    marginLineColor: 'rgba(244, 63, 94, 0.25)',
+    shadowColor: 'rgba(0, 0, 0, 0.65)',
+    accentStar: 'text-amber-400 fill-amber-400',
   },
 };
 
@@ -564,11 +618,11 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   />
 
                   {/* Note Header: Specific Day, Gregorian & Ethiopian Date */}
-                  <div className="relative z-10 border-b border-black/10 dark:border-white/10 pb-3 mb-3">
+                  <div className="relative z-10 border-b border-black/10 pb-3 mb-3">
                     <div className="flex items-start justify-between gap-2 pr-6">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10">
+                          <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 border border-black/5">
                             {note.dayName} • {note.dateStr}
                           </span>
                           {note.moodEmoji && (
@@ -599,7 +653,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setActivePaletteNoteId(isPaletteOpen ? null : note.id)}
-                          className="p-1 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 transition cursor-pointer"
+                          className="p-1 rounded-lg bg-black/5 hover:bg-black/10 transition cursor-pointer"
                           title="Change Note Color"
                         >
                           <Palette size={13} />
@@ -628,7 +682,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                     </div>
 
                     {/* INTERACTIVE 5-STAR RATING BAR */}
-                    <div className="mt-2.5 pt-2 border-t border-black/5 dark:border-white/10">
+                    <div className="mt-2.5 pt-2 border-t border-black/5">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-1">
                           <span className="text-[10px] font-mono font-extrabold uppercase opacity-70 mr-1">
@@ -646,14 +700,14 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                               >
                                 <Star
                                   size={16}
-                                  className={isFilled ? theme.accentStar : 'text-black/20 dark:text-white/20 stroke-current'}
+                                  className={isFilled ? theme.accentStar : 'text-black/20 stroke-current'}
                                 />
                               </button>
                             );
                           })}
                         </div>
 
-                        <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-black/10 dark:bg-white/15">
+                        <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-black/10">
                           {getRatingLabel(note.ratingStars)}
                         </span>
                       </div>
@@ -661,7 +715,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   </div>
 
                   {/* Daily Focus Hours & Progress Pill */}
-                  <div className="relative z-10 flex items-center justify-between gap-2 py-1 px-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[11px] font-mono font-bold mb-3">
+                  <div className="relative z-10 flex items-center justify-between gap-2 py-1 px-2.5 rounded-xl bg-black/5 border border-black/5 text-[11px] font-mono font-bold mb-3">
                     <div className="flex items-center gap-1.5">
                       <Clock size={12} className="opacity-70" />
                       <span>{note.focusHoursLogged}{t('hoursShort')} {language === 'am' ? 'ትኩረት' : 'focus'}</span>
@@ -683,7 +737,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                       return (
                         <div
                           key={task.id}
-                          className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs"
+                          className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-black/5 border border-black/5 text-xs"
                         >
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <button
@@ -715,7 +769,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   </div>
 
                   {/* Daily Review & Retrospective Debrief (Inline Editable) */}
-                  <div className="relative z-10 border-t border-black/10 dark:border-white/10 pt-2.5 space-y-1.5">
+                  <div className="relative z-10 border-t border-black/10 pt-2.5 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider opacity-75">
                         {t('reflectionLabel')}:
@@ -737,21 +791,21 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                           rows={3}
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
-                          className="w-full p-2 text-xs rounded-xl bg-white/80 dark:bg-black/30 border border-black/20 dark:border-white/20 outline-none font-medium resize-none"
+                          className="w-full p-2 text-xs rounded-xl bg-white/80 border border-black/20 outline-none font-medium resize-none text-slate-900"
                           placeholder={language === 'am' ? 'የዛሬ ዋና ስኬቶች ምን ነበሩ? ተግዳሮቶችና ትምህርቶች...' : 'What went well today? Any frictions or lessons?'}
                         />
                         <div className="flex justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={() => setEditingNoteId(null)}
-                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-black/10 dark:bg-white/10 cursor-pointer"
+                            className="px-2 py-1 rounded-md text-[10px] font-bold bg-black/10 cursor-pointer"
                           >
                             {t('cancel')}
                           </button>
                           <button
                             type="button"
                             onClick={() => saveEditingReview(note.id)}
-                            className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-black text-white dark:bg-white dark:text-black cursor-pointer"
+                            className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-black text-white cursor-pointer"
                           >
                             {t('save')}
                           </button>
@@ -769,7 +823,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                         {note.wins.map((w, i) => (
                           <span 
                             key={i}
-                            className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10"
+                            className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-black/5 border border-black/5"
                           >
                             ✓ {w}
                           </span>
@@ -779,7 +833,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   </div>
 
                   {/* Card Actions Footer */}
-                  <div className="relative z-10 flex items-center justify-between border-t border-black/10 dark:border-white/10 pt-2.5 mt-3 text-[10px] font-mono">
+                  <div className="relative z-10 flex items-center justify-between border-t border-black/10 pt-2.5 mt-3 text-[10px] font-mono">
                     <span className="opacity-60 flex items-center gap-1">
                       <span>📌 Fixed Desk Memo</span>
                     </span>
@@ -791,7 +845,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                           deleteDailyStickyNote(note.id);
                         }
                       }}
-                      className="p-1 rounded text-rose-600 opacity-40 hover:opacity-100 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition cursor-pointer"
+                      className="p-1 rounded text-rose-600 opacity-40 hover:opacity-100 hover:bg-rose-100 transition cursor-pointer"
                       title="Delete Note"
                     >
                       <Trash2 size={12} />

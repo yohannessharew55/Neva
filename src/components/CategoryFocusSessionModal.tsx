@@ -30,6 +30,8 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
     language 
   } = useLivotion();
 
+  if (!isOpen || !categoryId || !categoryPlans[categoryId]) return null;
+
   const category = categoryPlans[categoryId];
 
   // Resolve domain types for this category
@@ -421,7 +423,7 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
                     {language === 'am' ? 'ቆጣሪው እየቆጠረ ነው...' : 'Countdown timer active (checks itself when done)'}
                   </span>
                 ) : (
-                  <span className="text-amber-500 font-semibold">
+                  <span className="text-[#30d158]/80 font-semibold">
                     {language === 'am' ? 'ቆሟል (Paused)' : 'Timer paused'}
                   </span>
                 )}
@@ -430,8 +432,8 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
 
             {/* Large Digital Countdown Timer Display */}
             <div className="py-4 text-center">
-              <div className="relative inline-flex flex-col items-center justify-center p-8 sm:p-10 rounded-3xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-inner">
-                <span className="text-6xl sm:text-7xl font-mono font-extrabold tracking-tight text-slate-900 dark:text-white">
+              <div className="relative inline-flex flex-col items-center justify-center p-8 sm:p-10 rounded-3xl bg-slate-50 dark:bg-slate-900/80 border border-emerald-500/20 dark:border-emerald-500/30 shadow-inner">
+                <span className="text-6xl sm:text-7xl font-mono font-extrabold tracking-tight text-[#30d158] drop-shadow-[0_2px_14px_rgba(48,209,88,0.35)]">
                   {timeFormatted}
                 </span>
 

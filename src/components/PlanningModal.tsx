@@ -34,7 +34,7 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
 
   if (!isOpen) return null;
 
-  const currentPlan = categoryPlans[selectedPlanCategory] || categoryPlans['chess'];
+  const currentPlan = categoryPlans[selectedPlanCategory] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'buffer', title: 'Focus', color: '#0082ff', inProgressItems: [], completedItems: [] };
 
   const getDomainType = (catId: string): DomainType => {
     switch (catId) {
@@ -60,7 +60,7 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
       durationMin: Number(taskDuration),
       completed: false,
       color: categoryPlans[taskCategory]?.color || '#0082ff',
-      badge: categoryPlans[taskCategory]?.title.split(' ')[0] || 'Focus',
+      badge: categoryPlans[taskCategory]?.title?.split(' ')[0] || 'Focus',
       checklist: [
         { id: `c-${Date.now()}-1`, text: 'Initial set up', done: false },
         { id: `c-${Date.now()}-2`, text: 'Execute deliberate focus', done: false }

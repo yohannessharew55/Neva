@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  X, Check, Edit2, Trash2, Plus, Clock, Swords, Dumbbell, Palette, 
+  X, Check, Edit2, Trash2, Plus, Clock, Swords, ChessKnight, Dumbbell, Palette, 
   Music, Building2, TrendingUp, BookOpen, Shield, Sparkles, CheckSquare,
   AlertCircle, ArrowRight, RotateCcw
 } from 'lucide-react';
@@ -118,7 +118,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
   const getCategoryIcon = (key: string) => {
     switch (key) {
       case 'exercise': return Dumbbell;
-      case 'chess': return Swords;
+      case 'chess': return ChessKnight;
       case 'art': return Palette;
       case 'music': return Music;
       case 'architecture': return Building2;
@@ -133,7 +133,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     if (!editTitle.trim()) return;
 
     const originalTask = dayTasks.find((t) => t.id === taskId);
-    const catPlan = categoryPlans[editCategoryKey] || categoryPlans['chess'];
+    const catPlan = categoryPlans[editCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
     const domain = getDomainForCategory(editCategoryKey);
 
     setPendingScopeAction({
@@ -169,7 +169,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const catPlan = categoryPlans[newCategoryKey] || categoryPlans['chess'];
+    const catPlan = categoryPlans[newCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
     const domain = getDomainForCategory(newCategoryKey);
 
     setPendingScopeAction({
@@ -369,7 +369,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
             const matchedCatKey = Object.keys(categoryPlans).find((k) => 
               task.domain.toLowerCase().includes(k) || (task.badge && task.badge.toLowerCase().includes(k))
             ) || 'chess';
-            const cat = categoryPlans[matchedCatKey] || categoryPlans['chess'];
+            const cat = categoryPlans[matchedCatKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
             const Icon = getCategoryIcon(matchedCatKey);
 
             if (isEditing) {

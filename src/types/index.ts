@@ -162,7 +162,11 @@ export interface AlertTrigger {
   isDismissed: boolean;
 }
 
-export type StickyNoteThemeColor = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender';
+export type StickyNoteThemeColor = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
+
+export type AccentColor = 'blue' | 'emerald' | 'violet' | 'amber' | 'rose' | 'cyan' | 'indigo' | 'slate';
+
+export type CalendarSystem = 'gc' | 'et' | 'dual';
 
 export interface DailyStickyTaskItem {
   id: string;

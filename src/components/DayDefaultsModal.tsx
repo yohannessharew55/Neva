@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, Plus, Trash2, Edit2, Check, Clock, Sparkles, 
-  Dumbbell, Swords, Palette, Music, Building2, TrendingUp, BookOpen, Shield, Copy
+  Dumbbell, Swords, ChessKnight, Palette, Music, Building2, TrendingUp, BookOpen, Shield, Copy
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { DomainType, ScheduleTask } from '../types';
@@ -71,7 +71,7 @@ export const DayDefaultsModal: React.FC<DayDefaultsModalProps> = ({
   const getCatIcon = (catId: string) => {
     switch (catId) {
       case 'exercise': return Dumbbell;
-      case 'chess': return Swords;
+      case 'chess': return ChessKnight;
       case 'art': return Palette;
       case 'music': return Music;
       case 'architecture': return Building2;
@@ -320,7 +320,7 @@ export const DayDefaultsModal: React.FC<DayDefaultsModalProps> = ({
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs outline-none"
                 >
-                  {Object.values(categoryPlans).map((c) => (
+                  {Object.values(categoryPlans).filter(c => c && c.id).map((c) => (
                     <option key={c.id} value={c.id}>
                       {getCategoryTitleTranslated(c.id, c.title)}
                     </option>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Calendar, CalendarRange, BookOpen, 
+  Calendar, CalendarRange, FileText, 
   Target, Timer
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
@@ -18,9 +18,8 @@ export const IosBottomTabBar: React.FC = () => {
   const tabs = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
     { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
-    { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
-    { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: language === 'am' ? 'ትኩረት' : 'Focus', icon: Timer },
+    { id: 'notes', label: language === 'am' ? 'ማስታወሻ' : 'Notes', icon: FileText },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -31,10 +30,9 @@ export const IosBottomTabBar: React.FC = () => {
   const isTabActive = (tabId: string) => {
     if (selectedCategoryId) return false;
     if (tabId === 'cockpit') return activeTab === 'cockpit';
-    if (tabId === 'calendar') return activeTab === 'calendar' || activeTab === 'notes-gallery';
-    if (tabId === 'devotion') return activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition';
-    if (tabId === 'goals') return activeTab === 'goals' || activeTab === 'triple-eight';
+    if (tabId === 'calendar') return activeTab === 'calendar' || activeTab === 'goals' || activeTab === 'notes-gallery' || activeTab === 'triple-eight';
     if (tabId === 'practice') return activeTab === 'practice';
+    if (tabId === 'notes') return activeTab === 'notes';
     return activeTab === tabId;
   };
 

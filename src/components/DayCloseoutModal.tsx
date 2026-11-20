@@ -48,7 +48,10 @@ export const DayCloseoutModal: React.FC<DayCloseoutModalProps> = ({
     { id: 'mint', bg: '#bbf7d0', label: 'Mint' },
     { id: 'sky', bg: '#bae6fd', label: 'Sky' },
     { id: 'rose', bg: '#fecdd3', label: 'Rose' },
-    { id: 'lavender', bg: '#e9d5ff', label: 'Lavender' }
+    { id: 'lavender', bg: '#e9d5ff', label: 'Lavender' },
+    { id: 'darkgrey', bg: '#334155', label: 'Dark Slate Grey' },
+    { id: 'charcoal', bg: '#18181b', label: 'Charcoal Grey' },
+    { id: 'graphite', bg: '#111827', label: 'Graphite Grey' }
   ];
 
   const handleSaveCloseout = (e: React.FormEvent) => {

@@ -31,6 +31,7 @@ interface DailyRhythmItem {
   titleEn: string;
   titleAm: string;
   durationMinutes: number;
+  startTime?: string;
   descriptionEn: string;
   descriptionAm: string;
   completed: boolean;
@@ -78,9 +79,10 @@ const DEFAULT_RHYTHMS: DailyRhythmItem[] = [
   {
     id: 'rhythm-morning',
     timeSlot: 'morning',
-    titleEn: 'Dawn Gratitude & Word Meditation',
-    titleAm: 'የንጋት ምስጋናና የቃሉ ማሰላሰል',
-    durationMinutes: 20,
+    titleEn: 'Dawn Gratitude & Bible Reading',
+    titleAm: 'የንጋት ምስጋናና የመጽሐፍ ቅዱስ ንባብ',
+    durationMinutes: 30,
+    startTime: '06:00 AM',
     descriptionEn: 'Give thanks for life, read today\'s scripture chapter, and dedicate day\'s focus to God.',
     descriptionAm: 'ለተሰጠው አዲስ ቀን ማመስገን፣ የዕለቱን ምዕራፍ ማንበብና የዕለቱን ስራ ለእግዚአብሔር አደራ መስጠት።',
     completed: false
@@ -91,6 +93,7 @@ const DEFAULT_RHYTHMS: DailyRhythmItem[] = [
     titleEn: 'Midday Sacred Pause & Centering',
     titleAm: 'የቀትር ጸጥታና የመንፈስ ማደስ',
     durationMinutes: 10,
+    startTime: '12:30 PM',
     descriptionEn: 'Pause active work. Breathe deep, reset priorities, and reaffirm humility & grace.',
     descriptionAm: 'ከስራ ጫና ጥቂት ቆም ማለት፣ ትንፋሽ መውሰድና በትዕግስትና በሰላም ልብን ማደስ።',
     completed: false
@@ -100,7 +103,8 @@ const DEFAULT_RHYTHMS: DailyRhythmItem[] = [
     timeSlot: 'evening',
     titleEn: 'Evening Examen & Peaceful Surrender',
     titleAm: 'የማታ ቆጠራና የሰላም ጸሎት',
-    durationMinutes: 15,
+    durationMinutes: 20,
+    startTime: '09:30 PM',
     descriptionEn: 'Review the day\'s blessings, release stress, forgive offenses, and rest in Divine peace.',
     descriptionAm: 'የቀኑን በረከቶች ማሰብ፣ ጭንቀትንና ቂምን ማራገፍ እና በሰላም እንቅልፍ ማረፍ።',
     completed: false
@@ -117,13 +121,16 @@ const DEVOTION_SUB_TABS = [
 ];
 
 export const DevotionProtocolView: React.FC = () => {
-  const { language, categoryPlans, logSession, activeTab } = useLivotion();
+  const { 
+    language, 
+    categoryPlans, 
+    logSession, 
+    tasks,
+    getDaySchedule, 
+    updateDevotionRoutine, 
+    startTask 
+  } = useLivotion();
   const devotionCategory = categoryPlans['devotion'];
-
-  // Sub-section state: Devotion & Prayer vs Workouts & Fitness
-  const [activeSection, setActiveSection] = useState<'devotion' | 'workouts'>(() => {
-    return activeTab === 'fitness' ? 'workouts' : 'devotion';
-  });
 
   // Active Devotion Sub-Tab: 'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'
   const [devotionSubTab, setDevotionSubTab] = useState<'all' | 'reading' | 'memorize' | 'study' | 'quotes' | 'prayer'>('all');
@@ -242,14 +249,6 @@ export const DevotionProtocolView: React.FC = () => {
     } as any);
   };
 
-  useEffect(() => {
-    if (activeTab === 'fitness') {
-      setActiveSection('workouts');
-    } else if (activeTab === 'devotion') {
-      setActiveSection('devotion');
-    }
-  }, [activeTab]);
-
   // Current Verse Index
   const [verseIndex, setVerseIndex] = useState<number>(0);
 
@@ -281,7 +280,8 @@ export const DevotionProtocolView: React.FC = () => {
   const [editingProtocol, setEditingProtocol] = useState<DailyRhythmItem | null>(null);
   const [protocolForm, setProtocolForm] = useState({
     title: '',
-    durationMinutes: 15,
+    durationMinutes: 30,
+    startTime: '06:00 AM',
     timeSlot: 'morning' as 'morning' | 'midday' | 'evening' | 'anytime',
     description: ''
   });
@@ -290,7 +290,8 @@ export const DevotionProtocolView: React.FC = () => {
     setEditingProtocol(null);
     setProtocolForm({
       title: '',
-      durationMinutes: 15,
+      durationMinutes: 20,
+      startTime: '06:00 AM',
       timeSlot: 'morning',
       description: ''
     });
@@ -302,7 +303,8 @@ export const DevotionProtocolView: React.FC = () => {
     setEditingProtocol(item);
     setProtocolForm({
       title: language === 'am' ? (item.titleAm || item.titleEn) : item.titleEn,
-      durationMinutes: item.durationMinutes || 15,
+      durationMinutes: item.durationMinutes || 20,
+      startTime: item.startTime || (item.timeSlot === 'morning' ? '06:00 AM' : item.timeSlot === 'midday' ? '12:30 PM' : '09:30 PM'),
       timeSlot: item.timeSlot || 'morning',
       description: language === 'am' ? (item.descriptionAm || item.descriptionEn) : item.descriptionEn
     });
@@ -330,15 +332,20 @@ export const DevotionProtocolView: React.FC = () => {
     e.preventDefault();
     if (!protocolForm.title.trim()) return;
 
+    const durationMinutes = Number(protocolForm.durationMinutes) || 15;
+    const startTime = protocolForm.startTime || (protocolForm.timeSlot === 'morning' ? '06:00 AM' : protocolForm.timeSlot === 'midday' ? '12:30 PM' : '09:30 PM');
+    const title = protocolForm.title.trim();
+
     if (editingProtocol) {
       setRhythms((prev) =>
         prev.map((r) =>
           r.id === editingProtocol.id
             ? {
                 ...r,
-                titleEn: protocolForm.title.trim(),
-                titleAm: language === 'am' ? protocolForm.title.trim() : (r.titleAm || protocolForm.title.trim()),
-                durationMinutes: Number(protocolForm.durationMinutes) || 15,
+                titleEn: title,
+                titleAm: language === 'am' ? title : (r.titleAm || title),
+                durationMinutes,
+                startTime,
                 timeSlot: protocolForm.timeSlot,
                 descriptionEn: protocolForm.description.trim() || 'Daily sacred contemplation and prayer.',
                 descriptionAm: language === 'am' ? protocolForm.description.trim() : (r.descriptionAm || protocolForm.description.trim())
@@ -346,18 +353,33 @@ export const DevotionProtocolView: React.FC = () => {
             : r
         )
       );
+      // Synchronize with master schedule tasks
+      updateDevotionRoutine(editingProtocol.id, {
+        title,
+        durationMinutes,
+        startTime
+      });
     } else {
+      const newId = `rhythm-${Date.now()}`;
       const newProtocol: DailyRhythmItem = {
-        id: `rhythm-${Date.now()}`,
+        id: newId,
         timeSlot: protocolForm.timeSlot,
-        titleEn: protocolForm.title.trim(),
-        titleAm: protocolForm.title.trim(),
-        durationMinutes: Number(protocolForm.durationMinutes) || 15,
+        titleEn: title,
+        titleAm: title,
+        durationMinutes,
+        startTime,
         descriptionEn: protocolForm.description.trim() || 'Daily sacred contemplation and prayer.',
         descriptionAm: protocolForm.description.trim() || 'የዕለት የጸሎትና የማሰላሰል ክፍለ-ጊዜ።',
         completed: false
       };
       setRhythms((prev) => [...prev, newProtocol]);
+      // Synchronize with master schedule tasks
+      updateDevotionRoutine(newId, {
+        title,
+        durationMinutes,
+        startTime,
+        completed: false
+      });
     }
 
     setIsProtocolModalOpen(false);
@@ -512,20 +534,41 @@ export const DevotionProtocolView: React.FC = () => {
   };
 
   const toggleRhythm = (id: string) => {
+    let nextCompleted = false;
+    let targetTitle = '';
     setRhythms((prev) =>
       prev.map((r) => {
         if (r.id === id) {
-          const updated = !r.completed;
-          if (updated) {
-            try {
-              soundEngine.playPencil();
-            } catch (e) {}
-          }
-          return { ...r, completed: updated };
+          nextCompleted = !r.completed;
+          targetTitle = language === 'am' ? r.titleAm : r.titleEn;
+          return { ...r, completed: nextCompleted };
         }
         return r;
       })
     );
+    // Sync with tasks on Today's sticky note & calendar
+    updateDevotionRoutine(id, {
+      title: targetTitle || undefined,
+      completed: nextCompleted
+    });
+  };
+
+  const handleStartRhythmTimer = (rhythm: DailyRhythmItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    startTask({
+      id: `task-${rhythm.id}`,
+      title: language === 'am' ? rhythm.titleAm : rhythm.titleEn,
+      startTime: rhythm.startTime || (rhythm.timeSlot === 'morning' ? '06:00 AM' : rhythm.timeSlot === 'midday' ? '12:30 PM' : '09:30 PM'),
+      durationMin: rhythm.durationMinutes,
+      completed: rhythm.completed,
+      domain: 'DEVOTION_PRAYER',
+      badge: 'Devotion',
+      color: '#a855f7',
+      soundProfile: 'SOLFEGGIO_432',
+      checklist: [
+        { id: `c-${Date.now()}-1`, text: rhythm.descriptionEn || 'Scripture & contemplation', done: false }
+      ]
+    });
   };
 
   const addPrayer = (e: React.FormEvent) => {
@@ -578,55 +621,8 @@ export const DevotionProtocolView: React.FC = () => {
     return true;
   });
 
-  if (activeSection === 'workouts') {
-    return (
-      <div className="w-full min-h-screen">
-        {/* Top Segmented Sub-Nav: Devotion vs Workouts */}
-        <div className="w-full max-w-7xl mx-auto px-4 pt-3 sm:pt-5 pb-1 flex justify-center">
-          <div className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-            <button
-              onClick={() => setActiveSection('devotion')}
-              className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer"
-            >
-              <BookOpen size={16} />
-              <span>{language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer'}</span>
-            </button>
-            <button
-              onClick={() => setActiveSection('workouts')}
-              className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-white dark:bg-slate-900 text-rose-500 shadow-xs transition-all cursor-pointer"
-            >
-              <Dumbbell size={16} />
-              <span>{language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness'}</span>
-            </button>
-          </div>
-        </div>
-        <FitnessProtocolView />
-      </div>
-    );
-  }
-
   return (
     <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-fadeIn">
-      {/* Top Segmented Sub-Nav: Devotion vs Workouts */}
-      <div className="w-full flex justify-center pb-2">
-        <div className="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
-          <button
-            onClick={() => setActiveSection('devotion')}
-            className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-white dark:bg-slate-900 text-[#a855f7] shadow-xs transition-all cursor-pointer"
-          >
-            <BookOpen size={16} />
-            <span>{language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer'}</span>
-          </button>
-          <button
-            onClick={() => setActiveSection('workouts')}
-            className="flex items-center gap-2 py-1.5 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer"
-          >
-            <Dumbbell size={16} />
-            <span>{language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness'}</span>
-          </button>
-        </div>
-      </div>
-
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
         <div className="space-y-1">
@@ -850,11 +846,16 @@ export const DevotionProtocolView: React.FC = () => {
                       <Icon size={16} className={iconColor} />
                       <span className={`text-sm font-bold ${
                         rhythm.completed 
-                          ? 'line-through text-slate-500 dark:text-slate-400' 
-                          : 'text-slate-900 dark:text-slate-100'
+                            ? 'line-through text-slate-500 dark:text-slate-400' 
+                            : 'text-slate-900 dark:text-slate-100'
                       }`}>
                         {language === 'am' ? rhythm.titleAm : rhythm.titleEn}
                       </span>
+                      {rhythm.startTime && (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
+                          {rhythm.startTime}
+                        </span>
+                      )}
                       <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                         ({rhythm.durationMinutes} min)
                       </span>
@@ -864,7 +865,15 @@ export const DevotionProtocolView: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={(e) => handleStartRhythmTimer(rhythm, e)}
+                      className="p-1.5 bg-purple-500/10 hover:bg-[#a855f7] text-[#a855f7] hover:text-white rounded-lg transition cursor-pointer shadow-2xs active:scale-95 flex items-center justify-center"
+                      title={language === 'am' ? 'ሰዓት ጀምር' : 'Start Focus Timer'}
+                    >
+                      <Play size={13} fill="currentColor" />
+                    </button>
                     <button
                       type="button"
                       onClick={(e) => handleOpenEditProtocol(rhythm, e)}
@@ -1272,6 +1281,41 @@ export const DevotionProtocolView: React.FC = () => {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Scheduled Start Time Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {language === 'am' ? 'የመጀመሪያ ሰዓት (የቀን ሰሌዳ)' : 'Scheduled Start Time'}
+                  </label>
+                  <span className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
+                    {protocolForm.startTime}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {['06:00 AM', '07:00 AM', '12:30 PM', '06:00 PM', '09:30 PM'].map((tStr) => (
+                    <button
+                      key={tStr}
+                      type="button"
+                      onClick={() => setProtocolForm((prev) => ({ ...prev, startTime: tStr }))}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+                        protocolForm.startTime === tStr
+                          ? 'bg-[#a855f7] text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {tStr}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  value={protocolForm.startTime}
+                  onChange={(e) => setProtocolForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                  placeholder="06:00 AM"
+                  className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white mt-1 focus:outline-hidden focus:ring-2 focus:ring-[#a855f7]"
+                />
               </div>
 
               {/* Duration with quick select chips */}

@@ -8,7 +8,15 @@ import { useLivotion } from '../context/LivotionContext';
 import { HorizonLevel, StrategicGoal, GoalMilestone } from '../types';
 import { soundEngine } from '../utils/audio';
 
-export const StrategicHorizonsView: React.FC = () => {
+export interface StrategicHorizonsViewProps {
+  streamFilter?: string;
+  isEmbedded?: boolean;
+}
+
+export const StrategicHorizonsView: React.FC<StrategicHorizonsViewProps> = ({
+  streamFilter,
+  isEmbedded = false
+}) => {
   const { 
     goals, 
     updateGoalProgress, 
@@ -81,7 +89,7 @@ export const StrategicHorizonsView: React.FC = () => {
     setHorizon(defaultH);
     setQuarter(currentQuarter);
     setYear(2026);
-    setCategory('architecture');
+    setCategory(streamFilter && streamFilter !== 'all' ? streamFilter : 'architecture');
     setTargetMetric('');
 
     if (defaultH === 'QUARTERLY') {
@@ -253,6 +261,9 @@ export const StrategicHorizonsView: React.FC = () => {
 
   // Filtered Goals
   const filteredGoals = goals.filter((g) => {
+    if (streamFilter && streamFilter !== 'all') {
+      if (g.category && g.category.toLowerCase() !== streamFilter.toLowerCase()) return false;
+    }
     if (horizonFilter === 'QUARTERLY') {
       if (g.horizon !== 'QUARTERLY') return false;
       if (selectedQuarter !== 'ALL' && g.quarter && g.quarter !== selectedQuarter) return false;
@@ -265,14 +276,14 @@ export const StrategicHorizonsView: React.FC = () => {
   });
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6 animate-fadeIn">
+    <div className={`w-full ${isEmbedded ? 'space-y-4' : 'max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6'} animate-fadeIn`}>
       
       {/* Minimal Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Target className="text-[#0082ff]" size={26} /> 
-            {language === 'am' ? 'ግቦች' : 'Goals'}
+          <h1 className={`${isEmbedded ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2`}>
+            <Target className="text-[#0082ff]" size={isEmbedded ? 22 : 26} /> 
+            {language === 'am' ? 'ስልታዊ ግቦችና ምዕራፎች' : 'Strategic Goals & Milestones'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {horizonFilter === 'YEARLY' 
@@ -295,7 +306,7 @@ export const StrategicHorizonsView: React.FC = () => {
 
           <button
             onClick={handleOpenAdd}
-            className="px-4 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer active:scale-95"
+            className="px-3.5 sm:px-4 py-1.5 sm:py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer active:scale-95"
           >
             <Plus size={14} /> 
             <span>{language === 'am' ? 'አዲስ ግብ' : 'Add Goal'}</span>

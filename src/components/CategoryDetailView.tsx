@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   ArrowLeft, Play, CheckCircle2, Clock, 
   Plus, Target, Award, Calendar, CheckSquare, 
   Square, Sparkles, TrendingUp, ChevronRight,
-  Flame, Swords, Palette, Music, Dumbbell,
+  Flame, Swords, ChessKnight, Palette, Music, Dumbbell,
   Building2, BookOpen, Shield, Edit3, Trash2, 
-  ChevronDown, ChevronUp, Layers, Check, Save, X
+  ChevronDown, ChevronUp, Layers, Check, Save, X, MoreVertical
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { DomainType, ScheduleTask } from '../types';
 import { DailyPlansStickyCard } from './DailyPlansStickyCard';
 import { CategoryFocusSessionModal } from './CategoryFocusSessionModal';
+import { soundEngine } from '../utils/audio';
+import { formatTaskDuration } from '../utils/formatDuration';
+import { gregorianToEthiopian } from '../utils/ethiopianCalendar';
 
 export const CategoryDetailView: React.FC = () => {
   const { 
@@ -28,10 +31,14 @@ export const CategoryDetailView: React.FC = () => {
     startTask,
     toggleTaskCompletion,
     addTask,
+    updateTask,
     deleteTask,
+    activeTask,
+    calendarSystem,
     language,
     t,
-    getCategoryTitleTranslated
+    getCategoryTitleTranslated,
+    setActiveTab: setGlobalActiveTab
   } = useLivotion();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'inprogress' | 'achieved' | 'upcoming'>('overview');
@@ -58,9 +65,29 @@ export const CategoryDetailView: React.FC = () => {
   // New item input
   const [newItemText, setNewItemText] = useState('');
 
+  const allAvailable = Object.values(categoryPlans || {}).filter(cat => cat && cat.id);
   const category = (selectedCategoryId && categoryPlans[selectedCategoryId]) 
     ? categoryPlans[selectedCategoryId] 
-    : categoryPlans['chess'];
+    : allAvailable[0] || null;
+
+  if (!category || !category.id) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 py-16 text-center">
+        <p className="text-sm font-bold text-slate-500 mb-4">
+          {language === 'am' ? 'ይህ ዘርፍ አልተገኘም ወይም ተሰርዟል' : 'This stream was deleted or not found.'}
+        </p>
+        <button
+          onClick={() => {
+            setSelectedCategoryId(null);
+            setGlobalActiveTab('cockpit');
+          }}
+          className="px-5 py-2.5 rounded-xl bg-[#0082ff] text-white text-xs font-bold shadow-md cursor-pointer hover:bg-blue-600 transition"
+        >
+          {language === 'am' ? 'ወደ ዛሬ ተመለስ' : 'Return to Today'}
+        </button>
+      </div>
+    );
+  }
 
   // Real-time live mathematical metrics
   const metrics = getCategoryLiveMetrics(category.id);
@@ -218,7 +245,7 @@ export const CategoryDetailView: React.FC = () => {
   const getIcon = (id: string) => {
     switch (id) {
       case 'exercise': return Dumbbell;
-      case 'chess': return Swords;
+      case 'chess': return ChessKnight;
       case 'art': return Palette;
       case 'music': return Music;
       case 'architecture': return Building2;
@@ -250,6 +277,334 @@ export const CategoryDetailView: React.FC = () => {
 
     setTaskTitle('');
     setShowAddTaskModal(false);
+  };
+
+  // =========================================================================
+  // STREAM EXECUTION TIMELINE & PROGRESS TRACKING (Mobile Timeline & Circular Ring)
+  // =========================================================================
+  const [selectedTimelineDate, setSelectedTimelineDate] = useState<Date>(() => new Date());
+  const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<ScheduleTask | null>(null);
+  const [taskModalTitle, setTaskModalTitle] = useState('');
+  const [taskModalTime, setTaskModalTime] = useState('08:00 AM');
+  const [taskModalDuration, setTaskModalDuration] = useState(45);
+  const [taskModalNotes, setTaskModalNotes] = useState('');
+  const [taskPlanHorizon, setTaskPlanHorizon] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [taskSelectedDays, setTaskSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // 1=Mon..7=Sun
+  const [taskMonthlyWeeks, setTaskMonthlyWeeks] = useState<number>(4); // 1..4 weeks
+  const [inlineTaskStepInputs, setInlineTaskStepInputs] = useState<Record<string, string>>({});
+
+  // 7-day strip around selectedTimelineDate
+  const timelineWeekDays = useMemo(() => {
+    const curr = new Date(selectedTimelineDate);
+    const day = curr.getDay();
+    const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(curr.setDate(diff));
+
+    const days = [];
+    const dayNamesEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNamesAm = ['እሁ', 'ሰኞ', 'ማክ', 'ረቡ', 'ሐሙ', 'አር', 'ቅዳ'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dayIndex = d.getDay();
+      const ethDate = gregorianToEthiopian(d);
+
+      let displayDayNum: number = d.getDate();
+      let secondaryDayNum: number | null = null;
+      if (calendarSystem === 'et') {
+        displayDayNum = ethDate.day;
+      } else if (calendarSystem === 'dual') {
+        displayDayNum = d.getDate();
+        secondaryDayNum = ethDate.day;
+      }
+
+      days.push({
+        date: d,
+        dateStr: d.toISOString().split('T')[0],
+        dayNum: displayDayNum,
+        secondaryDayNum,
+        dayShort: dayNamesEn[dayIndex],
+        dayAm: dayNamesAm[dayIndex],
+        ethDate,
+        isSunday: dayIndex === 0,
+        isToday: d.toDateString() === new Date().toDateString(),
+        isSelected: d.toDateString() === selectedTimelineDate.toDateString(),
+      });
+    }
+    return days;
+  }, [selectedTimelineDate, calendarSystem]);
+
+  // Tasks for category on selected date
+  const streamTasksForSelectedDay = useMemo(() => {
+    if (!category) return [];
+    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const dayIndex = selectedTimelineDate.getDay();
+    const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex];
+
+    // 1. Explicit tasks in context matching domain/badge and this date
+    const explicitTasks = tasks.filter((t) => {
+      const matches = domainTypes.includes(t.domain) || 
+        (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase()));
+      return matches && t.date === dateStr;
+    });
+
+    if (explicitTasks.length > 0) return explicitTasks;
+
+    // 2. Check weekly schedule summary cadence slots for this day
+    const daySlots = (category.weeklyScheduleSummary || []).filter((s) =>
+      s.toLowerCase().includes(dayShort.toLowerCase())
+    );
+
+    if (daySlots.length > 0) {
+      return daySlots.map((slot, idx) => {
+        const timeMatch = slot.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i);
+        const timeStr = timeMatch ? timeMatch[0] : '08:00 AM';
+        const cleanTitle = slot
+          .replace(new RegExp(`^${dayShort}\\s*`, 'i'), '')
+          .replace(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b:?\s*/i, '')
+          .trim() || `${category.title} Focus`;
+
+        const existing = tasks.find(t => 
+          (domainTypes.includes(t.domain) || t.badge?.toLowerCase().includes(category.id.toLowerCase())) &&
+          t.title === cleanTitle && 
+          t.date === dateStr
+        );
+        if (existing) return existing;
+
+        return {
+          id: `cadence-${category.id}-${dayShort}-${idx}`,
+          title: cleanTitle,
+          domain: domainTypes[0],
+          startTime: timeStr,
+          durationMin: 45,
+          color: category.color,
+          badge: category.title.split(' ')[0],
+          completed: false,
+          date: dateStr,
+          checklist: [],
+          notes: `${category.title} Scheduled Cadence`,
+        };
+      });
+    }
+
+    // 3. Fallback recurring tasks without date
+    return tasks.filter((t) => {
+      const matches = domainTypes.includes(t.domain) || 
+        (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase()));
+      return matches && (!t.date || t.date === '');
+    });
+  }, [category, domainTypes, selectedTimelineDate, tasks]);
+
+  // Daily task completion stats
+  const dayTotalCount = streamTasksForSelectedDay.length;
+  const dayCompletedCount = streamTasksForSelectedDay.filter(t => t.completed).length;
+  const dayPercentage = dayTotalCount > 0 ? Math.round((dayCompletedCount / dayTotalCount) * 100) : 0;
+
+  // Stream streak calculation (consecutive days with completed tasks in this stream)
+  const streamStreak = useMemo(() => {
+    let streak = 0;
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      const hasDone = tasks.some(t => 
+        (domainTypes.includes(t.domain) || t.badge?.toLowerCase().includes(category.id.toLowerCase())) &&
+        t.completed &&
+        (t.date === ds || (!t.date && i === 0))
+      );
+      if (hasDone) {
+        streak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+    return streak;
+  }, [tasks, domainTypes, category]);
+
+  const totalStreamCompleted = useMemo(() => {
+    return tasks.filter(t => 
+      (domainTypes.includes(t.domain) || t.badge?.toLowerCase().includes(category.id.toLowerCase())) &&
+      t.completed
+    ).length;
+  }, [tasks, domainTypes, category]);
+
+  const motivationalMsg = useMemo(() => {
+    if (dayPercentage === 100) return language === 'am' ? 'የዛሬው ዒላማ ተጠናቋል!' : 'Mastery achieved today!';
+    if (dayPercentage >= 50) return language === 'am' ? 'ጥሩ ጉልበት — ቀጥሉበት!' : 'Great momentum — keep going!';
+    if (dayTotalCount > 0) return language === 'am' ? 'ቀጥሉበት!' : 'keep going!';
+    return language === 'am' ? 'ለዚህ ቀን ተግባር መድቡ' : 'Ready to plan this day';
+  }, [dayPercentage, dayTotalCount, language]);
+
+  // Handlers for task actions
+  const handleToggleStreamTask = (task: ScheduleTask) => {
+    if (task.id.startsWith('cadence-')) {
+      addTask({
+        title: task.title,
+        domain: task.domain,
+        startTime: task.startTime,
+        durationMin: task.durationMin,
+        color: task.color,
+        badge: task.badge,
+        completed: true,
+        date: task.date || selectedTimelineDate.toISOString().split('T')[0],
+        checklist: task.checklist || [],
+        notes: task.notes,
+      });
+    } else {
+      toggleTaskCompletion(task.id);
+    }
+    try { soundEngine.playTouchSound(); } catch {}
+  };
+
+  const handleDeleteStreamTask = (taskId: string) => {
+    if (!taskId.startsWith('cadence-')) {
+      deleteTask(taskId);
+    }
+    try { soundEngine.playTouchSound(); } catch {}
+  };
+
+  const handleOpenEditStreamTask = (task: ScheduleTask) => {
+    setEditingTask(task);
+    setTaskModalTitle(task.title);
+    setTaskModalTime(task.startTime || '08:00 AM');
+    setTaskModalDuration(task.durationMin || 45);
+    setTaskModalNotes(task.notes || '');
+    setTaskPlanHorizon('daily');
+    setIsTaskModalOpen(true);
+  };
+
+  const handleOpenAddStreamTask = () => {
+    setEditingTask(null);
+    setTaskModalTitle('');
+    setTaskModalTime('08:00 AM');
+    setTaskModalDuration(45);
+    setTaskModalNotes('');
+    setTaskPlanHorizon('daily');
+    const dayOfWeek = selectedTimelineDate.getDay();
+    const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek;
+    setTaskSelectedDays([dayNum]);
+    setTaskMonthlyWeeks(4);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleToggleTaskModalDay = (dayNum: number) => {
+    setTaskSelectedDays((prev) => {
+      if (prev.includes(dayNum)) {
+        if (prev.length === 1) return prev; // keep at least 1 day
+        return prev.filter((d) => d !== dayNum);
+      }
+      return [...prev, dayNum].sort((a, b) => a - b);
+    });
+  };
+
+  const handleSaveStreamTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskModalTitle.trim()) return;
+
+    if (editingTask && !editingTask.id.startsWith('cadence-')) {
+      updateTask(editingTask.id, {
+        title: taskModalTitle.trim(),
+        startTime: taskModalTime,
+        durationMin: Number(taskModalDuration),
+        notes: taskModalNotes.trim(),
+      });
+    } else {
+      if (taskPlanHorizon === 'daily') {
+        addTask({
+          title: taskModalTitle.trim(),
+          domain: domainTypes[0],
+          startTime: taskModalTime,
+          durationMin: Number(taskModalDuration),
+          color: category.color,
+          badge: category.title.split(' ')[0],
+          completed: false,
+          date: selectedTimelineDate.toISOString().split('T')[0],
+          checklist: [],
+          notes: taskModalNotes.trim(),
+        });
+      } else if (taskPlanHorizon === 'weekly') {
+        // Schedule for each selected day in the current week
+        const curr = new Date(selectedTimelineDate);
+        const day = curr.getDay();
+        const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(curr.setDate(diff));
+
+        taskSelectedDays.forEach((dayNum) => {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + (dayNum - 1));
+          addTask({
+            title: taskModalTitle.trim(),
+            domain: domainTypes[0],
+            startTime: taskModalTime,
+            durationMin: Number(taskModalDuration),
+            color: category.color,
+            badge: category.title.split(' ')[0],
+            completed: false,
+            date: d.toISOString().split('T')[0],
+            checklist: [],
+            notes: taskModalNotes.trim() ? `${taskModalNotes.trim()} (Weekly Routine)` : 'Weekly Routine',
+          });
+        });
+      } else if (taskPlanHorizon === 'monthly') {
+        // Plan set amount of weeks with set amount of days
+        const curr = new Date(selectedTimelineDate);
+        const day = curr.getDay();
+        const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(curr.setDate(diff));
+
+        const weeksToSchedule = Math.max(1, Math.min(taskMonthlyWeeks, 12));
+        for (let w = 0; w < weeksToSchedule; w++) {
+          taskSelectedDays.forEach((dayNum) => {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + (w * 7) + (dayNum - 1));
+            addTask({
+              title: taskModalTitle.trim(),
+              domain: domainTypes[0],
+              startTime: taskModalTime,
+              durationMin: Number(taskModalDuration),
+              color: category.color,
+              badge: category.title.split(' ')[0],
+              completed: false,
+              date: d.toISOString().split('T')[0],
+              checklist: [],
+              notes: taskModalNotes.trim() ? `${taskModalNotes.trim()} (Week ${w + 1})` : `Week ${w + 1} Routine`,
+            });
+          });
+        }
+      }
+    }
+
+    setIsTaskModalOpen(false);
+    try { soundEngine.playTouchSound(); } catch {}
+  };
+
+  const handleAddInlineStep = (taskId: string) => {
+    const text = inlineTaskStepInputs[taskId];
+    if (!text || !text.trim()) return;
+
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const updated = [
+      ...(task.checklist || []),
+      { id: `step-${Date.now()}`, text: text.trim(), done: false }
+    ];
+    updateTask(taskId, { checklist: updated });
+    setInlineTaskStepInputs(prev => ({ ...prev, [taskId]: '' }));
+    try { soundEngine.playTouchSound(); } catch {}
+  };
+
+  const handleToggleChecklistStep = (taskId: string, stepId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.checklist) return;
+
+    const updated = task.checklist.map(c => c.id === stepId ? { ...c, done: !c.done } : c);
+    updateTask(taskId, { checklist: updated });
+    try { soundEngine.playTouchSound(); } catch {}
   };
 
   const handleAddItem = (type: 'inProgress' | 'achieved' | 'upcoming') => {
@@ -609,357 +964,378 @@ export const CategoryDetailView: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 1: Overview & Detailed Plan (Unified Category Focus Sticky Note + Cadence & Milestones) */}
+      {/* Tab 1: Overview & Detailed Plan (Stream Execution Timeline & Progress Tracking) */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Primary 2 Columns: The Category Focus Sticky Note (Unified with Focus Blocks) */}
-          <div className="lg:col-span-2 space-y-4">
-            <div id="category-sticky-note-card">
-              <DailyPlansStickyCard categoryId={category.id} />
-            </div>
-          </div>
+          {/* Primary 2 Columns: Stream Execution Timeline & Progress Tracking */}
+          <div className="lg:col-span-2 space-y-5">
+            
+            {/* 1. TODAY'S / DAY'S PROGRESS TRACKING CARD (From User Design) */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#12142d] via-[#16193b] to-[#1c1a45] text-white p-5 sm:p-6 border border-indigo-900/40 shadow-xl">
+              {/* Subtle background glow */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Secondary 1 Column: Weekly Schedule Cadence & Monthly Milestone */}
-          <div className="space-y-6">
-
-            {/* 2. WEEKLY SCHEDULE BOX (as seen in user image) */}
-            <div className="p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#0082ff]" /> Weekly Schedule
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-                    {metrics.weeklyTargetHours}h / week
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-[11px] sm:text-xs font-semibold text-indigo-300/80 tracking-wide uppercase">
+                    {selectedTimelineDate.toDateString() === new Date().toDateString()
+                      ? (language === 'am' ? 'የዛሬ እድገት' : "Today's Progress")
+                      : `${selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })} ${language === 'am' ? 'እድገት' : 'Progress'}`}
                   </span>
-                  <button
-                    onClick={() => {
-                      setEditWeeklyHours(category.weeklyTargetHours);
-                      setEditScheduleSlots([...category.weeklyScheduleSummary]);
-                      setShowEditWeeklyModal(true);
-                    }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-[#0082ff] hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    title="Edit with Main Database"
-                  >
-                    <Edit3 size={13} />
-                  </button>
-                  <button
-                    onClick={() => setShowWeeklyDetail(!showWeeklyDetail)}
-                    className="text-[11px] font-bold text-[#0082ff] hover:underline"
-                  >
-                    {showWeeklyDetail ? 'Less' : 'Detail'}
-                  </button>
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {dayCompletedCount} of {dayTotalCount} completed
+                  </h3>
+                  <p className="text-xs text-indigo-200/70 font-medium">
+                    {dayPercentage}% done — {motivationalMsg} 🚀
+                  </p>
+                </div>
+
+                {/* Circular Progress Ring */}
+                <div className="relative shrink-0 flex items-center justify-center">
+                  <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90">
+                    <circle
+                      cx="38"
+                      cy="38"
+                      r="28"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="transparent"
+                      className="text-slate-800/80"
+                    />
+                    <circle
+                      cx="38"
+                      cy="38"
+                      r="28"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      fill="transparent"
+                      strokeDasharray={2 * Math.PI * 28}
+                      strokeDashoffset={2 * Math.PI * 28 - (dayPercentage / 100) * (2 * Math.PI * 28)}
+                      strokeLinecap="round"
+                      className="text-[#818cf8] transition-all duration-700 ease-out"
+                    />
+                  </svg>
+                  <span className="absolute text-sm sm:text-base font-black text-white font-mono">
+                    {dayPercentage}%
+                  </span>
                 </div>
               </div>
 
-              {/* Routine Bullet Points */}
-              <div className="space-y-1.5">
-                {category.weeklyScheduleSummary.map((slot, i) => (
-                  <div key={i} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: category.color }} />
-                      <span className="truncate">{slot}</span>
-                    </div>
-                  </div>
+              {/* Footer Row: Streak & Total Completed */}
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-semibold">
+                <div className="flex items-center gap-1.5 text-amber-300">
+                  <span>🔥</span>
+                  <span>{streamStreak} {language === 'am' ? 'ቀናት ተከታታይ' : 'day streak'}</span>
+                  <span>🔥</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-400">
+                  <CheckCircle2 size={13} className="text-emerald-400" />
+                  <span>{totalStreamCompleted} {language === 'am' ? 'ተጠናቋል' : 'total completed'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. THE TIMELINE CONTAINER (From Mobile Design) */}
+            <div className="p-4 sm:p-6 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs space-y-5">
+              
+              {/* Header: Date + Day Name + Quick Action */}
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400 block">
+                    {(() => {
+                      const eth = gregorianToEthiopian(selectedTimelineDate);
+                      if (calendarSystem === 'et') {
+                        return `${eth.monthNameAm} ${eth.day}፣ ${eth.year} ዓ.ም.`;
+                      } else if (calendarSystem === 'dual') {
+                        const greg = selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        return `${greg} • ${eth.monthNameAm} ${eth.day}`;
+                      }
+                      return selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    })()}
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {selectedTimelineDate.toDateString() === new Date().toDateString() 
+                      ? (language === 'am' ? 'ዛሬ' : 'Today') 
+                      : (calendarSystem === 'et'
+                          ? gregorianToEthiopian(selectedTimelineDate).dayOfWeekAm
+                          : selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' }))}
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddStreamTask}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
+                  style={{ backgroundColor: category.color }}
+                >
+                  <Plus size={14} />
+                  <span>{language === 'am' ? 'ብሎክ አቅድ' : 'Plan Block'}</span>
+                </button>
+              </div>
+
+              {/* Horizontal 7-Day Day Selector Strip */}
+              <div className="flex items-center justify-between gap-1 sm:gap-1.5 px-1">
+                {timelineWeekDays.map((day) => (
+                  <button
+                    key={day.dayShort}
+                    type="button"
+                    onClick={() => setSelectedTimelineDate(day.date)}
+                    className={`flex-1 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
+                      day.isSelected
+                        ? 'bg-blue-50 dark:bg-blue-950/50 text-[#0082ff] font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60 scale-102'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <span className="text-[8.5px] sm:text-[9.5px] font-semibold opacity-80 uppercase tracking-normal">
+                      {calendarSystem === 'et' ? day.ethDate.dayOfWeekAm : (language === 'am' ? day.dayAm : day.dayShort)}
+                      {day.isSunday ? ' 🌿' : ''}
+                    </span>
+                    <span className={`text-xs sm:text-[13px] font-bold ${day.isSelected ? 'text-[#0082ff]' : 'text-slate-900 dark:text-slate-200'}`}>
+                      {day.dayNum}
+                      {day.secondaryDayNum !== null && (
+                        <span className="text-[8px] font-normal opacity-70 ml-0.5">({day.secondaryDayNum})</span>
+                      )}
+                    </span>
+                    {day.isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff] mt-0.5" />
+                    )}
+                  </button>
                 ))}
               </div>
 
-              {/* Expanded Detailed 7-Day Matrix */}
-              {showWeeklyDetail && (
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
-                        {language === 'am' ? 'የ7ቱ ቀናት የጊዜ ሰሌዳ' : '7-Day Cadence Breakdown'}
-                      </span>
-                      <p className="text-[10px] text-slate-400">
-                        {language === 'am' ? 'ቀናትን ይምረጡ ወይም ሰዓት ለማስተካከል ይጫኑ' : 'Choose active days or tap ✎ to customize time & focus'}
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0082ff]">
-                      {category.weeklyScheduleSummary.length}/7 active
-                    </span>
-                  </div>
+              {/* Vertical Timeline & Task Cards */}
+              <div className="relative pl-6 sm:pl-7 pt-2 space-y-3.5">
+                {/* Vertical Timeline Thread */}
+                <div className="absolute left-2.5 sm:left-3 top-3 bottom-3 w-0.5 bg-slate-200 dark:bg-slate-800" />
 
-                  {/* Quick Day Toggle Bar: [Mon] [Tue] [Wed] [Thu] [Fri] [Sat] [Sun 🌿] */}
-                  <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400 px-1">
-                      <span>{language === 'am' ? 'የሳምንት ቀናት ፈጣን ምርጫ' : 'Quick Day Chooser'}</span>
-                      <span className="font-mono text-slate-400">{category.weeklyScheduleSummary.length} days chosen</span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center">
-                      {[
-                        { id: 'Mon', en: 'Mon', am: 'ሰኞ', isRest: false },
-                        { id: 'Tue', en: 'Tue', am: 'ማክ', isRest: false },
-                        { id: 'Wed', en: 'Wed', am: 'ረቡ', isRest: false },
-                        { id: 'Thu', en: 'Thu', am: 'ሐሙ', isRest: false },
-                        { id: 'Fri', en: 'Fri', am: 'አር', isRest: false },
-                        { id: 'Sat', en: 'Sat', am: 'ቅዳ', isRest: false },
-                        { id: 'Sun', en: 'Sun 🌿', am: 'እሁ 🌿', isRest: true },
-                      ].map((d) => {
-                        const hasSlot = category.weeklyScheduleSummary.some((s) =>
-                          s.toLowerCase().includes(d.id.toLowerCase())
-                        );
-                        return (
-                          <button
-                            key={d.id}
-                            type="button"
-                            onClick={() => handleToggleDayCadence(d.en.slice(0, 3))}
-                            className={`py-1.5 px-0.5 rounded-xl text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 border ${
-                              hasSlot
-                                ? d.isRest
-                                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-2xs'
-                                  : 'bg-[#0082ff] text-white border-[#0082ff] shadow-2xs'
-                                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                            }`}
-                          >
-                            <span>{language === 'am' ? d.am : d.en}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                {streamTasksForSelectedDay.length > 0 ? (
+                  streamTasksForSelectedDay.map((task) => {
+                    const isActiveRunning = activeTask?.id === task.id;
 
-                  {/* 7-Day Interactive Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                      const dayShort = day.slice(0, 3);
-                      const isSunday = day === 'Sunday';
-                      const existingSlot = category.weeklyScheduleSummary.find((s) =>
-                        s.toLowerCase().includes(dayShort.toLowerCase())
-                      );
-                      const isActive = !!existingSlot;
-                      const isEditingThis = editingDay === day;
-
-                      return (
+                    return (
+                      <div key={task.id} className="relative group">
+                        {/* Milestone Node on Timeline */}
                         <div
-                          key={day}
-                          className={`p-3 rounded-2xl border transition-all ${
-                            isEditingThis
-                              ? 'bg-blue-50/90 dark:bg-blue-950/50 border-[#0082ff] ring-2 ring-[#0082ff]/30 shadow-md col-span-1 sm:col-span-2'
-                              : isActive
-                              ? 'bg-white dark:bg-slate-900/90 border-blue-200 dark:border-blue-900/60 shadow-2xs'
-                              : isSunday
-                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/50'
-                              : 'bg-slate-50/80 dark:bg-slate-900/40 border-slate-200/70 dark:border-slate-800'
+                          onClick={() => handleToggleStreamTask(task)}
+                          className={`absolute -left-6 sm:-left-7 top-4 -translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all cursor-pointer z-10 flex items-center justify-center ${
+                            isActiveRunning
+                              ? 'border-[#0082ff] bg-[#0082ff] ring-4 ring-blue-500/20 shadow-xs scale-110'
+                              : task.completed
+                              ? 'border-emerald-500 bg-emerald-500 text-white'
+                              : 'border-blue-400 dark:border-blue-500 bg-white dark:bg-[#121927] hover:border-[#0082ff]'
+                          }`}
+                          title={task.completed ? 'Mark incomplete' : 'Mark completed'}
+                        >
+                          {task.completed && <Check size={10} strokeWidth={3} className="text-white" />}
+                        </div>
+
+                        {/* Task Card with 3 Vertical Dots */}
+                        <div
+                          className={`p-3.5 sm:p-4 rounded-2xl transition-all relative ${
+                            isActiveRunning
+                              ? 'bg-gradient-to-r from-[#0082ff] to-blue-600 text-white shadow-md'
+                              : 'bg-slate-50 dark:bg-[#161c28] border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white shadow-2xs hover:shadow-sm'
                           }`}
                         >
-                          {/* Normal Card View */}
-                          {!isEditingThis ? (
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5">
-                                  {/* Quick Toggle Checkbox/Dot */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleDayCadence(day)}
-                                    className={`w-4 h-4 rounded-md border flex items-center justify-center transition cursor-pointer shrink-0 ${
-                                      isActive
-                                        ? isSunday
-                                          ? 'bg-emerald-500 border-emerald-500 text-white'
-                                          : 'bg-[#0082ff] border-[#0082ff] text-white'
-                                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400'
-                                    }`}
-                                    title={isActive ? 'Click to make Rest day' : 'Click to activate this day'}
-                                  >
-                                    {isActive && <Check size={11} strokeWidth={3} />}
-                                  </button>
-
-                                  <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
-                                    {day}
-                                  </span>
-
-                                  {isSunday && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
-                                      🌿 Rest
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                  {/* Active / Off Pill */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleDayCadence(day)}
-                                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full cursor-pointer transition ${
-                                      isActive
-                                        ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                                    }`}
-                                  >
-                                    {isActive ? 'Active' : 'Off / Rest'}
-                                  </button>
-
-                                  {/* Edit Button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStartEditingDay(day)}
-                                    className="p-1 rounded-lg text-slate-400 hover:text-[#0082ff] hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                                    title={`Edit ${day} Schedule`}
-                                  >
-                                    <Edit3 size={12} />
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Cadence Description */}
-                              <div
-                                onClick={() => handleStartEditingDay(day)}
-                                className="cursor-pointer group flex items-center justify-between"
-                              >
-                                <span className={`text-[11px] truncate block ${
-                                  isActive
-                                    ? 'text-slate-700 dark:text-slate-200 font-medium'
-                                    : isSunday
-                                    ? 'text-emerald-700 dark:text-emerald-400 font-medium italic'
-                                    : 'text-slate-400 italic'
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                                  isActiveRunning
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                                 }`}>
-                                  {existingSlot || (isSunday ? '🌿 Official Rest & Recovery Sanctuary' : 'Active recovery / review')}
+                                  {task.startTime || '08:00 AM'}
                                 </span>
-                                <span className="text-[10px] text-slate-300 dark:text-slate-600 group-hover:text-[#0082ff] transition ml-1 shrink-0">
-                                  ✎
+                                <span className={`text-[10px] font-bold ${isActiveRunning ? 'text-white/80' : 'text-[#0082ff]'}`}>
+                                  {formatTaskDuration(task.durationMin || 45)}
                                 </span>
                               </div>
-                            </div>
-                          ) : (
-                            /* Inline Day Editor View */
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between border-b border-blue-200/60 dark:border-blue-900/60 pb-2">
-                                <div className="flex items-center gap-1.5">
-                                  <Edit3 size={13} className="text-[#0082ff]" />
-                                  <span className="font-extrabold text-xs text-slate-900 dark:text-white">
-                                    {language === 'am' ? `${day} የጊዜ ሰሌዳ አድስ` : `Edit ${day} Cadence`}
-                                  </span>
-                                  {isSunday && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
-                                      🌿 Rest Day
-                                    </span>
-                                  )}
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingDay(null)}
-                                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
-                                >
-                                  <X size={13} />
-                                </button>
-                              </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                <div>
-                                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
-                                    {language === 'am' ? 'ሰዓት' : 'Time'}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={editDayTime}
-                                    onChange={(e) => setEditDayTime(e.target.value)}
-                                    placeholder="07:00 AM"
-                                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-[#0082ff]"
-                                  />
-                                </div>
+                              <h4 className={`text-sm sm:text-base font-bold tracking-tight ${
+                                task.completed ? 'line-through opacity-60' : ''
+                              } ${isActiveRunning ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                                {task.title}
+                              </h4>
 
-                                <div className="sm:col-span-2">
-                                  <label className="text-[10px] font-bold text-slate-500 block mb-1">
-                                    {language === 'am' ? 'ተግባር / የትኩረት አይነት' : 'Cadence Activity / Focus Label'}
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={editDayText}
-                                    onChange={(e) => setEditDayText(e.target.value)}
-                                    placeholder="e.g. Deliberate Mastery Practice"
-                                    className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold outline-none focus:border-[#0082ff]"
-                                  />
-                                </div>
-                              </div>
+                              {task.notes && (
+                                <p className={`text-xs mt-1 ${isActiveRunning ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>
+                                  {task.notes}
+                                </p>
+                              )}
 
-                              {/* Quick Presets */}
-                              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                <span className="text-[10px] text-slate-400 font-mono">Presets:</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditDayTime('07:00 AM');
-                                    setEditDayText(`${category.title} Focus Block`);
+                              {/* Checklist Subtasks */}
+                              {task.checklist && task.checklist.length > 0 && (
+                                <div className="mt-2.5 space-y-1">
+                                  {task.checklist.map((step) => (
+                                    <div
+                                      key={step.id}
+                                      onClick={() => handleToggleChecklistStep(task.id, step.id)}
+                                      className="flex items-center gap-2 text-xs cursor-pointer group/step py-0.5"
+                                    >
+                                      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
+                                        step.done 
+                                          ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                          : isActiveRunning 
+                                          ? 'border-white/60 group-hover/step:border-white' 
+                                          : 'border-slate-400 dark:border-slate-500 group-hover/step:border-[#0082ff]'
+                                      }`}>
+                                        {step.done && <Check size={10} strokeWidth={3} />}
+                                      </div>
+                                      <span className={`transition-all ${
+                                        step.done 
+                                          ? 'line-through opacity-50' 
+                                          : isActiveRunning ? 'text-white' : 'text-slate-700 dark:text-slate-300'
+                                      }`}>
+                                        {step.text}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Add Step Inline */}
+                              <div className="mt-2 flex items-center gap-1.5 max-w-sm">
+                                <input
+                                  type="text"
+                                  placeholder="+ Add subtask / step..."
+                                  value={inlineTaskStepInputs[task.id] || ''}
+                                  onChange={(e) => setInlineTaskStepInputs(prev => ({ ...prev, [task.id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleAddInlineStep(task.id);
                                   }}
-                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                                >
-                                  🌅 07:00 AM Focus
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditDayTime('12:30 PM');
-                                    setEditDayText(`${category.title} Midday Practice`);
-                                  }}
-                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                                >
-                                  ☀️ 12:30 PM Midday
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditDayTime('06:00 PM');
-                                    setEditDayText(`${category.title} Evening Mastery`);
-                                  }}
-                                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-[10px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                                >
-                                  🌙 06:00 PM Evening
-                                </button>
-                                {isSunday && (
+                                  className={`text-xs px-2.5 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#0082ff] flex-1 ${
+                                    isActiveRunning
+                                      ? 'bg-white/10 border-white/20 text-white placeholder-white/50'
+                                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400'
+                                  }`}
+                                />
+                                {inlineTaskStepInputs[task.id] && (
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setEditDayTime('08:00 AM');
-                                      setEditDayText('Spiritual Reflection & Devotion Sanctuary');
-                                    }}
-                                    className="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/60 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 cursor-pointer"
+                                    onClick={() => handleAddInlineStep(task.id)}
+                                    className="text-xs bg-[#0082ff] text-white px-2 py-1 rounded-lg font-bold cursor-pointer"
                                   >
-                                    🌿 Sunday Sanctuary
+                                    Add
                                   </button>
                                 )}
                               </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex items-center justify-between pt-2 border-t border-blue-200/50 dark:border-blue-900/50">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSetDayAsRest(day)}
-                                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
-                                >
-                                  {language === 'am' ? 'እንደ እረፍት ቀን መዝግብ' : 'Set as Off / Rest'}
-                                </button>
-
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingDay(null)}
-                                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
-                                  >
-                                    {language === 'am' ? 'ሰርዝ' : 'Cancel'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSaveDayCadence(day)}
-                                    className="px-4 py-1.5 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1"
-                                  >
-                                    <Check size={12} strokeWidth={3} />
-                                    <span>{language === 'am' ? 'አስቀምጥ' : 'Save Day'}</span>
-                                  </button>
-                                </div>
-                              </div>
                             </div>
-                          )}
+
+                            {/* 3 Vertical Dots Menu: Edit & Delete (From User Image) */}
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                }}
+                                className={`w-7 h-7 rounded-xl flex items-center justify-center transition cursor-pointer ${
+                                  isActiveRunning
+                                    ? 'text-white/80 hover:text-white hover:bg-white/10'
+                                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10'
+                                }`}
+                                title={language === 'am' ? 'አማራጮች' : 'Options'}
+                              >
+                                <MoreVertical size={16} />
+                              </button>
+
+                              {openTaskMenuId === task.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenTaskMenuId(null);
+                                    }}
+                                  />
+                                  <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenTaskMenuId(null);
+                                        handleOpenEditStreamTask(task);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition cursor-pointer"
+                                    >
+                                      <Edit3 size={14} className="text-indigo-500" />
+                                      <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
+                                    </button>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenTaskMenuId(null);
+                                        handleDeleteStreamTask(task.id);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition cursor-pointer"
+                                    >
+                                      <Trash2 size={14} className="text-rose-500" />
+                                      <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-8 text-center bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-6">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#0082ff] flex items-center justify-center mx-auto text-xl mb-2.5 shadow-2xs">
+                      📅
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet'}
+                    </h4>
+                    <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1 mb-3">
+                      {language === 'am'
+                        ? 'ለዚህ ዘርፍ አዲስ የትኩረት ብሎክ ለመመደብ ከታች ያለውን ይጫኑ።'
+                        : `Plan a deliberate focus block or routine for ${category.title}.`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddStreamTask}
+                      className="px-4 py-2 bg-[#0082ff] hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Plus size={14} />
+                      <span>{language === 'am' ? 'የመጀመሪያውን ብሎክ አቅድ' : 'Plan First Block'}</span>
+                    </button>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Optional Collapsible Sticky Note Card */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowStickyDrawer(!showStickyDrawer)}
+                className="w-full py-2.5 px-4 rounded-2xl bg-amber-50/80 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-200 text-xs font-bold flex items-center justify-between transition cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <span>📌</span>
+                  <span>{language === 'am' ? 'ዕለታዊ ማስታወሻና ፈጣን እቅድ' : 'Daily Sticky Note & Quick Notes'}</span>
+                </div>
+                {showStickyDrawer ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </button>
+
+              {showStickyDrawer && (
+                <div className="mt-3 animate-fadeIn">
+                  <DailyPlansStickyCard categoryId={category.id} />
                 </div>
               )}
             </div>
+          </div>
 
-            {/* 2. MONTHLY DELIVERABLE BOX (as seen in user image) */}
+          {/* Secondary 1 Column: Monthly Milestone & Deliverables */}
+          <div className="space-y-6">
+
+            {/* MONTHLY DELIVERABLE BOX */}
             <div className="p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -1702,6 +2078,290 @@ export const CategoryDetailView: React.FC = () => {
                   className="px-5 py-2 bg-[#0082ff] text-white rounded-xl font-bold flex items-center gap-1.5"
                 >
                   <Save size={13} /> Save to Main Database
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Stream Task Add / Edit Modal (Daily, Weekly, Monthly) */}
+      {isTaskModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-lg bg-white dark:bg-[#121927] rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-xs" style={{ backgroundColor: category.color }}>
+                  <Icon size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    {editingTask ? (language === 'am' ? 'ብሎክ አስተካክል' : 'Edit Stream Task') : (language === 'am' ? 'አዲስ ብሎክ አቅድ' : 'Plan Stream Block')}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {category.title} • {taskPlanHorizon.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTaskModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStreamTask} className="space-y-4">
+              
+              {/* 1. Cadence Mode: Daily / Weekly / Monthly */}
+              {!editingTask && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    {language === 'am' ? 'የእቅድ አድማስ (Plan Horizon)' : 'Plan Cadence'}
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskPlanHorizon('daily');
+                        soundEngine.playTouchSound();
+                      }}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                        taskPlanHorizon === 'daily'
+                          ? 'bg-white dark:bg-[#1a2333] text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>☀️</span>
+                      <span>{language === 'am' ? 'ዕለታዊ' : 'Daily'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskPlanHorizon('weekly');
+                        soundEngine.playTouchSound();
+                      }}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                        taskPlanHorizon === 'weekly'
+                          ? 'bg-white dark:bg-[#1a2333] text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>📅</span>
+                      <span>{language === 'am' ? 'ሳምንታዊ' : 'Weekly'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskPlanHorizon('monthly');
+                        soundEngine.playTouchSound();
+                      }}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                        taskPlanHorizon === 'monthly'
+                          ? 'bg-white dark:bg-[#1a2333] text-slate-900 dark:text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>🗓️</span>
+                      <span>{language === 'am' ? 'ወርሃዊ' : 'Monthly'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Weekly or Monthly Day Chooser */}
+              {!editingTask && (taskPlanHorizon === 'weekly' || taskPlanHorizon === 'monthly') && (
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                    <span>{language === 'am' ? 'ብሎኩ የሚመጣባቸው ቀናት' : 'Choose Routine Days:'}</span>
+                    <span className="text-[#0082ff] font-mono">{taskSelectedDays.length} days/week</span>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {[
+                      { id: 1, en: 'Mon', am: 'ሰኞ' },
+                      { id: 2, en: 'Tue', am: 'ማክ' },
+                      { id: 3, en: 'Wed', am: 'ረቡ' },
+                      { id: 4, en: 'Thu', am: 'ሐሙ' },
+                      { id: 5, en: 'Fri', am: 'አር' },
+                      { id: 6, en: 'Sat', am: 'ቅዳ' },
+                      { id: 7, en: 'Sun 🌿', am: 'እሁ 🌿', isRest: true },
+                    ].map((d) => {
+                      const isSel = taskSelectedDays.includes(d.id);
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => handleToggleTaskModalDay(d.id)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center justify-center ${
+                            isSel
+                              ? 'bg-[#0082ff] text-white shadow-xs scale-102'
+                              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                          }`}
+                        >
+                          <span>{language === 'am' ? d.am : d.en}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Quick Preset Buttons */}
+                  <div className="flex items-center gap-1.5 pt-0.5 text-[10px]">
+                    <span className="text-slate-400">Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => setTaskSelectedDays([1, 2, 3, 4, 5])}
+                      className="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/70 font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer"
+                    >
+                      Mon–Fri
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskSelectedDays([1, 2, 3, 4, 5, 6, 7])}
+                      className="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/70 font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer"
+                    >
+                      All 7 Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskSelectedDays([6, 7])}
+                      className="px-2 py-0.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/70 font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer"
+                    >
+                      Weekend
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly Specific: Set amount of weeks */}
+              {!editingTask && taskPlanHorizon === 'monthly' && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 dark:text-amber-200">
+                    <span>{language === 'am' ? 'የሳምንታት ብዛት ምረጥ' : 'Plan Amount of Weeks:'}</span>
+                    <span className="font-mono text-amber-700 dark:text-amber-400">{taskMonthlyWeeks} Weeks</span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[1, 2, 3, 4].map((w) => (
+                      <button
+                        key={w}
+                        type="button"
+                        onClick={() => {
+                          setTaskMonthlyWeeks(w);
+                          soundEngine.playTouchSound();
+                        }}
+                        className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          taskMonthlyWeeks === w
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60'
+                        }`}
+                      >
+                        {w} {w === 1 ? 'Week' : 'Weeks'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="text-[10px] text-amber-800 dark:text-amber-300/80 pt-0.5 font-medium flex items-center gap-1">
+                    <span>⚡</span>
+                    <span>
+                      {language === 'am'
+                        ? `በ${taskMonthlyWeeks} ሳምንታት ውስጥ ${taskMonthlyWeeks * taskSelectedDays.length} የብሎክ እቅዶች ይመዘገባሉ`
+                        : `Schedules ${taskMonthlyWeeks * taskSelectedDays.length} sessions across ${taskMonthlyWeeks} weeks (${taskSelectedDays.length} days/week)`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Task Title Input */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                  {language === 'am' ? 'የተግባሩ ስም' : 'Task Title'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={taskModalTitle}
+                  onChange={(e) => setTaskModalTitle(e.target.value)}
+                  placeholder={language === 'am' ? 'ምሳሌ፡ የቼስ ታክቲክ ስልጠና' : 'e.g., Tactical Calculation Drill'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold outline-none focus:border-[#0082ff]"
+                />
+              </div>
+
+              {/* Start Time & Duration */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                    {language === 'am' ? 'ሰዓት' : 'Start Time'}
+                  </label>
+                  <input
+                    type="text"
+                    value={taskModalTime}
+                    onChange={(e) => setTaskModalTime(e.target.value)}
+                    placeholder="08:00 AM"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold outline-none focus:border-[#0082ff]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                    {language === 'am' ? 'ቆይታ' : 'Duration'}
+                  </label>
+                  <select
+                    value={taskModalDuration}
+                    onChange={(e) => setTaskModalDuration(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold outline-none focus:border-[#0082ff]"
+                  >
+                    <option value={25}>25 min (Pomodoro)</option>
+                    <option value={30}>30 min</option>
+                    <option value={45}>45 min (Standard)</option>
+                    <option value={60}>60 min (1 Hour)</option>
+                    <option value={90}>90 min (Deep Work)</option>
+                    <option value={120}>120 min (2 Hours)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                  {language === 'am' ? 'ተጨማሪ ማስታወሻ' : 'Notes / Focus Drill Goal'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={taskModalNotes}
+                  onChange={(e) => setTaskModalNotes(e.target.value)}
+                  placeholder={language === 'am' ? 'ለዚህ ብሎክ ዋና ዒላማ...' : 'Key objective or instructions for this session...'}
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs outline-none focus:border-[#0082ff]"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsTaskModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                >
+                  {language === 'am' ? 'ይቅር' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-white text-xs font-bold cursor-pointer shadow-xs active:scale-95 transition flex items-center gap-1.5"
+                  style={{ backgroundColor: category.color }}
+                >
+                  <Plus size={14} />
+                  <span>
+                    {editingTask
+                      ? (language === 'am' ? 'አስቀምጥ' : 'Save Changes')
+                      : taskPlanHorizon === 'daily'
+                      ? (language === 'am' ? 'ቀን አቅድ' : 'Schedule Daily')
+                      : taskPlanHorizon === 'weekly'
+                      ? (language === 'am' ? 'ሳምንታዊ አቅድ' : `Schedule Weekly (${taskSelectedDays.length} days)`)
+                      : (language === 'am' ? 'ወርሃዊ አቅድ' : `Schedule Monthly (${taskMonthlyWeeks * taskSelectedDays.length} blocks)`)}
+                  </span>
                 </button>
               </div>
             </form>

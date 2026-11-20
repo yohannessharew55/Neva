@@ -103,18 +103,18 @@ export const ClearScratchPasswordModal: React.FC<ClearScratchPasswordModalProps>
         className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Minimal words & icon */}
+        {/* Header - Beautiful Graphics & Radiant Badge */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-              <RotateCcw size={17} />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-500 text-white flex items-center justify-center shadow-md shadow-rose-500/25 shrink-0">
+              <RotateCcw size={18} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                {language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All'}
+              <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'ሁሉንም አጥፋ (ከባዶ ጀምር)' : 'Clear All Data & Reset'}
               </h3>
-              <p className="text-[11px] text-slate-400">
-                {language === 'am' ? 'ከባዶ ጀምር (Scratch)' : 'Start from scratch'}
+              <p className="text-[11px] text-slate-400 font-mono">
+                {language === 'am' ? 'ከባዶ ጀምር (Fresh Scratch)' : 'Fresh start from scratch'}
               </p>
             </div>
           </div>

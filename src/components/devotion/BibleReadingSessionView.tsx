@@ -477,10 +477,10 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
 
           {/* Large Countdown Display */}
           <div className="py-2">
-            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
+            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-[#30d158] drop-shadow-[0_2px_12px_rgba(48,209,88,0.35)]">
               {formatTime(secondsRemaining)}
             </div>
-            <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold mt-2">
+            <p className="text-xs text-[#30d158]/80 font-semibold mt-2">
               {isRunning
                 ? (language === 'am' ? 'የእግዚአብሔርን ቃል በጸጥታ እያነበቡ ነው...' : 'Immersed in holy Scripture...')
                 : isCompleted
@@ -493,10 +493,10 @@ export const BibleReadingSessionView: React.FC<BibleReadingSessionViewProps> = (
           <div className="flex items-center justify-center gap-3 pt-1">
             <button
               onClick={toggleTimer}
-              className={`px-6 py-2.5 rounded-2xl font-bold text-sm text-white flex items-center gap-2 cursor-pointer transition shadow-xs active:scale-95 ${
+              className={`px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 cursor-pointer transition shadow-xs active:scale-95 ${
                 isRunning
-                  ? 'bg-amber-500 hover:bg-amber-600'
-                  : 'bg-[#a855f7] hover:bg-purple-600'
+                  ? 'bg-[#30d158] hover:bg-[#28b84d] text-slate-950'
+                  : 'bg-[#30d158]/20 hover:bg-[#30d158]/30 text-[#30d158] border border-[#30d158]/40'
               }`}
             >
               {isRunning ? <Pause size={16} /> : <Play size={16} />}

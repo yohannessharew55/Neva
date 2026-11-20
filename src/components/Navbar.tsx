@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import { 
   Sun, Moon, Download, Upload, RotateCcw, 
   Menu, X, Calendar, Dumbbell, Target, Timer, 
-  MoreHorizontal, Swords, Palette, Music, Building2, 
+  MoreHorizontal, Swords, ChessKnight, Palette, Music, Building2, 
   TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
   PlusCircle, CalendarDays, CalendarRange, BellRing, Plus, Sparkles, Database, Cloud, Star,
   Languages, Globe, SquarePen, StickyNote, User, LogOut,
-  PieChart
+  PieChart, RefreshCw, Trash2, FileText, Trophy, Settings as SettingsIcon
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { PlanningModal } from './PlanningModal';
 import { ReminderCenterModal } from './ReminderCenterModal';
 import { NewCategoryModal } from './NewCategoryModal';
-import { QuickScratchModal } from './QuickScratchModal';
 import { ClearScratchPasswordModal } from './ClearScratchPasswordModal';
+import { WeeklyMasteryReviewModal } from './WeeklyMasteryReviewModal';
 import { syncStateToCloud } from '../utils/cloudSync';
+import { soundEngine } from '../utils/audio';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -32,10 +33,13 @@ export const Navbar: React.FC = () => {
     resetAllData,
     tasks,
     categoryPlans,
+    deleteCategoryPlan,
+    openManageCategoriesModal,
     selectedCategoryId,
     setSelectedCategoryId,
     openNewCategoryModal,
     openSyncModal,
+    openSettingsModal,
     cloudSyncStatus,
     cloudDatabase,
     syncKey,
@@ -48,15 +52,17 @@ export const Navbar: React.FC = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
-  const [showScratchModal, setShowScratchModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showWeeklyReviewModal, setShowWeeklyReviewModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isManagingCategories, setIsManagingCategories] = useState(false);
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalCount = tasks.length;
 
   const getIconForCategory = (id: string) => {
     switch (id) {
-      case 'chess': return Swords;
+      case 'chess': return ChessKnight;
       case 'art': return Palette;
       case 'music': return Music;
       case 'exercise': return Dumbbell;
@@ -70,21 +76,10 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { id: 'cockpit', label: t('navToday'), icon: Calendar },
     { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
-    { id: 'devotion', label: language === 'am' ? 'ጸሎት' : 'Devotion', icon: BookOpen },
-    { id: 'goals', label: t('navGoals'), icon: Target },
     { id: 'practice', label: t('navFocusTimer'), icon: Timer },
+    { id: 'notes', label: language === 'am' ? 'ማስታወሻ' : 'Notes', icon: FileText },
   ];
 
-  const drawerNavItems = [
-    { id: 'cockpit', label: t('navToday'), icon: Calendar },
-    { id: 'calendar', label: language === 'am' ? 'ዕቅድ' : 'Plan', icon: CalendarRange },
-    { id: 'notes-gallery', label: language === 'am' ? 'ስቲኪ ማስታወሻ ⭐' : 'Sticky Notes Gallery ⭐', icon: Star },
-    { id: 'devotion', label: language === 'am' ? 'ጸሎትና መንፈሳዊ ልምምድ' : 'Devotion & Prayer', icon: BookOpen },
-    { id: 'fitness', label: language === 'am' ? 'ስፖርትና አካላዊ ብቃት' : 'Workouts & Fitness', icon: Dumbbell },
-    { id: 'goals', label: t('navGoals'), icon: Target },
-    { id: 'practice', label: t('navFocusTimer'), icon: Timer },
-    { id: 'triple-eight', label: language === 'am' ? '24 ሰዓት ሚዛን (8/8/8)' : '24h Balance (8/8/8)', icon: PieChart },
-  ];
 
   const handleSelectCategory = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -111,7 +106,7 @@ export const Navbar: React.FC = () => {
     }
   };
 
-  const allCategories = Object.values(categoryPlans);
+  const allCategories = Object.values(categoryPlans).filter(cat => cat && cat.id);
 
   return (
     <>
@@ -158,9 +153,9 @@ export const Navbar: React.FC = () => {
               const Icon = item.icon;
               const isActive = !selectedCategoryId && (
                 item.id === 'cockpit' ? activeTab === 'cockpit' :
-                item.id === 'calendar' ? (activeTab === 'calendar' || activeTab === 'notes-gallery') :
-                item.id === 'devotion' ? (activeTab === 'devotion' || activeTab === 'fitness' || activeTab === 'nutrition') :
-                item.id === 'goals' ? (activeTab === 'goals' || activeTab === 'triple-eight') :
+                item.id === 'calendar' ? (activeTab === 'calendar' || activeTab === 'goals' || activeTab === 'notes-gallery' || activeTab === 'triple-eight') :
+                item.id === 'practice' ? activeTab === 'practice' :
+                item.id === 'notes' ? activeTab === 'notes' :
                 activeTab === item.id
               );
               return (
@@ -185,16 +180,6 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Icons - Restored to previous comfortable size */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Schedule Reminders & Alarms Button */}
-            <button
-              onClick={() => setShowReminderModal(true)}
-              className="flex p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer relative active:scale-90 min-w-[40px] min-h-[40px] items-center justify-center shadow-2xs"
-              title={language === 'am' ? 'አስታዋሾች እና የማንቂያ ደወል (Reminders & Alarms)' : 'Reminders & Alarms Hub'}
-            >
-              <BellRing size={18} className="text-[#0082ff]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            </button>
-
             {/* Add Category Button */}
             <button
               onClick={() => openNewCategoryModal()}
@@ -221,15 +206,6 @@ export const Navbar: React.FC = () => {
               <span className="font-extrabold text-xs tracking-tight">
                 {language === 'en' ? 'አማ' : 'EN'}
               </span>
-            </button>
-
-            {/* Quick Scratchpad / Classic Note Icon */}
-            <button
-              onClick={() => setShowScratchModal(true)}
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-500 hover:text-amber-600 transition cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center relative shadow-2xs"
-              title={language === 'am' ? 'ፈጣን ማስታወሻ' : 'Quick Scratch & Notes'}
-            >
-              <StickyNote size={18} className="text-amber-500 fill-amber-400/20" />
             </button>
 
             {/* Theme Toggle (Daytime vs Dark) */}
@@ -321,34 +297,10 @@ export const Navbar: React.FC = () => {
                               setShowMoreMenu(false);
                               openSyncModal();
                             }}
-                            className="flex-1 py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px] border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95"
+                            className="flex-1 py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200/60 dark:border-slate-700/60 shadow-2xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95"
                           >
-                            <User size={12} className="text-[#0082ff]" />
-                            <span>Profile</span>
-                          </button>
-                          <button
-                            onClick={async () => {
-                              setShowMoreMenu(false);
-                              await syncNow();
-                            }}
-                            className="py-1.5 px-2 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
-                            title="Sync all data to cloud"
-                          >
-                            <Cloud size={12} className={cloudSyncStatus === 'syncing' ? 'animate-spin' : ''} />
-                            <span>{cloudSyncStatus === 'syncing' ? 'Syncing' : 'Sync'}</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowMoreMenu(false);
-                              if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe.`)) {
-                                logoutUser();
-                              }
-                            }}
-                            className="py-1.5 px-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-[10px] shadow-2xs flex items-center justify-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
-                            title="Sign out of account"
-                          >
-                            <LogOut size={12} />
-                            <span>Sign Out</span>
+                            <User size={13} className="text-[#0082ff]" />
+                            <span>Manage Profile & Sync</span>
                           </button>
                         </div>
                       </div>
@@ -380,158 +332,92 @@ export const Navbar: React.FC = () => {
                     )}
                   </div>
                   
-                  {/* Language Selection Bar (Moved from Hamburger Drawer) */}
-                  <div className="p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl flex items-center gap-1 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
-                    <button
-                      onClick={() => {
-                        setLanguage('en');
-                        setShowMoreMenu(false);
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 ${
-                        language === 'en'
-                          ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <span className="font-extrabold text-[10px] font-mono">GB</span>
-                      <span>English</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLanguage('am');
-                        setShowMoreMenu(false);
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 ${
-                        language === 'am'
-                          ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <span className="font-extrabold text-[10px] font-mono">ET</span>
-                      <span>አማርኛ</span>
-                    </button>
-                  </div>
+                  {/* System Settings Primary Action */}
+                  <button
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      openSettingsModal();
+                      try { soundEngine.playTouchSound(); } catch {}
+                    }}
+                    className="w-full text-left p-3 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-900/30 dark:via-indigo-900/20 dark:to-purple-900/20 border border-blue-200/80 dark:border-blue-800/80 hover:border-[#0082ff] flex items-center justify-between cursor-pointer transition-all shadow-2xs group active:scale-98"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#0082ff] text-white flex items-center justify-center shadow-xs group-hover:rotate-45 transition-transform duration-300">
+                        <SettingsIcon size={16} />
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-xs text-slate-900 dark:text-white group-hover:text-[#0082ff] transition-colors">
+                          {language === 'am' ? 'ስርዓት እና ቅንብሮች' : 'System Settings'}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                          {language === 'am' ? 'ገጽታ፣ የንክኪ ድምፅ፣ ቋንቋ...' : 'Theme, Touch Sounds, Audio...'}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight size={14} className="text-slate-400 group-hover:text-[#0082ff] group-hover:translate-x-0.5 transition-all" />
+                  </button>
 
-                  {/* Quick Actions Bar (Moved from Hamburger Drawer) */}
-                  <div className="flex items-center justify-between gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60 shadow-2xs">
-                    {/* 1. Database Sync Icon Button */}
+                  {/* Quick Controls: Theme & Language */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {/* Quick Theme Switcher */}
                     <button
                       onClick={() => {
-                        setShowMoreMenu(false);
-                        openSyncModal();
+                        toggleTheme();
+                        try { soundEngine.playTouchSound(); } catch {}
                       }}
-                      className="flex-1 py-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#0082ff] transition cursor-pointer active:scale-95 flex items-center justify-center relative shadow-2xs border border-slate-200/50 dark:border-slate-700/50"
-                      title={language === 'am' ? `የዳታቤዝ ማመሳሰያ (${cloudDatabase})` : `Database Sync (${cloudDatabase})`}
+                      className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs transition active:scale-95 cursor-pointer"
                     >
-                      <Cloud size={16} className={cloudSyncStatus === 'syncing' ? 'animate-pulse' : ''} />
-                      <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${cloudSyncStatus === 'synced' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                      {theme === 'dark' ? <Sun size={13} className="text-amber-500" /> : <Moon size={13} className="text-indigo-500" />}
+                      <span>{theme === 'dark' ? (language === 'am' ? 'ብርሃን' : 'Light') : (language === 'am' ? 'ጨለማ' : 'Dark')}</span>
                     </button>
 
-                    {/* 2. Reminders Icon Button */}
+                    {/* Quick Language Toggle */}
                     <button
                       onClick={() => {
-                        setShowMoreMenu(false);
-                        setShowReminderModal(true);
+                        toggleLanguage();
+                        try { soundEngine.playTouchSound(); } catch {}
                       }}
-                      className="flex-1 py-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition cursor-pointer active:scale-95 flex items-center justify-center relative shadow-2xs border border-slate-200/50 dark:border-slate-700/50"
-                      title={t('reminders')}
+                      className="py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs transition active:scale-95 cursor-pointer"
                     >
-                      <BellRing size={16} className="text-[#0082ff]" />
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    </button>
-
-                    {/* 3. Planning Icon Button (Merged with Plan & Calendar) */}
-                    <button
-                      onClick={() => {
-                        setShowMoreMenu(false);
-                        setSelectedCategoryId(null);
-                        setActiveTab('calendar');
-                      }}
-                      className="flex-1 py-2 rounded-lg bg-[#0082ff] hover:bg-[#0070df] text-white transition cursor-pointer active:scale-95 flex items-center justify-center shadow-xs"
-                      title={language === 'am' ? 'ዕቅድ' : 'Plan'}
-                    >
-                      <CalendarRange size={16} />
+                      <Globe size={13} className="text-[#0082ff]" />
+                      <span>{language === 'am' ? 'English (GB)' : 'አማርኛ (ET)'}</span>
                     </button>
                   </div>
 
                   <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-
-                  {/* 24h Triple-8 Life Balance View */}
-                  <button
-                    onClick={() => {
-                      setSelectedCategoryId(null);
-                      setActiveTab('triple-eight');
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer font-bold text-xs"
-                  >
-                    <span className="flex items-center gap-2">
-                      <PieChart size={14} className="text-indigo-600 dark:text-indigo-400" />
-                      <span>{language === 'am' ? '24 ሰዓት ሚዛን' : '24h Balance'}</span>
-                    </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 font-bold">
-                      8/8/8
-                    </span>
-                  </button>
 
                   <button
                     onClick={() => {
                       exportDataJson();
                       setShowMoreMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer font-bold text-xs transition"
                   >
                     <Download size={14} /> {t('backupData')}
                   </button>
-                  <label className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+                  <label className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer font-bold text-xs transition">
                     <Upload size={14} /> {t('restoreData')}
                     <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
                   </label>
-                  <button
-                    onClick={() => {
-                      openSyncModal();
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between cursor-pointer"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Cloud size={14} className="text-[#0082ff]" /> {language === 'am' ? 'የዳታቤዝ ማመሳሰያ' : 'Cross-Device Sync'}
-                    </span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  </button>
-                  {currentUser && (
-                    <>
-                      <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-                      <button
-                        onClick={() => {
-                          setShowMoreMenu(false);
-                          if (confirm(language === 'am' ? 'ከአካውንትዎ መውጣት ይፈልጋሉ? የአሁን ዳታዎ በዚህ ስልክ ላይ ተቀምጦ ይቆያል።' : `Sign out of @${currentUser.username}? Your local data will remain safe on this device.`)) {
-                            logoutUser();
-                          }
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer font-bold"
-                      >
-                        <span className="flex items-center gap-2">
-                          <LogOut size={14} /> {language === 'am' ? 'ከአካውንት ውጣ' : 'Sign Out'}
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-400 font-normal">@{currentUser.username}</span>
-                      </button>
-                    </>
-                  )}
-                  <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                  <div className="border-t border-slate-100 dark:border-slate-800 my-1.5" />
                   <button
                     onClick={() => {
                       setShowMoreMenu(false);
                       setShowClearModal(true);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer font-bold text-xs transition"
+                    className="w-full text-left p-2.5 rounded-2xl bg-gradient-to-r from-rose-50/80 to-amber-50/40 dark:from-rose-950/30 dark:to-slate-900/40 border border-rose-200/80 dark:border-rose-900/60 hover:border-rose-400 dark:hover:border-rose-700 flex items-center justify-between cursor-pointer transition-all group"
                   >
-                    <span className="flex items-center gap-2">
-                      <RotateCcw size={14} className="text-rose-500" />
-                      <span>{language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All'}</span>
+                    <span className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:rotate-[-45deg] transition-all duration-300 shrink-0">
+                        <RotateCcw size={13} strokeWidth={2.5} />
+                      </div>
+                      <span className="font-black text-xs text-slate-800 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                        {language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All Data'}
+                      </span>
                     </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-rose-50 dark:bg-rose-950 text-rose-600 font-semibold">
-                      Scratch
+                    <span className="text-[10px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 shrink-0 flex items-center gap-1 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-2xs">
+                      <Sparkles size={9} />
+                      <span>Scratch</span>
                     </span>
                   </button>
                 </div>
@@ -622,15 +508,51 @@ export const Navbar: React.FC = () => {
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                     {t('categoriesTitle')} ({allCategories.length})
                   </span>
-                  <button
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      openNewCategoryModal();
-                    }}
-                    className="text-[11px] font-bold text-[#0082ff] hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <Plus size={12} /> {language === 'am' ? 'አዲስ ዘርፍ' : 'Add New'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsManagingCategories(!isManagingCategories)}
+                      className={`text-[11px] font-bold cursor-pointer transition ${
+                        isManagingCategories 
+                          ? 'text-rose-600 dark:text-rose-400 underline font-black' 
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                      title={language === 'am' ? 'ዘርፎችን አስተካክል / ሰርዝ' : 'Manage / delete main streams'}
+                    >
+                      {isManagingCategories ? (language === 'am' ? 'ጨርስ' : 'Done') : (language === 'am' ? 'አስተካክል' : 'Edit')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        openManageCategoriesModal();
+                      }}
+                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition"
+                      title={language === 'am' ? 'ሁሉንም ዘርፎች በዝርዝር አስተዳድር' : 'Manage all streams & priorities'}
+                    >
+                      {language === 'am' ? 'አስተዳድር' : 'Manage'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        openNewCategoryModal();
+                      }}
+                      className="text-[11px] font-bold text-[#0082ff] hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus size={12} /> {language === 'am' ? 'አዲስ' : 'Add'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        setShowWeeklyReviewModal(true);
+                      }}
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                      title={language === 'am' ? 'ሳምንታዊ ግምገማ እና የደረጃዎች እድገት' : 'Weekly Review & Milestones'}
+                    >
+                      <Trophy size={11} /> {language === 'am' ? 'ግምገማ' : 'Review'}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-500 px-2 pb-1">
                   {language === 'am' 
@@ -638,24 +560,24 @@ export const Navbar: React.FC = () => {
                     : 'Click any category to open its full plan, achievements, and roadmap.'}
                 </p>
 
-                <div className="space-y-1 max-h-[36vh] overflow-y-auto pr-1">
+                <div className="space-y-1 max-h-[58vh] overflow-y-auto pr-1">
                   {allCategories.map((cat) => {
                     const CatIcon = getIconForCategory(cat.id);
                     return (
-                      <button
+                      <div
                         key={cat.id}
-                        onClick={() => handleSelectCategory(cat.id)}
                         className="w-full text-left p-2.5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center justify-between cursor-pointer group"
+                        onClick={() => handleSelectCategory(cat.id)}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div 
                             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
                             style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
                           >
                             <CatIcon size={16} />
                           </div>
-                          <div>
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-[#0082ff] block">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-[#0082ff] block truncate">
                               {getCategoryTitleTranslated(cat.id, cat.title)}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono">
@@ -663,79 +585,39 @@ export const Navbar: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <ChevronRight size={14} className="text-slate-400 group-hover:text-[#0082ff] group-hover:translate-x-0.5 transition-all" />
-                      </button>
+
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          {/* Delete Category Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCategoryToDelete({ 
+                                id: cat.id, 
+                                title: getCategoryTitleTranslated(cat.id, cat.title) 
+                              });
+                            }}
+                            className={`p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition ${
+                              isManagingCategories ? 'opacity-100 text-rose-500 scale-105' : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                            title={language === 'am' ? `${getCategoryTitleTranslated(cat.id, cat.title)} ዋና ዘርፍ ሰርዝ` : `Delete ${cat.title} Main Stream`}
+                            aria-label={`Delete ${cat.title}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+
+                          <ChevronRight size={14} className="text-slate-400 group-hover:text-[#0082ff] group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Quick Navigation Section */}
-              <div className="space-y-1 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block px-2">
-                  {t('systemViews')}
-                </span>
-                {drawerNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const isItemActive = !selectedCategoryId && (
-                    item.id === 'cockpit' ? activeTab === 'cockpit' :
-                    item.id === 'calendar' ? activeTab === 'calendar' :
-                    item.id === 'notes-gallery' ? activeTab === 'notes-gallery' :
-                    item.id === 'devotion' ? activeTab === 'devotion' :
-                    item.id === 'fitness' ? activeTab === 'fitness' :
-                    activeTab === item.id
-                  );
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedCategoryId(null);
-                        setActiveTab(item.id);
-                        setDrawerOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
-                        isItemActive
-                          ? 'bg-[#0082ff]/10 text-[#0082ff] font-bold'
-                          : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <Icon size={15} className={isItemActive ? 'text-[#0082ff]' : (item.id === 'triple-eight' ? 'text-indigo-500' : 'text-slate-400')} />
-                        <span>{item.label}</span>
-                      </span>
-                      {item.id === 'triple-eight' && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold">
-                          8/8/8
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {/* Clear All / Start From Scratch with Password */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      setShowClearModal(true);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between cursor-pointer transition"
-                  >
-                    <span className="flex items-center gap-2">
-                      <RotateCcw size={14} className="text-rose-500" />
-                      <span>{language === 'am' ? 'ሁሉንም አጥፋ' : 'Clear All'}</span>
-                    </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-rose-50 dark:bg-rose-950 text-rose-600 font-semibold">
-                      Scratch
-                    </span>
-                  </button>
-                </div>
-
                 <div className="pt-3 pb-1 text-center text-[10px] font-mono text-slate-400 dark:text-slate-500 select-none">
                   NEVA Standalone • v1.0.4
                 </div>
               </div>
-            </div>
 
 
           </div>
@@ -754,16 +636,6 @@ export const Navbar: React.FC = () => {
         onClose={() => setShowReminderModal(false)}
       />
 
-      {/* Quick Scratchpad Floating Modal */}
-      <QuickScratchModal
-        isOpen={showScratchModal}
-        onClose={() => setShowScratchModal(false)}
-        onOpenNotesApp={() => {
-          setSelectedCategoryId(null);
-          setActiveTab('notes');
-        }}
-      />
-
       {/* Add Mainstream Category Modal */}
       <NewCategoryModal />
 
@@ -772,6 +644,60 @@ export const Navbar: React.FC = () => {
         isOpen={showClearModal}
         onClose={() => setShowClearModal(false)}
       />
+
+      {/* Weekly Mastery Review & Milestone Progress Modal */}
+      <WeeklyMasteryReviewModal
+        isOpen={showWeeklyReviewModal}
+        onClose={() => setShowWeeklyReviewModal(false)}
+      />
+
+      {/* Delete Main Stream Confirmation Modal */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-[#121927] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl space-y-4 animate-scaleUp">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <Trash2 size={20} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                  {language === 'am' ? `${categoryToDelete.title} ዋና ዘርፍ ሰርዝ?` : `Delete ${categoryToDelete.title}?`}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {language === 'am' ? 'ዘርፍን በቋሚነት የማስወገድ ማረጋገጫ' : 'Confirm Permanent Removal'}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {language === 'am' 
+                ? `ይህ "${categoryToDelete.title}" የሚለውን ዋና ዘርፍ፣ የተመዘገቡትን ዕለታዊ ዕቅዶች እና የጊዜ ሰሌዳ ተግባራት በሙሉ ከስርዓቱ ያጠፋዋል። እርግጠኛ ነዎት?` 
+                : `Are you sure you want to permanently delete "${categoryToDelete.title}"? This will remove its roadmap, daily plans, and all associated scheduled activities.`}
+            </p>
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCategoryToDelete(null)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+              >
+                {language === 'am' ? 'ይቅር / ተመለስ' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteCategoryPlan(categoryToDelete.id);
+                  setCategoryToDelete(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <Trash2 size={13} />
+                <span>{language === 'am' ? 'በቋሚነት ሰርዝ' : 'Delete Stream'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

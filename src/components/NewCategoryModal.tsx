@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   X, Plus, Swords, Palette, Music, 
   Dumbbell, Building2, TrendingUp, BookOpen, Shield, 
-  Code, Flame, Target, Compass, Laptop, Feather, AlertCircle
+  Code, Flame, Target, Compass, Laptop, Feather, AlertCircle,
+  Briefcase, Heart
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import confetti from 'canvas-confetti';
@@ -42,6 +43,16 @@ const PRESET_COLORS = [
   '#64748b', // Slate
 ];
 
+const STREAM_PRESETS = [
+  { id: 'chess', title: 'Chess', color: '#8b5cf6', icon: 'Swords', hours: 5.0, triple8Type: 'hobby' as const },
+  { id: 'exercise', title: 'Exercise & Fitness', color: '#ef4444', icon: 'Dumbbell', hours: 5.0, triple8Type: 'living' as const },
+  { id: 'devotion', title: 'Devotion & Prayer', color: '#a855f7', icon: 'BookOpen', hours: 5.0, triple8Type: 'living' as const },
+  { id: 'music', title: 'Music & Guitar', color: '#ec4899', icon: 'Music', hours: 5.0, triple8Type: 'hobby' as const },
+  { id: 'art', title: 'Art & Painting', color: '#e11d48', icon: 'Palette', hours: 5.0, triple8Type: 'hobby' as const },
+  { id: 'architecture', title: 'Architecture & Design', color: '#0082ff', icon: 'Building2', hours: 10.0, triple8Type: 'career' as const },
+  { id: 'trading', title: 'Forex Trading', color: '#10b981', icon: 'TrendingUp', hours: 5.0, triple8Type: 'career' as const },
+];
+
 export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({ 
   isOpen: propIsOpen, 
   onClose: propOnClose 
@@ -61,6 +72,7 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [selectedIconName, setSelectedIconName] = useState('Code');
   const [weeklyTargetHours, setWeeklyTargetHours] = useState(6.0);
+  const [triple8Type, setTriple8Type] = useState<'career' | 'hobby' | 'living'>('hobby');
   const [scheduleItem1, setScheduleItem1] = useState('Mon/Wed/Fri: Core Deep Work Session');
   const [scheduleItem2, setScheduleItem2] = useState('Tue/Thu: Technical Review & Practice');
   const [monthlyGoalTitle, setMonthlyGoalTitle] = useState('');
@@ -92,6 +104,7 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
       monthlyTargetMetric: monthlyTargetMetric.trim() || 'Verified standard execution',
       monthlyProgress: 0,
       monthlyTargetHours: Number(monthlyTargetHours),
+      triple8Type,
       inProgressItems: [
         'Initial mastery syllabus setup and immersion',
         'Daily consistent practice habit baseline',
@@ -168,6 +181,34 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
 
         {/* Form Container (No form tag to prevent any unexpected browser submission) */}
         <div className="space-y-4 text-xs font-semibold">
+          {/* Quick Preset Templates */}
+          <div>
+            <label className="text-slate-500 dark:text-slate-400 block mb-1 text-[11px] font-bold">
+              Quick Presets (Click to Auto-Fill)
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {STREAM_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setTitle(p.title);
+                    setSelectedColor(p.color);
+                    setSelectedIconName(p.icon);
+                    setWeeklyTargetHours(p.hours);
+                    setMonthlyTargetHours(p.hours * 4);
+                    setTriple8Type(p.triple8Type);
+                    setNameError('');
+                  }}
+                  className="px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 hover:border-[#0082ff] bg-slate-50 dark:bg-slate-800/60 transition cursor-pointer active:scale-95 flex items-center gap-1"
+                >
+                  <span className="text-[#0082ff]">+</span>
+                  <span>{p.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Title */}
           <div>
             <label className="text-slate-600 dark:text-slate-400 block mb-1">
@@ -190,6 +231,54 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
                 <AlertCircle size={12} /> {nameError}
               </p>
             )}
+          </div>
+
+          {/* Triple-8 Life Balance Pillar Choice */}
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-700 dark:text-slate-300 text-[11px] font-bold">
+                Triple-8 Balance Classification *
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">Syncs with 24h Wheel</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setTriple8Type('career')}
+                className={`p-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
+                  triple8Type === 'career'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                }`}
+              >
+                <Briefcase size={13} />
+                <span>💼 Career</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriple8Type('hobby')}
+                className={`p-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
+                  triple8Type === 'hobby'
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                }`}
+              >
+                <Palette size={13} />
+                <span>🎨 Hobby</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTriple8Type('living')}
+                className={`p-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border ${
+                  triple8Type === 'living'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                }`}
+              >
+                <Heart size={13} />
+                <span>🌿 Living</span>
+              </button>
+            </div>
           </div>
 
           {/* Color Picker */}

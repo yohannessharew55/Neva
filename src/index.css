@@ -45,6 +45,140 @@
   }
 }
 
+/* =========================================================================
+   DYNAMIC ACCENT COLOR SYSTEM
+   ========================================================================= */
+:root {
+  --app-accent: #0082ff;
+  --app-accent-rgb: 0, 130, 255;
+  --app-accent-hover: #0070df;
+}
+
+[data-accent="emerald"] {
+  --app-accent: #10b981;
+  --app-accent-rgb: 16, 185, 129;
+  --app-accent-hover: #059669;
+}
+
+[data-accent="violet"] {
+  --app-accent: #8b5cf6;
+  --app-accent-rgb: 139, 92, 246;
+  --app-accent-hover: #7c3aed;
+}
+
+[data-accent="amber"] {
+  --app-accent: #f59e0b;
+  --app-accent-rgb: 245, 158, 11;
+  --app-accent-hover: #d97706;
+}
+
+[data-accent="rose"] {
+  --app-accent: #f43f5e;
+  --app-accent-rgb: 244, 63, 94;
+  --app-accent-hover: #e11d48;
+}
+
+[data-accent="cyan"] {
+  --app-accent: #06b6d4;
+  --app-accent-rgb: 6, 182, 212;
+  --app-accent-hover: #0891b2;
+}
+
+[data-accent="indigo"] {
+  --app-accent: #6366f1;
+  --app-accent-rgb: 99, 102, 241;
+  --app-accent-hover: #4f46e5;
+}
+
+[data-accent="slate"] {
+  --app-accent: #475569;
+  --app-accent-rgb: 71, 85, 105;
+  --app-accent-hover: #334155;
+}
+
+/* Override all #0082ff elements across entire app when another accent is selected */
+[data-accent]:not([data-accent="blue"]) .bg-\[\#0082ff\],
+[data-accent]:not([data-accent="blue"]) [class*="bg-[#0082ff]"] {
+  background-color: var(--app-accent) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .bg-\[\#0082ff\]\/10 {
+  background-color: rgba(var(--app-accent-rgb), 0.1) !important;
+}
+[data-accent]:not([data-accent="blue"]) .bg-\[\#0082ff\]\/15 {
+  background-color: rgba(var(--app-accent-rgb), 0.15) !important;
+}
+[data-accent]:not([data-accent="blue"]) .bg-\[\#0082ff\]\/20 {
+  background-color: rgba(var(--app-accent-rgb), 0.2) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .text-\[\#0082ff\],
+[data-accent]:not([data-accent="blue"]) [class*="text-[#0082ff]"] {
+  color: var(--app-accent) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .border-\[\#0082ff\],
+[data-accent]:not([data-accent="blue"]) [class*="border-[#0082ff]"] {
+  border-color: var(--app-accent) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .border-\[\#0082ff\]\/20 {
+  border-color: rgba(var(--app-accent-rgb), 0.2) !important;
+}
+[data-accent]:not([data-accent="blue"]) .border-\[\#0082ff\]\/30 {
+  border-color: rgba(var(--app-accent-rgb), 0.3) !important;
+}
+[data-accent]:not([data-accent="blue"]) .border-\[\#0082ff\]\/40 {
+  border-color: rgba(var(--app-accent-rgb), 0.4) !important;
+}
+[data-accent]:not([data-accent="blue"]) .border-\[\#0082ff\]\/60 {
+  border-color: rgba(var(--app-accent-rgb), 0.6) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\],
+[data-accent]:not([data-accent="blue"]) [class*="ring-[#0082ff]"] {
+  --tw-ring-color: var(--app-accent) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\]\/20 {
+  --tw-ring-color: rgba(var(--app-accent-rgb), 0.2) !important;
+}
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\]\/25 {
+  --tw-ring-color: rgba(var(--app-accent-rgb), 0.25) !important;
+}
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\]\/30 {
+  --tw-ring-color: rgba(var(--app-accent-rgb), 0.3) !important;
+}
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\]\/40 {
+  --tw-ring-color: rgba(var(--app-accent-rgb), 0.4) !important;
+}
+[data-accent]:not([data-accent="blue"]) .ring-\[\#0082ff\]\/50 {
+  --tw-ring-color: rgba(var(--app-accent-rgb), 0.5) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .from-\[\#0082ff\] {
+  --tw-gradient-from: var(--app-accent) !important;
+}
+[data-accent]:not([data-accent="blue"]) .via-\[\#0082ff\] {
+  --tw-gradient-via: var(--app-accent) !important;
+}
+[data-accent]:not([data-accent="blue"]) .to-\[\#0082ff\] {
+  --tw-gradient-to: var(--app-accent) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .hover\:bg-\[\#0070df\]:hover,
+[data-accent]:not([data-accent="blue"]) .hover\:bg-\[\#0082ff\]:hover {
+  background-color: var(--app-accent-hover) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .hover\:text-\[\#0082ff\]:hover {
+  color: var(--app-accent-hover) !important;
+}
+
+[data-accent]:not([data-accent="blue"]) .hover\:border-\[\#0082ff\]:hover {
+  border-color: var(--app-accent-hover) !important;
+}
+
 /* Prevent iOS Safari 1.25x-1.5x zoom-in when tapping form inputs */
 @media screen and (max-width: 768px) {
   input, select, textarea {

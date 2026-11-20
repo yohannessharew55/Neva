@@ -16,6 +16,10 @@
           } else {
             document.documentElement.classList.remove('dark');
           }
+          var savedAccent = localStorage.getItem('livotion_mastery_state_v2_accent_color');
+          if (savedAccent) {
+            document.documentElement.setAttribute('data-accent', savedAccent);
+          }
         } catch (e) {}
       })();
     </script>
@@ -39,7 +43,39 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js').catch(function() {});
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function(reg) {
+            // Immediate update check upon load
+            reg.update().catch(function() {});
+
+            // Check for updates whenever user returns to the app / switches tabs
+            document.addEventListener('visibilitychange', function() {
+              if (document.visibilityState === 'visible') {
+                reg.update().catch(function() {});
+              }
+            });
+            window.addEventListener('focus', function() {
+              reg.update().catch(function() {});
+            });
+
+            reg.onupdatefound = function() {
+              var installing = reg.installing;
+              if (installing) {
+                installing.onstatechange = function() {
+                  if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[SW] New version ready. Auto-reloading client...');
+                    window.location.reload();
+                  }
+                };
+              }
+            };
+          }).catch(function() {});
+        });
+
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'NEW_VERSION_ACTIVATED') {
+            console.log('[SW] New version activated via broadcast. Reloading...');
+            window.location.reload();
+          }
         });
       }
     </script>

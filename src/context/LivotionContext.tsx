@@ -12,6 +12,8 @@ import {
   DomainType,
   DailyStickyReviewNote,
   StickyNoteThemeColor,
+  AccentColor,
+  CalendarSystem,
   DailyStickyTaskItem,
   IosNoteItem
 } from '../types';
@@ -28,6 +30,7 @@ import {
 } from '../data/seedData';
 import { soundEngine } from '../utils/audio';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
+import { timerNotificationService } from '../utils/timerNotificationService';
 import { 
   syncStateToCloud, 
   fetchStateFromCloud, 
@@ -62,7 +65,7 @@ export interface CategoryLiveMetrics {
   milestonePercentile: number;
 }
 
-export type StickyNoteColor = 'yellow' | 'mint' | 'cyan' | 'peach' | 'rose' | 'lavender';
+export type StickyNoteColor = 'yellow' | 'mint' | 'cyan' | 'peach' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 
 export interface CategoryDailyPlanItem {
   id: string;
@@ -91,6 +94,7 @@ export interface CategoryPlan {
   isCustom?: boolean;
   dailyPlans?: CategoryDailyPlanItem[];
   stickyNoteColor?: StickyNoteColor;
+  triple8Type?: 'career' | 'hobby' | 'living';
 }
 
 export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
@@ -111,7 +115,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'peach',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'living'
   },
   chess: {
     id: 'chess',
@@ -130,7 +135,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'yellow',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'hobby'
   },
   art: {
     id: 'art',
@@ -149,7 +155,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'peach',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'hobby'
   },
   music: {
     id: 'music',
@@ -168,7 +175,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'rose',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'hobby'
   },
   architecture: {
     id: 'architecture',
@@ -187,7 +195,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'cyan',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'career'
   },
   trading: {
     id: 'trading',
@@ -206,7 +215,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'mint',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'career'
   },
   devotion: {
     id: 'devotion',
@@ -225,7 +235,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'lavender',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'living'
   },
   buffer: {
     id: 'buffer',
@@ -244,7 +255,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
     achievedItems: [],
     upcomingItems: [],
     stickyNoteColor: 'mint',
-    dailyPlans: []
+    dailyPlans: [],
+    triple8Type: 'living'
   }
 };
 
@@ -290,7 +302,12 @@ interface LivotionContextType {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
+  accentColor: AccentColor;
+  setAccentColor: (color: AccentColor) => void;
+  calendarSystem: CalendarSystem;
+  setCalendarSystem: (system: CalendarSystem) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
@@ -298,13 +315,21 @@ interface LivotionContextType {
   getCategoryTitleTranslated: (catId: string, currentTitle: string) => string;
   selectedCategoryId: string | null;
   setSelectedCategoryId: (categoryId: string | null) => void;
+  isSettingsModalOpen: boolean;
+  openSettingsModal: () => void;
+  closeSettingsModal: () => void;
   isNewCategoryModalOpen: boolean;
   openNewCategoryModal: () => void;
   closeNewCategoryModal: () => void;
+  isManageCategoriesModalOpen: boolean;
+  openManageCategoriesModal: () => void;
+  closeManageCategoriesModal: () => void;
+  restoreDefaultCategories: () => void;
   categoryPlans: Record<string, CategoryPlan>;
   updateCategoryPlan: (categoryId: string, updates: Partial<CategoryPlan>) => void;
   getCategoryLiveMetrics: (categoryId: string) => CategoryLiveMetrics;
   addNewCategory: (newCategory: CategoryPlan) => void;
+  deleteCategoryPlan: (categoryId: string) => void;
   updateCategorySchedule: (categoryId: string, summary: string[], targetHours: number) => void;
   updateCategoryMonthlyDeliverable: (
     categoryId: string,
@@ -359,6 +384,7 @@ interface LivotionContextType {
   applyDayScheduleToDates: (sourceDateStr: string, targetDateStrs: string[]) => void;
   updateWeekdayDefaultSchedule: (dayOfWeek: number, newDefaultTasks: Omit<ScheduleTask, 'id' | 'date'>[]) => void;
   getWeekdayDefaultTasks: (dayOfWeek: number) => ScheduleTask[];
+  updateDevotionRoutine: (id: string, updates: { title?: string; durationMinutes?: number; startTime?: string; completed?: boolean }) => void;
   applyTaskActionWithScope: (params: {
     action: 'edit' | 'create' | 'delete';
     scope: 'this_day_only' | 'all_days' | 'chosen_days';
@@ -427,7 +453,22 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [tasks, setTasks] = useState<ScheduleTask[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_tasks`);
-    return saved ? JSON.parse(saved) : initialTasks;
+    if (saved) {
+      try {
+        const parsed: ScheduleTask[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((t) => 
+            t && 
+            !t.id?.startsWith('def-') && 
+            !t.id?.startsWith('carry-') && 
+            !['Compound Strength & Conditioning', 'Tactical Chess Study & Calculation', 'Guitar Repertoire & Fretboard Mastery', 'Dawn Gratitude & Bible Reading', 'Evening Examen & Prayer', 'Morning Devotion & Scripture Study', 'Evening Reflection & Gratitude Prayer', 'Evening Prayer & Spiritual Rest', 'Sunday Worship & Word Meditation'].includes(t.title)
+          );
+        }
+      } catch (e) {
+        return initialTasks;
+      }
+    }
+    return initialTasks;
   });
 
   const [workouts, setWorkouts] = useState<WorkoutProtocol[]>(() => {
@@ -459,7 +500,23 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const saved = localStorage.getItem(`${STORAGE_KEY}_category_plans`);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const updated = { ...parsed };
+          Object.keys(updated).forEach((k) => {
+            if (!updated[k].triple8Type) {
+              if (k === 'architecture' || k === 'trading' || k === 'career' || k === 'work') {
+                updated[k].triple8Type = 'career';
+              } else if (k === 'chess' || k === 'music' || k === 'art' || k === 'guitar' || k === 'painting') {
+                updated[k].triple8Type = 'hobby';
+              } else {
+                updated[k].triple8Type = 'living';
+              }
+            }
+          });
+          return updated;
+        }
+        return INITIAL_CATEGORY_PLANS;
       } catch (e) {
         return INITIAL_CATEGORY_PLANS;
       }
@@ -536,7 +593,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [dailyStickyColor, setDailyStickyColorState] = useState<StickyNoteThemeColor>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_daily_sticky_color`) || localStorage.getItem('neva_daily_sticky_color');
-      if (saved && ['canary', 'peach', 'mint', 'sky', 'rose', 'lavender'].includes(saved)) {
+      if (saved && ['canary', 'peach', 'mint', 'sky', 'rose', 'lavender', 'darkgrey', 'charcoal', 'graphite'].includes(saved)) {
         return saved as StickyNoteThemeColor;
       }
     } catch {}
@@ -606,6 +663,25 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState<boolean>(false);
   const openNewCategoryModal = () => setIsNewCategoryModalOpen(true);
   const closeNewCategoryModal = () => setIsNewCategoryModalOpen(false);
+
+  const [isManageCategoriesModalOpen, setIsManageCategoriesModalOpen] = useState<boolean>(false);
+  const openManageCategoriesModal = () => setIsManageCategoriesModalOpen(true);
+  const closeManageCategoriesModal = () => setIsManageCategoriesModalOpen(false);
+
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const openSettingsModal = () => setIsSettingsModalOpen(true);
+  const closeSettingsModal = () => setIsSettingsModalOpen(false);
+
+  const restoreDefaultCategories = () => {
+    setCategoryPlans((prev) => {
+      const merged = { ...prev, ...INITIAL_CATEGORY_PLANS };
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(merged));
+        localStorage.setItem('neva_last_local_edit_time', new Date().toISOString());
+      } catch {}
+      return merged;
+    });
+  };
   const [soundProfile, setSoundProfile] = useState<string>('CHIME_MEDITATION');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_theme`) || localStorage.getItem(`${OLD_STORAGE_KEY}_theme`);
@@ -617,7 +693,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return (saved === 'am' ? 'am' : 'en');
   });
 
-  // Purge deprecated v2 seed data so user starts completely from scratch
+  // Purge deprecated v2 seed data and any default/mock blocks so user starts completely clean from scratch
   useEffect(() => {
     try {
       Object.keys(localStorage).forEach((key) => {
@@ -625,6 +701,23 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           localStorage.removeItem(key);
         }
       });
+
+      const savedTasks = localStorage.getItem(`${STORAGE_KEY}_tasks`);
+      if (savedTasks) {
+        const parsed = JSON.parse(savedTasks);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter((t: any) => 
+            t && 
+            !t.id?.startsWith('def-') && 
+            !t.id?.startsWith('carry-') && 
+            !['Compound Strength & Conditioning', 'Tactical Chess Study & Calculation', 'Guitar Repertoire & Fretboard Mastery', 'Dawn Gratitude & Bible Reading', 'Evening Examen & Prayer', 'Morning Devotion & Scripture Study', 'Evening Reflection & Gratitude Prayer', 'Evening Prayer & Spiritual Rest', 'Sunday Worship & Word Meditation'].includes(t.title)
+          );
+          if (cleaned.length !== parsed.length) {
+            localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(cleaned));
+            setTasks(cleaned);
+          }
+        }
+      }
     } catch (e) {}
   }, []);
 
@@ -645,10 +738,48 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return getTranslatedCategoryTitle(catId, currentTitle, language);
   };
 
-  // Timer states
-  const [activeTask, setActiveTask] = useState<ScheduleTask | null>(null);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  // Persistent Clock / Active Timer State (Immune to app close, reload, backgrounding & switching apps)
+  const CLOCK_SESSION_KEY = 'neva_active_clock_session_v2';
+
+  const [activeTask, setActiveTask] = useState<ScheduleTask | null>(() => {
+    try {
+      const saved = localStorage.getItem(CLOCK_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.activeTask) return parsed.activeTask;
+      }
+    } catch {}
+    return null;
+  });
+
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(CLOCK_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.isRunning && parsed.targetEndTime) {
+          const diff = Math.max(0, Math.ceil((parsed.targetEndTime - Date.now()) / 1000));
+          return diff;
+        } else if (parsed.secondsRemaining) {
+          return parsed.secondsRemaining;
+        }
+      }
+    } catch {}
+    return 0;
+  });
+
+  const [isRunning, setIsRunning] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(CLOCK_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.isRunning && parsed.targetEndTime) {
+          return Date.now() < parsed.targetEndTime;
+        }
+      }
+    } catch {}
+    return false;
+  });
 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_theme`, theme);
@@ -661,6 +792,47 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // App Theme Accent Color (Default: 'blue' / #0082ff)
+  const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_accent_color`) as AccentColor;
+      if (['blue', 'emerald', 'violet', 'amber', 'rose', 'cyan', 'indigo', 'slate'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'blue';
+  });
+
+  const setAccentColor = (color: AccentColor) => {
+    setAccentColorState(color);
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_accent_color`, color);
+      document.documentElement.setAttribute('data-accent', color);
+    } catch {}
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-accent', accentColor);
+  }, [accentColor]);
+
+  // Calendar System Selection: 'gc' (Gregorian), 'et' (Ethiopian), 'dual' (Both)
+  const [calendarSystem, setCalendarSystemState] = useState<CalendarSystem>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_calendar_system`) as CalendarSystem;
+      if (saved === 'gc' || saved === 'et' || saved === 'dual') {
+        return saved;
+      }
+    } catch {}
+    return 'dual';
+  });
+
+  const setCalendarSystem = (system: CalendarSystem) => {
+    setCalendarSystemState(system);
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_calendar_system`, system);
+    } catch {}
   };
 
   // Cross-Device Cloud Sync State & User Account
@@ -1028,52 +1200,124 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const targetEndTimeRef = useRef<number | null>(null);
 
+  // Synchronize targetEndTimeRef with persistent storage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CLOCK_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.isRunning && parsed.targetEndTime && parsed.targetEndTime > Date.now()) {
+          targetEndTimeRef.current = parsed.targetEndTime;
+        }
+      }
+    } catch {}
+  }, []);
+
   // Timer loop with timestamp accuracy, wake-lock & lock-screen sync
+  // Immune to app closing, backgrounding, and switching to other apps
   useEffect(() => {
     let interval: NodeJS.Timeout;
+
+    const syncTime = () => {
+      let targetEnd = targetEndTimeRef.current;
+      if (!targetEnd) {
+        try {
+          const saved = localStorage.getItem(CLOCK_SESSION_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.isRunning && parsed.targetEndTime) {
+              targetEnd = parsed.targetEndTime;
+              targetEndTimeRef.current = targetEnd;
+            }
+          }
+        } catch {}
+      }
+
+      if (!targetEnd) return;
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((targetEnd - now) / 1000));
+      setSecondsRemaining(diff);
+
+      if (diff <= 0) {
+        targetEndTimeRef.current = null;
+        setIsRunning(false);
+        try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
+        soundEngine.playSound(activeTask?.soundProfile || soundProfile);
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        } catch (e) {}
+        if (activeTask) {
+          toggleTaskCompletion(activeTask.id);
+        }
+        mobileTimerEngine.stop();
+        timerNotificationService.handleTimerEnd({
+          title: activeTask?.title || 'Daily Activity Block',
+          category: activeTask?.domain || 'task',
+          durationMinutes: activeTask?.durationMin || 25,
+          system: 'task',
+          phase: 'focus',
+          completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        });
+      }
+    };
+
     if (isRunning && secondsRemaining > 0) {
       if (!targetEndTimeRef.current) {
         targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+        try {
+          localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
+            activeTask,
+            targetEndTime: targetEndTimeRef.current,
+            secondsRemaining,
+            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
+            isRunning: true,
+            updatedAt: Date.now()
+          }));
+        } catch {}
       }
-
-      const syncTime = () => {
-        if (!targetEndTimeRef.current) return;
-        const now = Date.now();
-        const diff = Math.max(0, Math.ceil((targetEndTimeRef.current - now) / 1000));
-        setSecondsRemaining(diff);
-
-        if (diff <= 0) {
-          targetEndTimeRef.current = null;
-          setIsRunning(false);
-          soundEngine.playSound(activeTask?.soundProfile || soundProfile);
-          try {
-            confetti({
-              particleCount: 80,
-              spread: 70,
-              origin: { y: 0.6 },
-            });
-          } catch (e) {}
-          if (activeTask) {
-            toggleTaskCompletion(activeTask.id);
-          }
-          mobileTimerEngine.stop();
-        }
-      };
 
       interval = setInterval(syncTime, 1000);
 
-      const handleVisibility = () => {
-        if (document.visibilityState === 'visible') {
-          syncTime();
-        }
+      // Listen to all browser, OS, and mobile app resume events
+      const handleAppResume = () => {
+        syncTime();
       };
-      document.addEventListener('visibilitychange', handleVisibility);
+
+      document.addEventListener('visibilitychange', handleAppResume);
+      window.addEventListener('focus', handleAppResume);
+      window.addEventListener('pageshow', handleAppResume);
+      window.addEventListener('resume' as any, handleAppResume);
+
+      // Capacitor native appStateChange listener
+      let capacitorAppRemove: (() => void) | null = null;
+      try {
+        import('@capacitor/app').then(({ App }) => {
+          App.addListener('appStateChange', (state) => {
+            if (state.isActive) {
+              syncTime();
+            }
+          }).then((handle) => {
+            capacitorAppRemove = () => handle.remove();
+          }).catch(() => {});
+          App.addListener('resume', () => {
+            syncTime();
+          }).catch(() => {});
+        }).catch(() => {});
+      } catch {}
 
       return () => {
         clearInterval(interval);
-        document.removeEventListener('visibilitychange', handleVisibility);
+        document.removeEventListener('visibilitychange', handleAppResume);
+        window.removeEventListener('focus', handleAppResume);
+        window.removeEventListener('pageshow', handleAppResume);
+        window.removeEventListener('resume' as any, handleAppResume);
+        if (capacitorAppRemove) capacitorAppRemove();
       };
-    } else {
+    } else if (!isRunning) {
       targetEndTimeRef.current = null;
     }
   }, [isRunning, activeTask, soundProfile]);
@@ -1082,9 +1326,21 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setActiveTask(task);
     const secs = task.durationMin * 60;
     setSecondsRemaining(secs);
-    targetEndTimeRef.current = Date.now() + secs * 1000;
+    const targetEnd = Date.now() + secs * 1000;
+    targetEndTimeRef.current = targetEnd;
     setIsRunning(true);
     soundEngine.playSound('SOLFEGGIO_432');
+
+    try {
+      localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
+        activeTask: task,
+        targetEndTime: targetEnd,
+        secondsRemaining: secs,
+        totalDurationSeconds: secs,
+        isRunning: true,
+        startedAt: Date.now()
+      }));
+    } catch {}
 
     mobileTimerEngine.startCountdown({
       durationSeconds: secs,
@@ -1095,6 +1351,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       phase: 'focus',
       onComplete: () => {
         setIsRunning(false);
+        try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
         toggleTaskCompletion(task.id);
       }
     });
@@ -1104,10 +1361,31 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsRunning((prev) => {
       const next = !prev;
       if (next) {
-        targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+        const targetEnd = Date.now() + secondsRemaining * 1000;
+        targetEndTimeRef.current = targetEnd;
+        try {
+          localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
+            activeTask,
+            targetEndTime: targetEnd,
+            secondsRemaining,
+            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
+            isRunning: true,
+            resumedAt: Date.now()
+          }));
+        } catch {}
         mobileTimerEngine.resume();
       } else {
         targetEndTimeRef.current = null;
+        try {
+          localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
+            activeTask,
+            targetEndTime: null,
+            secondsRemaining,
+            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
+            isRunning: false,
+            pausedAt: Date.now()
+          }));
+        } catch {}
         mobileTimerEngine.pause();
       }
       return next;
@@ -1119,6 +1397,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setActiveTask(null);
     setSecondsRemaining(0);
     targetEndTimeRef.current = null;
+    try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
     mobileTimerEngine.stop();
   };
 
@@ -1151,6 +1430,25 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return t;
       })
     );
+
+    // Bidirectional sync with Category dailyPlans if this item originated from a Main Stream plan
+    setCategoryPlans((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      Object.keys(next).forEach((catId) => {
+        const cat = next[catId];
+        if (cat.dailyPlans && cat.dailyPlans.some((dp) => dp.id === checklistId)) {
+          changed = true;
+          next[catId] = {
+            ...cat,
+            dailyPlans: cat.dailyPlans.map((dp) =>
+              dp.id === checklistId ? { ...dp, completed: !dp.completed } : dp
+            ),
+          };
+        }
+      });
+      return changed ? next : prev;
+    });
   };
 
   const addTask = (newTask: Omit<ScheduleTask, 'id'>) => {
@@ -1174,39 +1472,213 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // Standard Default Devotion and Exercise Tasks
+  const getStandardDevotionTasks = (dow: number): ScheduleTask[] => {
+    if (dow === 7) {
+      return [
+        {
+          id: `def-sun-dev-1`,
+          domain: 'DEVOTION_PRAYER',
+          title: 'Sunday Worship & Word Meditation',
+          startTime: '08:30 AM',
+          durationMin: 60,
+          completed: false,
+          color: '#a855f7',
+          badge: 'Devotion',
+          dayOfWeek: 7,
+          checklist: [
+            { id: 'c-sun-1', text: 'Fellowship & scripture contemplation', done: false },
+            { id: 'c-sun-2', text: 'Spiritual rest & dedication prayer', done: false }
+          ]
+        },
+        {
+          id: `def-sun-dev-2`,
+          domain: 'DEVOTION_PRAYER',
+          title: 'Evening Prayer & Spiritual Rest',
+          startTime: '08:00 PM',
+          durationMin: 30,
+          completed: false,
+          color: '#a855f7',
+          badge: 'Devotion',
+          dayOfWeek: 7,
+          checklist: [
+            { id: 'c-sun-3', text: 'Family thanksgiving & week preview', done: false },
+            { id: 'c-sun-4', text: 'Peaceful Sabbath closeout prayer', done: false }
+          ]
+        }
+      ];
+    }
+    return [
+      {
+        id: `def-wd-${dow}-dev-1`,
+        domain: 'DEVOTION_PRAYER',
+        title: 'Dawn Gratitude & Bible Reading',
+        startTime: '06:00 AM',
+        durationMin: 30,
+        completed: false,
+        color: '#a855f7',
+        badge: 'Devotion',
+        dayOfWeek: dow,
+        checklist: [
+          { id: `c-dev-${dow}-1`, text: 'Give thanks for life & peace', done: false },
+          { id: `c-dev-${dow}-2`, text: 'Daily scripture chapter & meditation', done: false },
+          { id: `c-dev-${dow}-3`, text: 'Dedicate daily execution to God', done: false }
+        ]
+      },
+      {
+        id: `def-wd-${dow}-dev-2`,
+        domain: 'DEVOTION_PRAYER',
+        title: 'Evening Examen & Prayer',
+        startTime: '09:30 PM',
+        durationMin: 20,
+        completed: false,
+        color: '#a855f7',
+        badge: 'Devotion',
+        dayOfWeek: dow,
+        checklist: [
+          { id: `c-dev-${dow}-4`, text: 'Review blessings & surrender stress', done: false },
+          { id: `c-dev-${dow}-5`, text: 'Forgive offenses & sleep in peace', done: false }
+        ]
+      }
+    ];
+  };
+
+  const getStandardExerciseTask = (dow: number): ScheduleTask => ({
+    id: `def-wd-${dow}-ex-1`,
+    domain: 'PHYSICAL_FITNESS',
+    title: 'Compound Strength & Conditioning',
+    startTime: '06:00 PM',
+    durationMin: 60,
+    completed: false,
+    color: '#ef4444',
+    badge: 'Workout',
+    dayOfWeek: dow,
+    checklist: [
+      { id: `c-ex-${dow}-1`, text: 'Dynamic mobility & warm-up', done: false },
+      { id: `c-ex-${dow}-2`, text: 'Target compound sets & cool down', done: false }
+    ]
+  });
+
+  // Ensure routines are present - passthrough (no artificial injection of mock tasks)
+  const ensureRoutinesPresent = (taskList: ScheduleTask[], _dow: number): ScheduleTask[] => {
+    return taskList;
+  };
+
+  // Helper to extract recurring stream tasks configured across Main Stream programs (categoryPlans)
+  const getStreamTasksForDayOfWeek = (dow: number): ScheduleTask[] => {
+    const streamTasks: ScheduleTask[] = [];
+    const dayKeywords: Record<number, string[]> = {
+      1: ['mon', 'ሰኞ', 'monday'],
+      2: ['tue', 'ማክ', 'tuesday'],
+      3: ['wed', 'ረቡ', 'wednesday'],
+      4: ['thu', 'ሐሙ', 'thursday'],
+      5: ['fri', 'አር', 'friday'],
+      6: ['sat', 'ቅዳ', 'saturday'],
+      7: ['sun', 'እሁ', 'sunday'],
+    };
+    const keywords = dayKeywords[dow] || [];
+
+    Object.entries(categoryPlans || {}).forEach(([catKey, plan]) => {
+      if (dow === 7 && catKey !== 'devotion') return; // Sunday rest day except devotion
+
+      const summarySlots = plan.weeklyScheduleSummary || [];
+      summarySlots.forEach((slot, slotIdx) => {
+        const slotLower = slot.toLowerCase();
+        const matchesDay = keywords.some((kw) => slotLower.includes(kw));
+        if (!matchesDay) return;
+
+        // Parse start time
+        const timeMatch = slot.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i);
+        const startTime = timeMatch ? timeMatch[0] : '07:00 AM';
+
+        // Parse duration
+        const durationMatch = slot.match(/\b(\d+)\s*(?:m|min|mins|minutes)\b/i);
+        const durationMin = durationMatch ? Number(durationMatch[1]) : 60;
+
+        // Parse title
+        let cleanTitle = slot
+          .replace(/^[a-z]{3,}\s*/i, '')
+          .replace(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b:?\s*/i, '')
+          .replace(/\(\d+\s*m\)/i, '')
+          .replace(/^[:\s-]+/, '')
+          .trim();
+        if (!cleanTitle) {
+          cleanTitle = `${plan.title} Focus`;
+        }
+
+        const domain = getDomainTypesForCat(catKey)[0] || 'OPEN_MULTIPURPOSE';
+
+        const checklist = plan.dailyPlans && plan.dailyPlans.length > 0
+          ? plan.dailyPlans.map((dp) => ({ id: dp.id, text: dp.text, done: !!dp.completed }))
+          : [
+              { id: `c-${catKey}-${dow}-${slotIdx}-1`, text: 'Warm-up & context immersion', done: false },
+              { id: `c-${catKey}-${dow}-${slotIdx}-2`, text: 'Deliberate high-focus execution', done: false },
+            ];
+
+        streamTasks.push({
+          id: `stream-slot-${catKey}-${dow}-${slotIdx}`,
+          title: cleanTitle,
+          startTime,
+          durationMin,
+          completed: false,
+          domain,
+          badge: plan.title.split(' ')[0],
+          color: plan.color,
+          dayOfWeek: dow,
+          soundProfile: 'SOLFEGGIO_432',
+          checklist,
+        });
+      });
+    });
+
+    return streamTasks;
+  };
+
   // Helper to get default tasks for a given day of week (1 = Mon ... 7 = Sun)
+  // Seamlessly merges explicit user recurring tasks and Main Stream weekly routine schedules
   const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
-    // 1. If Sunday (dayOfWeek === 7):
-    // SUNDAY IS STRICTLY THE REST DAY!
-    // It should ONLY show tasks from Devotion or explicit Sunday tasks.
-    // Weekday execution blocks (Exercise, Chess, Guitar, etc.) must NEVER leak into Sunday.
-    // If there are none, return [] so the sticky card displays "Rest Day and Relax".
     if (dayOfWeek === 7) {
       const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
-      const sundayMatches = tasks.filter((t) => {
+      const sundayTasks = tasks.filter((t) => {
         if (t.date) return false;
         if (t.id.startsWith('def-') || t.id.startsWith('carry-')) return false;
         if (weekdayDomains.includes(t.domain)) return false;
         return t.domain === 'DEVOTION_PRAYER' || t.dayOfWeek === 7;
       });
-      return sundayMatches;
+      const streamSunTasks = getStreamTasksForDayOfWeek(7);
+      const combinedSun: ScheduleTask[] = [...sundayTasks];
+      const seenSun = new Set(sundayTasks.map(t => t.title.toLowerCase().trim()));
+      streamSunTasks.forEach((st) => {
+        if (!seenSun.has(st.title.toLowerCase().trim())) {
+          combinedSun.push(st);
+          seenSun.add(st.title.toLowerCase().trim());
+        }
+      });
+      return combinedSun;
     }
 
-    // 2. Monday through Saturday (dayOfWeek 1..6):
     // Day-of-week specific recurring tasks (!t.date && t.dayOfWeek === dayOfWeek)
-    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek && !t.id.startsWith('def-'));
+    const dayMatches = tasks.filter((t) => !t.date && t.dayOfWeek === dayOfWeek && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
 
-    // 3. Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
-    // These blocks are the user's foundation for active execution days (Monday - Saturday)
-    const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek && !t.id.startsWith('def-'));
+    // Global recurring tasks under main streams (!t.date && !t.dayOfWeek)
+    const globalTasks = tasks.filter((t) => !t.date && !t.dayOfWeek && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
 
-    // Combine dayMatches with global stream blocks so all streams are held across Mon - Sat
+    // Main Stream program weekly cadence slots
+    const streamWeeklySlots = getStreamTasksForDayOfWeek(dayOfWeek);
+
     const combined: ScheduleTask[] = [];
     const seenTitles = new Set<string>();
 
     dayMatches.forEach((t) => {
       combined.push(t);
       seenTitles.add(t.title.toLowerCase().trim());
+    });
+
+    streamWeeklySlots.forEach((t) => {
+      if (!seenTitles.has(t.title.toLowerCase().trim())) {
+        combined.push(t);
+        seenTitles.add(t.title.toLowerCase().trim());
+      }
     });
 
     globalTasks.forEach((t) => {
@@ -1216,93 +1688,16 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     });
 
-    if (combined.length > 0) {
-      return combined;
-    }
-
-    // 4. Fallback to existing user custom tasks across any date/day before mock defaults
-    const userCustomTasks = tasks.filter((t) => !t.id.startsWith('def-') && t.dayOfWeek !== 7);
-    if (userCustomTasks.length > 0) {
-      const carryTasks: ScheduleTask[] = [];
-      const seenCarry = new Set<string>();
-      userCustomTasks.forEach((t) => {
-        const key = t.title.toLowerCase().trim();
-        if (!seenCarry.has(key)) {
-          seenCarry.add(key);
-          carryTasks.push({
-            ...t,
-            id: `carry-${t.id}`,
-            date: undefined,
-            dayOfWeek: undefined,
-            completed: false,
-            checklist: t.checklist ? t.checklist.map((c) => ({ ...c, done: false })) : undefined
-          });
-        }
-      });
-      if (carryTasks.length > 0) {
-        return carryTasks;
-      }
-    }
-
-    // 5. Default templates only if user has never created any tasks for weekdays
-    return [
-      {
-        id: `def-wd-${dayOfWeek}-1`,
-        domain: 'CHESS',
-        title: 'Tactical Chess Study & Calculation',
-        startTime: '08:00 AM',
-        durationMin: 45,
-        completed: false,
-        color: '#8b5cf6',
-        badge: 'Chess',
-        dayOfWeek,
-        checklist: [
-          { id: 'c-wd-1', text: 'Puzzle storm & pattern recognition', done: false },
-          { id: 'c-wd-2', text: 'Annotated master games analysis', done: false }
-        ]
-      },
-      {
-        id: `def-wd-${dayOfWeek}-2`,
-        domain: 'GUITAR',
-        title: 'Guitar Repertoire & Fretboard Mastery',
-        startTime: '05:00 PM',
-        durationMin: 45,
-        completed: false,
-        color: '#ec4899',
-        badge: 'Music',
-        dayOfWeek,
-        checklist: [
-          { id: 'c-wd-3', text: 'Metronome scale warm-up', done: false },
-          { id: 'c-wd-4', text: 'Piece run-through & phrasing', done: false }
-        ]
-      },
-      {
-        id: `def-wd-${dayOfWeek}-3`,
-        domain: 'PHYSICAL_FITNESS',
-        title: 'Compound Strength & Conditioning',
-        startTime: '06:00 PM',
-        durationMin: 60,
-        completed: false,
-        color: '#ef4444',
-        badge: 'Workout',
-        dayOfWeek,
-        checklist: [
-          { id: 'c-wd-5', text: 'Dynamic mobility & warm-up', done: false },
-          { id: 'c-wd-6', text: 'Target compound sets & cool down', done: false }
-        ]
-      }
-    ];
+    return combined;
   };
 
   const getDaySchedule = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon ... 7 = Sun
-    const customTasks = tasks.filter((t) => t.date === dateStr);
+    const customTasks = tasks.filter((t) => t.date === dateStr && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
 
     if (dayOfWeek === 7) {
-      // SUNDAY IS THE DESIGNATED REST DAY:
-      // Only show devotion tasks or explicit Sunday tasks.
-      // Filter out any weekday execution streams (Exercise & Fitness, Chess, Music & Guitar, etc.)
+      // SUNDAY REST DAY:
       const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
       const sundayAllowed = customTasks.filter((t) => {
         if (t.domain === 'DEVOTION_PRAYER') return true;
@@ -1335,8 +1730,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     if (customTasks.length > 0) {
+      // Seamlessly merge any registered stream routine tasks for this day that aren't already represented in customTasks!
+      const defaultTasks = getWeekdayDefaultTasks(dayOfWeek);
+      const customTitles = new Set(customTasks.map((t) => t.title.toLowerCase().trim()));
+      const streamTasksToAdd = defaultTasks.filter((dt) => !customTitles.has(dt.title.toLowerCase().trim()));
+
       return {
-        tasks: customTasks,
+        tasks: [...customTasks, ...streamTasksToAdd],
         isCustom: true,
         source: 'custom' as const,
         dateStr,
@@ -1358,14 +1758,80 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   };
 
+  // Synchronize Devotion rhythms & routines across the entire system
+  const updateDevotionRoutine = (id: string, updates: { title?: string; durationMinutes?: number; startTime?: string; completed?: boolean }) => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const dayOfWeek = (today.getDay() + 6) % 7 + 1;
+
+    setTasks((prev) => {
+      let matched = false;
+      const updated = prev.map((t) => {
+        const isDevotion = t.domain === 'DEVOTION_PRAYER';
+        if (!isDevotion) return t;
+
+        const isExactId = t.id === id;
+        const isTimeMatch = (id.includes('morning') && (t.title.toLowerCase().includes('dawn') || t.title.toLowerCase().includes('morning') || (t.startTime && t.startTime.includes('AM')))) ||
+                            (id.includes('evening') && (t.title.toLowerCase().includes('evening') || t.title.toLowerCase().includes('examen') || (t.startTime && t.startTime.includes('PM')))) ||
+                            (id.includes('midday') && t.title.toLowerCase().includes('midday'));
+        const isTitleMatch = updates.title && t.title.toLowerCase().trim() === updates.title.toLowerCase().trim();
+
+        if (isExactId || isTimeMatch || isTitleMatch) {
+          matched = true;
+          return {
+            ...t,
+            title: updates.title !== undefined ? updates.title : t.title,
+            durationMin: updates.durationMinutes !== undefined ? updates.durationMinutes : t.durationMin,
+            startTime: updates.startTime !== undefined ? updates.startTime : t.startTime,
+            completed: updates.completed !== undefined ? updates.completed : t.completed,
+          };
+        }
+        return t;
+      });
+
+      if (!matched && updates.title) {
+        // Create an explicit task for today's schedule
+        updated.push({
+          id: `task-dev-${Date.now()}`,
+          date: todayStr,
+          dayOfWeek,
+          domain: 'DEVOTION_PRAYER',
+          title: updates.title,
+          startTime: updates.startTime || '06:00 AM',
+          durationMin: updates.durationMinutes || 20,
+          completed: updates.completed || false,
+          color: '#a855f7',
+          badge: 'Devotion',
+          checklist: [
+            { id: `c-dev-${Date.now()}-1`, text: 'Scripture reflection & prayer', done: false }
+          ]
+        });
+      }
+
+      return updated;
+    });
+
+    if (updates.completed) {
+      try {
+        confetti({
+          particleCount: 25,
+          spread: 45,
+          origin: { y: 0.6 },
+        });
+        soundEngine.playPencil();
+      } catch (e) {}
+    }
+  };
+
   const materializeDaySchedule = (dateStr: string): ScheduleTask[] => {
-    const existing = tasks.filter((t) => t.date === dateStr);
+    const existing = tasks.filter((t) => t.date === dateStr && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
     if (existing.length > 0) return existing;
 
     const [y, m, d] = dateStr.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d);
     const dayOfWeek = (dateObj.getDay() + 6) % 7 + 1;
     const defaults = getWeekdayDefaultTasks(dayOfWeek);
+    if (!defaults || defaults.length === 0) return [];
 
     const cloned: ScheduleTask[] = defaults.map((t, idx) => ({
       ...t,
@@ -1392,11 +1858,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const filtered = prev.filter((t) => !(t.dayOfWeek === dayOfWeek && !t.date));
       const newDefaults: ScheduleTask[] = sourceTasks.map((t, idx) => ({
         ...t,
-        id: `def-task-${dayOfWeek}-${Date.now()}-${idx}`,
+        id: `user-wd-task-${dayOfWeek}-${Date.now()}-${idx}`,
         dayOfWeek,
         date: undefined,
         completed: false,
-        checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-def-${dayOfWeek}-${idx}-${cidx}`, done: false })) : undefined
+        checklist: t.checklist ? t.checklist.map((c, cidx) => ({ ...c, id: `c-wd-${dayOfWeek}-${idx}-${cidx}`, done: false })) : undefined
       }));
       return [...filtered, ...newDefaults];
     });
@@ -1454,7 +1920,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const cleaned = filtered.filter((t) => t.date || t.dayOfWeek);
       const created: ScheduleTask[] = newDefaultTasks.map((t, idx) => ({
         ...t,
-        id: `def-task-${dayOfWeek}-${Date.now()}-${idx}`,
+        id: `user-wd-task-${dayOfWeek}-${Date.now()}-${idx}`,
         dayOfWeek,
         date: undefined,
         completed: false,
@@ -1617,7 +2083,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateCategoryPlan = (categoryId: string, updates: Partial<CategoryPlan>) => {
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
+      if (!current) return prev;
       return {
         ...prev,
         [categoryId]: { ...current, ...updates }
@@ -1640,7 +2107,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const getCategoryLiveMetrics = (catId: string): CategoryLiveMetrics => {
-    const cat = categoryPlans[catId] || INITIAL_CATEGORY_PLANS[catId];
+    const cat = categoryPlans[catId];
     if (!cat) {
       return {
         currentWeeklyHours: 0,
@@ -1752,6 +2219,71 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ]);
   };
 
+  const deleteCategoryPlan = (categoryId: string) => {
+    // 0. Immediately reset selectedCategoryId if it matches the deleted stream
+    setSelectedCategoryId((prev) => (prev === categoryId ? null : prev));
+
+    // 1. Remove from categoryPlans state
+    setCategoryPlans((prev) => {
+      const next = { ...prev };
+      delete next[categoryId];
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(next));
+        localStorage.setItem('neva_last_local_edit_time', new Date().toISOString());
+      } catch {}
+      return next;
+    });
+
+    // 2. Remove from categoryOrder state and persist
+    setCategoryOrderState((prev) => {
+      const next = prev.filter((id) => id !== categoryId);
+      try {
+        localStorage.setItem('neva_category_order_v1', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    // 3. Remove associated domain and goals
+    const domainTypes = getDomainTypesForCat(categoryId);
+    const domainId = `domain-${categoryId}`;
+    setDomains((prev) =>
+      prev.filter(
+        (d) =>
+          !domainTypes.includes(d.domainType) &&
+          d.id !== domainId &&
+          !d.id.toLowerCase().includes(categoryId.toLowerCase())
+      )
+    );
+    setGoals((prev) =>
+      prev.filter((g) => !g.id.includes(categoryId) && g.domainId !== domainId)
+    );
+
+    // 4. Remove all tasks belonging to this category from schedule
+    setTasks((prev) =>
+      prev.filter((t) => {
+        const isMatchingDomain = domainTypes.includes(t.domain);
+        const isMatchingBadge =
+          t.badge &&
+          (t.badge.toLowerCase().includes(categoryId.toLowerCase()) ||
+            t.badge.toLowerCase().replace(/[^a-z]/g, '') ===
+              categoryId.toLowerCase().replace(/[^a-z]/g, ''));
+        return !isMatchingDomain && !isMatchingBadge;
+      })
+    );
+
+    // 5. If active timer is running on this category, stop timer
+    if (
+      activeTask &&
+      (domainTypes.includes(activeTask.domain) ||
+        activeTask.badge?.toLowerCase().includes(categoryId.toLowerCase()))
+    ) {
+      stopTimer();
+    }
+
+    // 6. If selected category is the deleted one, reset
+    setSelectedCategoryId((prev) => (prev === categoryId ? null : prev));
+  };
+
   const updateCategorySchedule = (categoryId: string, summary: string[], targetHours: number) => {
     updateCategoryPlan(categoryId, {
       weeklyScheduleSummary: summary,
@@ -1762,6 +2294,68 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDomains((prev) =>
       prev.map((d) => (domainTypes.includes(d.domainType) ? { ...d, weeklyTargetHours: targetHours } : d))
     );
+
+    // Synchronize weekly cadence slots directly into recurring tasks
+    const dayKeywords: Record<number, string[]> = {
+      1: ['mon', 'ሰኞ', 'monday'],
+      2: ['tue', 'ማክ', 'tuesday'],
+      3: ['wed', 'ረቡ', 'wednesday'],
+      4: ['thu', 'ሐሙ', 'thursday'],
+      5: ['fri', 'አር', 'friday'],
+      6: ['sat', 'ቅዳ', 'saturday'],
+      7: ['sun', 'እሁ', 'sunday'],
+    };
+
+    const targetCat = categoryPlans[categoryId];
+    const catTitle = targetCat?.title || categoryId;
+    const catColor = targetCat?.color || '#0082ff';
+    const primaryDomain = domainTypes[0] || 'OPEN_MULTIPURPOSE';
+
+    const newRecurringTasks: ScheduleTask[] = [];
+
+    summary.forEach((slot, slotIdx) => {
+      const slotLower = slot.toLowerCase();
+      for (let dow = 1; dow <= 7; dow++) {
+        const kws = dayKeywords[dow];
+        if (kws.some((kw) => slotLower.includes(kw))) {
+          const timeMatch = slot.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i);
+          const startTime = timeMatch ? timeMatch[0] : '07:00 AM';
+
+          const durationMatch = slot.match(/\b(\d+)\s*(?:m|min|mins|minutes)\b/i);
+          const durationMin = durationMatch ? Number(durationMatch[1]) : 60;
+
+          let cleanTitle = slot
+            .replace(/^[a-z]{3,}\s*/i, '')
+            .replace(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b:?\s*/i, '')
+            .replace(/\(\d+\s*m\)/i, '')
+            .replace(/^[:\s-]+/, '')
+            .trim();
+          if (!cleanTitle) cleanTitle = `${catTitle} Focus`;
+
+          newRecurringTasks.push({
+            id: `stream-slot-${categoryId}-${dow}-${slotIdx}`,
+            title: cleanTitle,
+            startTime,
+            durationMin,
+            completed: false,
+            domain: primaryDomain,
+            badge: catTitle.split(' ')[0],
+            color: catColor,
+            dayOfWeek: dow,
+            soundProfile: 'SOLFEGGIO_432',
+            checklist: [
+              { id: `c-${categoryId}-${dow}-${slotIdx}-1`, text: 'Warm-up & context immersion', done: false },
+              { id: `c-${categoryId}-${dow}-${slotIdx}-2`, text: 'Deliberate high-focus execution', done: false },
+            ]
+          });
+        }
+      }
+    });
+
+    setTasks((prev) => {
+      const filtered = prev.filter((t) => !(t.id.startsWith(`stream-slot-${categoryId}-`) || (!t.date && domainTypes.includes(t.domain) && t.badge === catTitle.split(' ')[0])));
+      return [...filtered, ...newRecurringTasks];
+    });
   };
 
   const updateCategoryMonthlyDeliverable = (
@@ -1800,7 +2394,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addCategoryDailyPlan = (categoryId: string, text: string) => {
     if (!text.trim()) return;
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
       if (!current) return prev;
       const currentPlans = current.dailyPlans || [];
       const newPlan: CategoryDailyPlanItem = {
@@ -1820,7 +2414,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const toggleCategoryDailyPlan = (categoryId: string, planId: string) => {
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
       if (!current || !current.dailyPlans) return prev;
       const updated = current.dailyPlans.map((p) => {
         if (p.id === planId) {
@@ -1844,11 +2438,26 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
       };
     });
+
+    // Bidirectional sync with tasks checklist on Home Sticky Note
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.checklist && t.checklist.some((c) => c.id === planId)) {
+          return {
+            ...t,
+            checklist: t.checklist.map((c) =>
+              c.id === planId ? { ...c, done: !c.done } : c
+            ),
+          };
+        }
+        return t;
+      })
+    );
   };
 
   const deleteCategoryDailyPlan = (categoryId: string, planId: string) => {
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
       if (!current || !current.dailyPlans) return prev;
       return {
         ...prev,
@@ -1862,7 +2471,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateCategoryDailyPlan = (categoryId: string, planId: string, text: string) => {
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
       if (!current || !current.dailyPlans) return prev;
       return {
         ...prev,
@@ -1876,7 +2485,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setCategoryStickyNoteColor = (categoryId: string, color: StickyNoteColor) => {
     setCategoryPlans((prev) => {
-      const current = prev[categoryId] || INITIAL_CATEGORY_PLANS[categoryId];
+      const current = prev[categoryId];
       if (!current) return prev;
       return {
         ...prev,
@@ -2244,7 +2853,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         activeTab,
         setActiveTab,
         theme,
+        setTheme,
         toggleTheme,
+        accentColor,
+        setAccentColor,
+        calendarSystem,
+        setCalendarSystem,
         language,
         setLanguage,
         toggleLanguage,
@@ -2252,13 +2866,21 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getCategoryTitleTranslated,
         selectedCategoryId,
         setSelectedCategoryId,
+        isSettingsModalOpen,
+        openSettingsModal,
+        closeSettingsModal,
         isNewCategoryModalOpen,
         openNewCategoryModal,
         closeNewCategoryModal,
+        isManageCategoriesModalOpen,
+        openManageCategoriesModal,
+        closeManageCategoriesModal,
+        restoreDefaultCategories,
         categoryPlans,
         updateCategoryPlan,
         getCategoryLiveMetrics,
         addNewCategory,
+        deleteCategoryPlan,
         updateCategorySchedule,
         updateCategoryMonthlyDeliverable,
         addCategoryDailyPlan,
@@ -2301,6 +2923,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         applyDayScheduleToDates,
         updateWeekdayDefaultSchedule,
         getWeekdayDefaultTasks,
+        updateDevotionRoutine,
         applyTaskActionWithScope,
         categoryOrder,
         setCategoryOrder,

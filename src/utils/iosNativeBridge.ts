@@ -127,14 +127,18 @@ class IOSNativeBridge {
         // Request permissions if not yet granted
         await LocalNotifications.requestPermissions().catch(() => {});
 
-        // Schedule native time-sensitive alarm
+        // Schedule native time-sensitive alarm with High Importance channel & lockscreen wake
         await LocalNotifications.schedule({
           notifications: [
             {
               id: Math.abs(id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 100000,
               title,
               body,
-              schedule: { at: new Date(Date.now() + seconds * 1000) },
+              schedule: { 
+                at: new Date(Date.now() + seconds * 1000),
+                allowWhileIdle: true
+              },
+              channelId: 'neva_timer_alarm_channel_v2',
               sound: 'alarm_bell.wav',
               actionTypeId: 'FOCUS_COMPLETE',
               extra: { originalId: id, soundType }
@@ -166,40 +170,27 @@ class IOSNativeBridge {
     return false;
   }
 
-  // Post or update the active ongoing timer in the phone's notification bar / center
-  async updateActiveTimerNotification(title: string, body: string): Promise<boolean> {
-    if (this.isNativeApp()) {
-      try {
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              id: 99901,
-              title,
-              body,
-              schedule: { at: new Date(Date.now() + 100) },
-              sound: undefined,
-              actionTypeId: 'TIMER_ACTIVE',
-              extra: { active: true }
-            }
-          ]
-        });
-        return true;
-      } catch (e) {
-        console.warn('updateActiveTimerNotification error:', e);
-      }
-    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification(title, {
-          body,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: 'neva_active_timer',
-          silent: true
-        });
-        return true;
-      } catch (e) {}
-    }
+  // No-op: Do not send notifications when leaving the app. Notifications only trigger when the timer hits 0.
+  async updateActiveTimerNotification(_title: string, _body: string): Promise<boolean> {
     return false;
+  }
+
+  // Open native Apple Clock / Timer if user wants the system Live Activity
+  openSystemTimer(minutes: number = 25): void {
+    if (typeof window === 'undefined') return;
+    try {
+      // 1. Try shortcuts deep-link
+      const shortcutUrl = `shortcuts://run-shortcut?name=Timer&input=${minutes * 60}`;
+      window.location.href = shortcutUrl;
+      setTimeout(() => {
+        // Fallback to clock-timer scheme
+        window.location.href = 'clock-timer://';
+      }, 500);
+    } catch (e) {
+      try {
+        window.location.href = 'clock-timer://';
+      } catch (err) {}
+    }
   }
 
   // Clear the active timer from the notification bar

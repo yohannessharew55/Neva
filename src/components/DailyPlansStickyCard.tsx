@@ -34,118 +34,175 @@ const STICKY_THEMES: Record<StickyNoteColor, {
   marginLine: string;
 }> = {
   yellow: {
-    bg: 'bg-[#fef9c3] dark:bg-[#2c2405]',
-    border: 'border-[#fef08a] dark:border-amber-700/60',
-    text: 'text-amber-950 dark:text-amber-100',
-    subtext: 'text-amber-800/80 dark:text-amber-300/80',
-    tape: 'bg-amber-100/70 dark:bg-amber-900/40',
-    tapeBorder: 'border-amber-200/80 dark:border-amber-700/40',
-    checkboxBg: 'bg-amber-50 dark:bg-amber-950/60',
-    checkboxBorder: 'border-amber-400 dark:border-amber-600',
+    bg: 'bg-[#fef9c3]',
+    border: 'border-[#fef08a]',
+    text: 'text-amber-950',
+    subtext: 'text-amber-800/80',
+    tape: 'bg-amber-100/70',
+    tapeBorder: 'border-amber-200/80',
+    checkboxBg: 'bg-amber-50',
+    checkboxBorder: 'border-amber-400',
     checkboxCheck: 'bg-amber-600 text-white',
-    badgeBg: 'bg-amber-200/80 dark:bg-amber-900/70',
-    badgeText: 'text-amber-950 dark:text-amber-200',
-    inputBg: 'bg-amber-100/60 dark:bg-amber-950/40',
-    inputBorder: 'border-amber-300/80 dark:border-amber-700/60',
+    badgeBg: 'bg-amber-200/80',
+    badgeText: 'text-amber-950',
+    inputBg: 'bg-amber-100/60',
+    inputBorder: 'border-amber-300/80',
     name: 'Canary Yellow',
     dotColor: '#fde047',
     ruledLine: 'rgba(217, 119, 6, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
   },
   mint: {
-    bg: 'bg-[#dcfce7] dark:bg-[#062615]',
-    border: 'border-[#bbf7d0] dark:border-emerald-700/60',
-    text: 'text-emerald-950 dark:text-emerald-100',
-    subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
-    tape: 'bg-emerald-100/70 dark:bg-emerald-900/40',
-    tapeBorder: 'border-emerald-200/80 dark:border-emerald-700/40',
-    checkboxBg: 'bg-emerald-50 dark:bg-emerald-950/60',
-    checkboxBorder: 'border-emerald-400 dark:border-emerald-600',
+    bg: 'bg-[#dcfce7]',
+    border: 'border-[#bbf7d0]',
+    text: 'text-emerald-950',
+    subtext: 'text-emerald-800/80',
+    tape: 'bg-emerald-100/70',
+    tapeBorder: 'border-emerald-200/80',
+    checkboxBg: 'bg-emerald-50',
+    checkboxBorder: 'border-emerald-400',
     checkboxCheck: 'bg-emerald-600 text-white',
-    badgeBg: 'bg-emerald-200/80 dark:bg-emerald-900/70',
-    badgeText: 'text-emerald-950 dark:text-emerald-200',
-    inputBg: 'bg-emerald-100/60 dark:bg-emerald-950/40',
-    inputBorder: 'border-emerald-300/80 dark:border-emerald-700/60',
+    badgeBg: 'bg-emerald-200/80',
+    badgeText: 'text-emerald-950',
+    inputBg: 'bg-emerald-100/60',
+    inputBorder: 'border-emerald-300/80',
     name: 'Pastel Mint',
     dotColor: '#86efac',
     ruledLine: 'rgba(5, 150, 105, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
   },
   cyan: {
-    bg: 'bg-[#e0f2fe] dark:bg-[#072436]',
-    border: 'border-[#bae6fd] dark:border-sky-700/60',
-    text: 'text-sky-950 dark:text-sky-100',
-    subtext: 'text-sky-800/80 dark:text-sky-300/80',
-    tape: 'bg-sky-100/70 dark:bg-sky-900/40',
-    tapeBorder: 'border-sky-200/80 dark:border-sky-700/40',
-    checkboxBg: 'bg-sky-50 dark:bg-sky-950/60',
-    checkboxBorder: 'border-sky-400 dark:border-sky-600',
+    bg: 'bg-[#e0f2fe]',
+    border: 'border-[#bae6fd]',
+    text: 'text-sky-950',
+    subtext: 'text-sky-800/80',
+    tape: 'bg-sky-100/70',
+    tapeBorder: 'border-sky-200/80',
+    checkboxBg: 'bg-sky-50',
+    checkboxBorder: 'border-sky-400',
     checkboxCheck: 'bg-sky-600 text-white',
-    badgeBg: 'bg-sky-200/80 dark:bg-sky-900/70',
-    badgeText: 'text-sky-950 dark:text-sky-200',
-    inputBg: 'bg-sky-100/60 dark:bg-sky-950/40',
-    inputBorder: 'border-sky-300/80 dark:border-sky-700/60',
+    badgeBg: 'bg-sky-200/80',
+    badgeText: 'text-sky-950',
+    inputBg: 'bg-sky-100/60',
+    inputBorder: 'border-sky-300/80',
     name: 'Sky Blue',
     dotColor: '#7dd3fc',
     ruledLine: 'rgba(2, 132, 199, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
   },
   peach: {
-    bg: 'bg-[#ffedd5] dark:bg-[#2e1507]',
-    border: 'border-[#fed7aa] dark:border-orange-700/60',
-    text: 'text-orange-950 dark:text-orange-100',
-    subtext: 'text-orange-800/80 dark:text-orange-300/80',
-    tape: 'bg-orange-100/70 dark:bg-orange-900/40',
-    tapeBorder: 'border-orange-200/80 dark:border-orange-700/40',
-    checkboxBg: 'bg-orange-50 dark:bg-orange-950/60',
-    checkboxBorder: 'border-orange-400 dark:border-orange-600',
+    bg: 'bg-[#ffedd5]',
+    border: 'border-[#fed7aa]',
+    text: 'text-orange-950',
+    subtext: 'text-orange-800/80',
+    tape: 'bg-orange-100/70',
+    tapeBorder: 'border-orange-200/80',
+    checkboxBg: 'bg-orange-50',
+    checkboxBorder: 'border-orange-400',
     checkboxCheck: 'bg-orange-600 text-white',
-    badgeBg: 'bg-orange-200/80 dark:bg-orange-900/70',
-    badgeText: 'text-orange-950 dark:text-orange-200',
-    inputBg: 'bg-orange-100/60 dark:bg-orange-950/40',
-    inputBorder: 'border-orange-300/80 dark:border-orange-700/60',
+    badgeBg: 'bg-orange-200/80',
+    badgeText: 'text-orange-950',
+    inputBg: 'bg-orange-100/60',
+    inputBorder: 'border-orange-300/80',
     name: 'Warm Peach',
     dotColor: '#fdba74',
     ruledLine: 'rgba(234, 88, 12, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
   },
   rose: {
-    bg: 'bg-[#ffe4e6] dark:bg-[#2e0915]',
-    border: 'border-[#fecdd3] dark:border-rose-700/60',
-    text: 'text-rose-950 dark:text-rose-100',
-    subtext: 'text-rose-800/80 dark:text-rose-300/80',
-    tape: 'bg-rose-100/70 dark:bg-rose-900/40',
-    tapeBorder: 'border-rose-200/80 dark:border-rose-700/40',
-    checkboxBg: 'bg-rose-50 dark:bg-rose-950/60',
-    checkboxBorder: 'border-rose-400 dark:border-rose-600',
+    bg: 'bg-[#ffe4e6]',
+    border: 'border-[#fecdd3]',
+    text: 'text-rose-950',
+    subtext: 'text-rose-800/80',
+    tape: 'bg-rose-100/70',
+    tapeBorder: 'border-rose-200/80',
+    checkboxBg: 'bg-rose-50',
+    checkboxBorder: 'border-rose-400',
     checkboxCheck: 'bg-rose-600 text-white',
-    badgeBg: 'bg-rose-200/80 dark:bg-rose-900/70',
-    badgeText: 'text-rose-950 dark:text-rose-200',
-    inputBg: 'bg-rose-100/60 dark:bg-rose-950/40',
-    inputBorder: 'border-rose-300/80 dark:border-rose-700/60',
+    badgeBg: 'bg-rose-200/80',
+    badgeText: 'text-rose-950',
+    inputBg: 'bg-rose-100/60',
+    inputBorder: 'border-rose-300/80',
     name: 'Soft Rose',
     dotColor: '#fda4af',
     ruledLine: 'rgba(225, 29, 72, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
   },
   lavender: {
-    bg: 'bg-[#f3e8ff] dark:bg-[#250936]',
-    border: 'border-[#e9d5ff] dark:border-purple-700/60',
-    text: 'text-purple-950 dark:text-purple-100',
-    subtext: 'text-purple-800/80 dark:text-purple-300/80',
-    tape: 'bg-purple-100/70 dark:bg-purple-900/40',
-    tapeBorder: 'border-purple-200/80 dark:border-purple-700/40',
-    checkboxBg: 'bg-purple-50 dark:bg-purple-950/60',
-    checkboxBorder: 'border-purple-400 dark:border-purple-600',
+    bg: 'bg-[#f3e8ff]',
+    border: 'border-[#e9d5ff]',
+    text: 'text-purple-950',
+    subtext: 'text-purple-800/80',
+    tape: 'bg-purple-100/70',
+    tapeBorder: 'border-purple-200/80',
+    checkboxBg: 'bg-purple-50',
+    checkboxBorder: 'border-purple-400',
     checkboxCheck: 'bg-purple-600 text-white',
-    badgeBg: 'bg-purple-200/80 dark:bg-purple-900/70',
-    badgeText: 'text-purple-950 dark:text-purple-200',
-    inputBg: 'bg-purple-100/60 dark:bg-purple-950/40',
-    inputBorder: 'border-purple-300/80 dark:border-purple-700/60',
+    badgeBg: 'bg-purple-200/80',
+    badgeText: 'text-purple-950',
+    inputBg: 'bg-purple-100/60',
+    inputBorder: 'border-purple-300/80',
     name: 'Lavender',
     dotColor: '#d8b4fe',
     ruledLine: 'rgba(147, 51, 234, 0.08)',
     marginLine: 'rgba(225, 29, 72, 0.15)',
+  },
+  darkgrey: {
+    bg: 'bg-[#1e293b]',
+    border: 'border-[#334155]',
+    text: 'text-slate-100',
+    subtext: 'text-slate-400',
+    tape: 'bg-slate-700/60',
+    tapeBorder: 'border-slate-600/70',
+    checkboxBg: 'bg-slate-800',
+    checkboxBorder: 'border-slate-500',
+    checkboxCheck: 'bg-[#0082ff] text-white',
+    badgeBg: 'bg-slate-700/80',
+    badgeText: 'text-slate-100',
+    inputBg: 'bg-slate-900',
+    inputBorder: 'border-slate-700',
+    name: 'Dark Slate Grey',
+    dotColor: '#334155',
+    ruledLine: 'rgba(255, 255, 255, 0.05)',
+    marginLine: 'rgba(244, 63, 94, 0.25)',
+  },
+  charcoal: {
+    bg: 'bg-[#18181b]',
+    border: 'border-[#27272a]',
+    text: 'text-zinc-100',
+    subtext: 'text-zinc-400',
+    tape: 'bg-zinc-800/60',
+    tapeBorder: 'border-zinc-700/70',
+    checkboxBg: 'bg-zinc-800',
+    checkboxBorder: 'border-zinc-600',
+    checkboxCheck: 'bg-emerald-600 text-white',
+    badgeBg: 'bg-zinc-800/80',
+    badgeText: 'text-zinc-100',
+    inputBg: 'bg-zinc-900',
+    inputBorder: 'border-zinc-700',
+    name: 'Charcoal Dark Grey',
+    dotColor: '#262626',
+    ruledLine: 'rgba(255, 255, 255, 0.05)',
+    marginLine: 'rgba(239, 68, 68, 0.25)',
+  },
+  graphite: {
+    bg: 'bg-[#111827]',
+    border: 'border-[#1f2937]',
+    text: 'text-gray-100',
+    subtext: 'text-gray-400',
+    tape: 'bg-gray-800/60',
+    tapeBorder: 'border-gray-700/70',
+    checkboxBg: 'bg-gray-800',
+    checkboxBorder: 'border-gray-600',
+    checkboxCheck: 'bg-purple-600 text-white',
+    badgeBg: 'bg-gray-800/80',
+    badgeText: 'text-gray-100',
+    inputBg: 'bg-gray-900',
+    inputBorder: 'border-gray-700',
+    name: 'Graphite Dark Grey',
+    dotColor: '#374151',
+    ruledLine: 'rgba(255, 255, 255, 0.05)',
+    marginLine: 'rgba(244, 63, 94, 0.25)',
   },
 };
 
@@ -384,7 +441,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
         >
         {/* Lined Paper Lines Background */}
         <div 
-          className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
+          className="absolute inset-0 pointer-events-none opacity-40"
           style={{
             backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLine} 28px)`,
           }}
@@ -408,7 +465,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
         <div 
           onDoubleClick={handleTopDoubleClick}
           onTouchEnd={handleTopDoubleTap}
-          className="flex items-start justify-between gap-3 pb-3 border-b border-black/10 dark:border-white/10 relative z-10 cursor-pointer touch-manipulation select-none"
+          className="flex items-start justify-between gap-3 pb-3 border-b border-black/10 relative z-10 cursor-pointer touch-manipulation select-none"
           title={isFullScreen ? "Double tap to exit full screen" : "Double tap to view full screen"}
         >
           <div className="pointer-events-none">
@@ -439,7 +496,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 setIsAdding(!isAdding);
               }}
               className={`p-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                isAdding ? 'bg-black/15 dark:bg-white/20' : 'bg-black/5 hover:bg-black/10 dark:bg-white/10'
+                isAdding ? 'bg-black/15' : 'bg-black/5 hover:bg-black/10'
               }`}
               title={isAdding ? 'Close form' : 'Add focus block'}
             >
@@ -499,7 +556,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
 
         {/* Mini Progress Bar */}
         {totalCount > 0 && (
-          <div className="w-full bg-black/10 dark:bg-white/10 h-1.5 rounded-full overflow-hidden my-3 relative z-10">
+          <div className="w-full bg-black/10 h-1.5 rounded-full overflow-hidden my-3 relative z-10">
             <div 
               className="h-full bg-current transition-all duration-300 opacity-80"
               style={{ width: `${progressPercent}%` }}
@@ -518,7 +575,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 <form 
                   key={task.id}
                   onSubmit={(e) => handleSaveEditTask(task.id, e)}
-                  className="p-3 rounded-2xl bg-white/90 dark:bg-black/40 border border-black/15 dark:border-white/15 space-y-2 shadow-2xs"
+                  className="p-3 rounded-2xl bg-white/90 border border-black/15 space-y-2 shadow-2xs"
                 >
                   <div className="w-full">
                     <input
@@ -528,13 +585,13 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Task title..."
-                      className="w-full px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 outline-none focus:border-[#0082ff]"
+                      className="w-full px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white border border-black/10 outline-none focus:border-[#0082ff] text-slate-900"
                     />
                   </div>
 
                   <div className="flex items-center justify-between gap-1.5 flex-wrap">
                     <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-1 bg-white dark:bg-black/50 border border-black/10 dark:border-white/10 rounded-xl px-2 py-1 text-xs">
+                      <div className="flex items-center gap-1 bg-white border border-black/10 rounded-xl px-2 py-1 text-xs text-slate-900">
                         <Clock size={11} className="opacity-50" />
                         <input
                           type="text"
@@ -556,7 +613,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                       <button
                         type="button"
                         onClick={() => setEditingTaskId(null)}
-                        className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-slate-600 dark:text-slate-300"
+                        className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 transition cursor-pointer text-slate-600"
                         title={language === 'am' ? 'ተው' : 'Cancel'}
                         aria-label="Cancel"
                       >
@@ -581,10 +638,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 key={task.id}
                 className={`group/task flex items-center justify-between gap-2.5 text-xs font-semibold p-2 sm:p-2.5 rounded-2xl transition-all border ${
                   task.completed
-                    ? 'bg-black/5 dark:bg-white/5 border-transparent opacity-60'
+                    ? 'bg-black/5 border-transparent opacity-60'
                     : isTaskActive
-                    ? 'bg-white/80 dark:bg-black/40 border-[#0082ff] shadow-sm ring-1 ring-[#0082ff]/50'
-                    : 'bg-white/60 hover:bg-white/90 dark:bg-black/20 dark:hover:bg-black/40 border-black/5 dark:border-white/5'
+                    ? 'bg-white/80 border-[#0082ff] shadow-sm ring-1 ring-[#0082ff]/50'
+                    : 'bg-white/60 hover:bg-white/90 border-black/5'
                 }`}
               >
                 {/* Left: Checkbox & Task Information */}
@@ -651,7 +708,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                   <button
                     type="button"
                     onClick={() => startEditTask(task)}
-                    className="p-1 text-slate-400 hover:text-[#0082ff] dark:hover:text-[#0082ff] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                    className="p-1 text-slate-400 hover:text-[#0082ff] rounded-lg hover:bg-black/5 transition cursor-pointer"
                     title={language === 'am' ? 'ቀይር' : 'Edit Focus Block'}
                   >
                     <Edit2 size={12} />
@@ -660,7 +717,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                   <button
                     type="button"
                     onClick={() => deleteTask(task.id)}
-                    className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                    className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-black/5 transition cursor-pointer"
                     title="Delete Focus Block"
                   >
                     <Trash2 size={13} />
@@ -671,7 +728,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           })}
 
           {categoryTasks.length === 0 && !isAdding && (
-            <div className="py-7 text-center space-y-2 border border-dashed border-black/15 dark:border-white/15 rounded-2xl">
+            <div className="py-7 text-center space-y-2 border border-dashed border-black/15 rounded-2xl">
               <p className="text-xs font-medium opacity-70">
                 {language === 'am' 
                   ? `ለዚህ ክፍል የተያዘ የትኩረት ክፍለ-ጊዜ የለም። አዲስ የትኩረት እቅድ ይጨምሩ!` 
@@ -692,7 +749,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
         {isAdding && (
           <form 
             onSubmit={handleCreateBlock}
-            className="mt-3 p-3 sm:p-3.5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 space-y-2.5 relative z-10 w-full"
+            className="mt-3 p-3 sm:p-3.5 rounded-2xl bg-black/5 border border-black/10 space-y-2.5 relative z-10 w-full"
           >
             {/* Row 1: Title Input */}
             <div className="w-full">
@@ -703,7 +760,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder={language === 'am' ? 'የትኩረት ተግባር ርዕስ (ምሳሌ፡ የቼዝ ስልጠና)...' : 'Focus block or intention title...'}
-                className="w-full px-3 py-2 rounded-xl text-xs bg-white/90 dark:bg-black/50 border border-black/15 dark:border-white/15 outline-none font-semibold placeholder:opacity-60 focus:border-[#0082ff] shadow-2xs"
+                className="w-full px-3 py-2 rounded-xl text-xs bg-white/90 border border-black/15 outline-none font-semibold placeholder:opacity-60 focus:border-[#0082ff] shadow-2xs text-slate-900"
               />
             </div>
 
@@ -711,7 +768,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
             <div className="flex items-center justify-between gap-1.5 flex-wrap sm:flex-nowrap pt-0.5">
               <div className="flex items-center gap-1.5 shrink-0">
                 {/* Time picker */}
-                <div className="flex items-center gap-1 bg-white/90 dark:bg-black/50 border border-black/15 dark:border-white/15 rounded-xl px-2.5 py-1.5 text-xs">
+                <div className="flex items-center gap-1 bg-white/90 border border-black/15 rounded-xl px-2.5 py-1.5 text-xs text-slate-900">
                   <Clock size={12} className="opacity-50 shrink-0" />
                   <input
                     type="text"
@@ -735,7 +792,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="p-1.5 rounded-xl opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer flex items-center justify-center text-slate-600 dark:text-slate-300"
+                  className="p-1.5 rounded-xl opacity-70 hover:opacity-100 hover:bg-black/10 transition cursor-pointer flex items-center justify-center text-slate-600"
                   title={language === 'am' ? 'ተው' : 'Cancel'}
                   aria-label="Cancel"
                 >
