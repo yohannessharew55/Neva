@@ -257,7 +257,7 @@ export const TodayCockpitV2: React.FC = () => {
               }
             }}
           >
-            {/* Left: Overlapping Stream Avatar Jewels + Titles */}
+            {/* Left: Overlapping Stream Avatar Jewels */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex -space-x-1.5 overflow-hidden shrink-0">
                 {allCategories.slice(0, 5).map((cat) => {
@@ -278,17 +278,6 @@ export const TodayCockpitV2: React.FC = () => {
                     +{allCategories.length - 5}
                   </div>
                 )}
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight group-hover:text-[#0082ff] transition-colors truncate">
-                    {language === 'am' ? 'የዋና ዋና ዘርፎች እቅዶች' : 'Core Pillars & Milestones'}
-                  </h4>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
-                    {allCategories.length}
-                  </span>
-                </div>
               </div>
             </div>
 
