@@ -225,6 +225,17 @@
       "id": "task-1794831872926"
     },
     {
+      "title": "Chess Tactics & Grandmaster Drills",
+      "domain": "CHESS",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#8b5cf6",
+      "id": "task-1795208974194-2-sykv",
+      "date": "2026-11-21",
+      "dayOfWeek": 6
+    },
+    {
       "domain": "CHESS",
       "title": "Puzzle",
       "startTime": "01:00 AM",
@@ -245,17 +256,6 @@
         }
       ],
       "id": "task-1795208974194-0-m75w",
-      "date": "2026-11-21",
-      "dayOfWeek": 6
-    },
-    {
-      "title": "Chess Tactics & Grandmaster Drills",
-      "domain": "CHESS",
-      "startTime": "09:00",
-      "durationMin": 180,
-      "completed": false,
-      "color": "#8b5cf6",
-      "id": "task-1795208974194-2-sykv",
       "date": "2026-11-21",
       "dayOfWeek": 6
     },
