@@ -350,7 +350,13 @@
       "badge": "Art",
       "completed": false,
       "date": "2026-11-20",
-      "checklist": [],
+      "checklist": [
+        {
+          "id": "step-1795215956921",
+          "text": "Sketch",
+          "done": false
+        }
+      ],
       "notes": "",
       "id": "task-1795215932771"
     }
