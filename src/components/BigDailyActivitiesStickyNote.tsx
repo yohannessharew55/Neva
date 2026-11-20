@@ -1268,14 +1268,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     setDraggedSubjectId(null);
                     setDragOverSubjectId(null);
                   }}
-                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all ${
+                  onClick={() => setSelectedCategoryId(group.id)}
+                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all cursor-pointer ${
                     draggedSubjectId === group.id
                       ? 'opacity-40 scale-[0.98] border-dashed border-[#0082ff] bg-blue-50/20'
                       : dragOverSubjectId === group.id
                       ? 'border-2 border-[#0082ff] bg-blue-50/60 scale-[1.01]'
                       : group.isAllDone 
                       ? 'bg-black/10 border-black/10 opacity-75' 
-                      : 'bg-black/5 border-black/10 hover:border-black/20'
+                      : 'bg-black/5 border-black/10 hover:border-black/25 hover:bg-black/[0.08]'
                   }`}
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
@@ -1284,6 +1285,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     <div
                       className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
                       title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
+                      onClick={(e) => e.stopPropagation()}
                       onTouchStart={(e) => handleTouchStart(e, group.id)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
@@ -1294,7 +1296,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! */}
                     <button
                       type="button"
-                      onClick={() => handleToggleSubject(group.tasks, group.isAllDone)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSubject(group.tasks, group.isAllDone);
+                      }}
                       className={`w-4.5 h-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                         group.isAllDone
                           ? `${theme.checkBgDone} border-transparent shadow-xs scale-105`
@@ -1305,33 +1310,33 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       {group.isAllDone && <Check size={12} strokeWidth={3.5} />}
                     </button>
 
-                    {/* Subject Icon & Title - Touching toggles expand sign */}
+                    {/* Subject Icon & Title - Touching/clicking directs to main stream's page */}
                     <div 
-                      onClick={() => toggleSubjectExpand(group.id)}
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-100 select-none min-w-0 flex-1 overflow-hidden"
-                      title={group.translatedTitle}
+                      onClick={() => setSelectedCategoryId(group.id)}
+                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 select-none min-w-0 flex-1 overflow-hidden group/streamhead"
+                      title={language === 'am' ? `${group.translatedTitle} ገጽ ክፈት` : `Open ${group.translatedTitle} stream`}
                     >
                       <div 
-                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs"
+                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs group-hover/streamhead:scale-105 transition-transform"
                         style={{ backgroundColor: `${group.color}25`, color: group.color }}
                       >
                         <SubjectIcon size={12} />
                       </div>
-                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate ${
+                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate group-hover/streamhead:underline group-hover/streamhead:text-[#0082ff] transition-colors ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}>
                         {group.translatedTitle}
                       </span>
                     </div>
 
-                    {/* Quick Link to open Category Detail View (desktop only) */}
+                    {/* Quick Link to open Category Detail View */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedCategoryId(group.id);
                       }}
-                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0 hidden sm:inline-flex"
+                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0"
                       title={language === 'am' ? 'ሙሉ እቅድ ክፈት' : 'Open category detail view'}
                     >
                       <ExternalLink size={10} />
@@ -1340,18 +1345,28 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                   {/* Right: Progress Badge & Expand Little Sign */}
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 ${
-                      group.isAllDone 
-                        ? 'bg-emerald-500/25 text-emerald-800' 
-                        : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
-                    }`}>
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSubjectExpand(group.id);
+                      }}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 cursor-pointer ${
+                        group.isAllDone 
+                          ? 'bg-emerald-500/25 text-emerald-800' 
+                          : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
+                      }`}
+                      title={isExpanded ? 'Collapse' : 'Expand'}
+                    >
                       {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
                     </span>
 
                     {/* Expand Little Sign on the Main Stream */}
                     <button
                       type="button"
-                      onClick={() => toggleSubjectExpand(group.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSubjectExpand(group.id);
+                      }}
                       className={`p-1 rounded-md transition cursor-pointer flex items-center justify-center ${
                         isExpanded 
                           ? 'bg-black/10 opacity-100 scale-105' 
@@ -1378,66 +1393,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                           const hasSubtasks = task.checklist && task.checklist.length > 0;
                           const completedSubCount = task.checklist ? task.checklist.filter((c) => c.done).length : 0;
                           const isActive = activeTask?.id === task.id;
-
-                          const isEditing = editingTaskId === task.id;
-
-                          if (isEditing) {
-                            return (
-                              <form
-                                key={task.id}
-                                onSubmit={(e) => handleSaveEditTask(task.id, e)}
-                                className="p-2.5 rounded-xl bg-black/5 border border-black/10 space-y-2 shadow-2xs my-1"
-                              >
-                                <input
-                                  type="text"
-                                  autoFocus
-                                  required
-                                  value={editTitle}
-                                  onChange={(e) => setEditTitle(e.target.value)}
-                                  placeholder="Task title..."
-                                  className="w-full px-2 py-1 rounded-lg text-xs font-bold bg-white border border-black/10 outline-none focus:border-[#0082ff] text-slate-900"
-                                />
-                                <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="flex items-center gap-1 bg-white border border-black/10 rounded-lg px-2 py-0.5 text-xs text-slate-900">
-                                      <Clock size={10} className="opacity-50" />
-                                      <input
-                                        type="text"
-                                        value={editStartTime}
-                                        onChange={(e) => setEditStartTime(e.target.value)}
-                                        placeholder="09:00 PM"
-                                        className="w-16 bg-transparent text-[10px] font-mono outline-none text-center font-bold text-slate-900"
-                                      />
-                                    </div>
-                                    <DurationPicker
-                                      value={editDurationMin}
-                                      onChange={setEditDurationMin}
-                                      size="xs"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1 ml-auto">
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingTaskId(null)}
-                                      className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/10 transition cursor-pointer text-slate-600"
-                                      title={language === 'am' ? 'ተው' : 'Cancel'}
-                                      aria-label="Cancel"
-                                    >
-                                      <X size={13} />
-                                    </button>
-                                    <button
-                                      type="submit"
-                                      className="p-1 px-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-lg shadow-2xs cursor-pointer flex items-center justify-center"
-                                      title={language === 'am' ? 'አስቀምጥ' : 'Save'}
-                                      aria-label="Save"
-                                    >
-                                      <Check size={13} strokeWidth={3} />
-                                    </button>
-                                  </div>
-                                </div>
-                              </form>
-                            );
-                          }
 
                           return (
                             <div 
@@ -1492,7 +1447,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2 text-xs">
-                                {/* Checkbox, Time & Task Title */}
+                                {/* Checkbox, Time & Task Title (Check option only) */}
                                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                   {/* Task Drag Handle */}
                                   <div 
@@ -1510,7 +1465,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                         ? `${theme.checkBgDone} border-transparent` 
                                         : `${theme.checkBorder} bg-transparent hover:scale-110`
                                     }`}
-                                    title={task.completed ? 'Mark uncompleted' : 'Mark completed'}
+                                    title={task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')}
                                   >
                                     {task.completed && <Check size={11} strokeWidth={3} />}
                                   </button>
@@ -1520,18 +1475,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   </span>
 
                                   <span 
-                                    onClick={() => startEditTask(task)}
+                                    onClick={() => handleToggleTask(task)}
                                     className={`truncate font-semibold cursor-pointer select-none ${
-                                      task.completed ? 'line-through opacity-55' : 'opacity-90 hover:underline'
+                                      task.completed ? 'line-through opacity-55' : 'opacity-90 hover:opacity-100'
                                     }`}
-                                    title={language === 'am' ? 'ለመቀየር ይንኩ' : 'Click to edit task'}
+                                    title={task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')}
                                   >
                                     {task.title}
                                   </span>
                                 </div>
 
-                                {/* Duration Pill (Visible) & 3-Dots Menu (Hiding actions) */}
-                                <div className="flex items-center gap-1.5 shrink-0 relative">
+                                {/* Duration Pill & Subtasks Counter (Check option only, no edit/delete) */}
+                                <div className="flex items-center gap-1.5 shrink-0">
                                   <span 
                                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
                                     title={`${task.durationMin} minutes`}
@@ -1554,75 +1509,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                       {isSubtasksOpen ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
                                     </button>
                                   )}
-
-                                  {/* 3-Dots Menu Trigger */}
-                                  <div className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
-                                      }}
-                                      className="p-1 rounded-md text-slate-500 hover:text-slate-800 hover:bg-black/10 transition cursor-pointer flex items-center justify-center"
-                                      title={language === 'am' ? 'ተጨማሪ አማራጮች' : 'More options'}
-                                    >
-                                      <MoreVertical size={13} strokeWidth={2.2} />
-                                    </button>
-
-                                    {openTaskMenuId === task.id && (
-                                      <>
-                                        <div 
-                                          className="fixed inset-0 z-40" 
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setOpenTaskMenuId(null);
-                                          }} 
-                                        />
-                                        <div 
-                                          className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-black/10 dark:border-white/10 p-1 space-y-0.5 select-none"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {!task.completed && (
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                setOpenTaskMenuId(null);
-                                                startTask(task);
-                                              }}
-                                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#0082ff]/10 hover:text-[#0082ff] transition cursor-pointer"
-                                            >
-                                              <Play size={12} fill="currentColor" className="text-[#0082ff]" />
-                                              <span>{isActive ? (language === 'am' ? 'እያተኮረ...' : 'Focusing') : (language === 'am' ? 'አተኩር' : 'Focus')}</span>
-                                            </button>
-                                          )}
-
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setOpenTaskMenuId(null);
-                                              startEditTask(task);
-                                            }}
-                                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
-                                          >
-                                            <Edit2 size={12} className="text-slate-500" />
-                                            <span>{language === 'am' ? 'ቀይር' : 'Edit'}</span>
-                                          </button>
-
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setOpenTaskMenuId(null);
-                                              handleDeleteTask(task);
-                                            }}
-                                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
-                                          >
-                                            <Trash2 size={12} className="text-rose-500" />
-                                            <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
-                                          </button>
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
                                 </div>
                               </div>
 
