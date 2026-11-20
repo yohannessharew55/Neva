@@ -41,7 +41,6 @@ export const TodayCockpitV2: React.FC = () => {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [isPillarsExpanded, setIsPillarsExpanded] = useState(false);
-  const [customDuration, setCustomDuration] = useState<number | null>(null);
 
   const getDomainTypesForCat = (catId: string): DomainType[] => {
     switch (catId) {
@@ -143,60 +142,44 @@ export const TodayCockpitV2: React.FC = () => {
     return 0;
   });
 
-  const parseTimeToMinutes = (timeStr: string): number => {
-    if (!timeStr) return 0;
-    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  const parseTimeToMinutes = (timeStr?: string): number => {
+    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 0;
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
     if (!match) return 0;
     let [_, h, m, meridiem] = match;
     let hours = parseInt(h, 10);
     const minutes = parseInt(m, 10);
-    if (meridiem.toUpperCase() === 'PM' && hours < 12) hours += 12;
-    if (meridiem.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    if (meridiem) {
+      if (meridiem.toUpperCase() === 'PM' && hours < 12) hours += 12;
+      if (meridiem.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    }
     return hours * 60 + minutes;
   };
 
   // Up Next Focus Task:
-  // Automatically determined and changes dynamically based on the current time and main category priorities!
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const getCategoryOrderIndex = (task: ScheduleTask): number => {
-    const catKey = getCategoryKeyForTask(task);
-    const idx = orderedCategoryKeys.indexOf(catKey);
-    return idx === -1 ? 999 : idx;
-  };
-
-  // Find uncompleted tasks for today
-  const uncompletedTasks = dayTasks.filter((t) => !t.completed);
-
-  // Automatically determine the next upcoming task:
-  // 1. Prioritize tasks starting within 30 min ago or upcoming today (chronological)
-  // 2. Otherwise sort by sticky note category hierarchy
-  // 3. Within same category, sort by start time
-  const sortedPendingTasks = [...uncompletedTasks].sort((a, b) => {
-    const timeA = parseTimeToMinutes(a.startTime);
-    const timeB = parseTimeToMinutes(b.startTime);
-
-    const aIsNowOrFuture = timeA > 0 && timeA >= (currentMinutes - 30);
-    const bIsNowOrFuture = timeB > 0 && timeB >= (currentMinutes - 30);
-
-    if (aIsNowOrFuture && !bIsNowOrFuture) return -1;
-    if (!aIsNowOrFuture && bIsNowOrFuture) return 1;
-
-    const catA = getCategoryOrderIndex(a);
-    const catB = getCategoryOrderIndex(b);
-    if (catA !== catB) return catA - catB;
-
-    return timeA - timeB;
+  // Strictly respects the top-to-bottom order of main categories from the sticky note!
+  // Whichever category is on top with uncompleted tasks is the active focus block.
+  const topPendingCategoryKey = orderedCategoryKeys.find((catKey) => {
+    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey && !t.completed);
   });
 
-  // Automatically selected active task and its main category
-  const activeFocusTask = sortedPendingTasks[0] || dayTasks.find((t) => !t.completed) || dayTasks[0];
-  const activeFocusCategoryKey = activeFocusTask ? getCategoryKeyForTask(activeFocusTask) : (orderedCategoryKeys[0] || 'chess');
+  const activeFocusCategoryKey = topPendingCategoryKey || orderedCategoryKeys.find((catKey) => {
+    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey);
+  }) || orderedCategoryKeys[0] || 'chess';
 
-  // Reset custom duration when the active task changes automatically
-  useEffect(() => {
-    setCustomDuration(null);
-  }, [activeFocusTask?.id]);
+  // Tasks in this active focus category
+  const tasksInActiveCategory = dayTasks.filter((t) => getCategoryKeyForTask(t) === activeFocusCategoryKey);
+  const uncompletedInCat = tasksInActiveCategory.filter((t) => !t.completed);
+  const candidateTasks = uncompletedInCat.length > 0 ? uncompletedInCat : tasksInActiveCategory;
+
+  candidateTasks.sort((a, b) => {
+    const timeA = parseTimeToMinutes(a.startTime);
+    const timeB = parseTimeToMinutes(b.startTime);
+    if (timeA !== timeB && timeA > 0 && timeB > 0) return timeA - timeB;
+    return dayTasks.indexOf(a) - dayTasks.indexOf(b);
+  });
+
+  const activeFocusTask = candidateTasks[0] || dayTasks.find((t) => !t.completed) || dayTasks[0];
 
   const getCategoryTheme = (catKey: string) => {
     switch (catKey) {
@@ -406,7 +389,7 @@ export const TodayCockpitV2: React.FC = () => {
                   </span>
                   <span>•</span>
                   <span>
-                    {(customDuration || activeFocusTask.durationMin)} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
+                    {(activeFocusTask.durationMin || 30)} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
                   </span>
                 </div>
               </div>
@@ -418,7 +401,7 @@ export const TodayCockpitV2: React.FC = () => {
                   try { soundEngine.playPencil(); } catch {}
                   startTask({
                     ...activeFocusTask,
-                    durationMin: customDuration || activeFocusTask.durationMin || 30
+                    durationMin: activeFocusTask.durationMin || 30
                   });
                 }}
                 className={`px-5 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer self-start sm:self-auto active:scale-95 shadow-md ${currentTheme.buttonGrad}`}
@@ -426,37 +409,6 @@ export const TodayCockpitV2: React.FC = () => {
                 <Play size={13} fill="currentColor" />
                 <span>{language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}</span>
               </button>
-            </div>
-
-            {/* 4. Interactive Duration Quick-Tuning Presets */}
-            <div className="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-2 flex-wrap text-[10px] font-mono">
-              <span className="text-slate-400 font-semibold">
-                {language === 'am' ? 'የትኩረት ጊዜ መምረጫ:' : 'Session preset:'}
-              </span>
-              <div className="flex items-center gap-1.5">
-                {[
-                  { min: 25, label: '25m' },
-                  { min: 45, label: '45m' },
-                  { min: 90, label: '90m' },
-                  { min: activeFocusTask.durationMin, label: `${activeFocusTask.durationMin}m (Plan)` }
-                ].filter((p, idx, arr) => arr.findIndex(x => x.min === p.min) === idx).map((preset) => {
-                  const isCurrent = (customDuration === preset.min) || (!customDuration && activeFocusTask.durationMin === preset.min);
-                  return (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => setCustomDuration(preset.min)}
-                      className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer ${
-                        isCurrent 
-                          ? `${currentTheme.badgeBg} font-extrabold shadow-2xs` 
-                          : 'bg-black/5 dark:bg-white/5 opacity-65 hover:opacity-100'
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
           </div>
         </div>
