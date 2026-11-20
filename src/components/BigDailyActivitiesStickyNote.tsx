@@ -1096,7 +1096,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={handleResetDayToDefault}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-rose-50 hover:text-rose-600 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-rose-50 hover:text-rose-600 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Reset this day back to the default routine template"
                   >
                     <RotateCcw size={11} />
@@ -1106,7 +1106,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={() => setShowApplyModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-black/5 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Apply this day schedule to other dates"
                   >
                     <Copy size={11} />
@@ -1128,7 +1128,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   <button
                     type="button"
                     onClick={() => setShowDefaultsModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-white/80 hover:bg-black/5 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
                     title="Manage default templates for all weekdays"
                   >
                     <Settings size={11} />
@@ -1148,92 +1148,77 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           </div>
         )}
 
-        {/* The Smaller Sticky / Sticker: Placed over the Daily To-Do Sticky Note */}
-        <div className="relative z-20 my-3 -rotate-0.5 sm:-rotate-1 hover:rotate-0 transition-transform duration-200">
-          {/* Frosted Washi Tape / Tape Strip on Top Edge */}
-          <div className={`absolute -top-2 left-6 sm:left-10 w-20 sm:w-28 h-3.5 ${theme.tapeBg} ${theme.tapeBorder} backdrop-blur-xs border-y border-dashed rounded-xs shadow-2xs rotate-1 pointer-events-none z-30`} />
-
-          {/* Mini Sticky Note / Sticker Body (Harmonized with sticky color) */}
-          <div className={`relative rounded-2xl ${theme.cardBg || 'bg-white/70'} ${theme.paperBorder} border p-2.5 sm:p-3.5 shadow-md shadow-black/5 ${theme.textPrimary} overflow-hidden`}>
-            
-            {/* Subtle Ruled Texture for Authentic Sticky Note Paper Feel */}
-            <div 
-              className="absolute inset-0 pointer-events-none select-none opacity-30"
-              style={{
-                backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 19px, ${theme.ruledLineColor} 20px)`,
-              }}
-            />
-
-            {/* Metrics summary & Filter Pills */}
-            {isSunday && totalCount === 0 ? (
-              <div className="relative z-10 py-1 text-xs font-mono font-bold flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-emerald-800">
-                  <span className="text-sm">☕</span>
-                  <span className="font-sans font-extrabold text-xs sm:text-sm">
-                    {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-900">
-                    {language === 'am' ? 'ዕረፍት' : 'Rest Day & Relax'}
-                  </span>
-                </div>
+        {/* Metrics summary & Filter Pills - Right directly on the sticky note (No white box, no sticker) */}
+        <div className="relative z-20 my-2 px-1 pt-1 pb-1">
+          {/* Metrics summary & Filter Pills */}
+          {isSunday && totalCount === 0 ? (
+            <div className="py-1 text-xs font-mono font-bold flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 text-emerald-800">
+                <span className="text-sm">☕</span>
+                <span className="font-sans font-extrabold text-xs sm:text-sm">
+                  {language === 'am' ? 'የዕረፍት ቀን - ዘና ይበሉ' : 'Rest Day and Relax'}
+                </span>
               </div>
-            ) : (
-              <div className={`relative z-10 flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold ${theme.textSecondary}`}>
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                  <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900">{formattedDayDuration}</strong></span>
-                  <span className="opacity-40">•</span>
-                  <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700">{completedCount} ({progressPercent}%)</strong></span>
-                  <span className="opacity-40">•</span>
-                  <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
-                </div>
-
-                <div className="flex items-center gap-1 text-[10px]">
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode('all')}
-                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                      filterMode === 'all' 
-                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
-                    }`}
-                  >
-                    {t('all')} ({totalCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode('remaining')}
-                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                      filterMode === 'remaining' 
-                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
-                    }`}
-                  >
-                    {t('remaining')} ({totalCount - completedCount})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterMode('completed')}
-                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                      filterMode === 'completed' 
-                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
-                    }`}
-                  >
-                    {t('done')} ({completedCount})
-                  </button>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-900">
+                  {language === 'am' ? 'ዕረፍት' : 'Rest Day & Relax'}
+                </span>
               </div>
-            )}
-
-            {/* Progress Line */}
-            <div className="relative z-10 w-full bg-black/10 h-1.5 rounded-full overflow-hidden mt-2">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-500 via-[#0082ff] to-[#0082ff] transition-all duration-300 rounded-full"
-                style={{ width: `${progressPercent}%` }}
-              />
             </div>
+          ) : (
+            <div className={`flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold ${theme.textSecondary}`}>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900">{formattedDayDuration}</strong></span>
+                <span className="opacity-40">•</span>
+                <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700">{completedCount} ({progressPercent}%)</strong></span>
+                <span className="opacity-40">•</span>
+                <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
+              </div>
+
+              <div className="flex items-center gap-1 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('all')}
+                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                    filterMode === 'all' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                      : 'opacity-70 hover:opacity-100 hover:bg-black/5'
+                  }`}
+                >
+                  {t('all')} ({totalCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('remaining')}
+                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                    filterMode === 'remaining' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                      : 'opacity-70 hover:opacity-100 hover:bg-black/5'
+                  }`}
+                >
+                  {t('remaining')} ({totalCount - completedCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('completed')}
+                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                    filterMode === 'completed' 
+                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                      : 'opacity-70 hover:opacity-100 hover:bg-black/5'
+                  }`}
+                >
+                  {t('done')} ({completedCount})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Progress Line directly on sticky paper */}
+          <div className="w-full bg-black/10 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div 
+              className="h-full bg-gradient-to-r from-emerald-500 via-[#0082ff] to-[#0082ff] transition-all duration-300 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
         </div>
 
@@ -1400,7 +1385,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               <form
                                 key={task.id}
                                 onSubmit={(e) => handleSaveEditTask(task.id, e)}
-                                className="p-2.5 rounded-xl bg-white border border-amber-300/80 space-y-2 shadow-2xs my-1"
+                                className="p-2.5 rounded-xl bg-black/5 border border-black/10 space-y-2 shadow-2xs my-1"
                               >
                                 <input
                                   type="text"
@@ -1493,16 +1478,16 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                 setDraggedTaskId(null);
                                 setDragOverTaskId(null);
                               }}
-                              className={`group/task py-1.5 px-2.5 rounded-xl border transition-all duration-150 ${
+                              className={`group/task py-1.5 px-2 rounded-xl transition-all duration-150 ${
                                 draggedTaskId === task.id
-                                  ? 'opacity-40 scale-98 border-dashed border-[#0082ff]'
+                                  ? 'opacity-40 scale-98 border border-dashed border-[#0082ff]'
                                   : dragOverTaskId === task.id
-                                  ? 'border-[#0082ff] bg-blue-50/70 shadow-xs'
+                                  ? 'bg-blue-500/15 border border-[#0082ff]'
                                   : task.completed 
-                                  ? 'bg-black/5 border-black/5 opacity-55' 
+                                  ? 'opacity-55 hover:bg-black/5' 
                                   : isActive 
-                                    ? 'bg-white/95 border-[#0082ff] shadow-2xs'
-                                    : 'bg-white/85 hover:bg-white border-amber-200/70'
+                                    ? 'bg-black/10 border border-black/15 shadow-2xs'
+                                    : 'hover:bg-black/5'
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2 text-xs">
