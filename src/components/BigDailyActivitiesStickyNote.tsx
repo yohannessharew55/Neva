@@ -320,7 +320,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     return appTheme === 'dark' ? 'darkgrey' : 'canary';
   }, [dailyStickyColor, appTheme]);
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
-  const [showColorPalette, setShowColorPalette] = useState(false);
+  const [showStickyMenu, setShowStickyMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
@@ -968,58 +968,77 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </span>
             </div>
 
-            {/* Palette & Full-Screen Controls */}
-            <div className="flex items-center gap-1.5 relative z-20">
+            {/* 3-Dots Sticky Note Action Menu (Color Palette & Full Screen) */}
+            <div className="flex items-center gap-1.5 relative z-30">
               <div className="relative">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowColorPalette(!showColorPalette);
+                    setShowStickyMenu(!showStickyMenu);
                   }}
-                  className="p-1.5 min-w-[28px] min-h-[28px] rounded-lg bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-95 flex items-center justify-center text-current"
-                  title="Change Color"
+                  className="p-1.5 min-w-[30px] min-h-[30px] rounded-xl bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-95 flex items-center justify-center text-current shadow-2xs"
+                  title={language === 'am' ? 'ተጨማሪ አማራጮች' : 'Options'}
+                  aria-label="Sticky note options"
                 >
-                  <Palette size={14} />
+                  <MoreVertical size={15} strokeWidth={2.4} />
                 </button>
 
-                {showColorPalette && (
-                  <div className="absolute right-0 top-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-2xl flex items-center gap-1.5 z-40 backdrop-blur-md">
-                    {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
+                {showStickyMenu && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowStickyMenu(false);
+                      }} 
+                    />
+                    <div 
+                      className="absolute right-0 top-full mt-1.5 z-50 w-48 bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-2 shadow-2xl space-y-2 backdrop-blur-md animate-fadeIn select-none"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Full Screen Toggle */}
                       <button
-                        key={cKey}
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDailyStickyColor(cKey);
-                          try { localStorage.setItem('neva_daily_sticky_color_custom', 'true'); } catch {}
-                          setShowColorPalette(false);
+                        onClick={() => {
+                          setShowStickyMenu(false);
+                          setIsFullScreen(!isFullScreen);
+                          try { soundEngine.playPencil(); } catch {}
                         }}
-                        className={`w-5.5 h-5.5 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
-                          colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: THEMES[cKey].dotColor }}
-                        title={THEMES[cKey].name}
-                      />
-                    ))}
-                  </div>
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                      >
+                        {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                        <span>{isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Full Screen')}</span>
+                      </button>
+
+                      {/* Sticky Color Palette */}
+                      <div className="pt-1.5 border-t border-black/5 dark:border-white/5">
+                        <div className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                          {language === 'am' ? 'የወረቀት ቀለም' : 'Sticky Color'}
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5 px-2 py-1">
+                          {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
+                            <button
+                              key={cKey}
+                              type="button"
+                              onClick={() => {
+                                setDailyStickyColor(cKey);
+                                try { localStorage.setItem('neva_daily_sticky_color_custom', 'true'); } catch {}
+                                setShowStickyMenu(false);
+                              }}
+                              className={`w-6 h-6 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
+                                colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
+                              }`}
+                              style={{ backgroundColor: THEMES[cKey].dotColor }}
+                              title={THEMES[cKey].name}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
-
-              {/* Full Screen Symbol Button - On the side of color palette, comfortable touch target */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFullScreen(!isFullScreen);
-                  try { soundEngine.playPencil(); } catch {}
-                }}
-                className="p-1.5 sm:p-2 min-w-[32px] min-h-[32px] rounded-xl bg-black/5 hover:bg-black/10 transition cursor-pointer active:scale-90 text-current flex items-center justify-center relative z-20 shadow-2xs"
-                title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'View Full Screen')}
-                aria-label="Toggle Full Screen"
-              >
-                {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-              </button>
 
               {onClose && (
                 <button
@@ -1257,14 +1276,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     setDraggedSubjectId(null);
                     setDragOverSubjectId(null);
                   }}
-                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all ${
+                  onClick={() => toggleSubjectExpand(group.id)}
+                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all cursor-pointer select-none ${
                     draggedSubjectId === group.id
                       ? 'opacity-40 scale-[0.98] border-dashed border-[#0082ff] bg-blue-50/20'
                       : dragOverSubjectId === group.id
                       ? 'border-2 border-[#0082ff] bg-blue-50/60 scale-[1.01]'
                       : group.isAllDone 
                       ? 'bg-black/10 border-black/10 opacity-75' 
-                      : 'bg-black/5 border-black/10'
+                      : 'bg-black/5 border-black/10 hover:border-black/25 hover:bg-black/[0.08]'
                   }`}
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
@@ -1273,6 +1293,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     <div
                       className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
                       title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
+                      onClick={(e) => e.stopPropagation()}
                       onTouchStart={(e) => handleTouchStart(e, group.id)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
@@ -1283,7 +1304,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! */}
                     <button
                       type="button"
-                      onClick={() => handleToggleSubject(group.tasks, group.isAllDone)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSubject(group.tasks, group.isAllDone);
+                      }}
                       className={`w-4.5 h-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                         group.isAllDone
                           ? `${theme.checkBgDone} border-transparent shadow-xs scale-105`
@@ -1294,7 +1318,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       {group.isAllDone && <Check size={12} strokeWidth={3.5} />}
                     </button>
 
-                    {/* Subject Icon - Display only, non-clickable */}
+                    {/* Subject Icon - Display only */}
                     <div 
                       className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs select-none"
                       style={{ backgroundColor: `${group.color}25`, color: group.color }}
@@ -1304,7 +1328,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                     {/* Subject Title Text ONLY directs to main stream's page on click */}
                     <span 
-                      onClick={() => setSelectedCategoryId(group.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCategoryId(group.id);
+                      }}
                       className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate cursor-pointer hover:underline hover:text-[#0082ff] transition-colors select-none ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}
@@ -1325,10 +1352,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     </span>
 
                     {/* Expand Little Sign on the Main Stream */}
-                    <button
-                      type="button"
-                      onClick={() => toggleSubjectExpand(group.id)}
-                      className={`p-1 rounded-md transition cursor-pointer flex items-center justify-center ${
+                    <div
+                      className={`p-1 rounded-md transition flex items-center justify-center ${
                         isExpanded 
                           ? 'bg-black/10 opacity-100 scale-105' 
                           : 'opacity-70 hover:opacity-100 hover:bg-black/10'
@@ -1341,7 +1366,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       ) : (
                         <ChevronDown size={13} strokeWidth={2.5} />
                       )}
-                    </button>
+                    </div>
                   </div>
                 </div>
 

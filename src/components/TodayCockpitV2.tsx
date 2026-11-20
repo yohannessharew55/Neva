@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Play, Pause, Clock, RotateCcw,
   Palette, Music, Swords, ChessKnight, Building2, TrendingUp,
-  Shield, ChevronRight, ChevronDown, ChevronUp, Dumbbell, BookOpen, Settings, Layers, Sparkles
+  Shield, ChevronRight, ChevronDown, ChevronUp, Dumbbell, BookOpen, Settings, Layers, Sparkles,
+  ExternalLink, ChevronLeft, Zap
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -40,6 +41,9 @@ export const TodayCockpitV2: React.FC = () => {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [isPillarsExpanded, setIsPillarsExpanded] = useState(false);
+  const [selectedFocusCategory, setSelectedFocusCategory] = useState<string | null>(null);
+  const [focusTaskIndex, setFocusTaskIndex] = useState(0);
+  const [customDuration, setCustomDuration] = useState<number | null>(null);
 
   const getDomainTypesForCat = (catId: string): DomainType[] => {
     switch (catId) {
@@ -151,20 +155,132 @@ export const TodayCockpitV2: React.FC = () => {
   // Dynamically points to the first uncompleted task of the top-most category in the sticky note!
   // If Music & Guitar is dragged above Chess, it picks Music & Guitar (e.g. warmup exercise). If Chess is dragged to top, it picks Chess!
   let computedNextTask: ScheduleTask | undefined;
-  for (const catKey of orderedCategoryKeys) {
-    const catTasks = dayTasks.filter((t) => getCategoryKeyForTask(t) === catKey && !t.completed);
-    if (catTasks.length > 0) {
-      catTasks.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
-      computedNextTask = catTasks[0];
-      break;
+  // Active categories that have tasks scheduled for today
+  const categoriesWithTodayTasks = orderedCategoryKeys.filter((catKey) => {
+    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey);
+  });
+
+  // Default to top-most category with pending tasks, or fallback
+  const defaultCategoryKey = orderedCategoryKeys.find((catKey) => {
+    return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey && !t.completed);
+  }) || categoriesWithTodayTasks[0] || 'chess';
+
+  const activeFocusCategoryKey = selectedFocusCategory && categoriesWithTodayTasks.includes(selectedFocusCategory)
+    ? selectedFocusCategory
+    : defaultCategoryKey;
+
+  // Tasks in this active focus category for today
+  const tasksInActiveCategory = dayTasks.filter((t) => getCategoryKeyForTask(t) === activeFocusCategoryKey);
+  const pendingTasksInActiveCategory = tasksInActiveCategory.filter((t) => !t.completed);
+  const candidateTasks = pendingTasksInActiveCategory.length > 0 ? pendingTasksInActiveCategory : tasksInActiveCategory;
+  candidateTasks.sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+
+  const safeTaskIndex = Math.min(focusTaskIndex, Math.max(0, candidateTasks.length - 1));
+  const activeFocusTask = candidateTasks[safeTaskIndex] || dayTasks.find((t) => !t.completed) || dayTasks[0];
+
+  const getCategoryTheme = (catKey: string) => {
+    switch (catKey) {
+      case 'chess':
+        return {
+          title: categoryPlans['chess']?.title || 'Chess',
+          color: '#8b5cf6',
+          gradientBg: 'from-violet-500/15 via-purple-500/5 to-transparent dark:from-violet-950/40 dark:via-purple-900/20 dark:to-[#121927]',
+          borderColor: 'border-violet-500/30 dark:border-violet-500/30',
+          badgeBg: 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30',
+          buttonGrad: 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-md shadow-violet-500/25',
+          accentText: 'text-violet-600 dark:text-violet-400',
+          Icon: ChessKnight,
+          tagline: language === 'am' ? 'ስልታዊ ጥልቀትና የቦርድ እይታ' : 'Tactical Calculation & Board Vision',
+        };
+      case 'music':
+        return {
+          title: categoryPlans['music']?.title || 'Music & Guitar',
+          color: '#ec4899',
+          gradientBg: 'from-pink-500/15 via-rose-500/5 to-transparent dark:from-pink-950/40 dark:via-rose-900/20 dark:to-[#121927]',
+          borderColor: 'border-pink-500/30 dark:border-pink-500/30',
+          badgeBg: 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30',
+          buttonGrad: 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-md shadow-pink-500/25',
+          accentText: 'text-pink-600 dark:text-pink-400',
+          Icon: Music,
+          tagline: language === 'am' ? 'ሪትምና የጣቶች ቅልጥፍና' : 'Acoustic Touch & Repertoire Flow',
+        };
+      case 'exercise':
+        return {
+          title: categoryPlans['exercise']?.title || 'Physical Fitness',
+          color: '#ef4444',
+          gradientBg: 'from-red-500/15 via-orange-500/5 to-transparent dark:from-red-950/40 dark:via-orange-900/20 dark:to-[#121927]',
+          borderColor: 'border-red-500/30 dark:border-red-500/30',
+          badgeBg: 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
+          buttonGrad: 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-md shadow-red-500/25',
+          accentText: 'text-red-600 dark:text-red-400',
+          Icon: Dumbbell,
+          tagline: language === 'am' ? 'የጥንካሬና ጽናት ስልጠና' : 'Peak Conditioning & Muscle Drive',
+        };
+      case 'art':
+        return {
+          title: categoryPlans['art']?.title || 'Art & Painting',
+          color: '#e11d48',
+          gradientBg: 'from-rose-500/15 via-amber-500/5 to-transparent dark:from-rose-950/40 dark:via-amber-900/20 dark:to-[#121927]',
+          borderColor: 'border-rose-500/30 dark:border-rose-500/30',
+          badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+          buttonGrad: 'bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white shadow-md shadow-rose-500/25',
+          accentText: 'text-rose-600 dark:text-rose-400',
+          Icon: Palette,
+          tagline: language === 'am' ? 'የቀለም ቅንብርና ፈጠራ' : 'Creative Vision & Layered Brushwork',
+        };
+      case 'architecture':
+        return {
+          title: categoryPlans['architecture']?.title || 'Architecture & Design',
+          color: '#0082ff',
+          gradientBg: 'from-blue-500/15 via-cyan-500/5 to-transparent dark:from-blue-950/40 dark:via-cyan-900/20 dark:to-[#121927]',
+          borderColor: 'border-blue-500/30 dark:border-blue-500/30',
+          badgeBg: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+          buttonGrad: 'bg-gradient-to-r from-[#0082ff] to-cyan-600 hover:from-[#0070df] hover:to-cyan-500 text-white shadow-md shadow-blue-500/25',
+          accentText: 'text-[#0082ff] dark:text-blue-400',
+          Icon: Building2,
+          tagline: language === 'am' ? 'መዋቅራዊ ንድፍና ትክክለኛነት' : 'Blueprint Drafting & Structural Scale',
+        };
+      case 'trading':
+        return {
+          title: categoryPlans['trading']?.title || 'Trading & Markets',
+          color: '#10b981',
+          gradientBg: 'from-emerald-500/15 via-teal-500/5 to-transparent dark:from-emerald-950/40 dark:via-teal-900/20 dark:to-[#121927]',
+          borderColor: 'border-emerald-500/30 dark:border-emerald-500/30',
+          badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+          buttonGrad: 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-500/25',
+          accentText: 'text-emerald-600 dark:text-emerald-400',
+          Icon: TrendingUp,
+          tagline: language === 'am' ? 'የገበያ ስነ-ስርዓትና ጥንቃቄ' : 'Market Discipline & Risk Execution',
+        };
+      case 'devotion':
+        return {
+          title: categoryPlans['devotion']?.title || 'Devotion & Prayer',
+          color: '#a855f7',
+          gradientBg: 'from-purple-500/15 via-amber-500/5 to-transparent dark:from-purple-950/40 dark:via-amber-900/20 dark:to-[#121927]',
+          borderColor: 'border-purple-500/30 dark:border-purple-500/30',
+          badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+          buttonGrad: 'bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-500 hover:to-amber-500 text-white shadow-md shadow-purple-500/25',
+          accentText: 'text-purple-600 dark:text-purple-400',
+          Icon: BookOpen,
+          tagline: language === 'am' ? 'መንፈሳዊ ጽሞናና ጸሎት' : 'Spiritual Grounding & Sacred Stillness',
+        };
+      default:
+        return {
+          title: categoryPlans[catKey]?.title || 'Rest & Buffer',
+          color: '#64748b',
+          gradientBg: 'from-slate-500/15 via-zinc-500/5 to-transparent dark:from-slate-900/40 dark:via-slate-800/20 dark:to-[#121927]',
+          borderColor: 'border-slate-300/30 dark:border-slate-700/30',
+          badgeBg: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
+          buttonGrad: 'bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-600 hover:to-slate-800 text-white shadow-md shadow-slate-500/25',
+          accentText: 'text-slate-600 dark:text-slate-400',
+          Icon: Shield,
+          tagline: language === 'am' ? 'ዕረፍትና ማገገም' : 'Rest, Recharging & Reflection',
+        };
     }
-  }
+  };
 
-  if (!computedNextTask) {
-    computedNextTask = dayTasks.find((t) => !t.completed);
-  }
-
-  const nextTask = activeTask || computedNextTask;
+  const currentTheme = getCategoryTheme(activeFocusCategoryKey);
+  const WatermarkIcon = currentTheme.Icon;
 
   return (
     <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-3.5 sm:py-6 space-y-4 sm:space-y-6 max-w-full overflow-x-clip">
@@ -214,28 +330,162 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       )}
 
-      {/* Up Next Task for Today (when no active timer is running and tasks exist) */}
-      {!activeTask && nextTask && (
-        <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs transition-all">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block font-mono">
-                {language === 'am' ? 'ቀጣይ የትኩረት ክፍለ-ጊዜ' : 'Up Next Today'}
-              </span>
-              <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-0.5">
-                {nextTask.title}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                <Clock size={11} /> {nextTask.startTime} • {nextTask.durationMin} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
-              </p>
+      {/* Dynamic Creative Focus Block: Changes dynamically based on Main Categories */}
+      {!activeTask && activeFocusTask && (
+        <div className={`rounded-3xl border ${currentTheme.borderColor} bg-gradient-to-br ${currentTheme.gradientBg} bg-white dark:bg-[#121927] p-4 sm:p-5 shadow-xs relative overflow-hidden transition-all duration-300`}>
+          {/* Subtle Ambient Watermark Graphic in Background */}
+          <div className="absolute -right-3 -bottom-4 opacity-[0.06] dark:opacity-[0.09] pointer-events-none select-none text-current">
+            <WatermarkIcon size={130} strokeWidth={1.5} />
+          </div>
+
+          <div className="relative z-10 space-y-3.5">
+            {/* 1. Category Switcher Chips (Changes based on main categories!) */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
+                {categoriesWithTodayTasks.map((catKey) => {
+                  const catTheme = getCategoryTheme(catKey);
+                  const CatIcon = catTheme.Icon;
+                  const isSelected = catKey === activeFocusCategoryKey;
+                  return (
+                    <button
+                      key={catKey}
+                      type="button"
+                      onClick={() => {
+                        setSelectedFocusCategory(catKey);
+                        setFocusTaskIndex(0);
+                        setCustomDuration(null);
+                        try { soundEngine.playPencil(); } catch {}
+                      }}
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                        isSelected
+                          ? `${catTheme.badgeBg} shadow-xs scale-102 ring-1 ${catTheme.borderColor}`
+                          : 'bg-black/5 dark:bg-white/5 opacity-60 hover:opacity-100 hover:bg-black/10'
+                      }`}
+                    >
+                      <CatIcon size={12} strokeWidth={2.5} />
+                      <span>{catTheme.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Direct Link to Category Master Page */}
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryId(activeFocusCategoryKey)}
+                className="text-[10px] font-mono font-bold opacity-60 hover:opacity-100 hover:text-[#0082ff] flex items-center gap-1 transition cursor-pointer shrink-0 ml-auto"
+                title={language === 'am' ? `${currentTheme.title} ገጽ ክፈት` : `Open ${currentTheme.title} Stream`}
+              >
+                <span>{language === 'am' ? 'ወደ ዘርፍ' : 'Stream'}</span>
+                <ExternalLink size={10} />
+              </button>
             </div>
 
-            <button
-              onClick={() => startTask(nextTask)}
-              className="px-4 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-2xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer self-start sm:self-auto active:scale-95"
-            >
-              <Play size={13} fill="currentColor" /> {language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}
-            </button>
+            {/* 2. Main Focus Task Title & Information */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {language === 'am' ? 'ቀጣይ የትኩረት ብሎክ' : 'Up Next Today'}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className={`text-[10px] font-bold ${currentTheme.accentText}`}>
+                    {currentTheme.tagline}
+                  </span>
+                </div>
+
+                <h2 className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight truncate">
+                  {activeFocusTask.title}
+                </h2>
+
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                  <span className="flex items-center gap-1 font-mono font-semibold">
+                    <Clock size={11} className={currentTheme.accentText} />
+                    {activeFocusTask.startTime || 'Flexible'}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {(customDuration || activeFocusTask.durationMin)} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
+                  </span>
+                  
+                  {/* Task Cycler if multiple tasks in this category */}
+                  {candidateTasks.length > 1 && (
+                    <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 rounded-lg px-1.5 py-0.5 ml-1 text-[10px] font-mono font-bold">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFocusTaskIndex((prev) => (prev > 0 ? prev - 1 : candidateTasks.length - 1));
+                          setCustomDuration(null);
+                        }}
+                        className="opacity-60 hover:opacity-100 cursor-pointer p-0.5"
+                        title="Previous task"
+                      >
+                        <ChevronLeft size={11} />
+                      </button>
+                      <span>{safeTaskIndex + 1}/{candidateTasks.length}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFocusTaskIndex((prev) => (prev < candidateTasks.length - 1 ? prev + 1 : 0));
+                          setCustomDuration(null);
+                        }}
+                        className="opacity-60 hover:opacity-100 cursor-pointer p-0.5"
+                        title="Next task"
+                      >
+                        <ChevronRight size={11} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Action Button: Glowing with Category Colors */}
+              <button
+                type="button"
+                onClick={() => {
+                  try { soundEngine.playPencil(); } catch {}
+                  startTask({
+                    ...activeFocusTask,
+                    durationMin: customDuration || activeFocusTask.durationMin || 30
+                  });
+                }}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer self-start sm:self-auto active:scale-95 shadow-md ${currentTheme.buttonGrad}`}
+              >
+                <Play size={13} fill="currentColor" />
+                <span>{language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}</span>
+              </button>
+            </div>
+
+            {/* 4. Interactive Duration Quick-Tuning Presets */}
+            <div className="pt-2 border-t border-black/5 dark:border-white/5 flex items-center justify-between gap-2 flex-wrap text-[10px] font-mono">
+              <span className="text-slate-400 font-semibold">
+                {language === 'am' ? 'የትኩረት ጊዜ መምረጫ:' : 'Session preset:'}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { min: 25, label: '25m' },
+                  { min: 45, label: '45m' },
+                  { min: 90, label: '90m' },
+                  { min: activeFocusTask.durationMin, label: `${activeFocusTask.durationMin}m (Plan)` }
+                ].filter((p, idx, arr) => arr.findIndex(x => x.min === p.min) === idx).map((preset) => {
+                  const isCurrent = (customDuration === preset.min) || (!customDuration && activeFocusTask.durationMin === preset.min);
+                  return (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setCustomDuration(preset.min)}
+                      className={`px-2 py-0.5 rounded-lg font-bold transition cursor-pointer ${
+                        isCurrent 
+                          ? `${currentTheme.badgeBg} font-extrabold shadow-2xs` 
+                          : 'bg-black/5 dark:bg-white/5 opacity-65 hover:opacity-100'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
