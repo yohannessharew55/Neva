@@ -1268,15 +1268,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     setDraggedSubjectId(null);
                     setDragOverSubjectId(null);
                   }}
-                  onClick={() => setSelectedCategoryId(group.id)}
-                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all cursor-pointer ${
+                  className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-between border transition-all ${
                     draggedSubjectId === group.id
                       ? 'opacity-40 scale-[0.98] border-dashed border-[#0082ff] bg-blue-50/20'
                       : dragOverSubjectId === group.id
                       ? 'border-2 border-[#0082ff] bg-blue-50/60 scale-[1.01]'
                       : group.isAllDone 
                       ? 'bg-black/10 border-black/10 opacity-75' 
-                      : 'bg-black/5 border-black/10 hover:border-black/25 hover:bg-black/[0.08]'
+                      : 'bg-black/5 border-black/10'
                   }`}
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
@@ -1285,7 +1284,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     <div
                       className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
                       title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
-                      onClick={(e) => e.stopPropagation()}
                       onTouchStart={(e) => handleTouchStart(e, group.id)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
@@ -1296,10 +1294,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSubject(group.tasks, group.isAllDone);
-                      }}
+                      onClick={() => handleToggleSubject(group.tasks, group.isAllDone)}
                       className={`w-4.5 h-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                         group.isAllDone
                           ? `${theme.checkBgDone} border-transparent shadow-xs scale-105`
@@ -1310,63 +1305,40 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       {group.isAllDone && <Check size={12} strokeWidth={3.5} />}
                     </button>
 
-                    {/* Subject Icon & Title - Touching/clicking directs to main stream's page */}
+                    {/* Subject Icon - Display only, non-clickable */}
                     <div 
-                      onClick={() => setSelectedCategoryId(group.id)}
-                      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 select-none min-w-0 flex-1 overflow-hidden group/streamhead"
-                      title={language === 'am' ? `${group.translatedTitle} ገጽ ክፈት` : `Open ${group.translatedTitle} stream`}
+                      className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs select-none"
+                      style={{ backgroundColor: `${group.color}25`, color: group.color }}
                     >
-                      <div 
-                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-2xs group-hover/streamhead:scale-105 transition-transform"
-                        style={{ backgroundColor: `${group.color}25`, color: group.color }}
-                      >
-                        <SubjectIcon size={12} />
-                      </div>
-                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate group-hover/streamhead:underline group-hover/streamhead:text-[#0082ff] transition-colors ${
-                        group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
-                      }`}>
-                        {group.translatedTitle}
-                      </span>
+                      <SubjectIcon size={12} />
                     </div>
 
-                    {/* Quick Link to open Category Detail View */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCategoryId(group.id);
-                      }}
-                      className="p-1 rounded opacity-30 hover:opacity-100 hover:text-[#0082ff] transition cursor-pointer shrink-0"
-                      title={language === 'am' ? 'ሙሉ እቅድ ክፈት' : 'Open category detail view'}
+                    {/* Subject Title Text ONLY directs to main stream's page on click */}
+                    <span 
+                      onClick={() => setSelectedCategoryId(group.id)}
+                      className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate cursor-pointer hover:underline hover:text-[#0082ff] transition-colors select-none ${
+                        group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
+                      }`}
+                      title={language === 'am' ? `${group.translatedTitle} ገጽ ክፈት` : `Open ${group.translatedTitle} stream`}
                     >
-                      <ExternalLink size={10} />
-                    </button>
+                      {group.translatedTitle}
+                    </span>
                   </div>
 
                   {/* Right: Progress Badge & Expand Little Sign */}
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
-                    <span 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSubjectExpand(group.id);
-                      }}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 cursor-pointer ${
-                        group.isAllDone 
-                          ? 'bg-emerald-500/25 text-emerald-800' 
-                          : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
-                      }`}
-                      title={isExpanded ? 'Collapse' : 'Expand'}
-                    >
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 ${
+                      group.isAllDone 
+                        ? 'bg-emerald-500/25 text-emerald-800' 
+                        : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
+                    }`}>
                       {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
                     </span>
 
                     {/* Expand Little Sign on the Main Stream */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSubjectExpand(group.id);
-                      }}
+                      onClick={() => toggleSubjectExpand(group.id)}
                       className={`p-1 rounded-md transition cursor-pointer flex items-center justify-center ${
                         isExpanded 
                           ? 'bg-black/10 opacity-100 scale-105' 
