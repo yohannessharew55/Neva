@@ -229,7 +229,7 @@
       "domain": "CHESS",
       "startTime": "09:00",
       "durationMin": 180,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "id": "task-1795208974194-2-sykv",
       "date": "2026-11-21",
@@ -240,7 +240,7 @@
       "title": "Puzzle",
       "startTime": "01:00 AM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
