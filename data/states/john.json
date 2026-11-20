@@ -340,6 +340,19 @@
       "checklist": [],
       "notes": "Weekly Routine",
       "id": "task-1795070834904"
+    },
+    {
+      "title": "Drawing",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-20",
+      "checklist": [],
+      "notes": "",
+      "id": "task-1795215932771"
     }
   ],
   "workouts": [
