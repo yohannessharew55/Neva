@@ -288,6 +288,84 @@
           "done": false
         }
       ]
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-15",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-16",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-17",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-18",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-19",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
+    },
+    {
+      "title": "war",
+      "domain": "GUITAR",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#ec4899",
+      "badge": "Music",
+      "completed": false,
+      "date": "2026-11-20",
+      "checklist": [],
+      "notes": "Weekly Routine",
+      "id": "task-1795216042872"
     }
   ],
   "workouts": [
