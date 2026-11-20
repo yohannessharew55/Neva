@@ -4,7 +4,7 @@ import {
   Dumbbell, Swords, ChessKnight, Palette as PaletteIcon, Music, Building2, TrendingUp, 
   BookOpen, Shield, Sparkles, X, Edit2, Edit3, MoreVertical, Plus, Calendar, Compass, Star,
   Target, Award, Flag, ArrowRight, RotateCcw, Minus, List, LayoutGrid,
-  Sun, CalendarDays, Moon, ChevronUp, ChevronDown
+  Sun, CalendarDays, Moon, ChevronUp, ChevronDown, GripVertical
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -301,7 +301,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     language,
     getCategoryTitleTranslated,
     setSelectedCategoryId,
-    theme: appTheme
+    theme: appTheme,
+    reorderTasks
   } = useLivotion();
 
   // Active Horizon: Daily, Weekly, Monthly, Goals
@@ -346,6 +347,42 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
 
   // Week offset for Weekly view
   const [weekOffset, setWeekOffset] = useState<number>(0);
+
+  // Drag & drop state for scheduled routine blocks in the Plan system
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
+  const touchActivePlanTaskId = useRef<string | null>(null);
+
+  const handlePlanTaskTouchStart = (e: React.TouchEvent, taskId: string) => {
+    e.stopPropagation();
+    touchActivePlanTaskId.current = taskId;
+    setDraggedTaskId(taskId);
+  };
+
+  const handlePlanTaskTouchMove = (e: React.TouchEvent) => {
+    if (!touchActivePlanTaskId.current) return;
+    const touch = e.touches[0];
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    const card = targetElement?.closest('[data-plan-task-id]');
+    if (card) {
+      const targetId = card.getAttribute('data-plan-task-id');
+      if (targetId && targetId !== touchActivePlanTaskId.current) {
+        setDragOverTaskId(targetId);
+      }
+    }
+  };
+
+  const handlePlanTaskTouchEnd = () => {
+    if (touchActivePlanTaskId.current && dragOverTaskId && touchActivePlanTaskId.current !== dragOverTaskId) {
+      reorderTasks(touchActivePlanTaskId.current, dragOverTaskId);
+      try {
+        soundEngine.playPencil();
+      } catch {}
+    }
+    touchActivePlanTaskId.current = null;
+    setDraggedTaskId(null);
+    setDragOverTaskId(null);
+  };
 
   // Month offset for Monthly view
   const [monthOffset, setMonthOffset] = useState<number>(0);
@@ -1411,10 +1448,63 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     return (
                       <div
                         key={task.id}
-                        className={`p-3.5 sm:p-4 rounded-2xl ${currentTheme.cardBg} border border-black/5 dark:border-white/5 shadow-xs transition-all hover:shadow-md relative overflow-hidden`}
+                        data-plan-task-id={task.id}
+                        draggable={!task.completed}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          setDraggedTaskId(task.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          e.dataTransfer.setData('text/plain', task.id);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.dataTransfer.dropEffect = 'move';
+                          if (dragOverTaskId !== task.id) {
+                            setDragOverTaskId(task.id);
+                          }
+                        }}
+                        onDragLeave={(e) => {
+                          e.stopPropagation();
+                          if (dragOverTaskId === task.id) setDragOverTaskId(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                          if (fromId && fromId !== task.id) {
+                            reorderTasks(fromId, task.id);
+                            try { soundEngine.playPencil(); } catch {}
+                          }
+                          setDraggedTaskId(null);
+                          setDragOverTaskId(null);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTaskId(null);
+                          setDragOverTaskId(null);
+                        }}
+                        className={`p-3.5 sm:p-4 rounded-2xl ${currentTheme.cardBg} border shadow-xs transition-all hover:shadow-md relative overflow-hidden ${
+                          draggedTaskId === task.id
+                            ? 'opacity-40 scale-98 border-dashed border-[#0082ff] bg-blue-50/20'
+                            : dragOverTaskId === task.id
+                            ? 'border-2 border-[#0082ff] bg-blue-50/20 scale-[1.01]'
+                            : 'border-black/5 dark:border-white/5'
+                        }`}
                         style={{ borderLeft: `5px solid ${task.color || '#0082ff'}` }}
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2.5">
+                          {/* Plan Task Drag Handle */}
+                          <div 
+                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 mt-0.5 select-none transition-colors"
+                            title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder in plan'}
+                            onClick={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => handlePlanTaskTouchStart(e, task.id)}
+                            onTouchMove={handlePlanTaskTouchMove}
+                            onTouchEnd={handlePlanTaskTouchEnd}
+                          >
+                            <GripVertical size={14} />
+                          </div>
+
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1.5">
                               <div 

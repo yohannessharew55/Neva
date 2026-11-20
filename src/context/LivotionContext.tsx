@@ -589,18 +589,90 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCategoryOrder(newOrder);
   };
 
+  const parseTimeToMinutes = (timeStr?: string): number => {
+    if (!timeStr) return 0;
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (!match) return 0;
+    let [_, h, m, meridiem] = match;
+    let hours = parseInt(h, 10);
+    const minutes = parseInt(m, 10);
+    if (meridiem) {
+      if (meridiem.toUpperCase() === 'PM' && hours < 12) hours += 12;
+      if (meridiem.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    }
+    return hours * 60 + minutes;
+  };
+
   const reorderTasks = (fromTaskId: string, toTaskId: string) => {
     if (fromTaskId === toTaskId) return;
+
     setTasks((prev) => {
-      const fromIdx = prev.findIndex((t) => t.id === fromTaskId);
-      const toIdx = prev.findIndex((t) => t.id === toTaskId);
+      let currentTasks = [...prev];
+      let fromIdx = currentTasks.findIndex((t) => t.id === fromTaskId);
+      let toIdx = currentTasks.findIndex((t) => t.id === toTaskId);
+
+      // If either task is not found directly, check today's generated schedule and materialize it
+      if (fromIdx === -1 || toIdx === -1) {
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const daySched = getDaySchedule(today);
+        const dayTaskList = daySched.tasks;
+
+        const fromTaskInDay = dayTaskList.find(t => t.id === fromTaskId || t.title === fromTaskId);
+        const toTaskInDay = dayTaskList.find(t => t.id === toTaskId || t.title === toTaskId);
+
+        if (fromTaskInDay && toTaskInDay) {
+          const nonToday = currentTasks.filter(t => t.date !== todayStr);
+          const clonedDayTasks: ScheduleTask[] = dayTaskList.map(t => ({
+            ...t,
+            date: todayStr
+          }));
+          currentTasks = [...nonToday, ...clonedDayTasks];
+          fromIdx = currentTasks.findIndex((t) => t.id === fromTaskId || t.title === fromTaskId);
+          toIdx = currentTasks.findIndex((t) => t.id === toTaskId || t.title === toTaskId);
+        }
+      }
+
       if (fromIdx === -1 || toIdx === -1) return prev;
-      const next = [...prev];
+
+      const fromTask = currentTasks[fromIdx];
+      const toTask = currentTasks[toIdx];
+
+      // Extract start times to ensure chronological alignment across the plan system
+      const time1 = fromTask.startTime;
+      const time2 = toTask.startTime;
+      const min1 = parseTimeToMinutes(time1);
+      const min2 = parseTimeToMinutes(time2);
+      const hasTimes = min1 > 0 && min2 > 0;
+      const earlierTime = min1 <= min2 ? time1 : time2;
+      const laterTime = min1 <= min2 ? time2 : time1;
+
+      // Reorder items in array
+      const next = [...currentTasks];
       const [moved] = next.splice(fromIdx, 1);
       next.splice(toIdx, 0, moved);
+
+      // Whichever task is placed higher in the sequence gets the earlier start time in the plan system
+      if (hasTimes) {
+        const newIdxFrom = next.findIndex(t => t.id === fromTaskId || (fromTask && t.title === fromTask.title));
+        const newIdxTo = next.findIndex(t => t.id === toTaskId || (toTask && t.title === toTask.title));
+        if (newIdxFrom !== -1 && newIdxTo !== -1) {
+          if (newIdxFrom < newIdxTo) {
+            next[newIdxFrom] = { ...next[newIdxFrom], startTime: earlierTime };
+            next[newIdxTo] = { ...next[newIdxTo], startTime: laterTime };
+          } else {
+            next[newIdxTo] = { ...next[newIdxTo], startTime: earlierTime };
+            next[newIdxFrom] = { ...next[newIdxFrom], startTime: laterTime };
+          }
+        }
+      }
+
       try {
         localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify(next));
+        localStorage.setItem('livotion_tasks_v1', JSON.stringify(next));
+        localStorage.setItem('neva_os_state_tasks', JSON.stringify(next));
       } catch {}
+
       return next;
     });
   };

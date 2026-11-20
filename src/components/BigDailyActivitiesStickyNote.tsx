@@ -563,6 +563,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
 
   const touchActiveId = useRef<string | null>(null);
+  const touchActiveTaskId = useRef<string | null>(null);
 
   // Resolve Day Schedule (Unique vs Default Routine)
   const daySchedule = getDaySchedule(today);
@@ -689,8 +690,13 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Group tasks by Main Stream Subjects for this active day
-  const sortedTasks = [...dayTasks].sort((a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime));
+  // Group tasks by Main Stream Subjects for this active day: aligns with drag order & plan system
+  const sortedTasks = [...dayTasks].sort((a, b) => {
+    const timeA = parseTimeToMinutes(a.startTime);
+    const timeB = parseTimeToMinutes(b.startTime);
+    if (timeA !== timeB && timeA > 0 && timeB > 0) return timeA - timeB;
+    return dayTasks.indexOf(a) - dayTasks.indexOf(b);
+  });
 
   const baseCategoryKeys = Object.keys(categoryPlans);
   const allCategoryKeys = [...baseCategoryKeys].sort((a, b) => {
@@ -748,6 +754,37 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     touchActiveId.current = null;
     setDraggedSubjectId(null);
     setDragOverSubjectId(null);
+  };
+
+  const handleTaskTouchStart = (e: React.TouchEvent, taskId: string) => {
+    e.stopPropagation();
+    touchActiveTaskId.current = taskId;
+    setDraggedTaskId(taskId);
+  };
+
+  const handleTaskTouchMove = (e: React.TouchEvent) => {
+    if (!touchActiveTaskId.current) return;
+    const touch = e.touches[0];
+    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+    const card = targetElement?.closest('[data-task-id]');
+    if (card) {
+      const targetId = card.getAttribute('data-task-id');
+      if (targetId && targetId !== touchActiveTaskId.current) {
+        setDragOverTaskId(targetId);
+      }
+    }
+  };
+
+  const handleTaskTouchEnd = () => {
+    if (touchActiveTaskId.current && dragOverTaskId && touchActiveTaskId.current !== dragOverTaskId) {
+      reorderTasks(touchActiveTaskId.current, dragOverTaskId);
+      try {
+        soundEngine.playPencil();
+      } catch {}
+    }
+    touchActiveTaskId.current = null;
+    setDraggedTaskId(null);
+    setDragOverTaskId(null);
   };
 
   // Calculate grouped subjects with their tasks
@@ -1422,9 +1459,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               }}
                               className={`group/task py-1.5 px-2 rounded-xl transition-all duration-150 ${
                                 draggedTaskId === task.id
-                                  ? 'opacity-40 scale-98 border border-dashed border-[#0082ff]'
+                                  ? 'opacity-40 scale-98 border border-dashed border-[#0082ff] bg-blue-50/20'
                                   : dragOverTaskId === task.id
-                                  ? 'bg-blue-500/15 border border-[#0082ff]'
+                                  ? 'bg-blue-500/20 border-2 border-[#0082ff] scale-[1.01] shadow-xs'
                                   : task.completed 
                                   ? 'opacity-55 hover:bg-black/5' 
                                   : isActive 
@@ -1433,14 +1470,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2 text-xs">
-                                {/* Checkbox, Time & Task Title (Check option only) */}
+                                {/* Drag Handle, Checkbox, Time & Task Title */}
                                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  {/* Task Drag Handle */}
+                                  {/* Task Drag Handle (Desktop & Mobile Touch) */}
                                   <div 
-                                    className="opacity-0 group-hover/task:opacity-60 hover:opacity-100 cursor-grab active:cursor-grabbing shrink-0 -ml-1"
+                                    className="text-black/35 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 select-none transition-colors"
                                     title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder block'}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onTouchStart={(e) => handleTaskTouchStart(e, task.id)}
+                                    onTouchMove={handleTaskTouchMove}
+                                    onTouchEnd={handleTaskTouchEnd}
                                   >
-                                    <GripVertical size={11} />
+                                    <GripVertical size={12} />
                                   </div>
 
                                   <button
