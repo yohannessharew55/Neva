@@ -1158,16 +1158,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </div>
             </div>
           ) : (
-            <div className={`flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono font-semibold ${theme.textSecondary}`}>
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <div className={`flex items-center justify-between gap-2 text-[11px] font-mono font-semibold ${theme.textSecondary}`}>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900">{formattedDayDuration}</strong></span>
                 <span className="opacity-40">•</span>
-                <span>{language === 'am' ? 'የተጠናቀቀ:' : 'done:'} <strong className="font-extrabold text-emerald-700">{completedCount} ({progressPercent}%)</strong></span>
-                <span className="opacity-40">•</span>
-                <span>{language === 'am' ? 'የቀረ:' : 'remaining:'} <strong className={`font-extrabold ${theme.textPrimary}`}>{totalCount - completedCount}</strong></span>
+                <span className="text-emerald-700 font-extrabold">{progressPercent}%</span>
               </div>
 
-              <div className="flex items-center gap-1 text-[10px]">
+              <div className="flex items-center gap-1 text-[10px] shrink-0">
                 <button
                   type="button"
                   onClick={() => setFilterMode('all')}
