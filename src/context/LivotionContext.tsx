@@ -442,13 +442,21 @@ export const DEFAULT_IOS_NOTES: IosNoteItem[] = [
 
 export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_user`);
-    return saved ? JSON.parse(saved) : initialUser;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_user`);
+      return saved ? JSON.parse(saved) : initialUser;
+    } catch {
+      return initialUser;
+    }
   });
 
   const [domains, setDomains] = useState<SkillDomain[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_domains`);
-    return saved ? JSON.parse(saved) : initialDomains;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_domains`);
+      return saved ? JSON.parse(saved) : initialDomains;
+    } catch {
+      return initialDomains;
+    }
   });
 
   const [tasks, setTasks] = useState<ScheduleTask[]>(() => {
@@ -472,28 +480,48 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [workouts, setWorkouts] = useState<WorkoutProtocol[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_workouts`);
-    return saved ? JSON.parse(saved) : initialWorkouts;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_workouts`);
+      return saved ? JSON.parse(saved) : initialWorkouts;
+    } catch {
+      return initialWorkouts;
+    }
   });
 
   const [meals, setMeals] = useState<MealPlan[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_meals`);
-    return saved ? JSON.parse(saved) : initialMeals;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_meals`);
+      return saved ? JSON.parse(saved) : initialMeals;
+    } catch {
+      return initialMeals;
+    }
   });
 
   const [goals, setGoals] = useState<StrategicGoal[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_goals`);
-    return saved ? JSON.parse(saved) : initialGoals;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_goals`);
+      return saved ? JSON.parse(saved) : initialGoals;
+    } catch {
+      return initialGoals;
+    }
   });
 
   const [sessions, setSessions] = useState<PracticeSession[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_sessions`);
-    return saved ? JSON.parse(saved) : initialSessions;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_sessions`);
+      return saved ? JSON.parse(saved) : initialSessions;
+    } catch {
+      return initialSessions;
+    }
   });
 
   const [reviews, setReviews] = useState<FeedbackReview[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_reviews`);
-    return saved ? JSON.parse(saved) : initialReviews;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_reviews`);
+      return saved ? JSON.parse(saved) : initialReviews;
+    } catch {
+      return initialReviews;
+    }
   });
 
   const [categoryPlans, setCategoryPlans] = useState<Record<string, CategoryPlan>>(() => {

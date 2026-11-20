@@ -7,9 +7,17 @@ interface SplashMotionIntroProps {
 
 export const SplashMotionIntro: React.FC<SplashMotionIntroProps> = ({
   onComplete,
-  minDurationMs = 5900
+  minDurationMs = 900
 }) => {
-  const [isMounted, setIsMounted] = useState<boolean>(true);
+  const [isMounted, setIsMounted] = useState<boolean>(() => {
+    try {
+      if (sessionStorage.getItem('neva_splash_session_seen')) return false;
+      sessionStorage.setItem('neva_splash_session_seen', '1');
+      return true;
+    } catch {
+      return false;
+    }
+  });
   const [isExiting, setIsExiting] = useState<boolean>(false);
   const [animationStep, setAnimationStep] = useState<number>(0);
 

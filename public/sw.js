@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neva-cache-v1.0.9-20261117-1400';
+const CACHE_NAME = 'neva-cache-v1.0.10-20261121-0020';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -26,13 +26,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       )
-    ).then(() => self.clients.claim()).then(() => {
-      return self.clients.matchAll({ type: 'window' }).then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'NEW_VERSION_ACTIVATED', cache: CACHE_NAME });
-        });
-      });
-    })
+    ).then(() => self.clients.claim())
   );
 });
 
