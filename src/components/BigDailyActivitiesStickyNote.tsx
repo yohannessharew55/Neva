@@ -4,7 +4,7 @@ import {
   Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Palette, Maximize2, Minimize2,
   Dumbbell, Swords, ChessKnight, Music, Building2, TrendingUp, 
   BookOpen, Shield, CheckCircle2, Sparkles, X, Edit2,
-  ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar, Compass
+  ExternalLink, GripVertical, Settings, Copy, RotateCcw, Save, Calendar, Compass, MoreVertical
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -323,6 +323,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
+  const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({
     devotion: true,
     exercise: true,
@@ -1529,41 +1530,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   </span>
                                 </div>
 
-                                {/* Duration Pill, Hidden on Mobile Play Button, Edit & Delete */}
-                                <div className="flex items-center gap-1.5 shrink-0">
+                                {/* Duration Pill (Visible) & 3-Dots Menu (Hiding actions) */}
+                                <div className="flex items-center gap-1.5 shrink-0 relative">
                                   <span 
                                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
                                     title={`${task.durationMin} minutes`}
                                   >
                                     {formattedDuration}
                                   </span>
-
-                                  {/* Play Button - HIDDEN ON MOBILE (Desktop only) */}
-                                  {!task.completed && (
-                                    <button
-                                      type="button"
-                                      onClick={() => startTask(task)}
-                                      className={`hidden sm:flex px-2 py-0.5 rounded-lg text-[10px] font-bold transition items-center gap-0.5 cursor-pointer shadow-2xs ${
-                                        isActive 
-                                          ? 'bg-rose-500 text-white animate-pulse' 
-                                          : 'bg-[#0082ff] hover:bg-[#0070df] text-white'
-                                      }`}
-                                      title="Start focus timer"
-                                    >
-                                      <Play size={9} fill="currentColor" />
-                                      <span className="hidden md:inline">{isActive ? 'Focusing' : 'Focus'}</span>
-                                    </button>
-                                  )}
-
-                                  {/* Edit Pencil Button for mobile and desktop */}
-                                  <button
-                                    type="button"
-                                    onClick={() => startEditTask(task)}
-                                    className="p-1 rounded text-slate-500 hover:text-[#0082ff] hover:bg-black/5 transition cursor-pointer"
-                                    title={language === 'am' ? 'ቀይር' : 'Edit task'}
-                                  >
-                                    <Edit2 size={11} />
-                                  </button>
 
                                   {hasSubtasks && (
                                     <button
@@ -1581,14 +1555,74 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     </button>
                                   )}
 
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteTask(task)}
-                                    className="p-1 rounded text-rose-500 opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover/task:opacity-100 hover:bg-rose-50 transition cursor-pointer"
-                                    title="Delete Task"
-                                  >
-                                    <Trash2 size={11} />
-                                  </button>
+                                  {/* 3-Dots Menu Trigger */}
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                      }}
+                                      className="p-1 rounded-md text-slate-500 hover:text-slate-800 hover:bg-black/10 transition cursor-pointer flex items-center justify-center"
+                                      title={language === 'am' ? 'ተጨማሪ አማራጮች' : 'More options'}
+                                    >
+                                      <MoreVertical size={13} strokeWidth={2.2} />
+                                    </button>
+
+                                    {openTaskMenuId === task.id && (
+                                      <>
+                                        <div 
+                                          className="fixed inset-0 z-40" 
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenTaskMenuId(null);
+                                          }} 
+                                        />
+                                        <div 
+                                          className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-black/10 dark:border-white/10 p-1 space-y-0.5 select-none"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {!task.completed && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setOpenTaskMenuId(null);
+                                                startTask(task);
+                                              }}
+                                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#0082ff]/10 hover:text-[#0082ff] transition cursor-pointer"
+                                            >
+                                              <Play size={12} fill="currentColor" className="text-[#0082ff]" />
+                                              <span>{isActive ? (language === 'am' ? 'እያተኮረ...' : 'Focusing') : (language === 'am' ? 'አተኩር' : 'Focus')}</span>
+                                            </button>
+                                          )}
+
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setOpenTaskMenuId(null);
+                                              startEditTask(task);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                                          >
+                                            <Edit2 size={12} className="text-slate-500" />
+                                            <span>{language === 'am' ? 'ቀይር' : 'Edit'}</span>
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setOpenTaskMenuId(null);
+                                              handleDeleteTask(task);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                          >
+                                            <Trash2 size={12} className="text-rose-500" />
+                                            <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                          </button>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
 
