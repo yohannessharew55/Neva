@@ -289,9 +289,6 @@ export const TodayCockpitV2: React.FC = () => {
                     {allCategories.length}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium truncate">
-                  {language === 'am' ? 'መንገዶችንና ንቁ ተግባራትን ለመዘርጋት ይጫኑ' : 'Tap to expand roadmaps & active tasks'}
-                </p>
               </div>
             </div>
 

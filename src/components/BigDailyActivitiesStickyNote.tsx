@@ -324,16 +324,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
-  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({
-    devotion: true,
-    exercise: true,
-    chess: true,
-    art: true,
-    music: true,
-    architecture: true,
-    trading: true,
-    buffer: true,
-  });
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
   // True Native Mobile Touch + Desktop Double-Tap Detection for Sticky Paper
   const lastTouchTimeRef = useRef<number>(0);
