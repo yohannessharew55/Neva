@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neva-cache-v1.0.10-20261121-0020';
+const CACHE_NAME = 'neva-cache-v1.0.11-clean';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -68,6 +68,11 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request)
       .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
+          const contentType = networkResponse.headers.get('content-type') || '';
+          // Strictly reject HTML responses for JS/CSS assets (prevents MIME type poisoning!)
+          if (url.pathname.startsWith('/assets/') && contentType.includes('text/html')) {
+            return new Response('Asset not found', { status: 404 });
+          }
           const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }

@@ -39,8 +39,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Kalam:wght@300;400;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Service Worker for 100% Offline App Launch -->
+    <!-- Service Worker Cache Self-Healing & Registration -->
     <script>
+      if ('caches' in window && !sessionStorage.getItem('neva_sw_purged_v11')) {
+        sessionStorage.setItem('neva_sw_purged_v11', '1');
+        caches.keys().then(function(keys) {
+          keys.forEach(function(key) {
+            if (key !== 'neva-cache-v1.0.11-clean') {
+              caches.delete(key);
+            }
+          });
+        });
+      }
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(function() {});

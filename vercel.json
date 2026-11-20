@@ -13,7 +13,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|favicon\\.png|apple-touch-icon\\.png|manifest\\.json|sw\\.js|version\\.json).*)",
       "destination": "/index.html"
     }
   ],
