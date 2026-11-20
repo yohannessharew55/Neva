@@ -373,7 +373,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     },
     "chess": {
       "id": "chess",
@@ -392,7 +393,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "yellow",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "art": {
       "id": "art",
@@ -411,7 +413,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "music": {
       "id": "music",
@@ -430,7 +433,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "rose",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "architecture": {
       "id": "architecture",
@@ -449,7 +453,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "cyan",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "career"
     },
     "trading": {
       "id": "trading",
@@ -468,7 +473,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "career"
     },
     "devotion": {
       "id": "devotion",
@@ -487,7 +493,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "lavender",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     },
     "buffer": {
       "id": "buffer",
@@ -506,7 +513,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     }
   },
   "dailyStickyNotes": [],
