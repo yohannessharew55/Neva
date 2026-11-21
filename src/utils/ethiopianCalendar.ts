@@ -104,11 +104,10 @@ export function gregorianToEthiopian(date: Date): EthiopianDate {
 export function ethiopianToGregorian(year: number, month: number, day: number): Date {
   const jdn =
     1723856 +
-    365 * (year - 1) +
-    Math.floor(year / 4) +
+    1461 * Math.floor(year / 4) +
+    365 * (year % 4) +
     30 * (month - 1) +
-    day -
-    1;
+    (day - 1);
 
   // Convert JDN to Gregorian Date
   const l = jdn + 68569;

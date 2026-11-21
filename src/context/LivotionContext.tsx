@@ -468,12 +468,20 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const parsed: ScheduleTask[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return parsed.filter((t) => 
-            t && 
-            !t.id?.startsWith('def-') && 
-            !t.id?.startsWith('carry-') && 
-            !['Compound Strength & Conditioning', 'Tactical Chess Study & Calculation', 'Guitar Repertoire & Fretboard Mastery', 'Dawn Gratitude & Bible Reading', 'Evening Examen & Prayer', 'Morning Devotion & Scripture Study', 'Evening Reflection & Gratitude Prayer', 'Evening Prayer & Spiritual Rest', 'Sunday Worship & Word Meditation'].includes(t.title)
-          );
+          return parsed
+            .map((t) => {
+              // Self-heal any tasks saved with 2025-11- date due to previous calendar year calculation offset
+              if (t && t.date && t.date.startsWith('2025-11-')) {
+                return { ...t, date: t.date.replace('2025-11-', '2026-11-') };
+              }
+              return t;
+            })
+            .filter((t) => 
+              t && 
+              !t.id?.startsWith('def-') && 
+              !t.id?.startsWith('carry-') && 
+              !['Compound Strength & Conditioning', 'Tactical Chess Study & Calculation', 'Guitar Repertoire & Fretboard Mastery', 'Dawn Gratitude & Bible Reading', 'Evening Examen & Prayer', 'Morning Devotion & Scripture Study', 'Evening Reflection & Gratitude Prayer', 'Evening Prayer & Spiritual Rest', 'Sunday Worship & Word Meditation'].includes(t.title)
+            );
         }
       } catch (e) {
         return initialTasks;
@@ -1892,7 +1900,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getDaySchedule = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon ... 7 = Sun
-    const customTasks = tasks.filter((t) => t.date === dateStr && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
+    const customTasks = tasks.filter((t) => {
+      if (t.id.startsWith('def-') || t.id.startsWith('carry-')) return false;
+      if (t.date === dateStr) return true;
+      if (t.date && dateStr.startsWith('2026-11-') && t.date === dateStr.replace('2026-11-', '2025-11-')) return true;
+      return false;
+    });
 
     if (dayOfWeek === 7) {
       // SUNDAY REST DAY:
@@ -2024,7 +2037,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const materializeDaySchedule = (dateStr: string): ScheduleTask[] => {
-    const existing = tasks.filter((t) => t.date === dateStr && !t.id.startsWith('def-') && !t.id.startsWith('carry-'));
+    const existing = tasks.filter((t) => 
+      (t.date === dateStr || (t.date && dateStr.startsWith('2026-11-') && t.date === dateStr.replace('2026-11-', '2025-11-'))) && 
+      !t.id.startsWith('def-') && 
+      !t.id.startsWith('carry-')
+    );
     if (existing.length > 0) return existing;
 
     const [y, m, d] = dateStr.split('-').map(Number);

@@ -51,6 +51,8 @@ export const CategoryDetailView: React.FC = () => {
   const [stickyQuickTitle, setStickyQuickTitle] = useState('');
   const [stickyQuickTime, setStickyQuickTime] = useState('08:00 AM');
   const [stickyQuickDuration, setStickyQuickDuration] = useState(45);
+  const [stickyQuickIsCustom, setStickyQuickIsCustom] = useState(false);
+  const [stickyTaskDayAlerts, setStickyTaskDayAlerts] = useState<Record<string, string>>({});
 
   const today = useMemo(() => new Date(), []);
   const todayEth = useMemo(() => gregorianToEthiopian(today), [today]);
@@ -388,7 +390,7 @@ export const CategoryDetailView: React.FC = () => {
       const matches = domainTypes.includes(t.domain) || 
         (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase())) ||
         (t.title && t.title.toLowerCase().includes(category.title.toLowerCase()));
-      return matches && t.date === dateStr;
+      return matches && (t.date === dateStr || (t.date && dateStr.startsWith('2026-11-') && t.date === dateStr.replace('2026-11-', '2025-11-')));
     });
 
     if (explicitTasks.length > 0) return explicitTasks;
@@ -620,6 +622,69 @@ export const CategoryDetailView: React.FC = () => {
   };
 
   const handleStartStickyTaskFocus = (task: ScheduleTask) => {
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    let targetDate: Date | null = null;
+    if (task.date) {
+      const cleanDateStr = task.date.startsWith('2025-11-') ? task.date.replace('2025-11-', '2026-11-') : task.date;
+      const parts = cleanDateStr.split('-').map(Number);
+      if (parts.length === 3) {
+        targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+    if (!targetDate && stickyNoteDay) {
+      targetDate = new Date(stickyNoteDay.getFullYear(), stickyNoteDay.getMonth(), stickyNoteDay.getDate());
+    }
+    if (!targetDate) {
+      targetDate = new Date(todayDate);
+    }
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffMs = targetDate.getTime() - todayDate.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    // The play button will work ONLY on that specific day (today)
+    if (diffDays !== 0) {
+      let alertMsg = '';
+      if (diffDays > 0) {
+        if (diffDays === 1) {
+          alertMsg = language === 'am'
+            ? 'ይህ ተግባር ለነገ ነው። እባክዎ የዛሬን ተግባራት ያጠናቅቁ!'
+            : "This task is tomorrow. Please do today's tasks first!";
+        } else {
+          alertMsg = language === 'am'
+            ? `ይህ ተግባር ከ${diffDays} ቀናት በኋላ ነው። እባክዎ የዛሬን ተግባራት ያጠናቅቁ!`
+            : `This task is in ${diffDays} days. Please do today's tasks first!`;
+        }
+      } else {
+        const pastDays = Math.abs(diffDays);
+        if (pastDays === 1) {
+          alertMsg = language === 'am'
+            ? 'ይህ ተግባር የትናንት ነበር። እባክዎ የዛሬን ተግባራት ያጠናቅቁ!'
+            : "This task was yesterday. Please do today's tasks first!";
+        } else {
+          alertMsg = language === 'am'
+            ? `ይህ ተግባር የ${pastDays} ቀናት በፊት ነበር። እባክዎ የዛሬን ተግባራት ያጠናቅቁ!`
+            : `This task was ${pastDays} days ago. Please do today's tasks first!`;
+        }
+      }
+
+      setStickyTaskDayAlerts((prev) => ({ ...prev, [task.id]: alertMsg }));
+      try { soundEngine.playClick(); } catch {}
+
+      // Clear the message after 4.5 seconds
+      setTimeout(() => {
+        setStickyTaskDayAlerts((prev) => {
+          const updated = { ...prev };
+          delete updated[task.id];
+          return updated;
+        });
+      }, 4500);
+
+      return;
+    }
+
     try { soundEngine.playClick(); } catch {}
     startTask(task);
     setStickyNoteDay(null);
@@ -2931,6 +2996,13 @@ export const CategoryDetailView: React.FC = () => {
                           </span>
                         </div>
 
+                        {/* Very simple text only message under time and minute */}
+                        {stickyTaskDayAlerts[t.id] && (
+                          <p className="text-[11px] font-semibold text-amber-900 dark:text-amber-200 mt-1 animate-fadeIn leading-snug">
+                            {stickyTaskDayAlerts[t.id]}
+                          </p>
+                        )}
+
                         <h4 className={`text-xs sm:text-sm font-bold tracking-tight mt-1 text-slate-900 dark:text-white ${
                           t.completed ? 'line-through opacity-60 text-slate-500' : ''
                         }`}>
@@ -2991,7 +3063,7 @@ export const CategoryDetailView: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-amber-800/80 dark:text-amber-300/80 px-1">
+              <div className="flex items-center justify-between text-[11px] text-amber-800/80 dark:text-amber-300/80 px-1 gap-2 flex-wrap sm:flex-nowrap">
                 <div className="flex items-center gap-1.5">
                   <span>🕒</span>
                   <input
@@ -2999,7 +3071,8 @@ export const CategoryDetailView: React.FC = () => {
                     value={stickyQuickTime}
                     onChange={(e) => setStickyQuickTime(e.target.value)}
                     placeholder="08:00 AM"
-                    className="w-20 px-1.5 py-0.5 rounded-lg text-[10px] font-mono bg-white/80 dark:bg-amber-950/60 border border-amber-300/70 dark:border-amber-700/70 text-amber-950 dark:text-amber-100"
+                    className="w-20 px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-white/80 dark:bg-amber-950/60 border border-amber-300/70 dark:border-amber-700/70 text-amber-950 dark:text-amber-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    title={language === 'am' ? 'ብጁ ሰዓት ያስገቡ' : 'Custom start time (e.g. 08:00 AM, 02:30 PM)'}
                   />
                 </div>
 
@@ -3009,16 +3082,61 @@ export const CategoryDetailView: React.FC = () => {
                     <button
                       key={d}
                       type="button"
-                      onClick={() => setStickyQuickDuration(d)}
+                      onClick={() => {
+                        setStickyQuickDuration(d);
+                        setStickyQuickIsCustom(false);
+                      }}
                       className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                        stickyQuickDuration === d
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                        !stickyQuickIsCustom && stickyQuickDuration === d
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
                       }`}
                     >
                       {d}m
                     </button>
                   ))}
+
+                  {stickyQuickIsCustom ? (
+                    <div className="flex items-center gap-0.5 bg-white/95 dark:bg-amber-950/90 px-1.5 py-0.5 rounded-md border border-amber-400 dark:border-amber-600 shadow-2xs">
+                      <input
+                        type="number"
+                        min={5}
+                        max={480}
+                        value={stickyQuickDuration}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val > 0) setStickyQuickDuration(Math.min(val, 720));
+                        }}
+                        className="w-10 text-[10px] font-mono font-bold text-center bg-transparent text-amber-950 dark:text-white outline-none"
+                        placeholder="min"
+                        autoFocus
+                      />
+                      <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300">m</span>
+                      <button
+                        type="button"
+                        onClick={() => setStickyQuickIsCustom(false)}
+                        className="text-[10px] font-bold text-amber-600 hover:text-amber-800 dark:text-amber-300 ml-0.5 px-0.5 cursor-pointer"
+                        title="Done"
+                      >
+                        ✓
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setStickyQuickIsCustom(true)}
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                        stickyQuickIsCustom || ![25, 45, 60].includes(stickyQuickDuration)
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
+                      }`}
+                      title={language === 'am' ? 'ብጁ ደቂቃ ያስገቡ' : 'Add custom duration minutes'}
+                    >
+                      {![25, 45, 60].includes(stickyQuickDuration)
+                        ? `${stickyQuickDuration}m`
+                        : (language === 'am' ? '+ ብጁ' : '+ Custom')}
+                    </button>
+                  )}
                 </div>
               </div>
             </form>
