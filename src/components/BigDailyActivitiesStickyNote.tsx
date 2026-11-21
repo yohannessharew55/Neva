@@ -508,6 +508,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const isPastDay = useMemo(() => {
     return activeDateStr < todayStr;
   }, [activeDateStr, todayStr]);
+  const isFutureDay = useMemo(() => {
+    return activeDateStr > todayStr;
+  }, [activeDateStr, todayStr]);
   const activeDayOfWeek = (today.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
   const isSunday = activeDayOfWeek === 7;
 
@@ -640,7 +643,16 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Resolve Day Schedule (Unique vs Default Routine)
   const daySchedule = getDaySchedule(today);
-  const dayTasks = useMemo(() => autoResolveOverlappingTasks(daySchedule.tasks), [daySchedule.tasks]);
+  const dayTasks = useMemo(() => {
+    const resolved = autoResolveOverlappingTasks(daySchedule.tasks);
+    if (!isFutureDay) return resolved;
+    // On future days, tasks are upcoming plans and cannot be marked completed
+    return resolved.map((t) => ({
+      ...t,
+      completed: false,
+      checklist: t.checklist ? t.checklist.map((c) => ({ ...c, done: false })) : [],
+    }));
+  }, [daySchedule.tasks, isFutureDay]);
   const isCustomDay = daySchedule.isCustom;
 
   const handleCustomizeDay = () => {
@@ -674,6 +686,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   const handleToggleTask = (task: ScheduleTask) => {
     if (isPastDay) return; // Prevent modifying historical records
+    if (isFutureDay) {
+      setToastMessage(language === 'am' ? 'ተግባራት ዛሬ ብቻ ነው መፈጸማቸው የሚረጋገጠው! የወደፊት ቀናት ለማቀድና ለማስተካከል ብቻ ናቸው።' : 'Tasks can only be marked done on today! Future days are for planning and editing only.');
+      setTimeout(() => setToastMessage(null), 3000);
+      try { soundEngine.playTouchSound(); } catch {}
+      return;
+    }
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
       const match = materialized.find((m) => m.title === task.title) || materialized[0];
@@ -686,6 +704,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   const handleToggleChecklist = (task: ScheduleTask, checklistId: string) => {
+    if (isPastDay || isFutureDay) return;
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
       const match = materialized.find((m) => m.title === task.title);
@@ -959,9 +978,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     try { soundEngine.playSound('CHIME_MEDITATION'); } catch {}
   };
 
-  // Master Subject Checkbox: Toggling subject checks or unchecks all tasks under it
+  // Master Subject Checkbox: Toggling subject checks or unchecks all tasks under it (Today only)
   const handleToggleSubject = (groupTasks: ScheduleTask[], isCurrentlyAllDone: boolean) => {
     if (isPastDay) return;
+    if (isFutureDay) {
+      setToastMessage(language === 'am' ? 'ተግባራት ዛሬ ብቻ ነው መፈጸማቸው የሚረጋገጠው! የወደፊት ቀናት ለማቀድና ለማስተካከል ብቻ ናቸው።' : 'Tasks can only be marked done on today! Future days are for planning and editing only.');
+      setTimeout(() => setToastMessage(null), 3000);
+      try { soundEngine.playTouchSound(); } catch {}
+      return;
+    }
     let currentTasks = groupTasks;
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
@@ -1061,6 +1086,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               {isPastDay && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-900 border border-amber-500/30 select-none animate-fadeIn flex items-center gap-1">
                   📜 {language === 'am' ? 'ያለፈ ቀን ታሪክ' : 'Past Day Log'}
+                </span>
+              )}
+              {isFutureDay && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-900 border border-blue-500/25 select-none animate-fadeIn flex items-center gap-1">
+                  🗓️ {language === 'am' ? 'የሚመጣ ዕቅድ (ሊስተካከል የሚችል)' : 'Upcoming Plan (Editable)'}
                 </span>
               )}
 
@@ -1362,7 +1392,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               <div className="flex items-center gap-1.5 shrink-0">
                 <span>{language === 'am' ? 'ጠቅላላ:' : 'Total:'} <strong className="font-extrabold text-slate-900">{formattedDayDuration}</strong></span>
                 <span className="opacity-40">•</span>
-                <span className="text-emerald-700 font-extrabold">{progressPercent}%</span>
+                {isFutureDay ? (
+                  <span className="text-blue-700 font-extrabold">{language === 'am' ? 'የታቀደ' : 'Planned'}</span>
+                ) : (
+                  <span className="text-emerald-700 font-extrabold">{progressPercent}%</span>
+                )}
               </div>
 
               <div className="flex items-center gap-1 text-[10px] shrink-0">
@@ -1386,19 +1420,21 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       : 'opacity-70 hover:opacity-100 hover:bg-black/5'
                   }`}
                 >
-                  {t('remaining')} ({totalCount - completedCount})
+                  {isFutureDay ? (language === 'am' ? 'የታቀዱ' : 'Planned') : t('remaining')} ({isFutureDay ? totalCount : totalCount - completedCount})
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterMode('completed')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
-                    filterMode === 'completed' 
-                      ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
-                      : 'opacity-70 hover:opacity-100 hover:bg-black/5'
-                  }`}
-                >
-                  {t('done')} ({completedCount})
-                </button>
+                {!isFutureDay && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterMode('completed')}
+                    className={`px-2 py-0.5 rounded-md cursor-pointer transition active:scale-95 ${
+                      filterMode === 'completed' 
+                        ? `${theme.hourBadgeBg} ${theme.hourBadgeText} font-extrabold shadow-2xs` 
+                        : 'opacity-70 hover:opacity-100 hover:bg-black/5'
+                    }`}
+                  >
+                    {t('done')} ({completedCount})
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1484,8 +1520,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       </div>
                     )}
 
-                    {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! (hidden on past days) */}
-                    {!isPastDay && (
+                    {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! (ONLY on today) */}
+                    {isViewingToday && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -1514,7 +1550,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {/* Subject Title Text */}
                     <span 
                       className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate select-none ${
-                        group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
+                        !isFutureDay && group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}
                     >
                       {group.translatedTitle}
@@ -1524,11 +1560,13 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   {/* Right: Progress Badge & Expand Little Sign */}
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold shrink-0 ${
-                      group.isAllDone 
+                      !isFutureDay && group.isAllDone 
                         ? 'bg-emerald-500/25 text-emerald-800' 
                         : `${theme.hourBadgeBg} ${theme.hourBadgeText}`
                     }`}>
-                      {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
+                      {isFutureDay
+                        ? `${group.totalCount} ${group.totalCount === 1 ? 'task' : 'tasks'} • ${group.formattedDuration}`
+                        : `${group.completedCount}/${group.totalCount} ${group.isAllDone ? '✓ Done' : group.formattedDuration}`}
                     </span>
 
                     {/* Expand Little Sign on Category */}
@@ -1560,8 +1598,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                           return (
                             <div key={task.id} className="relative overflow-hidden rounded-xl">
-                              {/* Swipe Action Indicator Underneath */}
-                              {!isPastDay && isCurrentSwiping && swipeOffset > 0 && (
+                              {/* Swipe Action Indicator Underneath (Today Only) */}
+                              {isViewingToday && isCurrentSwiping && swipeOffset > 0 && (
                                 <div 
                                   className="absolute inset-y-0 left-0 bg-emerald-500/90 text-white flex items-center px-2.5 rounded-xl transition-all duration-75 font-bold text-xs gap-1.5 shadow-inner"
                                   style={{ width: `${Math.min(110, Math.max(0, swipeOffset + 15))}px` }}
@@ -1581,11 +1619,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   transition: isCurrentSwiping ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
                                 }}
                                 onTouchStart={(e) => {
-                                  if (isPastDay) return;
+                                  if (!isViewingToday) return;
                                   swipeTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                                 }}
                                 onTouchMove={(e) => {
-                                  if (isPastDay || !swipeTouchStart.current) return;
+                                  if (!isViewingToday || !swipeTouchStart.current) return;
                                   const dx = e.touches[0].clientX - swipeTouchStart.current.x;
                                   const dy = e.touches[0].clientY - swipeTouchStart.current.y;
                                   if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
@@ -1600,7 +1638,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   }
                                 }}
                                 onTouchEnd={() => {
-                                  if (swipingTaskId === task.id) {
+                                  if (isViewingToday && swipingTaskId === task.id) {
                                     if (swipeOffset > 45) {
                                       handleToggleTask(task);
                                       try { if (window.navigator?.vibrate) window.navigator.vibrate(25); } catch {}
@@ -1675,7 +1713,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     </div>
                                   )}
 
-                                  {!isPastDay && (
+                                  {isViewingToday ? (
                                     <button
                                       type="button"
                                       onClick={() => handleToggleTask(task)}
@@ -1688,20 +1726,39 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     >
                                       {task.completed && <Check size={11} strokeWidth={3} />}
                                     </button>
-                                  )}
+                                  ) : isFutureDay ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setToastMessage(language === 'am' ? 'ተግባራት ዛሬ ብቻ ነው መፈጸማቸው የሚረጋገጠው! የወደፊት ቀናት ለማቀድና ለማስተካከል ብቻ ናቸው።' : 'Tasks can only be marked done on today! Future days are for planning and editing only.');
+                                        setTimeout(() => setToastMessage(null), 3000);
+                                        try { soundEngine.playTouchSound(); } catch {}
+                                      }}
+                                      className={`w-4 h-4 rounded-md border border-dashed flex items-center justify-center shrink-0 opacity-45 hover:opacity-85 transition cursor-pointer ${theme.checkBorder}`}
+                                      title={language === 'am' ? 'የታቀደ ተግባር (ዛሬ ሲደርስ ብቻ ማጠናቀቅ ይቻላል፤ ጠቅ ያድርጉና ያርሙ)' : 'Planned task (only today can be marked done; click to edit)'}
+                                    >
+                                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                                    </button>
+                                  ) : null}
 
                                   <span className="font-mono text-[10px] font-bold shrink-0 opacity-65">
                                     {formatTaskTime(task.startTime)}
                                   </span>
 
                                   <span 
-                                    onClick={() => !isPastDay && handleToggleTask(task)}
+                                    onClick={() => {
+                                      if (isViewingToday) {
+                                        handleToggleTask(task);
+                                      } else if (isFutureDay) {
+                                        handleStartEditTask(task);
+                                      }
+                                    }}
                                     className={`truncate font-semibold select-none ${
-                                      !isPastDay ? 'cursor-pointer' : 'cursor-default'
+                                      isViewingToday || isFutureDay ? 'cursor-pointer' : 'cursor-default'
                                     } ${
                                       task.completed ? 'line-through opacity-55' : 'opacity-90 hover:opacity-100'
                                     }`}
-                                    title={!isPastDay ? (task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')) : undefined}
+                                    title={isViewingToday ? (task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')) : isFutureDay ? (language === 'am' ? 'ጠቅ አድርገው ያርሙ' : 'Click to edit task') : undefined}
                                   >
                                     {task.title}
                                   </span>

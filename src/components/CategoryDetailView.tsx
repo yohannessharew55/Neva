@@ -69,6 +69,20 @@ export const CategoryDetailView: React.FC = () => {
     return targetStr < todayStr;
   }, [stickyNoteDay]);
 
+  const isStickyDayFuture = useMemo(() => {
+    if (!stickyNoteDay) return false;
+    const targetStr = getLocalDateStr(stickyNoteDay);
+    const todayStr = getLocalDateStr(new Date());
+    return targetStr > todayStr;
+  }, [stickyNoteDay]);
+
+  const isStickyDayToday = useMemo(() => {
+    if (!stickyNoteDay) return false;
+    const targetStr = getLocalDateStr(stickyNoteDay);
+    const todayStr = getLocalDateStr(new Date());
+    return targetStr === todayStr;
+  }, [stickyNoteDay]);
+
   // When stickyNoteDay opens, automatically calculate the next free start time so tasks never overlap
   useEffect(() => {
     if (!stickyNoteDay) return;
@@ -425,8 +439,21 @@ export const CategoryDetailView: React.FC = () => {
   const getTasksForStreamDate = (targetDate: Date): ScheduleTask[] => {
     if (!category) return [];
     const dateStr = getLocalDateStr(targetDate);
+    const todayStr = getLocalDateStr(new Date());
+    const isTargetFuture = dateStr > todayStr;
     const dayIndex = targetDate.getDay();
     const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex];
+
+    const sanitizeTargetTasks = (list: ScheduleTask[]): ScheduleTask[] => {
+      const resolved = autoResolveOverlappingTasks(list);
+      if (!isTargetFuture) return resolved;
+      // Future tasks are planned only, never pre-completed
+      return resolved.map(t => ({
+        ...t,
+        completed: false,
+        checklist: t.checklist ? t.checklist.map(c => ({ ...c, done: false })) : []
+      }));
+    };
 
     // 1. Explicit tasks in context matching domain/badge and this date
     const explicitTasks = tasks.filter((t) => {
@@ -436,7 +463,7 @@ export const CategoryDetailView: React.FC = () => {
       return matches && (t.date === dateStr || (t.date && dateStr.startsWith('2026-11-') && t.date === dateStr.replace('2026-11-', '2025-11-')));
     });
 
-    if (explicitTasks.length > 0) return autoResolveOverlappingTasks(explicitTasks);
+    if (explicitTasks.length > 0) return sanitizeTargetTasks(explicitTasks);
 
     // 2. Check weekly schedule summary cadence slots for this day
     const daySlots = (category.weeklyScheduleSummary || []).filter((s) =>
@@ -473,7 +500,7 @@ export const CategoryDetailView: React.FC = () => {
           notes: `${category.title} Scheduled Cadence`,
         };
       });
-      return autoResolveOverlappingTasks(generated);
+      return sanitizeTargetTasks(generated);
     }
 
     // 3. Category daily plans if targetDate is today
@@ -618,6 +645,27 @@ export const CategoryDetailView: React.FC = () => {
   const handleToggleStickyTask = (task: ScheduleTask, date: Date) => {
     try { soundEngine.playClick(); } catch {}
     const dateStr = getLocalDateStr(date);
+    const todayStr = getLocalDateStr(new Date());
+
+    if (dateStr > todayStr) {
+      setStickyTaskDayAlerts(prev => ({
+        ...prev,
+        [task.id]: language === 'am'
+          ? 'ተግባራትን እንደተጠናቀቁ ምልክት ማድረግ የሚቻለው ለዛሬ ብቻ ነው! የወደፊት ቀናት ለማቀድና ለማስተካከል ብቻ ናቸው።'
+          : 'Tasks can only be marked done on today! Future days are for planning and editing only.'
+      }));
+      setTimeout(() => {
+        setStickyTaskDayAlerts(prev => {
+          const copy = { ...prev };
+          delete copy[task.id];
+          return copy;
+        });
+      }, 3500);
+      try { soundEngine.playTouchSound(); } catch {}
+      return;
+    }
+
+    if (dateStr < todayStr) return; // Past days read-only
 
     if (task.id.startsWith('cadence-')) {
       addTask({
@@ -3071,18 +3119,28 @@ export const CategoryDetailView: React.FC = () => {
                   >
                     <div className="flex items-start gap-2.5 min-w-0">
                       {!isStickyDayPast && (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
-                          className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center mt-0.5 transition cursor-pointer shrink-0 ${
-                            t.completed
-                              ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'border-amber-400 dark:border-amber-600 bg-white/90 dark:bg-amber-900/40 hover:border-amber-600'
-                          }`}
-                          title={t.completed ? 'Mark incomplete' : 'Mark complete'}
-                        >
-                          {t.completed && <Check size={12} strokeWidth={3} />}
-                        </button>
+                        isStickyDayToday ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
+                            className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center mt-0.5 transition cursor-pointer shrink-0 ${
+                              t.completed
+                                ? 'bg-emerald-600 border-emerald-600 text-white'
+                                : 'border-amber-400 dark:border-amber-600 bg-white/90 dark:bg-amber-900/40 hover:border-amber-600'
+                            }`}
+                            title={t.completed ? 'Mark incomplete' : 'Mark complete'}
+                          >
+                            {t.completed && <Check size={12} strokeWidth={3} />}
+                          </button>
+                        ) : (
+                          <div 
+                            className="w-5 h-5 rounded-lg border-2 border-dashed border-amber-400/80 dark:border-amber-600/80 flex items-center justify-center mt-0.5 cursor-pointer hover:border-amber-600 transition shrink-0"
+                            title={language === 'am' ? 'የታቀደ ተግባር (ዛሬ ሲደርስ ብቻ ማጠናቀቅ ይቻላል)' : 'Planned task (can only be marked done on today)'}
+                            onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600/60 dark:bg-amber-400/60" />
+                          </div>
+                        )
                       )}
 
                       <div className="min-w-0">

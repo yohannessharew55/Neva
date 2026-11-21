@@ -1531,9 +1531,32 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const toggleTaskCompletion = (taskId: string) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     setTasks((prev) => {
-      const exists = prev.some((t) => t.id === taskId);
-      if (exists) {
+      const match = prev.find((t) => t.id === taskId);
+      if (match) {
+        // Only today permits checking as done. Past records and future days cannot be toggled.
+        if (match.date && match.date !== todayStr) {
+          return prev;
+        }
+
+        // If template task without date, instantiate it specifically for today so future days don't inherit completion
+        if (!match.date) {
+          const nextCompleted = !match.completed;
+          if (nextCompleted) {
+            soundEngine.playSound('CHIME_MEDITATION');
+          }
+          const instantiated: ScheduleTask = {
+            ...match,
+            id: `task-${Date.now()}`,
+            date: todayStr,
+            completed: nextCompleted,
+          };
+          return [...prev, instantiated];
+        }
+
         return prev.map((t) => {
           if (t.id === taskId) {
             const nextCompleted = !t.completed;
@@ -1546,9 +1569,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
       }
 
-      // If taskId is a dynamic routine task, materialize it directly into state with toggled completion
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      // If taskId is a dynamic routine task, materialize it directly into state with toggled completion strictly for today
       const sched = getDaySchedule(now);
       const dynamicTask = sched.tasks.find((t) => t.id === taskId);
       if (dynamicTask) {
@@ -1558,7 +1579,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           {
             ...dynamicTask,
             id: taskId,
-            date: dynamicTask.date || todayStr,
+            date: todayStr,
             completed: !dynamicTask.completed,
           },
         ];
@@ -1603,35 +1624,55 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const addTask = (newTask: Omit<ScheduleTask, 'id'>) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const id = `task-${Date.now()}`;
-    setTasks((prev) => autoResolveOverlappingTasks([...prev, { ...newTask, id }]));
+    const taskToAdd: ScheduleTask = {
+      ...newTask,
+      id,
+      completed: newTask.date && newTask.date > todayStr ? false : (newTask.completed ?? false),
+    };
+    setTasks((prev) => autoResolveOverlappingTasks([...prev, taskToAdd]));
   };
 
   const updateTask = (taskId: string, updates: Partial<ScheduleTask>) => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     setTasks((prev) => {
       const exists = prev.some((t) => t.id === taskId);
       if (exists) {
-        return prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
+        return prev.map((t) => {
+          if (t.id === taskId) {
+            const updated = { ...t, ...updates };
+            if (updated.date && updated.date > todayStr) {
+              updated.completed = false;
+            }
+            return updated;
+          }
+          return t;
+        });
       }
 
       // If not in prev, this is a routine/default task being edited for the first time
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const sched = getDaySchedule(now);
       const dynamicTask = sched.tasks.find((t) => t.id === taskId || (updates.title && t.title.toLowerCase().trim() === updates.title.toLowerCase().trim()));
 
       if (dynamicTask) {
+        const targetDate = updates.date || dynamicTask.date || todayStr;
         return [
           ...prev,
           {
             ...dynamicTask,
             ...updates,
             id: taskId,
-            date: updates.date || dynamicTask.date || todayStr,
+            date: targetDate,
+            completed: targetDate > todayStr ? false : (updates.completed ?? dynamicTask.completed),
           },
         ];
       }
 
+      const targetDate = updates.date || todayStr;
       return [
         ...prev,
         {
@@ -1639,11 +1680,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           title: updates.title || 'Focus Block',
           startTime: updates.startTime || '09:00 AM',
           durationMin: updates.durationMin || 45,
-          completed: updates.completed ?? false,
+          completed: targetDate > todayStr ? false : (updates.completed ?? false),
           color: updates.color || '#0082ff',
           badge: updates.badge || 'Focus',
           domain: updates.domain || 'OPEN_MULTIPURPOSE',
-          date: updates.date || todayStr,
+          date: targetDate,
           ...updates,
         } as ScheduleTask,
       ];
@@ -1876,6 +1917,21 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getDaySchedule = (date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const dayOfWeek = (date.getDay() + 6) % 7 + 1; // 1 = Mon ... 7 = Sun
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const isFutureDay = dateStr > todayStr;
+
+    const sanitizeScheduleTasks = (list: ScheduleTask[]): ScheduleTask[] => {
+      const resolved = autoResolveOverlappingTasks(list);
+      if (!isFutureDay) return resolved;
+      // Future days are upcoming plans: checking as done is locked, so all future tasks are strictly uncompleted
+      return resolved.map((t) => ({
+        ...t,
+        completed: false,
+        checklist: t.checklist ? t.checklist.map((c) => ({ ...c, done: false })) : [],
+      }));
+    };
+
     const customTasks = tasks.filter((t) => {
       if (t.id.startsWith('def-') || t.id.startsWith('carry-')) return false;
       if (t.date === dateStr) return true;
@@ -1898,7 +1954,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (sundayAllowed.length > 0) {
         return {
-          tasks: sundayAllowed,
+          tasks: sanitizeScheduleTasks(sundayAllowed),
           isCustom: true,
           source: 'rest_day' as const,
           dateStr,
@@ -1908,7 +1964,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const defaultSunday = getWeekdayDefaultTasks(7);
       return {
-        tasks: defaultSunday,
+        tasks: sanitizeScheduleTasks(defaultSunday),
         isCustom: false,
         source: 'rest_day' as const,
         dateStr,
@@ -1925,7 +1981,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const streamTasksToAdd = defaultTasks.filter((dt) => !isRepresented(dt));
 
       return {
-        tasks: autoResolveOverlappingTasks([...customTasks, ...streamTasksToAdd]),
+        tasks: sanitizeScheduleTasks([...customTasks, ...streamTasksToAdd]),
         isCustom: true,
         source: 'custom' as const,
         dateStr,
@@ -1939,7 +1995,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       : ('global_default' as const);
 
     return {
-      tasks: defaultTasks,
+      tasks: sanitizeScheduleTasks(defaultTasks),
       isCustom: false,
       source,
       dateStr,
