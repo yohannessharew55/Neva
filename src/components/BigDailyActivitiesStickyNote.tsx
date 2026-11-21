@@ -631,6 +631,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
 
+  // Swipe-to-complete mobile gesture state
+  const [swipingTaskId, setSwipingTaskId] = useState<string | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState<number>(0);
+  const swipeTouchStart = useRef<{ x: number; y: number } | null>(null);
+
   const touchActiveId = useRef<string | null>(null);
   const touchActiveTaskId = useRef<string | null>(null);
 
@@ -1548,59 +1553,108 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                     {group.displayedTasks.map((task) => {
                           const formattedDuration = formatTaskDuration(task.durationMin);
                           const isActive = activeTask?.id === task.id;
+                          const isCurrentSwiping = swipingTaskId === task.id;
 
                           return (
-                            <div 
-                              key={task.id}
-                              data-task-id={task.id}
-                              draggable={!task.completed}
-                              onDragStart={(e) => {
-                                e.stopPropagation();
-                                setDraggedTaskId(task.id);
-                                e.dataTransfer.effectAllowed = 'move';
-                                e.dataTransfer.setData('text/plain', task.id);
-                              }}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.dataTransfer.dropEffect = 'move';
-                                if (dragOverTaskId !== task.id) {
-                                  setDragOverTaskId(task.id);
-                                }
-                              }}
-                              onDragLeave={(e) => {
-                                e.stopPropagation();
-                                if (dragOverTaskId === task.id) {
+                            <div key={task.id} className="relative overflow-hidden rounded-xl">
+                              {/* Swipe Action Indicator Underneath */}
+                              {!isPastDay && isCurrentSwiping && swipeOffset > 0 && (
+                                <div 
+                                  className="absolute inset-y-0 left-0 bg-emerald-500/90 text-white flex items-center px-2.5 rounded-xl transition-all duration-75 font-bold text-xs gap-1.5 shadow-inner"
+                                  style={{ width: `${Math.min(110, Math.max(0, swipeOffset + 15))}px` }}
+                                >
+                                  <Check size={14} strokeWidth={3} className="shrink-0" />
+                                  <span className="text-[10px] uppercase font-mono font-black">
+                                    {task.completed ? (language === 'am' ? 'መልስ' : 'Undo') : (language === 'am' ? 'ተጠናቋል' : 'Done')}
+                                  </span>
+                                </div>
+                              )}
+
+                              <div 
+                                data-task-id={task.id}
+                                draggable={!task.completed}
+                                style={{
+                                  transform: isCurrentSwiping && swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
+                                  transition: isCurrentSwiping ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                }}
+                                onTouchStart={(e) => {
+                                  if (isPastDay) return;
+                                  swipeTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                                }}
+                                onTouchMove={(e) => {
+                                  if (isPastDay || !swipeTouchStart.current) return;
+                                  const dx = e.touches[0].clientX - swipeTouchStart.current.x;
+                                  const dy = e.touches[0].clientY - swipeTouchStart.current.y;
+                                  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+                                    swipeTouchStart.current = null;
+                                    setSwipingTaskId(null);
+                                    setSwipeOffset(0);
+                                    return;
+                                  }
+                                  if (Math.abs(dx) > 10) {
+                                    setSwipingTaskId(task.id);
+                                    setSwipeOffset(Math.max(-40, Math.min(85, dx)));
+                                  }
+                                }}
+                                onTouchEnd={() => {
+                                  if (swipingTaskId === task.id) {
+                                    if (swipeOffset > 45) {
+                                      handleToggleTask(task);
+                                      try { if (window.navigator?.vibrate) window.navigator.vibrate(25); } catch {}
+                                      try { soundEngine.playPencil(); } catch {}
+                                    }
+                                  }
+                                  setSwipingTaskId(null);
+                                  setSwipeOffset(0);
+                                  swipeTouchStart.current = null;
+                                }}
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  setDraggedTaskId(task.id);
+                                  e.dataTransfer.effectAllowed = 'move';
+                                  e.dataTransfer.setData('text/plain', task.id);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.dataTransfer.dropEffect = 'move';
+                                  if (dragOverTaskId !== task.id) {
+                                    setDragOverTaskId(task.id);
+                                  }
+                                }}
+                                onDragLeave={(e) => {
+                                  e.stopPropagation();
+                                  if (dragOverTaskId === task.id) {
+                                    setDragOverTaskId(null);
+                                  }
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                                  if (fromId && fromId !== task.id) {
+                                    reorderTasks(fromId, task.id);
+                                    try { soundEngine.playPencil(); } catch {}
+                                  }
+                                  setDraggedTaskId(null);
                                   setDragOverTaskId(null);
-                                }
-                              }}
-                              onDrop={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
-                                if (fromId && fromId !== task.id) {
-                                  reorderTasks(fromId, task.id);
-                                  try { soundEngine.playPencil(); } catch {}
-                                }
-                                setDraggedTaskId(null);
-                                setDragOverTaskId(null);
-                              }}
-                              onDragEnd={() => {
-                                setDraggedTaskId(null);
-                                setDragOverTaskId(null);
-                              }}
-                              className={`group/task py-1.5 px-2 rounded-xl transition-all duration-150 ${
-                                draggedTaskId === task.id
-                                  ? 'opacity-40 scale-98 border border-dashed border-[#0082ff] bg-blue-50/20'
-                                  : dragOverTaskId === task.id
-                                  ? 'bg-blue-500/20 border-2 border-[#0082ff] scale-[1.01] shadow-xs'
-                                  : task.completed 
-                                  ? 'opacity-55 hover:bg-black/5' 
-                                  : isActive 
-                                    ? 'bg-black/10 border border-black/15 shadow-2xs'
-                                    : 'hover:bg-black/5'
-                              }`}
-                            >
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedTaskId(null);
+                                  setDragOverTaskId(null);
+                                }}
+                                className={`group/task py-1.5 px-2 rounded-xl transition-all duration-150 select-none ${
+                                  draggedTaskId === task.id
+                                    ? 'opacity-40 scale-98 border border-dashed border-[#0082ff] bg-blue-50/20'
+                                    : dragOverTaskId === task.id
+                                    ? 'bg-blue-500/20 border-2 border-[#0082ff] scale-[1.01] shadow-xs'
+                                    : task.completed 
+                                    ? 'opacity-55 hover:bg-black/5' 
+                                    : isActive 
+                                      ? 'bg-black/10 border border-black/15 shadow-2xs'
+                                      : 'hover:bg-black/5'
+                                }`}
+                              >
                               <div className="flex items-center justify-between gap-2 text-xs">
                                 {/* Drag Handle, Checkbox, Time & Task Title */}
                                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
@@ -1680,8 +1734,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>

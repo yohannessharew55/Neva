@@ -367,3 +367,18 @@
 .animate-neva-wave {
   animation: nevaWaveOscillate 1.8s ease-in-out infinite;
 }
+
+@keyframes nevaSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: nevaSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

@@ -53,6 +53,8 @@ export const CategoryDetailView: React.FC = () => {
   const [stickyQuickDuration, setStickyQuickDuration] = useState(45);
   const [stickyQuickIsCustom, setStickyQuickIsCustom] = useState(false);
   const [stickyTaskDayAlerts, setStickyTaskDayAlerts] = useState<Record<string, string>>({});
+  const [sheetTranslateY, setSheetTranslateY] = useState(0);
+  const sheetDragStartY = useRef<number | null>(null);
 
   const isStickyDayPast = useMemo(() => {
     if (!stickyNoteDay) return false;
@@ -1269,124 +1271,102 @@ export const CategoryDetailView: React.FC = () => {
         </button>
       </div>
 
-      {/* 4 Stat Overview Cards: MATHEMATICALLY EXACT IN REAL TIME */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* 1. Weekly Hours Card */}
-        <div className="p-4.5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-2">
+      {/* 2 High-Impact Mastery Cadence Capsules (Mobile Ergonomic & Clean - No Truncation) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* Capsule 1: Weekly Execution Cadence */}
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">{t('weeklyHours')}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                {t('weeklyHours')}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                • {language === 'am' ? 'የሳምንት ግብ' : 'Weekly Target'}
+              </span>
+            </div>
             <span 
-              className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
+              className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full shadow-2xs"
               style={{ backgroundColor: `${category.color}15`, color: category.color }}
             >
               {metrics.weeklyPercentile.toFixed(1)}%
             </span>
           </div>
           
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-mono font-extrabold text-slate-900 dark:text-white">
-              {metrics.currentWeeklyHours.toFixed(1)}
+          <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-mono font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {metrics.currentWeeklyHours.toFixed(1)}
+              </span>
+              <span className="text-xs sm:text-sm text-slate-400 font-mono">/ {metrics.weeklyTargetHours}{t('hoursShort')}</span>
+            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              {metrics.activeElapsedHours > 0 
+                ? `🔥 +${(metrics.activeElapsedHours * 60).toFixed(0)}m live`
+                : metrics.todayCompletedHours > 0
+                  ? `+${metrics.todayCompletedHours.toFixed(1)}h logged today`
+                  : `${Math.max(0, metrics.weeklyTargetHours - metrics.currentWeeklyHours).toFixed(1)}h remaining`}
             </span>
-            <span className="text-xs text-slate-400 font-mono">/ {metrics.weeklyTargetHours}{t('hoursShort')}</span>
           </div>
 
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
             <div 
-              className="h-full transition-all duration-300"
+              className="h-full transition-all duration-300 rounded-full"
               style={{ 
                 width: `${Math.min(100, Math.max(0, metrics.weeklyPercentile))}%`,
                 backgroundColor: category.color 
               }}
             />
           </div>
-
-          <p className="text-[11px] text-slate-400 truncate">
-            {metrics.activeElapsedHours > 0 
-              ? `🔥 +${(metrics.activeElapsedHours * 60).toFixed(0)}m focus live`
-              : metrics.todayCompletedHours > 0
-                ? `+${metrics.todayCompletedHours.toFixed(1)}h logged today`
-                : `${Math.max(0, metrics.weeklyTargetHours - metrics.currentWeeklyHours).toFixed(1)}h remaining`}
-          </p>
         </div>
 
-        {/* 2. Monthly Target Card */}
-        <div className="p-3.5 sm:p-4.5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-2 min-w-0">
-          <div className="flex items-center justify-between gap-1.5 min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 truncate">{t('monthlyTarget')}</span>
-            <span className="text-[10px] font-mono font-bold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full shrink-0">
-              {metrics.currentMonthlyHours.toFixed(1)} / {metrics.monthlyTargetHours}{t('hoursShort')}
+        {/* Capsule 2: Monthly Target & Today's Momentum */}
+        <div className="p-4 sm:p-5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                {t('monthlyTarget')}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                • {language === 'am' ? 'የወር እና የዛሬ' : 'Month & Today'}
+              </span>
+            </div>
+            <span className="text-xs font-mono font-bold text-[#0082ff] bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full shadow-2xs">
+              {metrics.currentMonthlyHours.toFixed(1)} / {metrics.monthlyTargetHours}{t('hoursShort')} ({metrics.monthlyPercentile.toFixed(0)}%)
             </span>
           </div>
 
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl sm:text-2xl font-mono font-extrabold text-[#0082ff]">
-              {metrics.monthlyPercentile.toFixed(1)}%
-            </span>
-            <span className="text-xs text-slate-400 font-mono">{t('percentDone')}</span>
+          <div className="grid grid-cols-2 gap-3 pt-0.5">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                {language === 'am' ? 'የዛሬ ብሎኮች' : "Today's Blocks"}
+              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg sm:text-xl font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {metrics.todayCompletedTasks}
+                </span>
+                <span className="text-xs text-slate-400 font-mono">/ {metrics.todayTotalTasks} {t('done')}</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                {language === 'am' ? 'የሳምንት ፍጥነት' : 'Weekly Pacing'}
+              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg sm:text-xl font-mono font-extrabold text-[#0082ff]">
+                  {(metrics.monthlyTargetHours / 4).toFixed(1)}h
+                </span>
+                <span className="text-xs text-slate-400 font-mono">/ {language === 'am' ? 'ሳምንት' : 'wk'}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex gap-1">
             <div 
-              className="bg-[#0082ff] h-full transition-all duration-300" 
+              className="bg-[#0082ff] h-full transition-all duration-300 rounded-full" 
               style={{ width: `${Math.min(100, Math.max(0, metrics.monthlyPercentile))}%` }} 
             />
           </div>
-
-          <p className="text-[11px] text-slate-400 truncate" title={category.monthlyGoalTitle}>
-            {language === 'am' ? `ግብ፡ ${category.monthlyGoalTitle}` : `Paced for ${category.monthlyGoalTitle}`}
-          </p>
-        </div>
-
-        {/* 3. Tasks Today Card */}
-        <div className="p-3.5 sm:p-4.5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-2 min-w-0">
-          <div className="flex items-center justify-between gap-1.5 min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 truncate">{t('todaysTasks')}</span>
-            <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full shrink-0">
-              {metrics.todayTaskPercentile.toFixed(0)}%
-            </span>
-          </div>
-
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl sm:text-2xl font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
-              {metrics.todayCompletedTasks}
-            </span>
-            <span className="text-xs text-slate-400 font-mono">/ {metrics.todayTotalTasks} {t('done')}</span>
-          </div>
-
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div 
-              className="bg-emerald-500 h-full transition-all duration-300" 
-              style={{ width: `${Math.min(100, Math.max(0, metrics.todayTaskPercentile))}%` }} 
-            />
-          </div>
-
-          <p className="text-[11px] text-slate-400 truncate">
-            {metrics.todayCompletedTasks === metrics.todayTotalTasks && metrics.todayTotalTasks > 0
-              ? `✓ ${language === 'am' ? 'የዛሬው 100% ተጠናቋል!' : '100% finished today!'}` 
-              : `${metrics.todayTotalTasks - metrics.todayCompletedTasks} ${language === 'am' ? 'የትኩረት ክፍለ-ጊዜ ቀርቷል' : 'focus blocks left'}`}
-          </p>
-        </div>
-
-        {/* 4. Monthly Target Volume Card */}
-        <div className="p-3.5 sm:p-4.5 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xs space-y-2 min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-            {t('monthlyHoursPlanned')}
-          </span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl sm:text-2xl font-mono font-extrabold text-slate-900 dark:text-white">
-              {metrics.monthlyTargetHours}
-            </span>
-            <span className="text-xs text-slate-400 font-mono">hrs planned</span>
-          </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div 
-              className="bg-slate-400 h-full" 
-              style={{ width: '100%' }} 
-            />
-          </div>
-          <p className="text-[11px] text-slate-400 truncate">
-            {(metrics.monthlyTargetHours / 4).toFixed(1)}h / week target cadence
-          </p>
         </div>
       </div>
 
@@ -2950,22 +2930,44 @@ export const CategoryDetailView: React.FC = () => {
         />
       )}
 
-      {/* Small Window Sticky Note Popup for Specific Day (Requested by User) */}
+      {/* Native iOS Slide-Up Bottom Sheet on Mobile & Paper Sticky Note on Desktop */}
       {stickyNoteDay && (
         <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
           onClick={() => setStickyNoteDay(null)}
         >
           <div 
-            className="relative w-full max-w-md bg-[#fef9c3] dark:bg-[#231e0c] border-2 border-[#fef08a] dark:border-amber-700/60 rounded-3xl p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.4)] text-amber-950 dark:text-amber-100 animate-scaleUp transition-all overflow-hidden"
+            className="relative w-full max-w-md bg-[#fef9c3] dark:bg-[#231e0c] border-t-2 sm:border-2 border-[#fef08a] dark:border-amber-700/60 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-[0_-12px_40px_rgba(0,0,0,0.35)] sm:shadow-[0_25px_60px_rgba(0,0,0,0.4)] text-amber-950 dark:text-amber-100 animate-slideUp sm:animate-scaleUp transition-transform duration-150 overflow-hidden max-h-[88vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundImage: 'linear-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px)',
               backgroundSize: '100% 28px',
+              transform: sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
             }}
           >
-            {/* Top Tape Graphic */}
-            <div className="w-28 h-5 mx-auto -mt-8 mb-3 bg-amber-100/90 dark:bg-amber-800/60 border border-amber-300/80 dark:border-amber-700/80 rounded-sm shadow-xs backdrop-blur-xs" />
+            {/* Mobile Bottom Sheet Grab Handle (Swipe down to dismiss) */}
+            <div 
+              className="sm:hidden w-12 h-1.5 bg-amber-900/25 dark:bg-amber-100/25 rounded-full mx-auto -mt-1 mb-3.5 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+              onTouchStart={(e) => {
+                sheetDragStartY.current = e.touches[0].clientY;
+              }}
+              onTouchMove={(e) => {
+                if (sheetDragStartY.current !== null) {
+                  const dy = e.touches[0].clientY - sheetDragStartY.current;
+                  if (dy > 0) setSheetTranslateY(dy);
+                }
+              }}
+              onTouchEnd={() => {
+                if (sheetTranslateY > 60) {
+                  setStickyNoteDay(null);
+                }
+                setSheetTranslateY(0);
+                sheetDragStartY.current = null;
+              }}
+            />
+
+            {/* Desktop Top Tape Graphic */}
+            <div className="hidden sm:block w-28 h-5 mx-auto -mt-8 mb-3 bg-amber-100/90 dark:bg-amber-800/60 border border-amber-300/80 dark:border-amber-700/80 rounded-sm shadow-xs backdrop-blur-xs shrink-0" />
 
             {/* Header: Date + Stream Badge + Close Button */}
             <div className="flex items-start justify-between gap-3 border-b border-amber-300/60 dark:border-amber-800/60 pb-3">
