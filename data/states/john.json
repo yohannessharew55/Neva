@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -94,7 +94,7 @@
       "domainType": "GUITAR",
       "title": "Guitar & Music Practice",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 5,
       "currentHours": 0,
       "accentColor": "#EC4899",
       "config": {
@@ -118,1255 +118,625 @@
   ],
   "tasks": [
     {
-      "title": "Overall body workout",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
       "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070593099"
-    },
-    {
-      "title": "Overall body workout",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-17",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070593099"
-    },
-    {
-      "title": "Overall body workout",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070593099"
-    },
-    {
-      "title": "Overall body workout",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": true,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Weekly Routine",
-      "id": "task-1795070593099"
-    },
-    {
-      "id": "stream-slot-chess-1-0",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
       "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
       "color": "#8b5cf6",
-      "dayOfWeek": 1,
-      "soundProfile": "SOLFEGGIO_432",
+      "badge": "Chess",
       "checklist": [
         {
-          "id": "c-chess-1-0-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794607192262-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-chess-1-0-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-chess-2-1",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 2,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-2-1-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-2-1-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-chess-4-2",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 4,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-4-2-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-4-2-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-chess-5-3",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 5,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-5-3-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-5-3-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "stream-slot-chess-6-4",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 6,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-chess-6-4-1",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-chess-6-4-2",
-          "text": "Deliberate high-focus execution",
-          "done": false
-        }
-      ]
-    },
-    {
-      "id": "task-1795216145827-0-w5xa",
-      "title": "Chess Focus",
-      "startTime": "07:00 AM",
-      "durationMin": 60,
-      "completed": false,
-      "domain": "CHESS",
-      "badge": "Chess",
-      "color": "#8b5cf6",
-      "dayOfWeek": 6,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": [
-        {
-          "id": "c-1795216145828-0-0",
-          "text": "Warm-up & context immersion",
-          "done": false
-        },
-        {
-          "id": "c-1795216145828-0-1",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794607192262-2",
+          "text": "Core deliberate execution",
           "done": false
         }
       ],
-      "date": "2026-11-21"
+      "id": "task-1794607192262"
     },
     {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
       "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-16",
-      "dayOfWeek": 1,
-      "id": "task-1795217081394"
-    },
-    {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-17",
-      "dayOfWeek": 2,
-      "id": "task-1795217081394"
-    },
-    {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-18",
-      "dayOfWeek": 3,
-      "id": "task-1795217081394"
-    },
-    {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-19",
-      "dayOfWeek": 4,
-      "id": "task-1795217081394"
-    },
-    {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-20",
-      "dayOfWeek": 5,
-      "id": "task-1795217081394"
-    },
-    {
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#10b981",
-      "badge": "Trading",
-      "domain": "TRADING",
-      "checklist": [],
-      "date": "2026-11-21",
-      "dayOfWeek": 6,
-      "id": "task-1795217081394"
-    },
-    {
-      "id": "stream-slot-trading-1-0",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "completed": true,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 1,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#8b5cf6",
+      "badge": "Chess",
       "checklist": [
         {
-          "id": "c-trading-1-0-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794607215059-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-1-0-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794607215060-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794607215060"
     },
     {
-      "id": "stream-slot-trading-2-1",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
       "durationMin": 30,
       "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 2,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#8b5cf6",
+      "badge": "Chess",
       "checklist": [
         {
-          "id": "c-trading-2-1-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794607244907-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-2-1-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794607244907-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794607244907"
     },
     {
-      "id": "stream-slot-trading-3-2",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
       "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 3,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#ec4899",
+      "badge": "Music",
       "checklist": [
         {
-          "id": "c-trading-3-2-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794647533131-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-3-2-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794647533131-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794647533131"
     },
     {
-      "id": "stream-slot-trading-4-3",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
       "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 4,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#ec4899",
+      "badge": "Music",
       "checklist": [
         {
-          "id": "c-trading-4-3-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794647582698-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-4-3-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794647582698-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794647582698"
     },
     {
-      "id": "stream-slot-trading-5-4",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
       "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 5,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#ec4899",
+      "badge": "Music",
       "checklist": [
         {
-          "id": "c-trading-5-4-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794647598186-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-5-4-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794647598186-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794647598186"
     },
     {
-      "id": "stream-slot-trading-6-5",
-      "title": "Pre-Market Preparation & Key Levels",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
       "completed": false,
-      "domain": "FOREX_TRADING",
-      "badge": "Trading",
-      "color": "#10b981",
-      "dayOfWeek": 6,
-      "soundProfile": "SOLFEGGIO_432",
+      "color": "#ec4899",
+      "badge": "Music",
       "checklist": [
         {
-          "id": "c-trading-6-5-1",
-          "text": "Warm-up & context immersion",
+          "id": "c-1794647622674-1",
+          "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-trading-6-5-2",
-          "text": "Deliberate high-focus execution",
+          "id": "c-1794647622674-2",
+          "text": "Core deliberate execution",
           "done": false
         }
-      ]
+      ],
+      "id": "task-1794647622674"
     },
     {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
       "completed": false,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932878"
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794858942586-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794858942586-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794858942586"
     },
     {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": false,
-      "date": "2026-11-17",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932878"
-    },
-    {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": false,
-      "date": "2026-11-18",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932878"
-    },
-    {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": true,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932879"
-    },
-    {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": true,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932879"
-    },
-    {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": true,
-      "date": "2026-11-21",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932879"
-    },
-    {
-      "title": "Sketching",
-      "domain": "OIL_PAINTING",
-      "startTime": "08:00 AM",
-      "durationMin": 60,
-      "color": "#e11d48",
-      "badge": "Art",
-      "completed": true,
-      "date": "2026-11-22",
-      "checklist": [],
-      "notes": "Improve skills (Weekly Routine)",
-      "id": "task-1795256932879"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-17",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-18",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-21",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-22",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257203599"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-29",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-06",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pushup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-13",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257203600"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-16",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-17",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-18",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-19",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-20",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-21",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-22",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-29",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-06",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "title": "Pullup",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-13",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795257218515"
-    },
-    {
-      "domain": "ARCHITECTURE_DESIGN",
-      "title": "hq",
-      "startTime": "08:00 AM",
+      "title": "Et",
+      "startTime": "Flexible",
       "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859007649"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-0-lc3x",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-1-vnmx",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-2-qjrq",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-3-hfor",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-4-4ob8",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-5-zi6k",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-6-2bib",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "date": "2025-11-24",
-      "checklist": [],
-      "notes": "Added from Architecture & Design Calendar Sticky Note",
-      "id": "task-1795272260427"
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794859102709-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-7-32x0",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859102709-8-b65w",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-0-cdyc",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-1-hlh7",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375661-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-2-vg2z",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-3-j6md",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-4-f5sj",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-5-fovr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-6-nktw",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794895375661-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-7-qcrr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794895375661-8-vjdf",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "id": "task-1794895375661-9-ncjh",
+      "domain": "PHYSICAL_FITNESS",
+      "title": "Compound Strength & Conditioning",
+      "startTime": "06:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Workout",
+      "dayOfWeek": 2,
+      "checklist": [
+        {
+          "id": "c-1794895375661-9-0",
+          "text": "Dynamic mobility & warm-up",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-9-1",
+          "text": "Target compound sets & cool down",
+          "done": false
+        }
+      ],
+      "date": "2026-11-17"
     }
   ],
   "workouts": [
@@ -1428,7 +798,75 @@
     }
   ],
   "meals": [],
-  "goals": [],
+  "goals": [
+    {
+      "title": "Ship N e v a Architecture & Core Modules",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "architecture",
+      "targetMetric": "100% Core Modules",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 75,
+      "isCompleted": false,
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": true
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": true
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ],
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "50h Deep Focus Practice in Q4",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "devotion",
+      "targetMetric": "50h Practice Logged",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 60,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "Master Forex & Algorithmic Trading Execution",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "trading",
+      "targetMetric": "15% Alpha",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 70,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "10 Master Oil Paintings & Studio Portfolio",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "art",
+      "targetMetric": "10 Canvases",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 80,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    }
+  ],
   "sessions": [],
   "reviews": [],
   "categoryPlans": {
@@ -1449,24 +887,17 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     },
     "chess": {
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Mon 07:00 AM: Chess Focus",
-        "Tue 07:00 AM: Chess Focus",
-        "Thu 07:00 AM: Chess Focus",
-        "Fri 07:00 AM: Chess Focus",
-        "Sat 07:00 AM: Chess Focus"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -1475,8 +906,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "yellow",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "art": {
       "id": "art",
@@ -1495,14 +925,13 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "music": {
       "id": "music",
       "title": "Music & Guitar",
       "color": "#ec4899",
-      "weeklyTargetHours": 6,
+      "weeklyTargetHours": 5,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
@@ -1515,8 +944,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "rose",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "architecture": {
       "id": "architecture",
@@ -1535,8 +963,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "cyan",
-      "dailyPlans": [],
-      "triple8Type": "career"
+      "dailyPlans": []
     },
     "trading": {
       "id": "trading",
@@ -1546,14 +973,7 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Mon 08:00 AM: Pre-Market Preparation & Key Levels (30m)",
-        "Tue 08:00 AM: Pre-Market Preparation & Key Levels (30m)",
-        "Wed 08:00 AM: Pre-Market Preparation & Key Levels (30m)",
-        "Thu 08:00 AM: Pre-Market Preparation & Key Levels (30m)",
-        "Fri 08:00 AM: Pre-Market Preparation & Key Levels (30m)",
-        "Sat 08:00 AM: Pre-Market Preparation & Key Levels (30m)"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -1562,8 +982,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": [],
-      "triple8Type": "career"
+      "dailyPlans": []
     },
     "devotion": {
       "id": "devotion",
@@ -1582,8 +1001,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "lavender",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     },
     "buffer": {
       "id": "buffer",
@@ -1602,12 +1020,11 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "canary",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
