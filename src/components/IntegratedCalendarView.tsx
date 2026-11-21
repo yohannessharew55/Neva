@@ -301,6 +301,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     language,
     getCategoryTitleTranslated,
     setSelectedCategoryId,
+    categoryOrder,
     theme: appTheme,
     reorderTasks
   } = useLivotion();
@@ -347,6 +348,16 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
 
   // Week offset for Weekly view
   const [weekOffset, setWeekOffset] = useState<number>(0);
+
+  // Collapsible category groups in Day Agenda
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const toggleCategoryExpand = (catId: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [catId]: prev[catId] === false ? true : false
+    }));
+    try { soundEngine.playPencil(); } catch {}
+  };
 
   // Drag & drop state for scheduled routine blocks in the Plan system
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -507,6 +518,108 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     });
   }, [mondayOfWeek, selectedDate, tasks, categoryPlans, selectedStreamFilter, getDaySchedule]);
 
+  const formatTaskTime = (timeStr?: string) => {
+    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 'Flexible';
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) return timeStr;
+    let [_, hStr, mStr, meridiem] = match;
+    let h = parseInt(hStr, 10);
+    if (meridiem) {
+      return `${String(h).padStart(2, '0')}:${mStr} ${meridiem.toUpperCase()}`;
+    }
+    const isPM = h >= 12;
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${String(h12).padStart(2, '0')}:${mStr} ${isPM ? 'PM' : 'AM'}`;
+  };
+
+  // Category Icon resolver
+  const getCategoryIcon = (catId: string) => {
+    switch (catId) {
+      case 'exercise': return Dumbbell;
+      case 'chess': return ChessKnight;
+      case 'art': return PaletteIcon;
+      case 'music': return Music;
+      case 'architecture': return Building2;
+      case 'trading': return TrendingUp;
+      case 'devotion': return BookOpen;
+      default: return ChessKnight;
+    }
+  };
+
+  const resolveTaskCategory = (task: ScheduleTask): { id: string; title: string; color: string; Icon: any } => {
+    // 1. Match by task.badge if present and valid
+    if (task.badge && task.badge.toUpperCase() !== 'STREAM' && task.badge.toUpperCase() !== 'FOCUS') {
+      const bLower = task.badge.toLowerCase();
+      for (const [id, plan] of Object.entries(categoryPlans)) {
+        if (bLower.includes(id) || plan.title.toLowerCase().includes(bLower)) {
+          return { id, title: plan.title, color: plan.color, Icon: getCategoryIcon(id) };
+        }
+      }
+    }
+
+    // 2. Match by task.domain
+    if (task.domain) {
+      switch (task.domain) {
+        case 'CHESS':
+          return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', Icon: ChessKnight };
+        case 'GUITAR':
+          return { id: 'music', title: categoryPlans['music']?.title || 'Music & Guitar', color: categoryPlans['music']?.color || '#ec4899', Icon: Music };
+        case 'PHYSICAL_FITNESS':
+          return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', Icon: Dumbbell };
+        case 'OIL_PAINTING':
+          return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', Icon: PaletteIcon };
+        case 'ARCHITECTURE_DESIGN':
+        case 'SITE_SUPERVISION':
+        case 'ARCHITECTURE' as any:
+          return { id: 'architecture', title: categoryPlans['architecture']?.title || 'Architecture & Design', color: categoryPlans['architecture']?.color || '#0082ff', Icon: Building2 };
+        case 'FOREX_TRADING':
+        case 'TRADING' as any:
+          return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', Icon: TrendingUp };
+        case 'DEVOTION_PRAYER':
+          return { id: 'devotion', title: categoryPlans['devotion']?.title || 'Devotion & Prayer', color: categoryPlans['devotion']?.color || '#a855f7', Icon: BookOpen };
+        default:
+          break;
+      }
+    }
+
+    // 3. Match by task.title keywords
+    const titleLower = (task.title || '').toLowerCase();
+    for (const [id, plan] of Object.entries(categoryPlans)) {
+      if (titleLower.includes(id) || titleLower.includes(plan.title.toLowerCase())) {
+        return { id, title: plan.title, color: plan.color, Icon: getCategoryIcon(id) };
+      }
+    }
+    if (titleLower.includes('chess') || titleLower.includes('tactic') || titleLower.includes('puzzle') || titleLower.includes('grandmaster')) {
+      return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', Icon: ChessKnight };
+    }
+    if (titleLower.includes('guitar') || titleLower.includes('music') || titleLower.includes('song') || titleLower.includes('finger') || titleLower.includes('acoustic') || titleLower.includes('repertoire')) {
+      return { id: 'music', title: categoryPlans['music']?.title || 'Music & Guitar', color: categoryPlans['music']?.color || '#ec4899', Icon: Music };
+    }
+    if (titleLower.includes('workout') || titleLower.includes('exercise') || titleLower.includes('gym') || titleLower.includes('fitness') || titleLower.includes('run')) {
+      return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', Icon: Dumbbell };
+    }
+    if (titleLower.includes('paint') || titleLower.includes('art') || titleLower.includes('draw')) {
+      return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', Icon: PaletteIcon };
+    }
+    if (titleLower.includes('trade') || titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('chart') || titleLower.includes('market')) {
+      return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', Icon: TrendingUp };
+    }
+    if (titleLower.includes('architect') || titleLower.includes('blueprint') || titleLower.includes('site') || titleLower.includes('design')) {
+      return { id: 'architecture', title: categoryPlans['architecture']?.title || 'Architecture & Design', color: categoryPlans['architecture']?.color || '#0082ff', Icon: Building2 };
+    }
+    if (titleLower.includes('pray') || titleLower.includes('devotion') || titleLower.includes('scripture') || titleLower.includes('bible')) {
+      return { id: 'devotion', title: categoryPlans['devotion']?.title || 'Devotion & Prayer', color: categoryPlans['devotion']?.color || '#a855f7', Icon: BookOpen };
+    }
+
+    const firstCat = Object.values(categoryPlans)[0];
+    return {
+      id: firstCat?.id || 'chess',
+      title: firstCat?.title || 'Chess',
+      color: firstCat?.color || '#8b5cf6',
+      Icon: getCategoryIcon(firstCat?.id || 'chess')
+    };
+  };
+
   // Active Day Schedule
   const activeSchedule = useMemo(() => {
     return getDaySchedule(selectedDate);
@@ -531,21 +644,70 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   const activeTasks = useMemo(() => {
     let list = activeSchedule.tasks || [];
     if (selectedStreamFilter !== 'all') {
-      const plan = categoryPlans[selectedStreamFilter];
-      const streamTitle = plan ? plan.title.toLowerCase() : selectedStreamFilter.toLowerCase();
-      list = list.filter(t => {
-        const d = (t.domain || '').toLowerCase();
-        const b = (t.badge || '').toLowerCase();
-        const title = (t.title || '').toLowerCase();
-        return d.includes(selectedStreamFilter.toLowerCase()) || 
-               b.includes(selectedStreamFilter.toLowerCase()) || 
-               title.includes(streamTitle);
-      });
+      list = list.filter(t => resolveTaskCategory(t).id === selectedStreamFilter);
     }
     if (filterMode === 'remaining') return list.filter(t => !t.completed);
     if (filterMode === 'done') return list.filter(t => t.completed);
     return list;
   }, [activeSchedule, filterMode, selectedStreamFilter, categoryPlans]);
+
+  // Group active tasks by their category: strictly preserves drag order within categories
+  const tasksGroupedByCategory = useMemo(() => {
+    const groups: {
+      category: { id: string; title: string; color: string; Icon: any };
+      tasks: ScheduleTask[];
+      totalDuration: number;
+      completedCount: number;
+    }[] = [];
+
+    const orderedCatKeys = Object.keys(categoryPlans).sort((a, b) => {
+      const idxA = (categoryOrder || []).indexOf(a);
+      const idxB = (categoryOrder || []).indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return 0;
+    });
+
+    orderedCatKeys.forEach((catKey) => {
+      const plan = categoryPlans[catKey];
+      if (!plan) return;
+      const catTasks = activeTasks.filter((t) => {
+        const resolved = resolveTaskCategory(t);
+        return resolved.id === catKey;
+      });
+      if (catTasks.length > 0) {
+        const totalDuration = catTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0);
+        const completedCount = catTasks.filter((t) => t.completed).length;
+        groups.push({
+          category: {
+            id: catKey,
+            title: plan.title,
+            color: plan.color,
+            Icon: getCategoryIcon(catKey),
+          },
+          tasks: catTasks,
+          totalDuration,
+          completedCount,
+        });
+      }
+    });
+
+    // Handle any tasks with categories not in orderedCatKeys
+    const representedTaskIds = new Set(groups.flatMap((g) => g.tasks.map((t) => t.id)));
+    const remainingTasks = activeTasks.filter((t) => !representedTaskIds.has(t.id));
+    if (remainingTasks.length > 0) {
+      const resolved = resolveTaskCategory(remainingTasks[0]);
+      groups.push({
+        category: resolved,
+        tasks: remainingTasks,
+        totalDuration: remainingTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0),
+        completedCount: remainingTasks.filter((t) => t.completed).length,
+      });
+    }
+
+    return groups;
+  }, [activeTasks, categoryPlans, categoryOrder]);
 
   const isSelectedSunday = selectedDate.getDay() === 0;
 
@@ -734,20 +896,6 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     };
   }, [monthOffset, categoryPlans, calendarSystem]);
 
-  // Category Icon resolver
-  const getCategoryIcon = (catId: string) => {
-    switch (catId) {
-      case 'exercise': return Dumbbell;
-      case 'chess': return ChessKnight;
-      case 'art': return PaletteIcon;
-      case 'music': return Music;
-      case 'architecture': return Building2;
-      case 'trading': return TrendingUp;
-      case 'devotion': return BookOpen;
-      default: return Shield;
-    }
-  };
-
   // --------------------------------------------------------------------------
   // Simple Plan / Edit Block Modal State
   // --------------------------------------------------------------------------
@@ -827,17 +975,17 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   const handleSaveBlock = () => {
     if (!modalTitle.trim()) return;
 
-    const chosenCategory = (modalCategory && categoryPlans[modalCategory]) || Object.values(categoryPlans || {}).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
-    const categoryTitle = chosenCategory?.title || 'General';
-    const categoryColor = chosenCategory?.color || '#0082ff';
+    const chosenCategory = (modalCategory && categoryPlans[modalCategory]) || Object.values(categoryPlans || {}).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
+    const categoryTitle = chosenCategory?.title || 'Chess';
+    const categoryColor = chosenCategory?.color || '#8b5cf6';
     
-    let domain: DomainType = 'CUSTOM';
+    let domain: DomainType = 'CHESS';
     if (modalCategory === 'exercise') domain = 'PHYSICAL_FITNESS';
     else if (modalCategory === 'chess') domain = 'CHESS';
     else if (modalCategory === 'art') domain = 'OIL_PAINTING';
     else if (modalCategory === 'music') domain = 'GUITAR';
-    else if (modalCategory === 'architecture') domain = 'ARCHITECTURE';
-    else if (modalCategory === 'trading') domain = 'TRADING';
+    else if (modalCategory === 'architecture') domain = 'ARCHITECTURE_DESIGN';
+    else if (modalCategory === 'trading') domain = 'FOREX_TRADING';
     else if (modalCategory === 'devotion') domain = 'DEVOTION_PRAYER';
 
     const checklistItems = modalChecklist
@@ -1440,154 +1588,197 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                   </div>
                 )}
 
-                {/* Scheduled Blocks */}
-                {activeTasks.length > 0 ? (
-                  activeTasks.map((task) => {
-                    const IconComponent = task.badge ? getCategoryIcon(task.badge.toLowerCase()) : Shield;
+                {/* Scheduled Blocks grouped by Category */}
+                {tasksGroupedByCategory.length > 0 ? (
+                  tasksGroupedByCategory.map((group) => {
+                    const CatIcon = group.category.Icon;
+                    const isExpanded = expandedCategories[group.category.id] !== false;
 
                     return (
-                      <div
-                        key={task.id}
-                        data-plan-task-id={task.id}
-                        draggable={!task.completed}
-                        onDragStart={(e) => {
-                          e.stopPropagation();
-                          setDraggedTaskId(task.id);
-                          e.dataTransfer.effectAllowed = 'move';
-                          e.dataTransfer.setData('text/plain', task.id);
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.dataTransfer.dropEffect = 'move';
-                          if (dragOverTaskId !== task.id) {
-                            setDragOverTaskId(task.id);
-                          }
-                        }}
-                        onDragLeave={(e) => {
-                          e.stopPropagation();
-                          if (dragOverTaskId === task.id) setDragOverTaskId(null);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
-                          if (fromId && fromId !== task.id) {
-                            reorderTasks(fromId, task.id);
-                            try { soundEngine.playPencil(); } catch {}
-                          }
-                          setDraggedTaskId(null);
-                          setDragOverTaskId(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedTaskId(null);
-                          setDragOverTaskId(null);
-                        }}
-                        className={`p-3.5 sm:p-4 rounded-2xl ${currentTheme.cardBg} border shadow-xs transition-all hover:shadow-md relative overflow-hidden ${
-                          draggedTaskId === task.id
-                            ? 'opacity-40 scale-98 border-dashed border-[#0082ff] bg-blue-50/20'
-                            : dragOverTaskId === task.id
-                            ? 'border-2 border-[#0082ff] bg-blue-50/20 scale-[1.01]'
-                            : 'border-black/5 dark:border-white/5'
-                        }`}
-                        style={{ borderLeft: `5px solid ${task.color || '#0082ff'}` }}
-                      >
-                        <div className="flex items-start justify-between gap-2.5">
-                          {/* Plan Task Drag Handle */}
-                          <div 
-                            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 mt-0.5 select-none transition-colors"
-                            title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder in plan'}
-                            onClick={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => handlePlanTaskTouchStart(e, task.id)}
-                            onTouchMove={handlePlanTaskTouchMove}
-                            onTouchEnd={handlePlanTaskTouchEnd}
-                          >
-                            <GripVertical size={14} />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <div 
-                                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-                                style={{ backgroundColor: `${task.color}20`, color: task.color }}
-                              >
-                                <IconComponent size={12} />
-                                <span>{task.badge || 'STREAM'}</span>
-                              </div>
-
-                              <div className={`inline-flex items-center gap-1 text-[11px] font-semibold ${currentTheme.textSecondary} bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md`}>
-                                <Clock size={11} />
-                                <span>{task.startTime || 'Scheduled'}</span>
-                                <span>•</span>
-                                <span className="font-bold text-[#0082ff]">
-                                  {formatTaskDuration(task.durationMin || 45)}
-                                </span>
-                              </div>
-
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                {task.date ? 'Single Date' : 'Weekly Routine'}
-                              </span>
-                            </div>
-
-                            <h4 className={`text-sm sm:text-base font-bold ${currentTheme.textPrimary} tracking-tight`}>
-                              {task.title}
-                            </h4>
-                          </div>
-
-                          {/* 3 Vertical Dots Menu: Edit & Delete */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
-                              }}
-                              className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                              title={language === 'am' ? 'አማራጮች' : 'Options'}
+                      <div key={group.category.id} className="space-y-2 mb-4">
+                        {/* Category Group Header Card */}
+                        <div 
+                          onClick={() => toggleCategoryExpand(group.category.id)}
+                          className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all cursor-pointer select-none"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div 
+                              className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
+                              style={{ backgroundColor: `${group.category.color}25`, color: group.category.color }}
                             >
-                              <MoreVertical size={16} />
-                            </button>
+                              <CatIcon size={13} />
+                            </div>
+                            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 truncate">
+                              {getCategoryTitleTranslated(group.category.id, group.category.title)}
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-slate-400">
+                              ({group.tasks.length} {group.tasks.length === 1 ? 'block' : 'blocks'})
+                            </span>
+                          </div>
 
-                            {openTaskMenuId === task.id && (
-                              <>
-                                <div 
-                                  className="fixed inset-0 z-40" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenTaskMenuId(null);
-                                  }} 
-                                />
-                                <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenTaskMenuId(null);
-                                      handleOpenEditBlockModal(task);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition-colors cursor-pointer"
-                                  >
-                                    <Edit3 size={14} className="text-indigo-500" />
-                                    <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
-                                  </button>
-                                  <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenTaskMenuId(null);
-                                      handleDeleteTask(task.id);
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
-                                  >
-                                    <Trash2 size={14} className="text-rose-500" />
-                                    <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
-                                  </button>
-                                </div>
-                              </>
-                            )}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-extrabold bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-200">
+                              {group.completedCount}/{group.tasks.length} {formatTaskDuration(group.totalDuration)}
+                            </span>
+                            {isExpanded ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
                           </div>
                         </div>
+
+                        {/* Task Cards under this Category */}
+                        {isExpanded && (
+                          <div className="space-y-2 pl-1 sm:pl-2">
+                            {group.tasks.map((task) => {
+                              const catInfo = resolveTaskCategory(task);
+                              const TaskIcon = catInfo.Icon;
+
+                              return (
+                                <div
+                                  key={task.id}
+                                  data-plan-task-id={task.id}
+                                  draggable={!task.completed}
+                                  onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    setDraggedTaskId(task.id);
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', task.id);
+                                  }}
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.dataTransfer.dropEffect = 'move';
+                                    if (dragOverTaskId !== task.id) {
+                                      setDragOverTaskId(task.id);
+                                    }
+                                  }}
+                                  onDragLeave={(e) => {
+                                    e.stopPropagation();
+                                    if (dragOverTaskId === task.id) setDragOverTaskId(null);
+                                  }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const fromId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                                    if (fromId && fromId !== task.id) {
+                                      reorderTasks(fromId, task.id);
+                                      try { soundEngine.playPencil(); } catch {}
+                                    }
+                                    setDraggedTaskId(null);
+                                    setDragOverTaskId(null);
+                                  }}
+                                  onDragEnd={() => {
+                                    setDraggedTaskId(null);
+                                    setDragOverTaskId(null);
+                                  }}
+                                  className={`p-3.5 sm:p-4 rounded-2xl ${currentTheme.cardBg} border shadow-xs transition-all hover:shadow-md relative overflow-hidden ${
+                                    draggedTaskId === task.id
+                                      ? 'opacity-40 scale-98 border-dashed border-[#0082ff] bg-blue-50/20'
+                                      : dragOverTaskId === task.id
+                                      ? 'border-2 border-[#0082ff] bg-blue-50/20 scale-[1.01]'
+                                      : 'border-black/5 dark:border-white/5'
+                                  }`}
+                                  style={{ borderLeft: `5px solid ${catInfo.color}` }}
+                                >
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    {/* Plan Task Drag Handle */}
+                                    <div 
+                                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 mt-0.5 select-none transition-colors"
+                                      title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder in plan'}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onTouchStart={(e) => handlePlanTaskTouchStart(e, task.id)}
+                                      onTouchMove={handlePlanTaskTouchMove}
+                                      onTouchEnd={handlePlanTaskTouchEnd}
+                                    >
+                                      <GripVertical size={14} />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <div 
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
+                                          style={{ backgroundColor: `${catInfo.color}20`, color: catInfo.color }}
+                                        >
+                                          <TaskIcon size={12} />
+                                          <span>{getCategoryTitleTranslated(catInfo.id, catInfo.title).toUpperCase()}</span>
+                                        </div>
+
+                                        <div className={`inline-flex items-center gap-1 text-[11px] font-semibold ${currentTheme.textSecondary} bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md`}>
+                                          <Clock size={11} />
+                                          <span>{formatTaskTime(task.startTime)}</span>
+                                          <span>•</span>
+                                          <span className="font-bold text-[#0082ff]">
+                                            {formatTaskDuration(task.durationMin || 45)}
+                                          </span>
+                                        </div>
+
+                                        <span className="text-[10px] text-slate-400 font-medium">
+                                          {task.date ? 'Single Date' : 'Weekly Routine'}
+                                        </span>
+                                      </div>
+
+                                      <h4 className={`text-sm sm:text-base font-bold ${currentTheme.textPrimary} tracking-tight`}>
+                                        {task.title}
+                                      </h4>
+                                    </div>
+
+                                    {/* 3 Vertical Dots Menu: Edit & Delete */}
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                        }}
+                                        className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                        title={language === 'am' ? 'አማራጮች' : 'Options'}
+                                      >
+                                        <MoreVertical size={16} />
+                                      </button>
+
+                                      {openTaskMenuId === task.id && (
+                                        <>
+                                          <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenTaskMenuId(null);
+                                            }} 
+                                          />
+                                          <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenTaskMenuId(null);
+                                                handleOpenEditBlockModal(task);
+                                              }}
+                                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition-colors cursor-pointer"
+                                            >
+                                              <Edit3 size={14} className="text-indigo-500" />
+                                              <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
+                                            </button>
+                                            <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenTaskMenuId(null);
+                                                handleDeleteTask(task.id);
+                                              }}
+                                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
+                                            >
+                                              <Trash2 size={14} className="text-rose-500" />
+                                              <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -2602,48 +2793,6 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* 5. Optional Action Steps / Checklist */}
-              <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                  5. {language === 'am' ? 'ተግባራት / Action Checklist (አማራጭ)' : 'Action Steps / Subtasks (Optional)'}
-                </label>
-                <div className="space-y-1.5">
-                  {modalChecklist.map((step, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        placeholder={`Step ${idx + 1}`}
-                        value={step}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setModalChecklist(prev => prev.map((item, i) => i === idx ? val : item));
-                        }}
-                        className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0082ff]"
-                      />
-                      {modalChecklist.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => setModalChecklist(prev => prev.filter((_, i) => i !== idx))}
-                          className="p-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {modalChecklist.length < 5 && (
-                    <button
-                      type="button"
-                      onClick={() => setModalChecklist(prev => [...prev, ''])}
-                      className="text-xs text-[#0082ff] font-bold py-1 px-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer flex items-center gap-1"
-                    >
-                      <Plus size={13} />
-                      <span>{language === 'am' ? '+ ተጨማሪ ደረጃ ጨምር' : '+ Add Step'}</span>
-                    </button>
-                  )}
-                </div>
               </div>
 
             </div>

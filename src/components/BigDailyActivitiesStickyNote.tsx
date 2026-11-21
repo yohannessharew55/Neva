@@ -528,9 +528,23 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     return hours * 60 + minutes;
   };
 
-  // Helper to map a task to its Main Stream Subject / Category
+  const formatTaskTime = (timeStr?: string) => {
+    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 'Flexible';
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) return timeStr;
+    let [_, hStr, mStr, meridiem] = match;
+    let h = parseInt(hStr, 10);
+    if (meridiem) {
+      return `${String(h).padStart(2, '0')}:${mStr} ${meridiem.toUpperCase()}`;
+    }
+    const isPM = h >= 12;
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${String(h12).padStart(2, '0')}:${mStr} ${isPM ? 'PM' : 'AM'}`;
+  };
+
+  // Helper to map a task to its Subject / Category
   const getCategoryForTask = (task: ScheduleTask): { id: string; title: string; color: string; icon: any } => {
-    if (task.badge) {
+    if (task.badge && task.badge.toUpperCase() !== 'STREAM' && task.badge.toUpperCase() !== 'FOCUS') {
       const badgeLower = task.badge.toLowerCase();
       for (const [id, plan] of Object.entries(categoryPlans)) {
         if (badgeLower.includes(id) || plan.title.toLowerCase().includes(badgeLower)) {
@@ -539,25 +553,59 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       }
     }
 
-    switch (task.domain) {
-      case 'PHYSICAL_FITNESS':
-        return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', icon: Dumbbell };
-      case 'CHESS':
-        return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', icon: ChessKnight };
-      case 'OIL_PAINTING':
-        return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', icon: Palette };
-      case 'GUITAR':
-        return { id: 'music', title: categoryPlans['music']?.title || 'Music & Guitar', color: categoryPlans['music']?.color || '#ec4899', icon: Music };
-      case 'ARCHITECTURE_DESIGN':
-      case 'SITE_SUPERVISION':
-        return { id: 'architecture', title: categoryPlans['architecture']?.title || 'Architecture & Design', color: categoryPlans['architecture']?.color || '#0082ff', icon: Building2 };
-      case 'FOREX_TRADING':
-        return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', icon: TrendingUp };
-      case 'DEVOTION_PRAYER':
-        return { id: 'devotion', title: categoryPlans['devotion']?.title || 'Devotion & Prayer', color: categoryPlans['devotion']?.color || '#a855f7', icon: BookOpen };
-      default:
-        return { id: 'buffer', title: categoryPlans['buffer']?.title || 'Rest & Buffer', color: categoryPlans['buffer']?.color || '#64748b', icon: Shield };
+    if (task.domain) {
+      switch (task.domain) {
+        case 'PHYSICAL_FITNESS':
+          return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', icon: Dumbbell };
+        case 'CHESS':
+          return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', icon: ChessKnight };
+        case 'OIL_PAINTING':
+          return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', icon: Palette };
+        case 'GUITAR':
+          return { id: 'music', title: categoryPlans['music']?.title || 'Music & Guitar', color: categoryPlans['music']?.color || '#ec4899', icon: Music };
+        case 'ARCHITECTURE_DESIGN':
+        case 'SITE_SUPERVISION':
+          return { id: 'architecture', title: categoryPlans['architecture']?.title || 'Architecture & Design', color: categoryPlans['architecture']?.color || '#0082ff', icon: Building2 };
+        case 'FOREX_TRADING':
+          return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', icon: TrendingUp };
+        case 'DEVOTION_PRAYER':
+          return { id: 'devotion', title: categoryPlans['devotion']?.title || 'Devotion & Prayer', color: categoryPlans['devotion']?.color || '#a855f7', icon: BookOpen };
+        default:
+          break;
+      }
     }
+
+    // Title keyword matching
+    const titleLower = (task.title || '').toLowerCase();
+    for (const [id, plan] of Object.entries(categoryPlans)) {
+      if (titleLower.includes(id) || titleLower.includes(plan.title.toLowerCase())) {
+        return { id, title: plan.title, color: plan.color, icon: getCategoryIcon(id) };
+      }
+    }
+    if (titleLower.includes('chess') || titleLower.includes('tactic') || titleLower.includes('puzzle') || titleLower.includes('grandmaster')) {
+      return { id: 'chess', title: categoryPlans['chess']?.title || 'Chess', color: categoryPlans['chess']?.color || '#8b5cf6', icon: ChessKnight };
+    }
+    if (titleLower.includes('guitar') || titleLower.includes('repertoire') || titleLower.includes('music') || titleLower.includes('finger')) {
+      return { id: 'music', title: categoryPlans['music']?.title || 'Music & Guitar', color: categoryPlans['music']?.color || '#ec4899', icon: Music };
+    }
+    if (titleLower.includes('workout') || titleLower.includes('fitness') || titleLower.includes('gym') || titleLower.includes('exercise')) {
+      return { id: 'exercise', title: categoryPlans['exercise']?.title || 'Exercise & Fitness', color: categoryPlans['exercise']?.color || '#ef4444', icon: Dumbbell };
+    }
+    if (titleLower.includes('art') || titleLower.includes('painting') || titleLower.includes('oil') || titleLower.includes('drawing')) {
+      return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', icon: Palette };
+    }
+    if (titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('crypto') || titleLower.includes('market')) {
+      return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', icon: TrendingUp };
+    }
+    if (titleLower.includes('architect') || titleLower.includes('design') || titleLower.includes('autocad') || titleLower.includes('site')) {
+      return { id: 'architecture', title: categoryPlans['architecture']?.title || 'Architecture & Design', color: categoryPlans['architecture']?.color || '#0082ff', icon: Building2 };
+    }
+    if (titleLower.includes('devotion') || titleLower.includes('bible') || titleLower.includes('prayer') || titleLower.includes('scripture')) {
+      return { id: 'devotion', title: categoryPlans['devotion']?.title || 'Devotion & Prayer', color: categoryPlans['devotion']?.color || '#a855f7', icon: BookOpen };
+    }
+
+    const firstCat = Object.values(categoryPlans)[0];
+    return { id: firstCat?.id || 'chess', title: firstCat?.title || 'Chess', color: firstCat?.color || '#8b5cf6', icon: getCategoryIcon(firstCat?.id || 'chess') };
   };
 
   const getDomainForCategory = (catKey: string): DomainType => {
@@ -968,7 +1016,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           onTouchStart={handlePaperTouchStart}
           onTouchEnd={handlePaperTouchEnd}
           onDoubleClick={handlePaperDoubleClick}
-          className={`relative w-full ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 overflow-hidden touch-manipulation select-none ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
+          className={`relative w-full ${isFullScreen ? 'flex-1 min-h-[85vh] sm:min-h-[88vh] shadow-2xl flex flex-col' : ''} rounded-2xl sm:rounded-3xl border p-3.5 sm:p-5 transition-all duration-200 ${showStickyMenu ? 'overflow-visible z-50' : 'overflow-hidden'} touch-manipulation select-none ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (በወረቀቱ ላይ ሁለት ጊዜ ይንኩ)' : 'Double tap on paper to expand full screen')}
           style={{
             boxShadow: isFullScreen
@@ -1070,14 +1118,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 {showStickyMenu && (
                   <>
                     <div 
-                      className="fixed inset-0 z-40 bg-black/10 dark:bg-black/40 backdrop-blur-[1px]" 
+                      className="fixed inset-0 z-[9990] bg-black/25 dark:bg-black/50 backdrop-blur-[1px]" 
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowStickyMenu(false);
                       }} 
                     />
                     <div 
-                      className="absolute right-0 top-full mt-2 z-[110] w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-2xl space-y-2.5 animate-fadeIn select-none ring-1 ring-black/10 pointer-events-auto"
+                      className="absolute right-0 top-full mt-2 z-[9999] w-64 bg-white dark:bg-[#1a202c] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-2xl space-y-2.5 animate-fadeIn select-none ring-1 ring-black/10 pointer-events-auto"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Full Screen Toggle */}
@@ -1096,15 +1144,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
                       {/* Sticky Color Section */}
                       <div className="pt-2 border-t border-black/5 dark:border-white/5 space-y-2">
-                        {/* Auto Stream Color Option Toggle */}
+                        {/* Auto Category Color Option Toggle */}
                         <div className="px-2 py-1.5 flex items-center justify-between gap-2 rounded-xl bg-black/5 dark:bg-white/5">
                           <div className="flex flex-col min-w-0 pr-1">
                             <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
                               <Palette size={12} className={isAutoStickyColor ? 'text-emerald-600 dark:text-emerald-400 shrink-0' : 'text-slate-400 shrink-0'} />
-                              <span>{language === 'am' ? 'አውቶማቲክ የቀለም ቅንብር' : 'Auto Stream Color'}</span>
+                              <span>{language === 'am' ? 'አውቶማቲክ የቀለም ቅንብር' : 'Auto Category Color'}</span>
                             </span>
                             <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight">
-                              {language === 'am' ? 'ከዋናው ርዕስ ጋር ይቀያየራል' : 'Adapts to active main stream'}
+                              {language === 'am' ? 'ከዋናው ርዕስ ጋር ይቀያየራል' : 'Adapts to active category'}
                             </span>
                           </div>
                           <button
@@ -1118,7 +1166,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                             className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer relative shrink-0 ${
                               isAutoStickyColor ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
                             }`}
-                            title={isAutoStickyColor ? 'Disable auto stream color' : 'Enable auto stream color'}
+                            title={isAutoStickyColor ? 'Disable auto category color' : 'Enable auto category color'}
                           >
                             <div className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform ${
                               isAutoStickyColor ? 'translate-x-4' : 'translate-x-0'
@@ -1452,16 +1500,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       <SubjectIcon size={12} />
                     </div>
 
-                    {/* Subject Title Text ONLY directs to main stream's page on click */}
+                    {/* Subject Title Text */}
                     <span 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCategoryId(group.id);
-                      }}
-                      className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate cursor-pointer hover:underline hover:text-[#0082ff] transition-colors select-none ${
+                      className={`text-[11px] sm:text-xs font-black uppercase tracking-wider truncate select-none ${
                         group.isAllDone ? 'line-through opacity-70' : 'opacity-95'
                       }`}
-                      title={language === 'am' ? `${group.translatedTitle} ገጽ ክፈት` : `Open ${group.translatedTitle} stream`}
                     >
                       {group.translatedTitle}
                     </span>
@@ -1587,7 +1630,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   </button>
 
                                   <span className="font-mono text-[10px] font-bold shrink-0 opacity-65">
-                                    {task.startTime || 'Flexible'}
+                                    {formatTaskTime(task.startTime)}
                                   </span>
 
                                   <span 
@@ -1601,7 +1644,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   </span>
                                 </div>
 
-                                {/* Duration Pill & Subtasks Counter (Check option only, no edit/delete) */}
+                                {/* Duration Pill */}
                                 <div className="flex items-center gap-1.5 shrink-0">
                                   <span 
                                     className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-extrabold ${theme.hourBadgeBg} ${theme.hourBadgeText}`}
@@ -1609,46 +1652,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                   >
                                     {formattedDuration}
                                   </span>
-
-                                  {hasSubtasks && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setExpandedSubtasks((prev) => ({
-                                          ...prev,
-                                          [task.id]: !prev[task.id],
-                                        }));
-                                      }}
-                                      className="px-1 py-0.5 rounded text-[9px] font-mono opacity-60 hover:opacity-100 flex items-center cursor-pointer"
-                                    >
-                                      <span>{completedSubCount}/{task.checklist?.length || 0}</span>
-                                      {isSubtasksOpen ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-                                    </button>
-                                  )}
                                 </div>
                               </div>
-
-                              {/* Checklist subtasks if expanded */}
-                              {isSubtasksOpen && hasSubtasks && task.checklist && (
-                                <div className="mt-1.5 pt-1.5 border-t border-black/5 pl-6 space-y-1 text-[11px]">
-                                  {task.checklist.map((item) => (
-                                    <div 
-                                      key={item.id} 
-                                      onClick={() => handleToggleChecklist(task, item.id)}
-                                      className="flex items-center gap-1.5 cursor-pointer opacity-75 hover:opacity-100"
-                                    >
-                                      <div className={`w-3 h-3 rounded-xs border flex items-center justify-center text-[8px] ${
-                                        item.done ? 'bg-current text-white border-transparent' : 'border-current'
-                                      }`}>
-                                        {item.done && <Check size={8} />}
-                                      </div>
-                                      <span className={item.done ? 'line-through opacity-50' : ''}>
-                                        {item.text}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           );
                         })}
@@ -1685,12 +1690,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               </div>
               <div className="space-y-1.5">
                 <h4 className="font-sans text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
-                  {language === 'am' ? 'ለዚህ ቀን የተመዘገበ የዘርፍ ፕሮግራም የለም' : 'No Stream Blocks Scheduled for this Day'}
+                  {language === 'am' ? 'ለዚህ ቀን የተመዘገበ ፕሮግራም የለም' : 'No Blocks Scheduled for this Day'}
                 </h4>
                 <p className="text-xs font-mono opacity-60 max-w-sm mx-auto leading-relaxed">
                   {language === 'am'
-                    ? 'በዋና ዘርፎች (Main Streams) ወይም በታክቲካል ፕላነር የተመዘገቡ ፕሮግራሞችና ተግባራት በቀጥታ በዚህ ሰሌዳ ላይ ይቀርባሉ።'
-                    : 'Blocks and routines registered in your Main Stream programs or Tactical Planner directly display here.'}
+                    ? 'በዋና ዘርፎች ወይም በታክቲካል ፕላነር የተመዘገቡ ፕሮግራሞችና ተግባራት በቀጥታ በዚህ ሰሌዳ ላይ ይቀርባሉ።'
+                    : 'Blocks and routines registered in your Category programs or Tactical Planner directly display here.'}
                 </p>
               </div>
 
@@ -1712,7 +1717,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   className="px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold border border-black/10 dark:border-white/10 cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
                 >
                   <Compass size={13} />
-                  <span>{language === 'am' ? 'ዋና ዘርፎችን ተመልከት' : 'View Main Streams'}</span>
+                  <span>{language === 'am' ? 'ዋና ክፍሎችን ተመልከት' : 'View Categories'}</span>
                 </button>
               </div>
 

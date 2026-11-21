@@ -1749,10 +1749,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     color: '#ef4444',
     badge: 'Workout',
     dayOfWeek: dow,
-    checklist: [
-      { id: `c-ex-${dow}-1`, text: 'Dynamic mobility & warm-up', done: false },
-      { id: `c-ex-${dow}-2`, text: 'Target compound sets & cool down', done: false }
-    ]
+    checklist: []
   });
 
   // Ensure routines are present - passthrough (no artificial injection of mock tasks)
@@ -1804,12 +1801,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const domain = getDomainTypesForCat(catKey)[0] || 'OPEN_MULTIPURPOSE';
 
-        const checklist = plan.dailyPlans && plan.dailyPlans.length > 0
-          ? plan.dailyPlans.map((dp) => ({ id: dp.id, text: dp.text, done: !!dp.completed }))
-          : [
-              { id: `c-${catKey}-${dow}-${slotIdx}-1`, text: 'Warm-up & context immersion', done: false },
-              { id: `c-${catKey}-${dow}-${slotIdx}-2`, text: 'Deliberate high-focus execution', done: false },
-            ];
+        const checklist: any[] = [];
 
         streamTasks.push({
           id: `stream-slot-${catKey}-${dow}-${slotIdx}`,
@@ -2541,10 +2533,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             color: catColor,
             dayOfWeek: dow,
             soundProfile: 'SOLFEGGIO_432',
-            checklist: [
-              { id: `c-${categoryId}-${dow}-${slotIdx}-1`, text: 'Warm-up & context immersion', done: false },
-              { id: `c-${categoryId}-${dow}-${slotIdx}-2`, text: 'Deliberate high-focus execution', done: false },
-            ]
+            checklist: []
           });
         }
       }

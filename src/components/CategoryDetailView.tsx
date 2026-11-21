@@ -11,6 +11,7 @@ import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { DomainType, ScheduleTask } from '../types';
 import { DailyPlansStickyCard } from './DailyPlansStickyCard';
 import { CategoryFocusSessionModal } from './CategoryFocusSessionModal';
+import { DurationPicker } from './DurationPicker';
 import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { gregorianToEthiopian } from '../utils/ethiopianCalendar';
@@ -270,10 +271,7 @@ export const CategoryDetailView: React.FC = () => {
       completed: false,
       color: category.color,
       badge: category.title.split(' ')[0],
-      checklist: [
-        { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
-        { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus execution', done: false },
-      ],
+      checklist: [],
     });
 
     setTaskTitle('');
@@ -1164,63 +1162,6 @@ export const CategoryDetailView: React.FC = () => {
                                   {task.notes}
                                 </p>
                               )}
-
-                              {/* Checklist Subtasks */}
-                              {task.checklist && task.checklist.length > 0 && (
-                                <div className="mt-2.5 space-y-1">
-                                  {task.checklist.map((step) => (
-                                    <div
-                                      key={step.id}
-                                      onClick={() => handleToggleChecklistStep(task.id, step.id)}
-                                      className="flex items-center gap-2 text-xs cursor-pointer group/step py-0.5"
-                                    >
-                                      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
-                                        step.done 
-                                          ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                          : isActiveRunning 
-                                          ? 'border-white/60 group-hover/step:border-white' 
-                                          : 'border-slate-400 dark:border-slate-500 group-hover/step:border-[#0082ff]'
-                                      }`}>
-                                        {step.done && <Check size={10} strokeWidth={3} />}
-                                      </div>
-                                      <span className={`transition-all ${
-                                        step.done 
-                                          ? 'line-through opacity-50' 
-                                          : isActiveRunning ? 'text-white' : 'text-slate-700 dark:text-slate-300'
-                                      }`}>
-                                        {step.text}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Add Step Inline */}
-                              <div className="mt-2 flex items-center gap-1.5 max-w-sm">
-                                <input
-                                  type="text"
-                                  placeholder="+ Add subtask / step..."
-                                  value={inlineTaskStepInputs[task.id] || ''}
-                                  onChange={(e) => setInlineTaskStepInputs(prev => ({ ...prev, [task.id]: e.target.value }))}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleAddInlineStep(task.id);
-                                  }}
-                                  className={`text-xs px-2.5 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#0082ff] flex-1 ${
-                                    isActiveRunning
-                                      ? 'bg-white/10 border-white/20 text-white placeholder-white/50'
-                                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400'
-                                  }`}
-                                />
-                                {inlineTaskStepInputs[task.id] && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleAddInlineStep(task.id)}
-                                    className="text-xs bg-[#0082ff] text-white px-2 py-1 rounded-lg font-bold cursor-pointer"
-                                  >
-                                    Add
-                                  </button>
-                                )}
-                              </div>
                             </div>
 
                             {/* 3 Vertical Dots Menu: Edit & Delete (From User Image) */}
@@ -2097,7 +2038,7 @@ export const CategoryDetailView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                    {editingTask ? (language === 'am' ? 'ብሎክ አስተካክል' : 'Edit Stream Task') : (language === 'am' ? 'አዲስ ብሎክ አቅድ' : 'Plan Stream Block')}
+                    {editingTask ? (language === 'am' ? 'ብሎክ አስተካክል' : 'Edit Task Block') : (language === 'am' ? 'አዲስ ብሎክ አቅድ' : 'Plan Block')}
                   </h3>
                   <p className="text-[11px] text-slate-400">
                     {category.title} • {taskPlanHorizon.toUpperCase()}
@@ -2310,18 +2251,12 @@ export const CategoryDetailView: React.FC = () => {
                   <label className="text-[11px] font-bold text-slate-500 block mb-1">
                     {language === 'am' ? 'ቆይታ' : 'Duration'}
                   </label>
-                  <select
+                  <DurationPicker
                     value={taskModalDuration}
-                    onChange={(e) => setTaskModalDuration(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold outline-none focus:border-[#0082ff]"
-                  >
-                    <option value={25}>25 min (Pomodoro)</option>
-                    <option value={30}>30 min</option>
-                    <option value={45}>45 min (Standard)</option>
-                    <option value={60}>60 min (1 Hour)</option>
-                    <option value={90}>90 min (Deep Work)</option>
-                    <option value={120}>120 min (2 Hours)</option>
-                  </select>
+                    onChange={setTaskModalDuration}
+                    size="md"
+                    className="w-full"
+                  />
                 </div>
               </div>
 

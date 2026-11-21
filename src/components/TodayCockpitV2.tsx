@@ -351,9 +351,9 @@ export const TodayCockpitV2: React.FC = () => {
                 type="button"
                 onClick={() => setSelectedCategoryId(activeFocusCategoryKey)}
                 className="text-[10px] font-mono font-bold opacity-60 hover:opacity-100 hover:text-[#0082ff] flex items-center gap-1 transition cursor-pointer shrink-0"
-                title={language === 'am' ? `${currentTheme.title} ገጽ ክፈት` : `Open ${currentTheme.title} Stream`}
+                title={language === 'am' ? `${currentTheme.title} ገጽ ክፈት` : `Open ${currentTheme.title}`}
               >
-                <span>{language === 'am' ? 'ወደ ዘርፍ' : 'Stream'}</span>
+                <span>{language === 'am' ? 'ወደ ክፍል' : 'Category'}</span>
                 <ExternalLink size={10} />
               </button>
             </div>

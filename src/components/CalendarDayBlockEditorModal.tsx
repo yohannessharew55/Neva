@@ -133,7 +133,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     if (!editTitle.trim()) return;
 
     const originalTask = dayTasks.find((t) => t.id === taskId);
-    const catPlan = categoryPlans[editCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
+    const catPlan = categoryPlans[editCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
     const domain = getDomainForCategory(editCategoryKey);
 
     setPendingScopeAction({
@@ -148,8 +148,8 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
         startTime: editStartTime.trim() || 'Flexible',
         durationMin: Number(editDurationMin),
         domain,
-        badge: catPlan?.title?.split(' ')[0] || 'Focus',
-        color: catPlan?.color || '#0082ff',
+        badge: catPlan?.title?.split(' ')[0] || 'Chess',
+        color: catPlan?.color || '#8b5cf6',
       },
     });
   };
@@ -169,27 +169,24 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const catPlan = categoryPlans[newCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
+    const catPlan = categoryPlans[newCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
     const domain = getDomainForCategory(newCategoryKey);
 
     setPendingScopeAction({
       isOpen: true,
       action: 'create',
       title: language === 'am' ? 'አዲስ ብሎክ ወደ ቀኑ አክል' : 'Add Block to Schedule',
-      itemDescription: `"${newTitle.trim()}" under ${catPlan?.title || 'Main Stream'} (${newStartTime} • ${newDurationMin}m)`,
+      itemDescription: `"${newTitle.trim()}" under ${catPlan?.title || 'Category'} (${newStartTime} • ${newDurationMin}m)`,
       newTaskData: {
         title: newTitle.trim(),
         startTime: newStartTime.trim() || 'Flexible',
         durationMin: Number(newDurationMin),
         domain,
-        badge: catPlan?.title?.split(' ')[0] || 'Focus',
-        color: catPlan?.color || '#0082ff',
+        badge: catPlan?.title?.split(' ')[0] || 'Chess',
+        color: catPlan?.color || '#8b5cf6',
         soundProfile: 'SOLFEGGIO_432',
         completed: false,
-        checklist: [
-          { id: `c-${Date.now()}-1`, text: 'Warm-up & context immersion', done: false },
-          { id: `c-${Date.now()}-2`, text: 'Deliberate high-focus practice', done: false },
-        ],
+        checklist: [],
       },
     });
   };
@@ -314,7 +311,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Stream</label>
+                  <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Category</label>
                   <select
                     value={newCategoryKey}
                     onChange={(e) => setNewCategoryKey(e.target.value)}
@@ -369,7 +366,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
             const matchedCatKey = Object.keys(categoryPlans).find((k) => 
               task.domain.toLowerCase().includes(k) || (task.badge && task.badge.toLowerCase().includes(k))
             ) || 'chess';
-            const cat = categoryPlans[matchedCatKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'stream', title: 'Focus', color: '#0082ff' };
+            const cat = categoryPlans[matchedCatKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
             const Icon = getCategoryIcon(matchedCatKey);
 
             if (isEditing) {
@@ -403,7 +400,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Stream</label>
+                      <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Category</label>
                       <select
                         value={editCategoryKey}
                         onChange={(e) => setEditCategoryKey(e.target.value)}
