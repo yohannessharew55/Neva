@@ -241,49 +241,6 @@ const DEFAULT_SUNDAY_HABITS: SundayRestHabit[] = [
   { id: 'sh-6', text: 'Gratitude Reflection & Peaceful Week Ahead Prep', completed: false, icon: '🧘' }
 ];
 
-const STREAM_SUGGESTIONS: Record<string, { title: string; duration: number }[]> = {
-  exercise: [
-    { title: 'Compound Strength & Weights', duration: 60 },
-    { title: 'Zone 2 Cardio & Running', duration: 45 },
-    { title: 'Mobility & Foam Rolling', duration: 25 },
-    { title: 'Hypertrophy Bodyweight Session', duration: 40 },
-  ],
-  chess: [
-    { title: 'Tactics & Calculation Puzzles', duration: 45 },
-    { title: 'Opening Repertoire & Prep', duration: 30 },
-    { title: 'Master Game Analysis & Endgames', duration: 60 },
-    { title: 'Rapid Practice with Engine Review', duration: 45 },
-  ],
-  art: [
-    { title: 'Daily Sketching & Proportion Study', duration: 30 },
-    { title: 'Oil Painting Layer & Glaze Session', duration: 90 },
-    { title: 'Color Theory & Values Palette', duration: 45 },
-  ],
-  music: [
-    { title: 'Guitar Scales & Finger Independence', duration: 30 },
-    { title: 'Song Repertoire & Rhythm Practice', duration: 45 },
-    { title: 'Improvisation & Ear Training', duration: 30 },
-  ],
-  architecture: [
-    { title: 'Concept Sketching & Spatial Layout', duration: 60 },
-    { title: '3D BIM Modeling & Detailing', duration: 90 },
-    { title: 'Precedent Study & Diagramming', duration: 45 },
-  ],
-  trading: [
-    { title: 'Pre-Market Preparation & Key Levels', duration: 30 },
-    { title: 'London / NY Open Execution Session', duration: 60 },
-    { title: 'Trade Journaling & Post-Market Review', duration: 30 },
-  ],
-  devotion: [
-    { title: 'Dawn Prayer & Scripture Meditation', duration: 30 },
-    { title: 'Midday Contemplation & Breathing', duration: 15 },
-    { title: 'Evening Examen & Gratitude Journal', duration: 20 },
-  ],
-  rest: [
-    { title: 'Strategic Recovery & Reading', duration: 45 },
-    { title: 'Deep Reset Walk in Nature', duration: 40 },
-  ]
-};
 
 export interface IntegratedCalendarViewProps {
   initialHorizon?: PlannerHorizon;
@@ -2611,29 +2568,6 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                   onChange={(e) => setModalTitle(e.target.value)}
                   className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
                 />
-
-                {STREAM_SUGGESTIONS[modalCategory] && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {STREAM_SUGGESTIONS[modalCategory].map((sug, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => {
-                          setModalTitle(sug.title);
-                          setModalDuration(sug.duration);
-                          try { soundEngine.playPencil(); } catch {}
-                        }}
-                        className={`text-[11px] font-medium px-2 py-1 rounded-lg border transition-all cursor-pointer ${
-                          modalTitle === sug.title 
-                            ? 'bg-[#0082ff] text-white border-blue-500 shadow-2xs' 
-                            : 'bg-slate-100 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:text-[#0082ff]'
-                        }`}
-                      >
-                        + {sug.title} ({sug.duration}m)
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* 3. Time & Duration */}
