@@ -4,7 +4,7 @@ import {
   Dumbbell, Swords, ChessKnight, Palette as PaletteIcon, Music, Building2, TrendingUp, 
   BookOpen, Shield, Sparkles, X, Edit2, Edit3, MoreVertical, Plus, Calendar, Compass, Star,
   Target, Award, Flag, ArrowRight, RotateCcw, Minus, List, LayoutGrid,
-  Sun, CalendarDays, Moon, ChevronUp, ChevronDown, GripVertical
+  Sun, CalendarDays, Moon, ChevronUp, ChevronDown, GripVertical, Play
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
@@ -14,7 +14,13 @@ import confetti from 'canvas-confetti';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { StrategicHorizonsView } from './StrategicHorizonsView';
 import { DurationPicker } from './DurationPicker';
-import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { 
+  checkScheduleConflict, 
+  ScheduleConflictResult,
+  autoResolveOverlappingTasks,
+  parseTimeToMinutes,
+  formatMinutesToTime
+} from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
@@ -263,7 +269,11 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     setSelectedCategoryId,
     categoryOrder,
     theme: appTheme,
-    reorderTasks
+    reorderTasks,
+    toggleTaskCompletion,
+    startTimerForTask,
+    activeTask,
+    isRunning
   } = useLivotion();
 
   // Active Horizon: Daily, Weekly, Monthly, Goals
@@ -294,6 +304,36 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [dailySubView, setDailySubView] = useState<'day' | 'week'>('day');
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'done'>('all');
+
+  const isViewingToday = useMemo(() => {
+    return selectedDate.toDateString() === new Date().toDateString();
+  }, [selectedDate]);
+
+  const isPastDay = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sel = new Date(selectedDate);
+    sel.setHours(0, 0, 0, 0);
+    return sel.getTime() < today.getTime();
+  }, [selectedDate]);
+
+  const isFutureDay = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sel = new Date(selectedDate);
+    sel.setHours(0, 0, 0, 0);
+    return sel.getTime() > today.getTime();
+  }, [selectedDate]);
+
+  const formatTimeRange = (timeStr?: string, durationMin: number = 45): string => {
+    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 'Flexible';
+    const startMin = parseTimeToMinutes(timeStr);
+    if (startMin < 0) return timeStr;
+    const endMin = (startMin + durationMin) % (24 * 60);
+    const startFormatted = formatTaskTime(timeStr);
+    const endFormatted = formatMinutesToTime(endMin);
+    return `${startFormatted} – ${endFormatted}`;
+  };
 
   // Active Stream Filter ('all' or specific category id: 'chess', 'exercise', etc.)
   const [selectedStreamFilter, setSelectedStreamFilter] = useState<string>('all');
@@ -632,10 +672,11 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     orderedCatKeys.forEach((catKey) => {
       const plan = categoryPlans[catKey];
       if (!plan) return;
-      const catTasks = activeTasks.filter((t) => {
+      const rawCatTasks = activeTasks.filter((t) => {
         const resolved = resolveTaskCategory(t);
         return resolved.id === catKey;
       });
+      const catTasks = autoResolveOverlappingTasks(rawCatTasks);
       if (catTasks.length > 0) {
         const totalDuration = catTasks.reduce((sum, t) => sum + (t.durationMin || 0), 0);
         const completedCount = catTasks.filter((t) => t.completed).length;
@@ -655,7 +696,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
 
     // Handle any tasks with categories not in orderedCatKeys
     const representedTaskIds = new Set(groups.flatMap((g) => g.tasks.map((t) => t.id)));
-    const remainingTasks = activeTasks.filter((t) => !representedTaskIds.has(t.id));
+    const remainingRaw = activeTasks.filter((t) => !representedTaskIds.has(t.id));
+    const remainingTasks = autoResolveOverlappingTasks(remainingRaw);
     if (remainingTasks.length > 0) {
       const resolved = resolveTaskCategory(remainingTasks[0]);
       groups.push({
@@ -1582,41 +1624,79 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     const isExpanded = expandedCategories[group.category.id] !== false;
 
                     return (
-                      <div key={group.category.id} className="space-y-2 mb-4">
+                      <div 
+                        key={group.category.id} 
+                        className="mb-4 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-xs hover:shadow-sm transition-all overflow-hidden"
+                        style={{
+                          boxShadow: `0 4px 20px -2px ${group.category.color}15`,
+                        }}
+                      >
                         {/* Category Group Header Card */}
                         <div 
                           onClick={() => toggleCategoryExpand(group.category.id)}
-                          className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all cursor-pointer select-none"
+                          className="flex items-center justify-between p-3 sm:p-3.5 transition-all cursor-pointer select-none border-b border-black/5 dark:border-white/5"
+                          style={{
+                            background: `linear-gradient(to right, ${group.category.color}12, transparent 85%)`,
+                          }}
                         >
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0">
                             <div 
-                              className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
-                              style={{ backgroundColor: `${group.category.color}25`, color: group.category.color }}
+                              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105"
+                              style={{ 
+                                backgroundColor: `${group.category.color}25`, 
+                                color: group.category.color,
+                                boxShadow: `0 2px 8px ${group.category.color}30`
+                              }}
                             >
-                              <CatIcon size={13} />
+                              <CatIcon size={15} strokeWidth={2.2} />
                             </div>
-                            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 truncate">
-                              {getCategoryTitleTranslated(group.category.id, group.category.title)}
-                            </span>
-                            <span className="text-[10px] font-mono font-bold text-slate-400">
-                              ({group.tasks.length} {group.tasks.length === 1 ? 'block' : 'blocks'})
-                            </span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 truncate">
+                                  {getCategoryTitleTranslated(group.category.id, group.category.title)}
+                                </span>
+                                <span 
+                                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: `${group.category.color}18`, color: group.category.color }}
+                                >
+                                  {group.tasks.length} {group.tasks.length === 1 ? (language === 'am' ? 'ብሎክ' : 'block') : (language === 'am' ? 'ብሎኮች' : 'blocks')}
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-extrabold bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-200">
-                              {group.completedCount}/{group.tasks.length} {formatTaskDuration(group.totalDuration)}
+                          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60">
+                              {group.completedCount}/{group.tasks.length} • {formatTaskDuration(group.totalDuration)}
                             </span>
-                            {isExpanded ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+
+                            {/* Quick Add Block Button for this Category */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenNewBlockModal(group.category.id);
+                              }}
+                              className="w-7 h-7 rounded-lg bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 flex items-center justify-center transition active:scale-90 cursor-pointer"
+                              title={language === 'am' ? 'በዚህ ዘርፍ ብሎክ ጨምር' : `Add block to ${group.category.title}`}
+                            >
+                              <Plus size={14} strokeWidth={2.5} />
+                            </button>
+
+                            {/* Expand/Collapse Chevron */}
+                            <div className="p-1 text-slate-400">
+                              {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                            </div>
                           </div>
                         </div>
 
                         {/* Task Cards under this Category */}
                         {isExpanded && (
-                          <div className="space-y-2 pl-1 sm:pl-2">
+                          <div className="p-2 sm:p-3 space-y-2">
                             {group.tasks.map((task) => {
                               const catInfo = resolveTaskCategory(task);
-                              const TaskIcon = catInfo.Icon;
+                              const isActive = activeTask?.id === task.id;
+                              const timeRange = formatTimeRange(task.startTime, task.durationMin);
 
                               return (
                                 <div
@@ -1656,103 +1736,214 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                     setDraggedTaskId(null);
                                     setDragOverTaskId(null);
                                   }}
-                                  className={`p-3.5 sm:p-4 rounded-2xl ${currentTheme.cardBg} border shadow-xs transition-all hover:shadow-md relative overflow-hidden ${
+                                  className={`group/task p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all duration-200 relative overflow-hidden ${
                                     draggedTaskId === task.id
-                                      ? 'opacity-40 scale-98 border-dashed border-[#0082ff] bg-blue-50/20'
+                                      ? 'opacity-40 scale-98 border-dashed border-[#0082ff] bg-blue-50/30'
                                       : dragOverTaskId === task.id
-                                      ? 'border-2 border-[#0082ff] bg-blue-50/20 scale-[1.01]'
-                                      : 'border-black/5 dark:border-white/5'
+                                      ? 'border-2 border-[#0082ff] bg-blue-50/40 scale-[1.01]'
+                                      : isActive
+                                      ? 'bg-blue-50/40 dark:bg-blue-950/30 border-[#0082ff]/40 shadow-sm ring-1 ring-[#0082ff]/30'
+                                      : task.completed
+                                      ? 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-200/40 dark:border-slate-800/40 opacity-70'
+                                      : 'bg-white dark:bg-slate-800/80 border-slate-200/70 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xs'
                                   }`}
-                                  style={{ borderLeft: `5px solid ${catInfo.color}` }}
                                 >
-                                  <div className="flex items-start justify-between gap-2.5">
-                                    {/* Plan Task Drag Handle */}
-                                    <div 
-                                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 mt-0.5 select-none transition-colors"
-                                      title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder in plan'}
-                                      onClick={(e) => e.stopPropagation()}
-                                      onTouchStart={(e) => handlePlanTaskTouchStart(e, task.id)}
-                                      onTouchMove={handlePlanTaskTouchMove}
-                                      onTouchEnd={handlePlanTaskTouchEnd}
-                                    >
-                                      <GripVertical size={14} />
-                                    </div>
+                                  {/* Subtle Category Color Left Accent Pill */}
+                                  <div 
+                                    className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full transition-all group-hover/task:w-1.5"
+                                    style={{ backgroundColor: catInfo.color }}
+                                  />
 
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1.5">
-                                        <div className={`inline-flex items-center gap-1 text-[11px] font-semibold ${currentTheme.textSecondary} bg-black/5 dark:bg-white/5 px-2.5 py-0.5 rounded-md`}>
-                                          <Clock size={11} className="text-[#0082ff]" />
-                                          <span>{formatTaskTime(task.startTime)}</span>
-                                          <span>•</span>
-                                          <span className="font-bold text-[#0082ff]">
-                                            {formatTaskDuration(task.durationMin || 45)}
-                                          </span>
-                                        </div>
-
-                                        {!task.date && (
-                                          <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">
-                                            Weekly
-                                          </span>
-                                        )}
+                                  <div className="flex items-center justify-between gap-2 sm:gap-2.5 pl-1.5">
+                                    {/* Left: Drag Handle, Completion / Status Ring, Time Range & Title */}
+                                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                                      {/* Plan Task Drag Handle */}
+                                      <div 
+                                        className="text-slate-300 hover:text-slate-600 dark:text-slate-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 select-none transition-colors"
+                                        title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder in plan'}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onTouchStart={(e) => handlePlanTaskTouchStart(e, task.id)}
+                                        onTouchMove={handlePlanTaskTouchMove}
+                                        onTouchEnd={handlePlanTaskTouchEnd}
+                                      >
+                                        <GripVertical size={14} />
                                       </div>
 
-                                      <h4 className={`text-sm sm:text-base font-bold ${currentTheme.textPrimary} tracking-tight`}>
-                                        {task.title}
-                                      </h4>
-                                    </div>
-
-                                    {/* 3 Vertical Dots Menu: Edit & Delete */}
-                                    <div className="relative">
+                                      {/* Completion / Status Button */}
                                       <button
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                          if (isViewingToday) {
+                                            toggleTaskCompletion(task.id);
+                                            try { soundEngine.playSound('CHIME_MEDITATION'); } catch {}
+                                          }
                                         }}
-                                        className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                                        title={language === 'am' ? 'አማራጮች' : 'Options'}
+                                        className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                                          task.completed
+                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs scale-105'
+                                            : isViewingToday
+                                            ? 'border-slate-300 dark:border-slate-600 hover:border-[#0082ff] hover:scale-110 bg-transparent cursor-pointer'
+                                            : 'border-dashed border-slate-300 dark:border-slate-600 bg-transparent cursor-default opacity-50'
+                                        }`}
+                                        title={task.completed ? 'Completed' : isViewingToday ? (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed') : (language === 'am' ? 'የታቀደ ብሎክ' : 'Planned block')}
                                       >
-                                        <MoreVertical size={16} />
+                                        {task.completed ? (
+                                          <Check size={12} strokeWidth={3} />
+                                        ) : isFutureDay ? (
+                                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                        ) : null}
                                       </button>
 
-                                      {openTaskMenuId === task.id && (
-                                        <>
-                                          <div 
-                                            className="fixed inset-0 z-40" 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setOpenTaskMenuId(null);
-                                            }} 
-                                          />
-                                          <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOpenTaskMenuId(null);
-                                                handleOpenEditBlockModal(task);
-                                              }}
-                                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition-colors cursor-pointer"
-                                            >
-                                              <Edit3 size={14} className="text-indigo-500" />
-                                              <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
-                                            </button>
-                                            <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOpenTaskMenuId(null);
-                                                handleDeleteTask(task.id);
-                                              }}
-                                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
-                                            >
-                                              <Trash2 size={14} className="text-rose-500" />
-                                              <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
-                                            </button>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                          {/* Time Range Pill */}
+                                          <div className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-mono font-bold ${currentTheme.textSecondary} bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md`}>
+                                            <Clock size={11} className="text-[#0082ff] shrink-0" />
+                                            <span>{timeRange}</span>
                                           </div>
-                                        </>
-                                      )}
+
+                                          {/* Duration Badge */}
+                                          <span 
+                                            className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md"
+                                            style={{ backgroundColor: `${catInfo.color}15`, color: catInfo.color }}
+                                          >
+                                            {formatTaskDuration(task.durationMin || 45)}
+                                          </span>
+
+                                          {/* Cadence Badge */}
+                                          {!task.date ? (
+                                            <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">
+                                              {language === 'am' ? 'ሳምንታዊ' : 'Weekly'}
+                                            </span>
+                                          ) : (
+                                            <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">
+                                              {task.date}
+                                            </span>
+                                          )}
+
+                                          {/* Active LIVE timer pill */}
+                                          {isActive && (
+                                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-md border border-emerald-200 animate-pulse">
+                                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                              <span>LIVE</span>
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Task Title */}
+                                        <h4 className={`text-xs sm:text-sm font-bold tracking-tight truncate ${
+                                          task.completed ? 'line-through text-slate-400 dark:text-slate-500' : currentTheme.textPrimary
+                                        }`}>
+                                          {task.title}
+                                        </h4>
+                                      </div>
+                                    </div>
+
+                                    {/* Right: Quick Action Focus/Play Button, Edit & Menu */}
+                                    <div className="flex items-center gap-1 shrink-0 ml-1">
+                                      {/* Quick Focus Session Play Button */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          startTimerForTask(task);
+                                          try { soundEngine.playBlockTimerStartMusic(); } catch {}
+                                        }}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-50 hover:bg-[#0082ff] text-[#0082ff] hover:text-white dark:bg-blue-950/60 dark:hover:bg-[#0082ff] dark:text-blue-400 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-90"
+                                        title={language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Timer'}
+                                      >
+                                        <Play size={12} fill="currentColor" className="ml-0.5" />
+                                      </button>
+
+                                      {/* Quick Edit Button */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditBlockModal(task);
+                                        }}
+                                        className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                        title={language === 'am' ? 'አስተካክል' : 'Edit'}
+                                      >
+                                        <Edit3 size={13} />
+                                      </button>
+
+                                      {/* 3 Vertical Dots Menu: More / Delete */}
+                                      <div className="relative">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                          }}
+                                          className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                                          title={language === 'am' ? 'ተጨማሪ አማራጮች' : 'More Options'}
+                                        >
+                                          <MoreVertical size={14} />
+                                        </button>
+
+                                        {openTaskMenuId === task.id && (
+                                          <>
+                                            <div 
+                                              className="fixed inset-0 z-40" 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenTaskMenuId(null);
+                                              }} 
+                                            />
+                                            <div className="absolute right-0 top-full mt-1 z-50 w-36 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setOpenTaskMenuId(null);
+                                                  handleOpenEditBlockModal(task);
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition-colors cursor-pointer"
+                                              >
+                                                <Edit3 size={13} className="text-indigo-500" />
+                                                <span>{language === 'am' ? 'አስተካክል' : 'Edit Block'}</span>
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setOpenTaskMenuId(null);
+                                                  addTask({
+                                                    title: `${task.title} (Copy)`,
+                                                    startTime: task.startTime,
+                                                    durationMin: task.durationMin,
+                                                    domain: task.domain,
+                                                    badge: task.badge,
+                                                    color: task.color,
+                                                    completed: false,
+                                                    date: task.date,
+                                                  });
+                                                  try { soundEngine.playPencil(); } catch {}
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer"
+                                              >
+                                                <Plus size={13} className="text-[#0082ff]" />
+                                                <span>{language === 'am' ? 'ቅዳ' : 'Duplicate'}</span>
+                                              </button>
+                                              <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setOpenTaskMenuId(null);
+                                                  handleDeleteTask(task.id);
+                                                }}
+                                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
+                                              >
+                                                <Trash2 size={13} className="text-rose-500" />
+                                                <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                              </button>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -1964,9 +2155,16 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                 return (
                   <div
                     key={cat.id}
-                    className={`p-4 rounded-2xl ${currentTheme.cardBg} border border-black/5 dark:border-white/5 shadow-xs relative overflow-hidden`}
-                    style={{ borderLeft: `5px solid ${cat.color}` }}
+                    className={`p-4 rounded-2xl ${currentTheme.cardBg} border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative overflow-hidden transition-all hover:shadow-sm`}
+                    style={{
+                      boxShadow: `0 4px 20px -2px ${cat.color}15`,
+                    }}
                   >
+                    {/* Subtle Category Left Accent */}
+                    <div 
+                      className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     {/* Header: Stream Badge & Weekly Target Hours Adjustment */}
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2">
@@ -2307,9 +2505,16 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                 return (
                   <div
                     key={cat.id}
-                    className={`p-4 rounded-2xl ${currentTheme.cardBg} border border-black/5 dark:border-white/5 shadow-xs relative overflow-hidden`}
-                    style={{ borderLeft: `5px solid ${cat.color}` }}
+                    className={`p-4 rounded-2xl ${currentTheme.cardBg} border border-slate-200/80 dark:border-slate-800/80 shadow-xs relative overflow-hidden transition-all hover:shadow-sm`}
+                    style={{
+                      boxShadow: `0 4px 20px -2px ${cat.color}15`,
+                    }}
                   >
+                    {/* Subtle Category Left Accent */}
+                    <div 
+                      className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     {/* Header */}
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-2">
