@@ -1532,54 +1532,6 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                             <h4 className={`text-sm sm:text-base font-bold ${currentTheme.textPrimary} tracking-tight`}>
                               {task.title}
                             </h4>
-
-                            {task.checklist && task.checklist.length > 0 && (
-                              <div className="mt-2.5 space-y-1">
-                                {task.checklist.map(step => (
-                                  <div
-                                    key={step.id}
-                                    onClick={() => handleToggleChecklistStep(task.id, step.id)}
-                                    className="flex items-center gap-2 text-xs cursor-pointer group py-0.5"
-                                  >
-                                    <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
-                                      step.done 
-                                        ? 'bg-[#0082ff] border-blue-500 text-white' 
-                                        : 'border-slate-400 dark:border-slate-500 group-hover:border-[#0082ff]'
-                                    }`}>
-                                      {step.done && <Check size={11} strokeWidth={3} />}
-                                    </div>
-                                    <span className={`transition-all ${
-                                      step.done 
-                                        ? 'line-through text-slate-400 dark:text-slate-500' 
-                                        : currentTheme.textPrimary
-                                    }`}>
-                                      {step.text}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="mt-2 flex items-center gap-1.5 max-w-sm">
-                              <input
-                                type="text"
-                                placeholder="+ Add action step..."
-                                value={inlineStepInputs[task.id] || ''}
-                                onChange={(e) => setInlineStepInputs(prev => ({ ...prev, [task.id]: e.target.value }))}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleAddInlineStep(task.id);
-                                }}
-                                className={`text-xs px-2.5 py-1 rounded-lg border border-black/10 dark:border-white/10 ${currentTheme.inputBg} focus:outline-none focus:ring-1 focus:ring-[#0082ff] flex-1`}
-                              />
-                              {inlineStepInputs[task.id] && (
-                                <button
-                                  onClick={() => handleAddInlineStep(task.id)}
-                                  className="text-xs bg-[#0082ff] text-white px-2 py-1 rounded-lg font-bold cursor-pointer"
-                                >
-                                  Add
-                                </button>
-                              )}
-                            </div>
                           </div>
 
                           {/* 3 Vertical Dots Menu: Edit & Delete */}

@@ -690,13 +690,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Group tasks by Main Stream Subjects for this active day: aligns with drag order & plan system
-  const sortedTasks = [...dayTasks].sort((a, b) => {
-    const timeA = parseTimeToMinutes(a.startTime);
-    const timeB = parseTimeToMinutes(b.startTime);
-    if (timeA !== timeB && timeA > 0 && timeB > 0) return timeA - timeB;
-    return dayTasks.indexOf(a) - dayTasks.indexOf(b);
-  });
+  // Group tasks by Main Stream Subjects for this active day: strictly preserves drag order and plan system
+  const sortedTasks = [...dayTasks];
 
   const baseCategoryKeys = Object.keys(categoryPlans);
   const allCategoryKeys = [...baseCategoryKeys].sort((a, b) => {
@@ -948,7 +943,9 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           onTouchStart={handlePaperTouchStart}
           onTouchEnd={handlePaperTouchEnd}
           onDoubleClick={handlePaperDoubleClick}
-          className="relative z-10 border-b border-black/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none"
+          className={`border-b border-black/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none transition-all ${
+            showStickyMenu ? 'relative z-50' : 'relative z-10'
+          }`}
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to view full screen')}
         >
           <div className="flex items-center justify-between gap-2 pr-7 sm:pr-8">
@@ -1006,7 +1003,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             </div>
 
             {/* 3-Dots Sticky Note Action Menu (Color Palette & Full Screen) */}
-            <div className="flex items-center gap-1.5 relative z-30">
+            <div className="flex items-center gap-1.5 relative z-50">
               <div className="relative">
                 <button
                   type="button"
@@ -1031,7 +1028,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       }} 
                     />
                     <div 
-                      className="absolute right-0 top-full mt-1.5 z-50 w-48 bg-white dark:bg-slate-900 border border-black/10 dark:border-white/10 rounded-2xl p-2 shadow-2xl space-y-2 backdrop-blur-md animate-fadeIn select-none"
+                      className="absolute right-0 top-full mt-2 z-50 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-2xl space-y-2 animate-fadeIn select-none ring-1 ring-black/10 pointer-events-auto"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Full Screen Toggle */}
@@ -1042,18 +1039,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                           setIsFullScreen(!isFullScreen);
                           try { soundEngine.playPencil(); } catch {}
                         }}
-                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
                       >
                         {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                         <span>{isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Full Screen')}</span>
                       </button>
 
                       {/* Sticky Color Palette */}
-                      <div className="pt-1.5 border-t border-black/5 dark:border-white/5">
+                      <div className="pt-2 border-t border-black/5 dark:border-white/5">
                         <div className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                           {language === 'am' ? 'የወረቀት ቀለም' : 'Sticky Color'}
                         </div>
-                        <div className="grid grid-cols-5 gap-1.5 px-2 py-1">
+                        <div className="grid grid-cols-5 gap-2 px-2 py-1.5">
                           {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
                             <button
                               key={cKey}
@@ -1064,7 +1061,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                 setShowStickyMenu(false);
                               }}
                               className={`w-6 h-6 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
-                                colorTheme === cKey ? 'ring-2 ring-offset-1 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
+                                colorTheme === cKey ? 'ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
                               }`}
                               style={{ backgroundColor: THEMES[cKey].dotColor }}
                               title={THEMES[cKey].name}

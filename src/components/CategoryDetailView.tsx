@@ -14,6 +14,7 @@ import { CategoryFocusSessionModal } from './CategoryFocusSessionModal';
 import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { gregorianToEthiopian } from '../utils/ethiopianCalendar';
+import { getLocalDateStr } from '../utils/dateUtils';
 
 export const CategoryDetailView: React.FC = () => {
   const { 
@@ -323,7 +324,7 @@ export const CategoryDetailView: React.FC = () => {
 
       days.push({
         date: d,
-        dateStr: d.toISOString().split('T')[0],
+        dateStr: getLocalDateStr(d),
         dayNum: displayDayNum,
         secondaryDayNum,
         dayShort: dayNamesEn[dayIndex],
@@ -340,7 +341,7 @@ export const CategoryDetailView: React.FC = () => {
   // Tasks for category on selected date
   const streamTasksForSelectedDay = useMemo(() => {
     if (!category) return [];
-    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateStr(selectedTimelineDate);
     const dayIndex = selectedTimelineDate.getDay();
     const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex];
 

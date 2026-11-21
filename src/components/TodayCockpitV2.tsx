@@ -167,19 +167,11 @@ export const TodayCockpitV2: React.FC = () => {
     return dayTasks.some((t) => getCategoryKeyForTask(t) === catKey);
   }) || orderedCategoryKeys[0] || 'chess';
 
-  // Tasks in this active focus category
+  // Tasks in this active focus category - strictly follows the sticky note task drag order!
+  // (Whichever task is on top in the category list on the sticky note is the active focus task)
   const tasksInActiveCategory = dayTasks.filter((t) => getCategoryKeyForTask(t) === activeFocusCategoryKey);
   const uncompletedInCat = tasksInActiveCategory.filter((t) => !t.completed);
-  const candidateTasks = uncompletedInCat.length > 0 ? uncompletedInCat : tasksInActiveCategory;
-
-  candidateTasks.sort((a, b) => {
-    const timeA = parseTimeToMinutes(a.startTime);
-    const timeB = parseTimeToMinutes(b.startTime);
-    if (timeA !== timeB && timeA > 0 && timeB > 0) return timeA - timeB;
-    return dayTasks.indexOf(a) - dayTasks.indexOf(b);
-  });
-
-  const activeFocusTask = candidateTasks[0] || dayTasks.find((t) => !t.completed) || dayTasks[0];
+  const activeFocusTask = uncompletedInCat[0] || tasksInActiveCategory[0] || dayTasks.find((t) => !t.completed) || dayTasks[0];
 
   const getCategoryTheme = (catKey: string) => {
     switch (catKey) {

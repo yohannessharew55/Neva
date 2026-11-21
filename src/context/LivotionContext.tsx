@@ -560,6 +560,24 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return [];
   });
 
+  const [deletedTaskIds, setDeletedTaskIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('neva_deleted_task_ids_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const recordDeletedTaskId = (id: string) => {
+    setDeletedTaskIds((prev) => {
+      const next = Array.from(new Set([...prev, id]));
+      try {
+        localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const setCategoryOrder = (order: string[]) => {
     setCategoryOrderState(order);
     try {
@@ -1502,18 +1520,40 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const toggleTaskCompletion = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          const nextCompleted = !t.completed;
-          if (nextCompleted) {
-            soundEngine.playSound('CHIME_MEDITATION');
+    setTasks((prev) => {
+      const exists = prev.some((t) => t.id === taskId);
+      if (exists) {
+        return prev.map((t) => {
+          if (t.id === taskId) {
+            const nextCompleted = !t.completed;
+            if (nextCompleted) {
+              soundEngine.playSound('CHIME_MEDITATION');
+            }
+            return { ...t, completed: nextCompleted };
           }
-          return { ...t, completed: nextCompleted };
-        }
-        return t;
-      })
-    );
+          return t;
+        });
+      }
+
+      // If taskId is a dynamic routine task, materialize it directly into state with toggled completion
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const sched = getDaySchedule(now);
+      const dynamicTask = sched.tasks.find((t) => t.id === taskId);
+      if (dynamicTask) {
+        soundEngine.playSound('CHIME_MEDITATION');
+        return [
+          ...prev,
+          {
+            ...dynamicTask,
+            id: taskId,
+            date: dynamicTask.date || todayStr,
+            completed: !dynamicTask.completed,
+          },
+        ];
+      }
+      return prev;
+    });
   };
 
   const toggleChecklistItem = (taskId: string, checklistId: string) => {
@@ -1557,9 +1597,47 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateTask = (taskId: string, updates: Partial<ScheduleTask>) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t))
-    );
+    setTasks((prev) => {
+      const exists = prev.some((t) => t.id === taskId);
+      if (exists) {
+        return prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
+      }
+
+      // If not in prev, this is a routine/default task being edited for the first time
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const sched = getDaySchedule(now);
+      const dynamicTask = sched.tasks.find((t) => t.id === taskId || (updates.title && t.title.toLowerCase().trim() === updates.title.toLowerCase().trim()));
+
+      if (dynamicTask) {
+        return [
+          ...prev,
+          {
+            ...dynamicTask,
+            ...updates,
+            id: taskId,
+            date: updates.date || dynamicTask.date || todayStr,
+          },
+        ];
+      }
+
+      return [
+        ...prev,
+        {
+          id: taskId,
+          title: updates.title || 'Focus Block',
+          startTime: updates.startTime || '09:00 AM',
+          durationMin: updates.durationMin || 45,
+          completed: updates.completed ?? false,
+          color: updates.color || '#0082ff',
+          badge: updates.badge || 'Focus',
+          domain: updates.domain || 'OPEN_MULTIPURPOSE',
+          date: updates.date || todayStr,
+          ...updates,
+        } as ScheduleTask,
+      ];
+    });
+
     if (activeTask?.id === taskId) {
       setActiveTask((prev) => (prev ? { ...prev, ...updates } : null));
     }
@@ -1567,6 +1645,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const deleteTask = (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    recordDeletedTaskId(taskId);
     if (activeTask?.id === taskId) {
       stopTimer();
     }
@@ -1830,10 +1909,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     if (customTasks.length > 0) {
-      // Seamlessly merge any registered stream routine tasks for this day that aren't already represented in customTasks!
+      // Seamlessly merge any registered stream routine tasks for this day that aren't already represented in customTasks or deleted!
       const defaultTasks = getWeekdayDefaultTasks(dayOfWeek);
-      const customTitles = new Set(customTasks.map((t) => t.title.toLowerCase().trim()));
-      const streamTasksToAdd = defaultTasks.filter((dt) => !customTitles.has(dt.title.toLowerCase().trim()));
+      const isRepresented = (dt: ScheduleTask) => 
+        deletedTaskIds.includes(dt.id) || 
+        customTasks.some((ct) => ct.id === dt.id || ((ct as any).originalId && (ct as any).originalId === dt.id) || ct.title.toLowerCase().trim() === dt.title.toLowerCase().trim());
+      const streamTasksToAdd = defaultTasks.filter((dt) => !isRepresented(dt));
 
       return {
         tasks: [...customTasks, ...streamTasksToAdd],
@@ -1844,7 +1925,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       };
     }
 
-    const defaultTasks = getWeekdayDefaultTasks(dayOfWeek);
+    const defaultTasks = getWeekdayDefaultTasks(dayOfWeek).filter((dt) => !deletedTaskIds.includes(dt.id));
     const source = tasks.some((t) => !t.date && t.dayOfWeek === dayOfWeek)
       ? ('weekday_default' as const)
       : ('global_default' as const);
