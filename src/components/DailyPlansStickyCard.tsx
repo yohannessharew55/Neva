@@ -418,21 +418,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           title={isFullScreen ? "Double Tap to Exit Full Screen" : "Double Tap to View Full Screen"}
         />
 
-        {/* 2. Pushpin pinned on the top right */}
-        <div 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFullScreen((prev) => !prev);
-          }}
-          onDoubleClick={handlePaperDoubleClick}
-          onTouchEnd={handlePaperTouchEnd}
-          className="absolute top-2 right-4 text-xl filter drop-shadow-xs select-none z-30 transition-transform hover:scale-110 active:scale-95 cursor-pointer touch-manipulation"
-          title={isFullScreen ? "Exit Full Screen" : "Toggle Full Screen"}
-        >
-          📌
-        </div>
-
-        {/* 3. The Authentic Sticky Note Paper Card - Double tap on clear area toggles full screen */}
+        {/* The Authentic Sticky Note Paper Card - Double tap on clear area toggles full screen */}
         <div 
           onTouchStart={handlePaperTouchStart}
           onTouchEnd={handlePaperTouchEnd}
@@ -445,12 +431,6 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
           style={{
             backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLine} 28px)`,
           }}
-        />
-
-        {/* Red/Rose Left Margin Line */}
-        <div 
-          className="absolute top-0 bottom-0 left-9 sm:left-11 w-px pointer-events-none"
-          style={{ backgroundColor: theme.marginLine }}
         />
 
         {/* Sticky Note Corner Fold */}

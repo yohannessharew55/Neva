@@ -591,15 +591,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   </span>
                 </div>
 
-                {/* 2. Brass Pushpin on Top Right */}
-                <div 
-                  className="absolute top-2 right-4 z-20 select-none cursor-pointer filter drop-shadow-xs transition-transform group-hover/stickynote:scale-125"
-                  title="Pinned Daily Review Note"
-                >
-                  <span className="text-xl">📌</span>
-                </div>
-
-                {/* 3. The Physical Sticky Note Card */}
+                {/* The Physical Sticky Note Card */}
                 <div 
                   className={`relative rounded-3xl border p-5 sm:p-5.5 transition-all duration-200 overflow-hidden ${theme.paperBg} ${theme.paperBorder} ${theme.textPrimary}`}
                   style={{
@@ -610,10 +602,7 @@ export const DailyStickyNotesGalleryView: React.FC = () => {
                   <div 
                     className="absolute inset-0 pointer-events-none select-none opacity-80"
                     style={{
-                      backgroundImage: `
-                        repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLineColor} 28px),
-                        linear-gradient(90deg, transparent 32px, ${theme.marginLineColor} 33px, ${theme.marginLineColor} 34px, transparent 35px)
-                      `,
+                      backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLineColor} 28px)`,
                     }}
                   />
 

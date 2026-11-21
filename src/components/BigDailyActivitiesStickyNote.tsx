@@ -995,22 +995,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           </span>
         </div>
 
-        {/* 2. Pushpin on Top Right (Click or double tap toggles full screen) */}
-        <div 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFullScreen((prev) => !prev);
-            try { soundEngine.playPencil(); } catch {}
-          }}
-          onDoubleClick={handlePaperDoubleClick}
-          onTouchEnd={handlePaperTouchEnd}
-          className="absolute top-1.5 right-3 sm:right-5 z-30 select-none cursor-pointer filter drop-shadow-xs transition-transform hover:scale-110 active:scale-95 touch-manipulation"
-          title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Toggle Full Screen')}
-        >
-          <span className="text-lg sm:text-xl pointer-events-none">📌</span>
-        </div>
-
-        {/* 3. The Stationary Classic Sticky Note Card - Double tap on clear area toggles full screen */}
+        {/* The Stationary Classic Sticky Note Card - Double tap on clear area toggles full screen */}
         <div 
           onTouchStart={handlePaperTouchStart}
           onTouchEnd={handlePaperTouchEnd}
@@ -1023,14 +1008,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               : `0 10px 24px -6px ${theme.shadowColor}, 0 4px 8px -2px rgba(0,0,0,0.05)`,
           }}
         >
-        {/* Ruled Lined Paper & Red Left Margin Line */}
+        {/* Ruled Lined Paper Background */}
         <div 
           className="absolute inset-0 pointer-events-none select-none opacity-80"
           style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLineColor} 28px),
-              linear-gradient(90deg, transparent 32px, ${theme.marginLineColor} 33px, ${theme.marginLineColor} 34px, transparent 35px)
-            `,
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 27px, ${theme.ruledLineColor} 28px)`,
           }}
         />
 
