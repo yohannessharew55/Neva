@@ -22,6 +22,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AutoUpdateBanner } from './components/AutoUpdateBanner';
 import { SplashMotionIntro } from './components/SplashMotionIntro';
 import { TimerCompletionModal } from './components/TimerCompletionModal';
+import { TaskAlarmBanner } from './components/TaskAlarmBanner';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -152,6 +153,7 @@ export const App: React.FC = () => {
       <LivotionProvider>
         <SplashMotionIntro />
         <AutoUpdateBanner />
+        <TaskAlarmBanner />
         <FloatingMiniTimerWindow />
         <TimerCompletionModal />
         <div className="min-h-screen max-w-full overflow-x-clip bg-[#fcfbf9] text-slate-800 dark:bg-[#0b0f17] dark:text-slate-100 flex flex-col w-full font-sans transition-colors selection:bg-[#0082ff] selection:text-white">

@@ -11,6 +11,8 @@ import { soundEngine } from '../utils/audio';
 import { gregorianToEthiopian, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
+import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 interface CalendarDayBlockEditorModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
 }) => {
   const { 
     language, 
+    tasks,
     categoryPlans, 
     getDaySchedule, 
     materializeDaySchedule,
@@ -46,6 +49,10 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
   const [newCategoryKey, setNewCategoryKey] = useState('chess');
   const [newStartTime, setNewStartTime] = useState('09:00 AM');
   const [newDurationMin, setNewDurationMin] = useState(45);
+
+  // Schedule Overlap Conflict Modal State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   // Scope Prompt State
   const [pendingScopeAction, setPendingScopeAction] = useState<{
@@ -136,6 +143,28 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     const catPlan = categoryPlans[editCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
     const domain = getDomainForCategory(editCategoryKey);
 
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        id: taskId,
+        title: editTitle.trim(),
+        startTime: editStartTime.trim() || 'Flexible',
+        durationMin: Number(editDurationMin),
+        categoryId: editCategoryKey,
+        domain,
+        badge: catPlan?.title?.split(' ')[0] || 'Chess',
+      },
+      dateStr,
+      existingTasks: tasks,
+      categoryPlans,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping block
+    }
+
     setPendingScopeAction({
       isOpen: true,
       action: 'edit',
@@ -171,6 +200,27 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
 
     const catPlan = categoryPlans[newCategoryKey] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'chess', title: 'Chess', color: '#8b5cf6' };
     const domain = getDomainForCategory(newCategoryKey);
+
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        title: newTitle.trim(),
+        startTime: newStartTime.trim() || 'Flexible',
+        durationMin: Number(newDurationMin),
+        categoryId: newCategoryKey,
+        domain,
+        badge: catPlan?.title?.split(' ')[0] || 'Chess',
+      },
+      dateStr,
+      existingTasks: tasks,
+      categoryPlans,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping block
+    }
 
     setPendingScopeAction({
       isOpen: true,
@@ -557,6 +607,19 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
           onConfirm={handleConfirmScope}
         />
       )}
+      {/* Schedule Overlap Conflict Stoppage Notification Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(time) => {
+          if (editingTaskId) {
+            setEditStartTime(time);
+          } else {
+            setNewStartTime(time);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -14,6 +14,8 @@ import confetti from 'canvas-confetti';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { StrategicHorizonsView } from './StrategicHorizonsView';
 import { DurationPicker } from './DurationPicker';
+import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 type PlannerHorizon = 'daily' | 'weekly' | 'monthly' | 'goals';
@@ -912,6 +914,10 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   const [modalSelectedDays, setModalSelectedDays] = useState<number[]>([3]); // default Wednesday = 3
   const [modalChecklist, setModalChecklist] = useState<string[]>(['']);
 
+  // Schedule Overlap Conflict Modal State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+
   // Open modal for a new block
   const handleOpenNewBlockModal = (defaultCatId?: string, forceWeekly = false) => {
     const catId = defaultCatId || (selectedStreamFilter !== 'all' ? selectedStreamFilter : Object.keys(categoryPlans)[0] || 'exercise');
@@ -998,6 +1004,29 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
       }));
 
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        id: editingTask?.id,
+        title: modalTitle.trim(),
+        startTime: modalStartTime,
+        durationMin: modalDuration,
+        categoryId: modalCategory,
+        domain,
+        badge: categoryTitle,
+      },
+      dateStr,
+      dayOfWeek: modalCadenceType !== 'daily' ? modalSelectedDays[0] : undefined,
+      existingTasks: tasks,
+      categoryPlans,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping schedule block
+    }
 
     if (editingTask) {
       updateTask(editingTask.id, {
@@ -2957,6 +2986,14 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
           </div>
         </div>
       )}
+
+      {/* Schedule Overlap Conflict Stoppage Notification Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(time) => setModalStartTime(time)}
+      />
 
     </div>
   );

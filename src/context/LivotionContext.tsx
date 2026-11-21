@@ -31,6 +31,7 @@ import {
 import { soundEngine } from '../utils/audio';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { timerNotificationService } from '../utils/timerNotificationService';
+import { taskAlarmService } from '../utils/taskAlarmNotificationService';
 import { 
   syncStateToCloud, 
   fetchStateFromCloud, 
@@ -1227,6 +1228,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => clearTimeout(syncTimer);
   }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
+
+  // Sync high-priority task start-time alarms for mobile notifications & in-app alerts
+  useEffect(() => {
+    try {
+      taskAlarmService.syncTaskAlarms(tasks, categoryPlans);
+    } catch (e) {
+      console.warn('Task alarm sync error:', e);
+    }
+  }, [tasks, categoryPlans]);
 
   // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {

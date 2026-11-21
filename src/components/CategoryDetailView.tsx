@@ -16,6 +16,8 @@ import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { gregorianToEthiopian } from '../utils/ethiopianCalendar';
 import { getLocalDateStr } from '../utils/dateUtils';
+import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 export const CategoryDetailView: React.FC = () => {
   const { 
@@ -57,6 +59,10 @@ export const CategoryDetailView: React.FC = () => {
   const [taskTitle, setTaskTitle] = useState('');
   const [taskTime, setTaskTime] = useState('06:00 PM');
   const [taskDuration, setTaskDuration] = useState(45);
+
+  // Schedule Overlap Conflict Modal State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   // Daily focus & block modal state
   const [newDailyPlanText, setNewDailyPlanText] = useState('');
@@ -262,6 +268,28 @@ export const CategoryDetailView: React.FC = () => {
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
+
+    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        title: taskTitle.trim(),
+        startTime: taskTime,
+        durationMin: Number(taskDuration),
+        categoryId: category.id,
+        domain: domainTypes[0],
+        badge: category.title.split(' ')[0],
+      },
+      dateStr,
+      existingTasks: tasks,
+      categoryPlans,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return;
+    }
 
     addTask({
       domain: domainTypes[0],
@@ -503,6 +531,33 @@ export const CategoryDetailView: React.FC = () => {
   const handleSaveStreamTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskModalTitle.trim()) return;
+
+    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const dayOfWeek = selectedTimelineDate.getDay();
+    const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        id: editingTask?.id,
+        title: taskModalTitle.trim(),
+        startTime: taskModalTime,
+        durationMin: Number(taskModalDuration),
+        categoryId: category.id,
+        domain: domainTypes[0],
+        badge: category.title.split(' ')[0],
+      },
+      dateStr,
+      dayOfWeek: taskPlanHorizon !== 'daily' ? dayNum : undefined,
+      existingTasks: tasks,
+      categoryPlans,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Stoppage: Do not save overlapping schedule block
+    }
 
     if (editingTask && !editingTask.id.startsWith('cadence-')) {
       updateTask(editingTask.id, {
@@ -969,66 +1024,71 @@ export const CategoryDetailView: React.FC = () => {
           {/* Primary 2 Columns: Stream Execution Timeline & Progress Tracking */}
           <div className="lg:col-span-2 space-y-5">
             
-            {/* 1. TODAY'S / DAY'S PROGRESS TRACKING CARD (From User Design) */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#12142d] via-[#16193b] to-[#1c1a45] text-white p-5 sm:p-6 border border-indigo-900/40 shadow-xl">
-              {/* Subtle background glow */}
-              <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+            {/* 1. TODAY'S / DAY'S PROGRESS TRACKING CARD (Dark mode from user design, Creative & Beautiful Day Mode) */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#ffffff] via-[#f8faff] to-[#eef2ff] dark:from-[#15162d] dark:via-[#191c3e] dark:to-[#1c2045] p-5 sm:p-6 border border-indigo-100/90 dark:border-indigo-900/40 shadow-[0_12px_32px_-4px_rgba(79,70,229,0.08),0_4px_12px_-2px_rgba(0,0,0,0.02)] dark:shadow-2xl transition-all duration-300">
+              {/* Subtle atmospheric ambient glow */}
+              <div className="absolute -top-12 -right-12 w-52 h-52 bg-gradient-to-br from-indigo-300/20 via-sky-300/15 to-transparent dark:from-blue-500/10 dark:via-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-300/15 via-indigo-200/10 to-transparent dark:from-indigo-600/5 dark:to-transparent rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex items-center justify-between gap-4">
+              <div className="relative z-10 flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <span className="text-[11px] sm:text-xs font-semibold text-indigo-300/80 tracking-wide uppercase">
-                    {selectedTimelineDate.toDateString() === new Date().toDateString()
-                      ? (language === 'am' ? 'የዛሬ እድገት' : "Today's Progress")
-                      : `${selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })} ${language === 'am' ? 'እድገት' : 'Progress'}`}
+                  <span className="text-[11px] sm:text-xs font-black text-indigo-600 dark:text-[#8b97cc] tracking-wider uppercase flex items-center gap-1.5">
+                    <Sparkles size={12} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                    <span>
+                      {selectedTimelineDate.toDateString() === new Date().toDateString()
+                        ? (language === 'am' ? 'የዛሬ እድገት' : "Today's Progress")
+                        : `${selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })} ${language === 'am' ? 'እድገት' : 'Progress'}`}
+                    </span>
                   </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                     {dayCompletedCount} of {dayTotalCount} completed
                   </h3>
-                  <p className="text-xs text-indigo-200/70 font-medium">
-                    {dayPercentage}% done — {motivationalMsg} 🚀
+                  <p className="text-xs text-slate-500 dark:text-indigo-200/70 font-semibold flex items-center gap-1">
+                    <span>{dayPercentage}% done — {motivationalMsg}</span>
+                    <span>🚀</span>
                   </p>
                 </div>
 
                 {/* Circular Progress Ring */}
                 <div className="relative shrink-0 flex items-center justify-center">
-                  <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90">
+                  <svg className="w-18 h-18 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 80 80">
                     <circle
-                      cx="38"
-                      cy="38"
-                      r="28"
+                      cx="40"
+                      cy="40"
+                      r="30"
                       stroke="currentColor"
-                      strokeWidth="6"
+                      strokeWidth="6.5"
                       fill="transparent"
-                      className="text-slate-800/80"
+                      className="text-indigo-100/90 dark:text-[#21264c]"
                     />
                     <circle
-                      cx="38"
-                      cy="38"
-                      r="28"
+                      cx="40"
+                      cy="40"
+                      r="30"
                       stroke="currentColor"
-                      strokeWidth="6"
+                      strokeWidth="6.5"
                       fill="transparent"
-                      strokeDasharray={2 * Math.PI * 28}
-                      strokeDashoffset={2 * Math.PI * 28 - (dayPercentage / 100) * (2 * Math.PI * 28)}
+                      strokeDasharray={2 * Math.PI * 30}
+                      strokeDashoffset={2 * Math.PI * 30 - (dayPercentage / 100) * (2 * Math.PI * 30)}
                       strokeLinecap="round"
-                      className="text-[#818cf8] transition-all duration-700 ease-out"
+                      className="text-[#4f46e5] dark:text-[#818cf8] transition-all duration-700 ease-out"
                     />
                   </svg>
-                  <span className="absolute text-sm sm:text-base font-black text-white font-mono">
+                  <span className="absolute text-sm sm:text-base font-black text-slate-900 dark:text-white font-mono">
                     {dayPercentage}%
                   </span>
                 </div>
               </div>
 
               {/* Footer Row: Streak & Total Completed */}
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-semibold">
-                <div className="flex items-center gap-1.5 text-amber-300">
+              <div className="relative z-10 mt-4 pt-3 border-t border-indigo-100/80 dark:border-white/10 flex items-center justify-between text-xs font-semibold">
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
                   <span>🔥</span>
                   <span>{streamStreak} {language === 'am' ? 'ቀናት ተከታታይ' : 'day streak'}</span>
                   <span>🔥</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-emerald-400">
-                  <CheckCircle2 size={13} className="text-emerald-400" />
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
+                  <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                   <span>{totalStreamCompleted} {language === 'am' ? 'ተጠናቋል' : 'total completed'}</span>
                 </div>
               </div>
@@ -2304,6 +2364,17 @@ export const CategoryDetailView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Schedule Overlap Conflict Stoppage Notification Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(time) => {
+          setTaskModalTime(time);
+          setTaskTime(time);
+        }}
+      />
 
       {/* Sequential Focus Countdown Runner Popup Modal */}
       {selectedCategoryId && (
