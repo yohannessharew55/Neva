@@ -397,7 +397,7 @@
       "title": "Pre-Market Preparation & Key Levels",
       "startTime": "08:00 AM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
