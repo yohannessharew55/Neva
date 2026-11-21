@@ -1828,19 +1828,19 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                       <div className="flex items-center gap-1.5 flex-wrap mb-1">
                                         {/* Time Range Pill - Themed with Stream Color */}
                                         <div 
-                                          className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-md"
+                                          className="inline-flex items-center gap-1 sm:gap-1.5 text-[7.5px] sm:text-[10.5px] font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded-md tracking-tight"
                                           style={{ 
                                             backgroundColor: `${group.category.color}15`, 
                                             color: group.category.color 
                                           }}
                                         >
-                                          <Clock size={11} strokeWidth={2.3} style={{ color: group.category.color }} className="shrink-0" />
+                                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" strokeWidth={2.3} style={{ color: group.category.color }} />
                                           <span>{timeRange}</span>
                                         </div>
 
                                         {/* Duration Badge */}
                                         <span 
-                                          className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-md border"
+                                          className="text-[7.5px] sm:text-[9.5px] font-mono font-extrabold px-1.5 py-0.5 rounded-md border"
                                           style={{ 
                                             backgroundColor: `${group.category.color}0a`, 
                                             color: group.category.color,
@@ -1853,7 +1853,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                         {/* Cadence Badge */}
                                         {!task.date ? (
                                           <span 
-                                            className="text-[9px] font-bold px-1.5 py-0.5 rounded-md border"
+                                            className="text-[7.5px] sm:text-[8.5px] font-bold px-1.5 py-0.5 rounded-md border"
                                             style={{
                                               backgroundColor: `${group.category.color}08`,
                                               color: group.category.color,
@@ -1863,7 +1863,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                             {language === 'am' ? 'ሳምንታዊ' : 'Weekly'}
                                           </span>
                                         ) : (
-                                          <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">
+                                          <span className="text-[7.5px] sm:text-[8.5px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">
                                             {task.date}
                                           </span>
                                         )}
@@ -1871,7 +1871,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                         {/* Active LIVE timer pill */}
                                         {isActive && (
                                           <span 
-                                            className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border animate-pulse"
+                                            className="inline-flex items-center gap-1 text-[7.5px] sm:text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-md border animate-pulse"
                                             style={{
                                               backgroundColor: `${group.category.color}20`,
                                               color: group.category.color,
