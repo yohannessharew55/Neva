@@ -284,15 +284,15 @@
       "dayOfWeek": 6
     },
     {
-      "title": "Acoustic Guitar & Repertoire",
+      "title": "Guitar Scales & Finger Independence",
       "domain": "GUITAR",
       "startTime": "09:00",
-      "durationMin": 180,
+      "durationMin": 10,
       "completed": false,
       "color": "#ec4899",
       "id": "task-1795208974194-1-ozfv",
       "date": "2026-11-21",
-      "dayOfWeek": 6
+      "badge": "Music & Guitar"
     },
     {
       "title": "xauusd",
