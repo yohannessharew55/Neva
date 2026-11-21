@@ -1089,9 +1089,18 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 </span>
               )}
               {isFutureDay && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-900 border border-blue-500/25 select-none animate-fadeIn flex items-center gap-1">
-                  🗓️ {language === 'am' ? 'የሚመጣ ዕቅድ (ሊስተካከል የሚችል)' : 'Upcoming Plan (Editable)'}
-                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab('calendar');
+                    try { soundEngine.playClick(); } catch {}
+                  }}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 hover:bg-blue-500/25 active:scale-95 text-blue-900 border border-blue-500/25 select-none animate-fadeIn flex items-center gap-1 cursor-pointer transition shadow-2xs pointer-events-auto"
+                  title={language === 'am' ? 'የዕቅድ ማውጫ ገጽ ክፈት' : 'Open Planning Page'}
+                >
+                  🗓️ {language === 'am' ? 'የሚመጣ ዕቅድ' : 'Upcoming Plan'}
+                </button>
               )}
 
               {/* Next Day Chevron */}
