@@ -1354,6 +1354,19 @@
       "checklist": [],
       "notes": "Week 4 Routine",
       "id": "task-1795257218515"
+    },
+    {
+      "domain": "ARCHITECTURE_DESIGN",
+      "title": "hq",
+      "startTime": "08:00 AM",
+      "durationMin": 25,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture",
+      "date": "2025-11-24",
+      "checklist": [],
+      "notes": "Added from Architecture & Design Calendar Sticky Note",
+      "id": "task-1795272260427"
     }
   ],
   "workouts": [
