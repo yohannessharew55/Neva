@@ -293,6 +293,19 @@
       "id": "task-1795208974194-1-ozfv",
       "date": "2026-11-21",
       "dayOfWeek": 6
+    },
+    {
+      "title": "xauusd",
+      "domain": "FOREX_TRADING",
+      "startTime": "08:00 AM",
+      "durationMin": 30,
+      "color": "#10b981",
+      "badge": "Trading",
+      "completed": false,
+      "date": "2026-11-21",
+      "checklist": [],
+      "notes": "",
+      "id": "task-1795247155364"
     }
   ],
   "workouts": [
