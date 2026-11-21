@@ -233,6 +233,33 @@ const getCategoryIcon = (catId: string) => {
   }
 };
 
+export function getStreamStickyTheme(categoryKey?: string, categoryColor?: string): StickyColorTheme {
+  const key = (categoryKey || '').toLowerCase();
+  if (key.includes('chess') || key.includes('devotion') || key.includes('spirit') || key.includes('study')) return 'lavender';
+  if (key.includes('music') || key.includes('guitar') || key.includes('art') || key.includes('paint') || key.includes('piano')) return 'rose';
+  if (key.includes('trade') || key.includes('trading') || key.includes('market') || key.includes('money') || key.includes('invest') || key.includes('finance')) return 'mint';
+  if (key.includes('arch') || key.includes('work') || key.includes('code') || key.includes('tech') || key.includes('career') || key.includes('design')) return 'sky';
+  if (key.includes('fit') || key.includes('exercise') || key.includes('gym') || key.includes('health') || key.includes('sport')) return 'peach';
+  
+  if (categoryColor) {
+    const c = categoryColor.toLowerCase();
+    // Purple / Indigo / Violet
+    if (c.includes('8b5cf6') || c.includes('a855f7') || c.includes('9333ea') || c.includes('7c3aed') || c.includes('6366f1') || c.includes('purple') || c.includes('violet')) return 'lavender';
+    // Pink / Rose / Fuchsia
+    if (c.includes('ec4899') || c.includes('f43f5e') || c.includes('e11d48') || c.includes('d946ef') || c.includes('pink') || c.includes('rose')) return 'rose';
+    // Blue / Cyan / Sky
+    if (c.includes('0082ff') || c.includes('3b82f6') || c.includes('0284c7') || c.includes('06b6d4') || c.includes('0ea5e9') || c.includes('blue') || c.includes('cyan')) return 'sky';
+    // Green / Emerald / Teal
+    if (c.includes('10b981') || c.includes('22c55e') || c.includes('16a34a') || c.includes('14b8a6') || c.includes('green') || c.includes('emerald') || c.includes('teal')) return 'mint';
+    // Orange / Red / Peach
+    if (c.includes('ef4444') || c.includes('f97316') || c.includes('ea580c') || c.includes('f59e0b') || c.includes('orange') || c.includes('red') || c.includes('peach')) return 'peach';
+    // Yellow
+    if (c.includes('eab308') || c.includes('facc15') || c.includes('yellow')) return 'canary';
+  }
+
+  return 'canary';
+}
+
 export interface BigDailyActivitiesStickyNoteProps {
   targetDate?: Date;
   onClose?: () => void;
@@ -273,6 +300,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     reorderTasks,
     dailyStickyColor,
     setDailyStickyColor,
+    isAutoStickyColor,
+    setIsAutoStickyColor,
     setActiveTab,
     theme: appTheme,
   } = useLivotion();
@@ -309,16 +338,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     try { soundEngine.playPencil(); } catch {}
   };
 
-  const colorTheme: StickyColorTheme = React.useMemo(() => {
-    if (dailyStickyColor && (dailyStickyColor in THEMES)) {
-      const savedExplicit = localStorage.getItem('neva_daily_sticky_color_custom');
-      if (appTheme === 'dark' && (!savedExplicit || dailyStickyColor === 'canary')) {
-        return 'darkgrey';
-      }
-      return dailyStickyColor as StickyColorTheme;
-    }
-    return appTheme === 'dark' ? 'darkgrey' : 'canary';
-  }, [dailyStickyColor, appTheme]);
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showStickyMenu, setShowStickyMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -479,8 +498,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
       },
     });
   };
-
-  const theme = THEMES[colorTheme];
 
   // Dual Date Calculation
   const today = currentDate;
@@ -702,6 +719,38 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (indexB !== -1) return 1;
     return 0;
   });
+
+  // Calculate the active / top main stream subject for auto sticky note color
+  const topPendingSubjectKey = allCategoryKeys.find((catKey) => {
+    return dayTasks.some((t) => {
+      const c = getCategoryForTask(t);
+      return c && c.id === catKey && !t.completed;
+    });
+  });
+
+  const topActiveSubjectKey = topPendingSubjectKey || allCategoryKeys.find((catKey) => {
+    return dayTasks.some((t) => {
+      const c = getCategoryForTask(t);
+      return c && c.id === catKey;
+    });
+  }) || allCategoryKeys[0] || 'chess';
+
+  const colorTheme: StickyColorTheme = React.useMemo(() => {
+    if (isAutoStickyColor) {
+      const streamColor = categoryPlans[topActiveSubjectKey]?.color;
+      return getStreamStickyTheme(topActiveSubjectKey, streamColor);
+    }
+    if (dailyStickyColor && (dailyStickyColor in THEMES)) {
+      const savedExplicit = localStorage.getItem('neva_daily_sticky_color_custom');
+      if (appTheme === 'dark' && (!savedExplicit || dailyStickyColor === 'canary')) {
+        return 'darkgrey';
+      }
+      return dailyStickyColor as StickyColorTheme;
+    }
+    return appTheme === 'dark' ? 'darkgrey' : 'canary';
+  }, [isAutoStickyColor, topActiveSubjectKey, categoryPlans, dailyStickyColor, appTheme]);
+
+  const theme = THEMES[colorTheme];
 
   const reorderSubjects = (fromId: string, toId: string) => {
     reorderCategories(fromId, toId);
@@ -944,7 +993,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           onTouchEnd={handlePaperTouchEnd}
           onDoubleClick={handlePaperDoubleClick}
           className={`border-b border-black/10 pb-2.5 mb-2.5 cursor-pointer touch-manipulation select-none transition-all ${
-            showStickyMenu ? 'relative z-50' : 'relative z-10'
+            showStickyMenu ? 'relative z-[100]' : 'relative z-10'
           }`}
           title={isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to exit full screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት (ሁለት ጊዜ ጠቅ ያድርጉ)' : 'Double tap to view full screen')}
         >
@@ -1003,7 +1052,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
             </div>
 
             {/* 3-Dots Sticky Note Action Menu (Color Palette & Full Screen) */}
-            <div className="flex items-center gap-1.5 relative z-50">
+            <div className="flex items-center gap-1.5 relative z-[100]">
               <div className="relative">
                 <button
                   type="button"
@@ -1021,14 +1070,14 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 {showStickyMenu && (
                   <>
                     <div 
-                      className="fixed inset-0 z-40" 
+                      className="fixed inset-0 z-40 bg-black/10 dark:bg-black/40 backdrop-blur-[1px]" 
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowStickyMenu(false);
                       }} 
                     />
                     <div 
-                      className="absolute right-0 top-full mt-2 z-50 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-2xl space-y-2 animate-fadeIn select-none ring-1 ring-black/10 pointer-events-auto"
+                      className="absolute right-0 top-full mt-2 z-[110] w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-2xl space-y-2.5 animate-fadeIn select-none ring-1 ring-black/10 pointer-events-auto"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Full Screen Toggle */}
@@ -1045,28 +1094,71 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                         <span>{isFullScreen ? (language === 'am' ? 'ከሙሉ ገጽ ውጣ' : 'Exit Full Screen') : (language === 'am' ? 'በሙሉ ገጽ ተመልከት' : 'Full Screen')}</span>
                       </button>
 
-                      {/* Sticky Color Palette */}
-                      <div className="pt-2 border-t border-black/5 dark:border-white/5">
-                        <div className="px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          {language === 'am' ? 'የወረቀት ቀለም' : 'Sticky Color'}
+                      {/* Sticky Color Section */}
+                      <div className="pt-2 border-t border-black/5 dark:border-white/5 space-y-2">
+                        {/* Auto Stream Color Option Toggle */}
+                        <div className="px-2 py-1.5 flex items-center justify-between gap-2 rounded-xl bg-black/5 dark:bg-white/5">
+                          <div className="flex flex-col min-w-0 pr-1">
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                              <Palette size={12} className={isAutoStickyColor ? 'text-emerald-600 dark:text-emerald-400 shrink-0' : 'text-slate-400 shrink-0'} />
+                              <span>{language === 'am' ? 'አውቶማቲክ የቀለም ቅንብር' : 'Auto Stream Color'}</span>
+                            </span>
+                            <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight">
+                              {language === 'am' ? 'ከዋናው ርዕስ ጋር ይቀያየራል' : 'Adapts to active main stream'}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const nextVal = !isAutoStickyColor;
+                              setIsAutoStickyColor(nextVal);
+                              try { soundEngine.playPencil(); } catch {}
+                            }}
+                            className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer relative shrink-0 ${
+                              isAutoStickyColor ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                            }`}
+                            title={isAutoStickyColor ? 'Disable auto stream color' : 'Enable auto stream color'}
+                          >
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform ${
+                              isAutoStickyColor ? 'translate-x-4' : 'translate-x-0'
+                            }`} />
+                          </button>
                         </div>
-                        <div className="grid grid-cols-5 gap-2 px-2 py-1.5">
-                          {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
-                            <button
-                              key={cKey}
-                              type="button"
-                              onClick={() => {
-                                setDailyStickyColor(cKey);
-                                try { localStorage.setItem('neva_daily_sticky_color_custom', 'true'); } catch {}
-                                setShowStickyMenu(false);
-                              }}
-                              className={`w-6 h-6 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
-                                colorTheme === cKey ? 'ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
-                              }`}
-                              style={{ backgroundColor: THEMES[cKey].dotColor }}
-                              title={THEMES[cKey].name}
-                            />
-                          ))}
+
+                        {/* Palette Heading & Swatches */}
+                        <div>
+                          <div className="px-1 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                            <span>{language === 'am' ? 'የወረቀት ቀለም' : 'Sticky Color'}</span>
+                            {isAutoStickyColor && (
+                              <span className="text-[9px] font-sans font-semibold text-emerald-600 dark:text-emerald-400 lowercase">
+                                ({THEMES[colorTheme]?.name})
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-5 gap-2 px-1 py-1.5">
+                            {(Object.keys(THEMES) as StickyColorTheme[]).map((cKey) => (
+                              <button
+                                key={cKey}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsAutoStickyColor(false);
+                                  setDailyStickyColor(cKey);
+                                  try { 
+                                    localStorage.setItem('neva_daily_sticky_color_custom', 'true'); 
+                                    soundEngine.playPencil();
+                                  } catch {}
+                                  setShowStickyMenu(false);
+                                }}
+                                className={`w-6 h-6 rounded-full transition-all cursor-pointer border border-black/15 dark:border-white/20 shadow-2xs ${
+                                  colorTheme === cKey ? 'ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110' : 'opacity-85 hover:opacity-100 hover:scale-105'
+                                }`}
+                                style={{ backgroundColor: THEMES[cKey].dotColor }}
+                                title={THEMES[cKey].name}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>

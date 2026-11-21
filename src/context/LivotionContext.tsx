@@ -345,6 +345,8 @@ interface LivotionContextType {
   setCategoryStickyNoteColor: (categoryId: string, color: StickyNoteColor) => void;
   dailyStickyColor: StickyNoteThemeColor;
   setDailyStickyColor: (color: StickyNoteThemeColor) => void;
+  isAutoStickyColor: boolean;
+  setIsAutoStickyColor: (enabled: boolean) => void;
   dailyStickyNotes: DailyStickyReviewNote[];
   updateDailyStickyNoteRating: (id: string, stars: number) => void;
   updateDailyStickyNoteReview: (id: string, reviewText: string) => void;
@@ -727,6 +729,21 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDailyStickyNotes((prev) =>
       prev.map((n) => ({ ...n, colorTheme: color }))
     );
+  };
+
+  const [isAutoStickyColor, setIsAutoStickyColorState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('neva_auto_sticky_stream_color');
+      if (saved !== null) return saved === 'true';
+    } catch {}
+    return true; // Default to true: automatically adapts sticky note color to active main stream
+  });
+
+  const setIsAutoStickyColor = (enabled: boolean) => {
+    setIsAutoStickyColorState(enabled);
+    try {
+      localStorage.setItem('neva_auto_sticky_stream_color', String(enabled));
+    } catch {}
   };
 
   const [iosNotes, setIosNotes] = useState<IosNoteItem[]>(() => {
@@ -3071,6 +3088,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCategoryStickyNoteColor,
         dailyStickyColor,
         setDailyStickyColor,
+        isAutoStickyColor,
+        setIsAutoStickyColor,
         dailyStickyNotes,
         updateDailyStickyNoteRating,
         updateDailyStickyNoteReview,
