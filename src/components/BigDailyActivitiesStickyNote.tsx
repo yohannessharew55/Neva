@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Check, Play, Clock, Wind, 
   Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Palette, Maximize2, Minimize2,
@@ -504,6 +504,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const nowObj = new Date();
   const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
   const isViewingToday = activeDateStr === todayStr;
+  const isPastDay = useMemo(() => {
+    const todayStart = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate()).getTime();
+    const activeStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    return activeStart < todayStart;
+  }, [today, nowObj]);
   const activeDayOfWeek = (today.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
   const isSunday = activeDayOfWeek === 7;
 
@@ -664,6 +669,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   const handleToggleTask = (task: ScheduleTask) => {
+    if (isPastDay) return; // Prevent modifying historical records
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
       const match = materialized.find((m) => m.title === task.title) || materialized[0];
@@ -929,6 +935,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const formattedDayDuration = formatTaskDuration(totalDayMinutes);
 
   const handleCopyTodayRoutine = () => {
+    if (isPastDay) return;
     const todayTasks = tasks.filter((t) => t.date ? t.date === todayStr : isViewingToday);
     if (todayTasks.length === 0) return;
     todayTasks.forEach((t, idx) => {
@@ -950,6 +957,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Master Subject Checkbox: Toggling subject checks or unchecks all tasks under it
   const handleToggleSubject = (groupTasks: ScheduleTask[], isCurrentlyAllDone: boolean) => {
+    if (isPastDay) return;
     let currentTasks = groupTasks;
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
@@ -1045,6 +1053,12 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
               <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/5 border border-black/5 select-none">
                 {dateBanner}
               </span>
+
+              {isPastDay && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-900 border border-amber-500/30 select-none animate-fadeIn flex items-center gap-1">
+                  📜 {language === 'am' ? 'ያለፈ ቀን ታሪክ' : 'Past Day Log'}
+                </span>
+              )}
 
               {/* Next Day Chevron */}
               <button
@@ -1246,60 +1260,68 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
             {/* Action Buttons */}
             <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
-              {/* Global Save / Apply Button (prompts for scope) */}
-              <button
-                type="button"
-                onClick={handleOpenSaveDaySchedule}
-                className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
-                title="Save or apply this schedule to this day, all days, or chosen days"
-              >
-                <Save size={11} />
-                <span>{language === 'am' ? 'ሰሌዳ አስቀምጥ / ተግብር' : 'Save / Apply Schedule'}</span>
-              </button>
-
-              {isCustomDay ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleResetDayToDefault}
-                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-rose-50 hover:text-rose-600 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                    title="Reset this day back to the default routine template"
-                  >
-                    <RotateCcw size={11} />
-                    <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowApplyModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                    title="Apply this day schedule to other dates"
-                  >
-                    <Copy size={11} />
-                    <span>{language === 'am' ? 'ለቀናት ቅዳ' : 'Apply to Days...'}</span>
-                  </button>
-                </>
+              {isPastDay ? (
+                <span className="text-[10px] font-bold text-black/60 px-2.5 py-1 rounded-xl bg-black/5 flex items-center gap-1 select-none">
+                  🔒 {language === 'am' ? 'ያለፈ ቀን ታሪክ (ማረም አይቻልም)' : 'Past Record (Read-Only)'}
+                </span>
               ) : (
                 <>
+                  {/* Global Save / Apply Button (prompts for scope) */}
                   <button
                     type="button"
-                    onClick={handleCustomizeDay}
-                    className="px-3 py-1 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
-                    title="Customize schedule uniquely for this date"
+                    onClick={handleOpenSaveDaySchedule}
+                    className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                    title="Save or apply this schedule to this day, all days, or chosen days"
                   >
-                    <Edit2 size={11} />
-                    <span>{language === 'am' ? 'ይህንን ቀን ለይተህ አዘጋጅ' : 'Customize for this Day'}</span>
+                    <Save size={11} />
+                    <span>{language === 'am' ? 'ሰሌዳ አስቀምጥ / ተግብር' : 'Save / Apply Schedule'}</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowDefaultsModal(true)}
-                    className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
-                    title="Manage default templates for all weekdays"
-                  >
-                    <Settings size={11} />
-                    <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
-                  </button>
+                  {isCustomDay ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleResetDayToDefault}
+                        className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-rose-50 hover:text-rose-600 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                        title="Reset this day back to the default routine template"
+                      >
+                        <RotateCcw size={11} />
+                        <span>{language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset to Default'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowApplyModal(true)}
+                        className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                        title="Apply this day schedule to other dates"
+                      >
+                        <Copy size={11} />
+                        <span>{language === 'am' ? 'ለቀናት ቅዳ' : 'Apply to Days...'}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleCustomizeDay}
+                        className="px-3 py-1 rounded-xl bg-[#0082ff] hover:bg-[#0070df] text-white text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1 shadow-2xs"
+                        title="Customize schedule uniquely for this date"
+                      >
+                        <Edit2 size={11} />
+                        <span>{language === 'am' ? 'ይህንን ቀን ለይተህ አዘጋጅ' : 'Customize for this Day'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowDefaultsModal(true)}
+                        className="px-2.5 py-1 rounded-xl bg-black/5 hover:bg-black/10 border border-black/10 text-[10px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                        title="Manage default templates for all weekdays"
+                      >
+                        <Settings size={11} />
+                        <span>{language === 'am' ? 'የቀን ነባሪዎች' : 'Day Defaults'}</span>
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -1582,41 +1604,66 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               <div className="flex items-center justify-between gap-2 text-xs">
                                 {/* Drag Handle, Checkbox, Time & Task Title */}
                                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  {/* Task Drag Handle (Desktop & Mobile Touch) */}
-                                  <div 
-                                    className="text-black/35 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 select-none transition-colors"
-                                    title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder block'}
-                                    onClick={(e) => e.stopPropagation()}
-                                    onTouchStart={(e) => handleTaskTouchStart(e, task.id)}
-                                    onTouchMove={handleTaskTouchMove}
-                                    onTouchEnd={handleTaskTouchEnd}
-                                  >
-                                    <GripVertical size={12} />
-                                  </div>
+                                  {/* Task Drag Handle (Desktop & Mobile Touch) - hidden on past days */}
+                                  {!isPastDay && (
+                                    <div 
+                                      className="text-black/35 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0 -ml-1 select-none transition-colors"
+                                      title={language === 'am' ? 'ብሎኩን ጎትተህ ቦታውን ቀይር' : 'Drag to reorder block'}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onTouchStart={(e) => handleTaskTouchStart(e, task.id)}
+                                      onTouchMove={handleTaskTouchMove}
+                                      onTouchEnd={handleTaskTouchEnd}
+                                    >
+                                      <GripVertical size={12} />
+                                    </div>
+                                  )}
 
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleTask(task)}
-                                    className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                                      task.completed 
-                                        ? `${theme.checkBgDone} border-transparent` 
-                                        : `${theme.checkBorder} bg-transparent hover:scale-110`
-                                    }`}
-                                    title={task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')}
-                                  >
-                                    {task.completed && <Check size={11} strokeWidth={3} />}
-                                  </button>
+                                  {isPastDay ? (
+                                    // Show Done symbol if checked, or Undone symbol if not correctly done
+                                    task.completed ? (
+                                      <div
+                                        className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 select-none shadow-2xs"
+                                        title={language === 'am' ? 'የተጠናቀቀ' : 'Done & Checked'}
+                                      >
+                                        <Check size={11} strokeWidth={3} />
+                                        <span>{language === 'am' ? 'ተጠናቋል' : 'Done'}</span>
+                                      </div>
+                                    ) : (
+                                      <div
+                                        className="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 select-none shadow-2xs"
+                                        title={language === 'am' ? 'ያልተጠናቀቀ' : 'Undone / Missed'}
+                                      >
+                                        <X size={11} strokeWidth={3} />
+                                        <span>{language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}</span>
+                                      </div>
+                                    )
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleTask(task)}
+                                      className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                        task.completed 
+                                          ? `${theme.checkBgDone} border-transparent` 
+                                          : `${theme.checkBorder} bg-transparent hover:scale-110`
+                                      }`}
+                                      title={task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')}
+                                    >
+                                      {task.completed && <Check size={11} strokeWidth={3} />}
+                                    </button>
+                                  )}
 
                                   <span className="font-mono text-[10px] font-bold shrink-0 opacity-65">
                                     {formatTaskTime(task.startTime)}
                                   </span>
 
                                   <span 
-                                    onClick={() => handleToggleTask(task)}
-                                    className={`truncate font-semibold cursor-pointer select-none ${
+                                    onClick={() => !isPastDay && handleToggleTask(task)}
+                                    className={`truncate font-semibold select-none ${
+                                      !isPastDay ? 'cursor-pointer' : 'cursor-default'
+                                    } ${
                                       task.completed ? 'line-through opacity-55' : 'opacity-90 hover:opacity-100'
                                     }`}
-                                    title={task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')}
+                                    title={!isPastDay ? (task.completed ? (language === 'am' ? 'ያልተጠናቀቀ አድርግ' : 'Mark uncompleted') : (language === 'am' ? 'እንደተጠናቀቀ ምልክት አድርግ' : 'Mark completed')) : undefined}
                                   >
                                     {task.title}
                                   </span>
@@ -1664,43 +1711,51 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           {!isSunday && subjectGroups.length === 0 && (
             <div className="py-10 px-4 text-center space-y-4 select-none animate-fadeIn">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-black/5 flex items-center justify-center text-2xl shadow-inner">
-                📋
+                {isPastDay ? '📜' : '📋'}
               </div>
               <div className="space-y-1.5">
                 <h4 className="font-sans text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
-                  {language === 'am' ? 'ለዚህ ቀን የተመዘገበ ፕሮግራም የለም' : 'No Blocks Scheduled for this Day'}
+                  {isPastDay
+                    ? (language === 'am' ? 'በዚህ ቀን የተመዘገበ ታሪክ የለም' : 'No Past Records for this Day')
+                    : (language === 'am' ? 'ለዚህ ቀን የተመዘገበ ፕሮግራም የለም' : 'No Blocks Scheduled for this Day')}
                 </h4>
                 <p className="text-xs font-mono opacity-60 max-w-sm mx-auto leading-relaxed">
-                  {language === 'am'
-                    ? 'በዋና ዘርፎች ወይም በታክቲካል ፕላነር የተመዘገቡ ፕሮግራሞችና ተግባራት በቀጥታ በዚህ ሰሌዳ ላይ ይቀርባሉ።'
-                    : 'Blocks and routines registered in your Category programs or Tactical Planner directly display here.'}
+                  {isPastDay
+                    ? (language === 'am'
+                      ? 'ያለፉ ቀናት ታሪክ ብቻ ናቸው፤ አዲስ ፕሮግራም ወይም ተግባር ማከል አይቻልም።'
+                      : 'Past days are read-only historical records. Planning or scheduling tasks is locked.')
+                    : (language === 'am'
+                      ? 'በዋና ዘርፎች ወይም በታክቲካል ፕላነር የተመዘገቡ ፕሮግራሞችና ተግባራት በቀጥታ በዚህ ሰሌዳ ላይ ይቀርባሉ።'
+                      : 'Blocks and routines registered in your Category programs or Tactical Planner directly display here.')}
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('calendar')}
-                  className="px-4 py-2 rounded-xl bg-[#0082ff] hover:bg-blue-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
-                >
-                  <Calendar size={13} />
-                  <span>{language === 'am' ? 'ታክቲካል ፕላነር ክፈት' : 'Open Tactical Planner'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const firstCat = allCategoryKeys.find((k) => categoryPlans && categoryPlans[k]);
-                    if (firstCat) setSelectedCategoryId(firstCat);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold border border-black/10 dark:border-white/10 cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
-                >
-                  <Compass size={13} />
-                  <span>{language === 'am' ? 'ዋና ክፍሎችን ተመልከት' : 'View Categories'}</span>
-                </button>
-              </div>
+              {!isPastDay && (
+                <div className="pt-2 flex items-center justify-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('calendar')}
+                    className="px-4 py-2 rounded-xl bg-[#0082ff] hover:bg-blue-600 text-white text-xs font-bold shadow-xs cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                  >
+                    <Calendar size={13} />
+                    <span>{language === 'am' ? 'ታክቲካል ፕላነር ክፈት' : 'Open Tactical Planner'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstCat = allCategoryKeys.find((k) => categoryPlans && categoryPlans[k]);
+                      if (firstCat) setSelectedCategoryId(firstCat);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold border border-black/10 dark:border-white/10 cursor-pointer transition active:scale-95 inline-flex items-center gap-1.5"
+                  >
+                    <Compass size={13} />
+                    <span>{language === 'am' ? 'ዋና ክፍሎችን ተመልከት' : 'View Categories'}</span>
+                  </button>
+                </div>
+              )}
 
               {/* One-click option to copy today's routine to this day for independent editing */}
-              {!isViewingToday && (
+              {!isViewingToday && !isPastDay && (
                 <div className="pt-1">
                   <button
                     type="button"

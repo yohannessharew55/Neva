@@ -42,6 +42,13 @@ export const StreamCalendarSystemView: React.FC = () => {
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('dual');
   const [selectedStreamFilter, setSelectedStreamFilter] = useState<string>('all');
 
+  const isSelectedDatePast = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).getTime();
+    return targetStart < todayStart;
+  }, [selectedDate]);
+
   // Block Editor Modal State
   const [blockEditorState, setBlockEditorState] = useState<{
     isOpen: boolean;
@@ -527,19 +534,25 @@ export const StreamCalendarSystemView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setBlockEditorState({
-                  isOpen: true,
-                  date: selectedDate,
-                  taskId: null,
-                });
-              }}
-              className="px-3 py-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
-            >
-              <Plus size={13} />
-              <span>{language === 'am' ? 'አዲስ ብሎክ አቅድ' : 'Plan Block for this Day'}</span>
-            </button>
+            {isSelectedDatePast ? (
+              <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                📜 {language === 'am' ? 'ያለፈ ቀን መዝገብ' : 'Historical Record'}
+              </span>
+            ) : (
+              <button
+                onClick={() => {
+                  setBlockEditorState({
+                    isOpen: true,
+                    date: selectedDate,
+                    taskId: null,
+                  });
+                }}
+                className="px-3 py-1.5 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+              >
+                <Plus size={13} />
+                <span>{language === 'am' ? 'አዲስ ብሎክ አቅድ' : 'Plan Block for this Day'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -548,15 +561,17 @@ export const StreamCalendarSystemView: React.FC = () => {
           <div className="text-center py-8 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
             <CalendarDays size={28} className="mx-auto text-slate-300 dark:text-slate-600" />
             <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-              {language === 'am' 
-                ? 'በዚህ ቀን የታቀደ የዘርፍ ብሎክ የለም።' 
-                : 'No stream blocks scheduled for this day.'}
+              {isSelectedDatePast
+                ? (language === 'am' ? 'በዚህ ያለፈ ቀን የተመዘገበ የዘርፍ ብሎክ አልነበረም።' : 'No stream blocks were recorded for this past day.')
+                : (language === 'am' ? 'በዚህ ቀን የታቀደ የዘርፍ ብሎክ የለም።' : 'No stream blocks scheduled for this day.')}
             </p>
-            <p className="text-[11px] text-slate-400">
-              {language === 'am'
-                ? 'ከላይ ያለውን "አዲስ ብሎክ አቅድ" በመንካት ለዋና ዘርፎችዎ ብሎክ ይመድቡ።'
-                : 'Click "Plan Block for this Day" above to schedule tasks from your Mastery Streams.'}
-            </p>
+            {!isSelectedDatePast && (
+              <p className="text-[11px] text-slate-400">
+                {language === 'am'
+                  ? 'ከላይ ያለውን "አዲስ ብሎክ አቅድ" በመንካት ለዋና ዘርፎችዎ ብሎክ ይመድቡ።'
+                  : 'Click "Plan Block for this Day" above to schedule tasks from your Mastery Streams.'}
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -597,17 +612,37 @@ export const StreamCalendarSystemView: React.FC = () => {
                         className="p-2 rounded-xl bg-white dark:bg-[#121927] border border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between gap-2 shadow-2xs group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <button
-                            type="button"
-                            onClick={() => toggleTaskCompletion(task.id)}
-                            className="cursor-pointer shrink-0 text-slate-400 hover:text-[#0082ff] transition"
-                          >
-                            {task.completed ? (
-                              <CheckCircle2 size={16} className="text-[#0082ff] fill-blue-500/10" />
+                          {isSelectedDatePast ? (
+                            task.completed ? (
+                              <div 
+                                className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1 shrink-0"
+                                title={language === 'am' ? 'የተጠናቀቀ' : 'Done & Checked'}
+                              >
+                                <Check size={11} strokeWidth={3} />
+                                <span>{language === 'am' ? 'ተጠናቋል' : 'Done'}</span>
+                              </div>
                             ) : (
-                              <div className="w-4 h-4 rounded-md border-2 border-slate-300 dark:border-slate-600 hover:border-[#0082ff]" />
-                            )}
-                          </button>
+                              <div 
+                                className="px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1 shrink-0"
+                                title={language === 'am' ? 'ያልተጠናቀቀ' : 'Undone / Missed'}
+                              >
+                                <X size={11} strokeWidth={3} />
+                                <span>{language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}</span>
+                              </div>
+                            )
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => toggleTaskCompletion(task.id)}
+                              className="cursor-pointer shrink-0 text-slate-400 hover:text-[#0082ff] transition"
+                            >
+                              {task.completed ? (
+                                <CheckCircle2 size={16} className="text-[#0082ff] fill-blue-500/10" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-md border-2 border-slate-300 dark:border-slate-600 hover:border-[#0082ff]" />
+                              )}
+                            </button>
+                          )}
                           <div className="min-w-0">
                             <p className={`text-xs font-bold truncate ${
                               task.completed 
@@ -622,38 +657,40 @@ export const StreamCalendarSystemView: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startTimerForTask(task)}
-                            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-500 cursor-pointer transition"
-                            title="Start Focus Timer"
-                          >
-                            <Play size={12} className="fill-blue-500/20" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBlockEditorState({
-                                isOpen: true,
-                                date: selectedDate,
-                                taskId: task.id,
-                              });
-                            }}
-                            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer transition"
-                            title="Edit Block"
-                          >
-                            <Edit3 size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteTask(task.id)}
-                            className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-500 cursor-pointer transition"
-                            title="Delete Block"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
+                        {!isSelectedDatePast && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => startTimerForTask(task)}
+                              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-500 cursor-pointer transition"
+                              title="Start Focus Timer"
+                            >
+                              <Play size={12} className="fill-blue-500/20" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBlockEditorState({
+                                  isOpen: true,
+                                  date: selectedDate,
+                                  taskId: task.id,
+                                });
+                              }}
+                              className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer transition"
+                              title="Edit Block"
+                            >
+                              <Edit3 size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteTask(task.id)}
+                              className="p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-500 cursor-pointer transition"
+                              title="Delete Block"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

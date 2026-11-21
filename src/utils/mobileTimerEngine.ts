@@ -217,12 +217,28 @@ class MobileTimerEngine {
     });
 
     window.addEventListener('focus', handleSync);
+    window.addEventListener('pageshow', handleSync);
+    window.addEventListener('resume' as any, handleSync);
     window.addEventListener('pagehide', () => {
       if (this.state.isActive && this.state.isRunning) {
         this.ensureBackgroundAudio();
         this.updateLockScreenMediaSession();
       }
     });
+
+    // Capacitor Native Mobile App state resume listener
+    try {
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('appStateChange', (state) => {
+          if (state.isActive) {
+            handleSync();
+          }
+        }).catch(() => {});
+        App.addListener('resume', () => {
+          handleSync();
+        }).catch(() => {});
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   // High-precision recalculation based on actual timestamps
@@ -384,6 +400,9 @@ class MobileTimerEngine {
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
+    try {
+      soundEngine.playBlockTimerStartMusic();
+    } catch (e) {}
     this.notify();
 
     // Schedule native time-sensitive alarm and timerNotificationService
@@ -443,6 +462,9 @@ class MobileTimerEngine {
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
+    try {
+      soundEngine.playBlockTimerStartMusic();
+    } catch (e) {}
     this.notify();
   }
 
@@ -501,6 +523,9 @@ class MobileTimerEngine {
     this.startTicking();
     this.updateLockScreenMediaSession();
     this.renderCanvasFrame();
+    try {
+      soundEngine.playBlockTimerStartMusic();
+    } catch (e) {}
     this.notify();
   }
 

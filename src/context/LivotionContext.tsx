@@ -271,6 +271,7 @@ interface LivotionContextType {
   secondsRemaining: number;
   isRunning: boolean;
   startTask: (task: ScheduleTask) => void;
+  startTimerForTask: (task: ScheduleTask) => void;
   toggleTimer: () => void;
   stopTimer: () => void;
   toggleTaskCompletion: (taskId: string) => void;
@@ -1352,8 +1353,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const targetEndTimeRef = useRef<number | null>(null);
+  const activeTaskRef = useRef<ScheduleTask | null>(activeTask);
 
-  // Synchronize targetEndTimeRef with persistent storage on mount
+  useEffect(() => {
+    activeTaskRef.current = activeTask;
+  }, [activeTask]);
+
+  // Synchronize targetEndTimeRef & active countdown on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(CLOCK_SESSION_KEY);
@@ -1361,128 +1367,70 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const parsed = JSON.parse(saved);
         if (parsed.isRunning && parsed.targetEndTime && parsed.targetEndTime > Date.now()) {
           targetEndTimeRef.current = parsed.targetEndTime;
+          const diff = Math.max(0, Math.ceil((parsed.targetEndTime - Date.now()) / 1000));
+          if (!mobileTimerEngine.getState().isActive) {
+            mobileTimerEngine.startCountdown({
+              durationSeconds: parsed.totalDurationSeconds || diff,
+              initialRemainingSeconds: diff,
+              taskTitle: parsed.activeTask?.title || 'Daily Activity Block',
+              category: parsed.activeTask?.domain || 'task',
+              system: 'task',
+              phase: 'focus',
+            });
+          }
         }
       }
     } catch {}
   }, []);
 
-  // Timer loop with timestamp accuracy, wake-lock & lock-screen sync
-  // Immune to app closing, backgrounding, and switching to other apps
+  // 100% Two-Way Synchronization with mobileTimerEngine (Top Dynamic Island / floating capsule <-> Main cockpit block)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    const unsubscribe = mobileTimerEngine.subscribe((engineState) => {
+      // 1. Synchronize running / paused state
+      setIsRunning(engineState.isRunning);
 
-    const syncTime = () => {
-      let targetEnd = targetEndTimeRef.current;
-      if (!targetEnd) {
-        try {
-          const saved = localStorage.getItem(CLOCK_SESSION_KEY);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed.isRunning && parsed.targetEndTime) {
-              targetEnd = parsed.targetEndTime;
-              targetEndTimeRef.current = targetEnd;
-            }
-          }
-        } catch {}
+      // 2. Synchronize seconds remaining if in countdown mode
+      if (engineState.mode === 'countdown') {
+        setSecondsRemaining(engineState.secondsRemaining);
       }
 
-      if (!targetEnd) return;
-      const now = Date.now();
-      const diff = Math.max(0, Math.ceil((targetEnd - now) / 1000));
-      setSecondsRemaining(diff);
+      // 3. Synchronize targetEndTime
+      targetEndTimeRef.current = engineState.targetEndTime;
 
-      if (diff <= 0) {
-        targetEndTimeRef.current = null;
+      // 4. Handle complete stop / cancellation / reset
+      if (!engineState.isActive && !engineState.isRunning) {
         setIsRunning(false);
+        setSecondsRemaining(0);
+        targetEndTimeRef.current = null;
+        setActiveTask(null);
+        activeTaskRef.current = null;
         try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
-        soundEngine.playSound(activeTask?.soundProfile || soundProfile);
-        try {
-          confetti({
-            particleCount: 80,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        } catch (e) {}
-        if (activeTask) {
-          toggleTaskCompletion(activeTask.id);
-        }
-        mobileTimerEngine.stop();
-        timerNotificationService.handleTimerEnd({
-          title: activeTask?.title || 'Daily Activity Block',
-          category: activeTask?.domain || 'task',
-          durationMinutes: activeTask?.durationMin || 25,
-          system: 'task',
-          phase: 'focus',
-          completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        });
-      }
-    };
-
-    if (isRunning && secondsRemaining > 0) {
-      if (!targetEndTimeRef.current) {
-        targetEndTimeRef.current = Date.now() + secondsRemaining * 1000;
+      } else if (engineState.isActive) {
+        // Keep session storage synchronized
         try {
           localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
-            activeTask,
-            targetEndTime: targetEndTimeRef.current,
-            secondsRemaining,
-            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
-            isRunning: true,
+            activeTask: activeTaskRef.current,
+            targetEndTime: engineState.targetEndTime,
+            secondsRemaining: engineState.secondsRemaining,
+            totalDurationSeconds: engineState.totalDurationSeconds,
+            isRunning: engineState.isRunning,
             updatedAt: Date.now()
           }));
         } catch {}
       }
+    });
 
-      interval = setInterval(syncTime, 1000);
-
-      // Listen to all browser, OS, and mobile app resume events
-      const handleAppResume = () => {
-        syncTime();
-      };
-
-      document.addEventListener('visibilitychange', handleAppResume);
-      window.addEventListener('focus', handleAppResume);
-      window.addEventListener('pageshow', handleAppResume);
-      window.addEventListener('resume' as any, handleAppResume);
-
-      // Capacitor native appStateChange listener
-      let capacitorAppRemove: (() => void) | null = null;
-      try {
-        import('@capacitor/app').then(({ App }) => {
-          App.addListener('appStateChange', (state) => {
-            if (state.isActive) {
-              syncTime();
-            }
-          }).then((handle) => {
-            capacitorAppRemove = () => handle.remove();
-          }).catch(() => {});
-          App.addListener('resume', () => {
-            syncTime();
-          }).catch(() => {});
-        }).catch(() => {});
-      } catch {}
-
-      return () => {
-        clearInterval(interval);
-        document.removeEventListener('visibilitychange', handleAppResume);
-        window.removeEventListener('focus', handleAppResume);
-        window.removeEventListener('pageshow', handleAppResume);
-        window.removeEventListener('resume' as any, handleAppResume);
-        if (capacitorAppRemove) capacitorAppRemove();
-      };
-    } else if (!isRunning) {
-      targetEndTimeRef.current = null;
-    }
-  }, [isRunning, activeTask, soundProfile]);
+    return () => unsubscribe();
+  }, []);
 
   const startTask = (task: ScheduleTask) => {
     setActiveTask(task);
+    activeTaskRef.current = task;
     const secs = task.durationMin * 60;
     setSecondsRemaining(secs);
     const targetEnd = Date.now() + secs * 1000;
     targetEndTimeRef.current = targetEnd;
     setIsRunning(true);
-    soundEngine.playSound('SOLFEGGIO_432');
 
     try {
       localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
@@ -1495,6 +1443,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }));
     } catch {}
 
+    soundEngine.playBlockTimerStartMusic();
+
     mobileTimerEngine.startCountdown({
       durationSeconds: secs,
       initialRemainingSeconds: secs,
@@ -1504,54 +1454,78 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       phase: 'focus',
       onComplete: () => {
         setIsRunning(false);
+        setSecondsRemaining(0);
+        targetEndTimeRef.current = null;
+        setActiveTask(null);
+        activeTaskRef.current = null;
         try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
+        soundEngine.playSound(task.soundProfile || soundProfile);
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        } catch (e) {}
         toggleTaskCompletion(task.id);
       }
     });
   };
 
   const toggleTimer = () => {
-    setIsRunning((prev) => {
-      const next = !prev;
-      if (next) {
-        const targetEnd = Date.now() + secondsRemaining * 1000;
-        targetEndTimeRef.current = targetEnd;
-        try {
-          localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
-            activeTask,
-            targetEndTime: targetEnd,
-            secondsRemaining,
-            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
-            isRunning: true,
-            resumedAt: Date.now()
-          }));
-        } catch {}
+    const engineState = mobileTimerEngine.getState();
+    if (engineState.isRunning) {
+      // Synchronous pause across top capsule and main cockpit block
+      mobileTimerEngine.pause();
+    } else {
+      // Synchronous resume across top capsule and main cockpit block with uplifting music
+      soundEngine.playBlockTimerStartMusic();
+      if (engineState.isActive) {
         mobileTimerEngine.resume();
-      } else {
-        targetEndTimeRef.current = null;
-        try {
-          localStorage.setItem(CLOCK_SESSION_KEY, JSON.stringify({
-            activeTask,
-            targetEndTime: null,
-            secondsRemaining,
-            totalDurationSeconds: (activeTask?.durationMin || 0) * 60 || secondsRemaining,
-            isRunning: false,
-            pausedAt: Date.now()
-          }));
-        } catch {}
-        mobileTimerEngine.pause();
+      } else if (activeTask || secondsRemaining > 0) {
+        const curTask = activeTask;
+        const totalSecs = (curTask?.durationMin ? curTask.durationMin * 60 : 0) || secondsRemaining || 25 * 60;
+        const remainingSecs = secondsRemaining > 0 ? secondsRemaining : totalSecs;
+
+        mobileTimerEngine.startCountdown({
+          durationSeconds: totalSecs,
+          initialRemainingSeconds: remainingSecs,
+          taskTitle: curTask?.title || 'Daily Focus Block',
+          category: curTask?.domain || 'task',
+          system: 'task',
+          phase: 'focus',
+          onComplete: () => {
+            setIsRunning(false);
+            setSecondsRemaining(0);
+            targetEndTimeRef.current = null;
+            setActiveTask(null);
+            activeTaskRef.current = null;
+            try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
+            if (curTask) {
+              soundEngine.playSound(curTask.soundProfile || soundProfile);
+              try {
+                confetti({
+                  particleCount: 80,
+                  spread: 70,
+                  origin: { y: 0.6 },
+                });
+              } catch (e) {}
+              toggleTaskCompletion(curTask.id);
+            }
+          }
+        });
       }
-      return next;
-    });
+    }
   };
 
   const stopTimer = () => {
+    mobileTimerEngine.stop();
     setIsRunning(false);
     setActiveTask(null);
+    activeTaskRef.current = null;
     setSecondsRemaining(0);
     targetEndTimeRef.current = null;
     try { localStorage.removeItem(CLOCK_SESSION_KEY); } catch {}
-    mobileTimerEngine.stop();
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -3035,6 +3009,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         secondsRemaining,
         isRunning,
         startTask,
+        startTimerForTask: startTask,
         toggleTimer,
         stopTimer,
         toggleTaskCompletion,

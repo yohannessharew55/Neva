@@ -267,6 +267,7 @@ class SoundEngine {
     if (volume <= 0) return;
     try {
       const ctx = this.getAudioContext();
+      if (!ctx) return;
       const chord = [329.63, 392.00, 493.88, 587.33, 659.25]; // E minor 9
       chord.forEach((freq, idx) => {
         const now = ctx.currentTime + idx * 0.1;
@@ -286,6 +287,87 @@ class SoundEngine {
         osc.stop(now + 2.8);
       });
     } catch (e) {}
+  }
+
+  // Play Uplifting Melodic Chime & Ambient Harp Music Effect for Block Timer Start
+  playBlockTimerStartMusic(volume = 0.8): void {
+    if (volume <= 0) return;
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const baseNow = ctx.currentTime;
+
+      // Master gain node
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(volume * 0.8, baseNow);
+      master.connect(ctx.destination);
+
+      // 1. Resonant Warm Solfeggio & Harmonic Ambient Pad (Swells smoothly under chord)
+      const dronePartials = [
+        { freq: 432.0, gain: 0.26, decay: 3.4 }, // A4 432Hz Solfeggio / Natural tuning
+        { freq: 528.0, gain: 0.22, decay: 3.2 }, // C5 528Hz Solfeggio transformation tone
+        { freq: 216.0, gain: 0.22, decay: 3.8 }  // Sub-octave warm acoustic body
+      ];
+
+      dronePartials.forEach((p) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(p.freq, baseNow);
+
+        // Subtle warm LFO shimmer
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.setValueAtTime(4.2, baseNow);
+        lfoGain.gain.setValueAtTime(1.2, baseNow);
+        lfo.connect(osc.frequency);
+        lfo.start(baseNow);
+        lfo.stop(baseNow + p.decay);
+
+        g.gain.setValueAtTime(0.001, baseNow);
+        g.gain.linearRampToValueAtTime(p.gain, baseNow + 0.12);
+        g.gain.exponentialRampToValueAtTime(0.0001, baseNow + p.decay);
+
+        osc.connect(g);
+        g.connect(master);
+
+        osc.start(baseNow);
+        osc.stop(baseNow + p.decay);
+      });
+
+      // 2. Sparkling Celestial Music Arpeggio (Dmaj9 / Golden Flow Chord)
+      // D4, A4, D5, F#5, A5, E6 (pure harmonic sequence)
+      const melodyNotes = [
+        { freq: 293.66, delay: 0.00, gain: 0.38, decay: 2.6 }, // D4
+        { freq: 440.00, delay: 0.08, gain: 0.35, decay: 2.5 }, // A4
+        { freq: 587.33, delay: 0.16, gain: 0.38, decay: 2.8 }, // D5
+        { freq: 739.99, delay: 0.24, gain: 0.36, decay: 3.0 }, // F#5
+        { freq: 880.00, delay: 0.32, gain: 0.32, decay: 3.2 }, // A5
+        { freq: 1318.51, delay: 0.42, gain: 0.26, decay: 3.5 } // E6
+      ];
+
+      melodyNotes.forEach((n) => {
+        const noteTime = baseNow + n.delay;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+
+        // Harmonically rich acoustic chime
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(n.freq, noteTime);
+
+        g.gain.setValueAtTime(0.001, noteTime);
+        g.gain.linearRampToValueAtTime(n.gain, noteTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, noteTime + n.decay);
+
+        osc.connect(g);
+        g.connect(master);
+
+        osc.start(noteTime);
+        osc.stop(noteTime + n.decay);
+      });
+    } catch (e) {
+      console.warn('Block timer start music error', e);
+    }
   }
 
   // Play Modern Digital Alert
@@ -465,7 +547,7 @@ class SoundEngine {
 
     switch (sound) {
       case 'gentle_bell':
-        this.playGentleBell(vol);
+        this.playBlockTimerStartMusic(vol);
         break;
       case 'tibetan_bowl':
         this.playTibetanBowl(vol);
@@ -478,6 +560,7 @@ class SoundEngine {
         break;
       case 'none':
       default:
+        this.playBlockTimerStartMusic(vol);
         break;
     }
   }
@@ -530,6 +613,11 @@ class SoundEngine {
           this.playCrystalChime(vol);
           break;
         case 'solfeggio_432':
+        case 'timer_start':
+        case 'block_start':
+        case 'block_timer':
+          this.playBlockTimerStartMusic(vol);
+          break;
         case 'sacred_chimes':
         case 'alpha432':
           this.playSacredChimes(vol);

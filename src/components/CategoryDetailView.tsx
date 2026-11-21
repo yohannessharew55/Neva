@@ -54,6 +54,14 @@ export const CategoryDetailView: React.FC = () => {
   const [stickyQuickIsCustom, setStickyQuickIsCustom] = useState(false);
   const [stickyTaskDayAlerts, setStickyTaskDayAlerts] = useState<Record<string, string>>({});
 
+  const isStickyDayPast = useMemo(() => {
+    if (!stickyNoteDay) return false;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetStart = new Date(stickyNoteDay.getFullYear(), stickyNoteDay.getMonth(), stickyNoteDay.getDate()).getTime();
+    return targetStart < todayStart;
+  }, [stickyNoteDay]);
+
   const today = useMemo(() => new Date(), []);
   const todayEth = useMemo(() => gregorianToEthiopian(today), [today]);
   const [selectedEthYear, setSelectedEthYear] = useState<number>(todayEth.year);
@@ -324,6 +332,13 @@ export const CategoryDetailView: React.FC = () => {
   // STREAM EXECUTION TIMELINE & PROGRESS TRACKING (Mobile Timeline & Circular Ring)
   // =========================================================================
   const [selectedTimelineDate, setSelectedTimelineDate] = useState<Date>(() => new Date());
+
+  const isSelectedTimelineDatePast = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetStart = new Date(selectedTimelineDate.getFullYear(), selectedTimelineDate.getMonth(), selectedTimelineDate.getDate()).getTime();
+    return targetStart < todayStart;
+  }, [selectedTimelineDate]);
   const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ScheduleTask | null>(null);
@@ -1614,15 +1629,21 @@ export const CategoryDetailView: React.FC = () => {
                     <span className="hidden sm:inline">Sticky Note</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleOpenAddStreamTask}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
-                    style={{ backgroundColor: category.color }}
-                  >
-                    <Plus size={14} />
-                    <span>{language === 'am' ? 'ብሎክ አቅድ' : 'Plan Block'}</span>
-                  </button>
+                  {isSelectedTimelineDatePast ? (
+                    <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center gap-1.5">
+                      📜 {language === 'am' ? 'ያለፈ ቀን መዝገብ' : 'Past Day Log'}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleOpenAddStreamTask}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
+                      style={{ backgroundColor: category.color }}
+                    >
+                      <Plus size={14} />
+                      <span>{language === 'am' ? 'ብሎክ አቅድ' : 'Plan Block'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1679,19 +1700,32 @@ export const CategoryDetailView: React.FC = () => {
                     return (
                       <div key={task.id} className="relative group">
                         {/* Milestone Node on Timeline */}
-                        <div
-                          onClick={() => handleToggleStreamTask(task)}
-                          className={`absolute -left-6 sm:-left-7 top-4 -translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all cursor-pointer z-10 flex items-center justify-center ${
-                            isActiveRunning
-                              ? 'border-[#0082ff] bg-[#0082ff] ring-4 ring-blue-500/20 shadow-xs scale-110'
-                              : task.completed
-                              ? 'border-emerald-500 bg-emerald-500 text-white'
-                              : 'border-blue-400 dark:border-blue-500 bg-white dark:bg-[#121927] hover:border-[#0082ff]'
-                          }`}
-                          title={task.completed ? 'Mark incomplete' : 'Mark completed'}
-                        >
-                          {task.completed && <Check size={10} strokeWidth={3} className="text-white" />}
-                        </div>
+                        {isSelectedTimelineDatePast ? (
+                          <div
+                            className={`absolute -left-6 sm:-left-7 top-4 -translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all z-10 flex items-center justify-center ${
+                              task.completed
+                                ? 'border-emerald-500 bg-emerald-500 text-white shadow-2xs'
+                                : 'border-rose-500 bg-rose-500 text-white shadow-2xs'
+                            }`}
+                            title={task.completed ? 'Completed' : 'Undone'}
+                          >
+                            {task.completed ? <Check size={10} strokeWidth={3} className="text-white" /> : <X size={10} strokeWidth={3} className="text-white" />}
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => handleToggleStreamTask(task)}
+                            className={`absolute -left-6 sm:-left-7 top-4 -translate-x-1/2 w-4 h-4 rounded-full border-2 transition-all cursor-pointer z-10 flex items-center justify-center ${
+                              isActiveRunning
+                                ? 'border-[#0082ff] bg-[#0082ff] ring-4 ring-blue-500/20 shadow-xs scale-110'
+                                : task.completed
+                                ? 'border-emerald-500 bg-emerald-500 text-white'
+                                : 'border-blue-400 dark:border-blue-500 bg-white dark:bg-[#121927] hover:border-[#0082ff]'
+                            }`}
+                            title={task.completed ? 'Mark incomplete' : 'Mark completed'}
+                          >
+                            {task.completed && <Check size={10} strokeWidth={3} className="text-white" />}
+                          </div>
+                        )}
 
                         {/* Task Card with 3 Vertical Dots */}
                         <div
@@ -1703,7 +1737,7 @@ export const CategoryDetailView: React.FC = () => {
                         >
                           <div className="flex items-start justify-between gap-2.5">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                                   isActiveRunning
                                     ? 'bg-white/20 text-white'
@@ -1714,6 +1748,17 @@ export const CategoryDetailView: React.FC = () => {
                                 <span className={`text-[10px] font-bold ${isActiveRunning ? 'text-white/80' : 'text-[#0082ff]'}`}>
                                   {formatTaskDuration(task.durationMin || 45)}
                                 </span>
+                                {isSelectedTimelineDatePast && (
+                                  task.completed ? (
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1 shrink-0">
+                                      <Check size={10} strokeWidth={3} /> {language === 'am' ? 'ተጠናቋል' : 'Done'}
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 text-[10px] font-bold flex items-center gap-1 shrink-0">
+                                      <X size={10} strokeWidth={3} /> {language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}
+                                    </span>
+                                  )
+                                )}
                               </div>
 
                               <h4 className={`text-sm sm:text-base font-bold tracking-tight ${
@@ -1729,63 +1774,65 @@ export const CategoryDetailView: React.FC = () => {
                               )}
                             </div>
 
-                            {/* 3 Vertical Dots Menu: Edit & Delete (From User Image) */}
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
-                                }}
-                                className={`w-7 h-7 rounded-xl flex items-center justify-center transition cursor-pointer ${
-                                  isActiveRunning
-                                    ? 'text-white/80 hover:text-white hover:bg-white/10'
-                                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10'
-                                }`}
-                                title={language === 'am' ? 'አማራጮች' : 'Options'}
-                              >
-                                <MoreVertical size={16} />
-                              </button>
+                            {/* 3 Vertical Dots Menu: Edit & Delete (Only on today / future days) */}
+                            {!isSelectedTimelineDatePast && (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenTaskMenuId(openTaskMenuId === task.id ? null : task.id);
+                                  }}
+                                  className={`w-7 h-7 rounded-xl flex items-center justify-center transition cursor-pointer ${
+                                    isActiveRunning
+                                      ? 'text-white/80 hover:text-white hover:bg-white/10'
+                                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10'
+                                  }`}
+                                  title={language === 'am' ? 'አማራጮች' : 'Options'}
+                                >
+                                  <MoreVertical size={16} />
+                                </button>
 
-                              {openTaskMenuId === task.id && (
-                                <>
-                                  <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenTaskMenuId(null);
-                                    }}
-                                  />
-                                  <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
-                                    <button
-                                      type="button"
+                                {openTaskMenuId === task.id && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-40"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setOpenTaskMenuId(null);
-                                        handleOpenEditStreamTask(task);
                                       }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition cursor-pointer"
-                                    >
-                                      <Edit3 size={14} className="text-indigo-500" />
-                                      <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
-                                    </button>
-                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenTaskMenuId(null);
-                                        handleDeleteStreamTask(task.id);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition cursor-pointer"
-                                    >
-                                      <Trash2 size={14} className="text-rose-500" />
-                                      <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                                    />
+                                    <div className="absolute right-0 top-full mt-1 z-50 w-32 bg-white dark:bg-[#1a202c] rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 animate-fadeIn space-y-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenTaskMenuId(null);
+                                          handleOpenEditStreamTask(task);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition cursor-pointer"
+                                      >
+                                        <Edit3 size={14} className="text-indigo-500" />
+                                        <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
+                                      </button>
+                                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenTaskMenuId(null);
+                                          handleDeleteStreamTask(task.id);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition cursor-pointer"
+                                      >
+                                        <Trash2 size={14} className="text-rose-500" />
+                                        <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1793,25 +1840,31 @@ export const CategoryDetailView: React.FC = () => {
                   })
                 ) : (
                   <div className="py-8 text-center bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-6">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#0082ff] flex items-center justify-center mx-auto text-xl mb-2.5 shadow-2xs">
-                      📅
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-xl mb-2.5 shadow-2xs">
+                      📜
                     </div>
                     <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      {language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet'}
+                      {isSelectedTimelineDatePast
+                        ? (language === 'am' ? 'ለዚህ ያለፈ ቀን ምንም የተመዘገበ ተግባር አልነበረም' : 'No tasks were recorded for this past day')
+                        : (language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet')}
                     </h4>
-                    <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1 mb-3">
-                      {language === 'am'
-                        ? 'ለዚህ ዘርፍ አዲስ የትኩረት ብሎክ ለመመደብ ከታች ያለውን ይጫኑ።'
-                        : `Plan a deliberate focus block or routine for ${category.title}.`}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleOpenAddStreamTask}
-                      className="px-4 py-2 bg-[#0082ff] hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      <Plus size={14} />
-                      <span>{language === 'am' ? 'የመጀመሪያውን ብሎክ አቅድ' : 'Plan First Block'}</span>
-                    </button>
+                    {!isSelectedTimelineDatePast && (
+                      <>
+                        <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1 mb-3">
+                          {language === 'am'
+                            ? 'ለዚህ ዘርፍ አዲስ የትኩረት ብሎክ ለመመደብ ከታች ያለውን ይጫኑ።'
+                            : `Plan a deliberate focus block or routine for ${category.title}.`}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleOpenAddStreamTask}
+                          className="px-4 py-2 bg-[#0082ff] hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                        >
+                          <Plus size={14} />
+                          <span>{language === 'am' ? 'የመጀመሪያውን ብሎክ አቅድ' : 'Plan First Block'}</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -2931,9 +2984,15 @@ export const CategoryDetailView: React.FC = () => {
                     >
                       {getCategoryTitleTranslated(category.id, category.title)}
                     </span>
-                    <span className="text-[10px] font-bold text-amber-800/80 dark:text-amber-300/80 flex items-center gap-0.5">
-                      <span>📌</span> Sticky Note
-                    </span>
+                    {isStickyDayPast ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 flex items-center gap-1">
+                        📜 {language === 'am' ? 'ያለፈ ቀን መዝገብ' : 'Past Day Log'}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-amber-800/80 dark:text-amber-300/80 flex items-center gap-0.5">
+                        <span>📌</span> Sticky Note
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate text-amber-950 dark:text-white">
                     {stickyNoteDay.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
@@ -2960,7 +3019,7 @@ export const CategoryDetailView: React.FC = () => {
             {/* Task List on This Specific Day */}
             <div className="my-4 space-y-2.5 max-h-60 overflow-y-auto pr-1">
               <div className="flex items-center justify-between text-xs font-bold text-amber-800/80 dark:text-amber-300/80 px-1">
-                <span>{language === 'am' ? 'የዕለቱ ተግባራት' : 'TASKS FOR THIS DAY'}</span>
+                <span>{language === 'am' ? (isStickyDayPast ? 'የተመዘገቡ ተግባራት' : 'የዕለቱ ተግባራት') : (isStickyDayPast ? 'LOGGED TASKS FOR THIS DAY' : 'TASKS FOR THIS DAY')}</span>
                 <span className="px-2 py-0.5 rounded-full bg-amber-200/60 dark:bg-amber-900/60 text-[10px] font-mono">
                   {getTasksForStreamDate(stickyNoteDay).filter(t => t.completed).length} / {getTasksForStreamDate(stickyNoteDay).length} {language === 'am' ? 'ተጠናቋል' : 'done'}
                 </span>
@@ -2973,18 +3032,39 @@ export const CategoryDetailView: React.FC = () => {
                     className="p-3 rounded-2xl bg-white/85 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 flex items-start justify-between gap-2.5 shadow-2xs hover:shadow-xs transition"
                   >
                     <div className="flex items-start gap-2.5 min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
-                        className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center mt-0.5 transition cursor-pointer shrink-0 ${
-                          t.completed
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : 'border-amber-400 dark:border-amber-600 bg-white/90 dark:bg-amber-900/40 hover:border-amber-600'
-                        }`}
-                        title={t.completed ? 'Mark incomplete' : 'Mark complete'}
-                      >
-                        {t.completed && <Check size={12} strokeWidth={3} />}
-                      </button>
+                      {isStickyDayPast ? (
+                        // Show Done symbol if checked, or Undone symbol if not done
+                        t.completed ? (
+                          <div 
+                            className="px-2 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 shrink-0 shadow-2xs"
+                            title={language === 'am' ? 'የተጠናቀቀ' : 'Done & Checked'}
+                          >
+                            <Check size={13} strokeWidth={3} className="text-emerald-600 dark:text-emerald-400" />
+                            <span>{language === 'am' ? 'ተጠናቋል' : 'Done'}</span>
+                          </div>
+                        ) : (
+                          <div 
+                            className="px-2 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-300 text-[11px] font-bold flex items-center gap-1.5 shrink-0 shadow-2xs"
+                            title={language === 'am' ? 'ያልተጠናቀቀ' : 'Undone / Missed'}
+                          >
+                            <X size={13} strokeWidth={3} className="text-rose-600 dark:text-rose-400" />
+                            <span>{language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}</span>
+                          </div>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
+                          className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center mt-0.5 transition cursor-pointer shrink-0 ${
+                            t.completed
+                              ? 'bg-emerald-600 border-emerald-600 text-white'
+                              : 'border-amber-400 dark:border-amber-600 bg-white/90 dark:bg-amber-900/40 hover:border-amber-600'
+                          }`}
+                          title={t.completed ? 'Mark incomplete' : 'Mark complete'}
+                        >
+                          {t.completed && <Check size={12} strokeWidth={3} />}
+                        </button>
+                      )}
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -3017,145 +3097,172 @@ export const CategoryDetailView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick Play & Action */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleStartStickyTaskFocus(t)}
-                        className="p-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 transition cursor-pointer"
-                        title="Run Focus Timer"
-                      >
-                        <Play size={12} fill="currentColor" />
-                      </button>
-                    </div>
+                    {/* Quick Play & Action: Only on Today / Future days */}
+                    {!isStickyDayPast && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleStartStickyTaskFocus(t)}
+                          className="p-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 transition cursor-pointer"
+                          title="Run Focus Timer"
+                        >
+                          <Play size={12} fill="currentColor" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
                 <div className="py-6 text-center bg-amber-100/40 dark:bg-amber-950/20 rounded-2xl border border-dashed border-amber-300/80 dark:border-amber-800/60 p-4">
-                  <span className="text-2xl block mb-1">📝</span>
+                  <span className="text-2xl block mb-1">{isStickyDayPast ? '📜' : '📝'}</span>
                   <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                    {language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet'}
+                    {isStickyDayPast 
+                      ? (language === 'am' ? 'ለዚህ ያለፈ ቀን ምንም የተመዘገበ ተግባር አልነበረም' : 'No tasks were recorded for this past day')
+                      : (language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet')}
                   </p>
-                  <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70 mt-0.5">
-                    {language === 'am' ? 'ከታች አዲስ ተግባር በፈጣን ይጻፉ' : 'Quickly jot down a task for this day below:'}
-                  </p>
+                  {!isStickyDayPast && (
+                    <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70 mt-0.5">
+                      {language === 'am' ? 'ከታች አዲስ ተግባር በፈጣን ይጻፉ' : 'Quickly jot down a task for this day below:'}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Quick Add Task Input on the Sticky Note */}
-            <form onSubmit={handleAddStickyQuickTask} className="pt-2 border-t border-amber-300/60 dark:border-amber-800/60 space-y-2">
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={stickyQuickTitle}
-                  onChange={(e) => setStickyQuickTitle(e.target.value)}
-                  placeholder={language === 'am' ? '+ አዲስ ተግባር ለዚህ ቀን...' : '+ Add task for this day...'}
-                  className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold bg-white/90 dark:bg-amber-950/60 border border-amber-300/80 dark:border-amber-700/80 text-amber-950 dark:text-white placeholder:text-amber-800/50 dark:placeholder:text-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                />
-                <button
-                  type="submit"
-                  disabled={!stickyQuickTitle.trim()}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1"
-                >
-                  <Plus size={13} />
-                  <span>{language === 'am' ? 'መዝግብ' : 'Add'}</span>
-                </button>
+            {/* Quick Add Task Input on the Sticky Note (LOCKED FOR PAST DAYS) */}
+            {isStickyDayPast ? (
+              <div className="pt-2 border-t border-amber-300/60 dark:border-amber-800/60">
+                <div className="p-3 rounded-2xl bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-center space-y-1">
+                  <p className="text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center justify-center gap-1.5">
+                    <span>🔒</span>
+                    <span>{language === 'am' ? 'ያለፈ ቀን ታሪክ - ባለፉ ቀናት ላይ አዲስ ተግባር ማቀድ አይቻልም' : 'Past Day Record: Planning or scheduling tasks is locked'}</span>
+                  </p>
+                  <p className="text-[11px] text-amber-800/70 dark:text-amber-300/70">
+                    {language === 'am' ? 'ይህ ክፍል የታለፉ ዕለታት አፈጻጸም መመልከቻ ብቻ ነው።' : 'Strictly shows historical records of completed or undone tasks.'}
+                  </p>
+                </div>
               </div>
-
-              <div className="flex items-center justify-between text-[11px] text-amber-800/80 dark:text-amber-300/80 px-1 gap-2 flex-wrap sm:flex-nowrap">
+            ) : (
+              <form onSubmit={handleAddStickyQuickTask} className="pt-2 border-t border-amber-300/60 dark:border-amber-800/60 space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span>🕒</span>
                   <input
                     type="text"
-                    value={stickyQuickTime}
-                    onChange={(e) => setStickyQuickTime(e.target.value)}
-                    placeholder="08:00 AM"
-                    className="w-20 px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-white/80 dark:bg-amber-950/60 border border-amber-300/70 dark:border-amber-700/70 text-amber-950 dark:text-amber-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    title={language === 'am' ? 'ብጁ ሰዓት ያስገቡ' : 'Custom start time (e.g. 08:00 AM, 02:30 PM)'}
+                    value={stickyQuickTitle}
+                    onChange={(e) => setStickyQuickTitle(e.target.value)}
+                    placeholder={language === 'am' ? '+ አዲስ ተግባር ለዚህ ቀን...' : '+ Add task for this day...'}
+                    className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold bg-white/90 dark:bg-amber-950/60 border border-amber-300/80 dark:border-amber-700/80 text-amber-950 dark:text-white placeholder:text-amber-800/50 dark:placeholder:text-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
                   />
+                  <button
+                    type="submit"
+                    disabled={!stickyQuickTitle.trim()}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1"
+                  >
+                    <Plus size={13} />
+                    <span>{language === 'am' ? 'መዝግብ' : 'Add'}</span>
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <span>⏱️</span>
-                  {[25, 45, 60].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => {
-                        setStickyQuickDuration(d);
-                        setStickyQuickIsCustom(false);
-                      }}
-                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                        !stickyQuickIsCustom && stickyQuickDuration === d
-                          ? 'bg-amber-600 text-white shadow-2xs'
-                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
-                      }`}
-                    >
-                      {d}m
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between text-[11px] text-amber-800/80 dark:text-amber-300/80 px-1 gap-2 flex-wrap sm:flex-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span>🕒</span>
+                    <input
+                      type="text"
+                      value={stickyQuickTime}
+                      onChange={(e) => setStickyQuickTime(e.target.value)}
+                      placeholder="08:00 AM"
+                      className="w-20 px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-white/80 dark:bg-amber-950/60 border border-amber-300/70 dark:border-amber-700/70 text-amber-950 dark:text-amber-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      title={language === 'am' ? 'ብጁ ሰዓት ያስገቡ' : 'Custom start time (e.g. 08:00 AM, 02:30 PM)'}
+                    />
+                  </div>
 
-                  {stickyQuickIsCustom ? (
-                    <div className="flex items-center gap-0.5 bg-white/95 dark:bg-amber-950/90 px-1.5 py-0.5 rounded-md border border-amber-400 dark:border-amber-600 shadow-2xs">
-                      <input
-                        type="number"
-                        min={5}
-                        max={480}
-                        value={stickyQuickDuration}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val > 0) setStickyQuickDuration(Math.min(val, 720));
+                  <div className="flex items-center gap-1">
+                    <span>⏱️</span>
+                    {[25, 45, 60].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          setStickyQuickDuration(d);
+                          setStickyQuickIsCustom(false);
                         }}
-                        className="w-10 text-[10px] font-mono font-bold text-center bg-transparent text-amber-950 dark:text-white outline-none"
-                        placeholder="min"
-                        autoFocus
-                      />
-                      <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300">m</span>
+                        className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                          !stickyQuickIsCustom && stickyQuickDuration === d
+                            ? 'bg-amber-600 text-white shadow-2xs'
+                            : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
+                        }`}
+                      >
+                        {d}m
+                      </button>
+                    ))}
+
+                    {stickyQuickIsCustom ? (
+                      <div className="flex items-center gap-0.5 bg-white/95 dark:bg-amber-950/90 px-1.5 py-0.5 rounded-md border border-amber-400 dark:border-amber-600 shadow-2xs">
+                        <input
+                          type="number"
+                          min={5}
+                          max={480}
+                          value={stickyQuickDuration}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val > 0) setStickyQuickDuration(Math.min(val, 720));
+                          }}
+                          className="w-10 text-[10px] font-mono font-bold text-center bg-transparent text-amber-950 dark:text-white outline-none"
+                          placeholder="min"
+                          autoFocus
+                        />
+                        <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300">m</span>
+                        <button
+                          type="button"
+                          onClick={() => setStickyQuickIsCustom(false)}
+                          className="text-[10px] font-bold text-amber-600 hover:text-amber-800 dark:text-amber-300 ml-0.5 px-0.5 cursor-pointer"
+                          title="Done"
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setStickyQuickIsCustom(false)}
-                        className="text-[10px] font-bold text-amber-600 hover:text-amber-800 dark:text-amber-300 ml-0.5 px-0.5 cursor-pointer"
-                        title="Done"
+                        onClick={() => setStickyQuickIsCustom(true)}
+                        className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                          stickyQuickIsCustom || ![25, 45, 60].includes(stickyQuickDuration)
+                            ? 'bg-amber-600 text-white shadow-2xs'
+                            : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
+                        }`}
+                        title={language === 'am' ? 'ብጁ ደቂቃ ያስገቡ' : 'Add custom duration minutes'}
                       >
-                        ✓
+                        {![25, 45, 60].includes(stickyQuickDuration)
+                          ? `${stickyQuickDuration}m`
+                          : (language === 'am' ? '+ ብጁ' : '+ Custom')}
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setStickyQuickIsCustom(true)}
-                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                        stickyQuickIsCustom || ![25, 45, 60].includes(stickyQuickDuration)
-                          ? 'bg-amber-600 text-white shadow-2xs'
-                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 hover:bg-amber-300/80'
-                      }`}
-                      title={language === 'am' ? 'ብጁ ደቂቃ ያስገቡ' : 'Add custom duration minutes'}
-                    >
-                      {![25, 45, 60].includes(stickyQuickDuration)
-                        ? `${stickyQuickDuration}m`
-                        : (language === 'am' ? '+ ብጁ' : '+ Custom')}
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            )}
 
             {/* Footer Toolbar: Plan Full Block & Close */}
             <div className="mt-3 pt-3 border-t border-amber-300/60 dark:border-amber-800/60 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const day = stickyNoteDay;
-                  setStickyNoteDay(null);
-                  setSelectedTimelineDate(day);
-                  handleOpenAddStreamTask();
-                }}
-                className="text-xs font-bold text-amber-900 hover:text-amber-950 dark:text-amber-200 dark:hover:text-white flex items-center gap-1 transition cursor-pointer"
-              >
-                <Plus size={13} />
-                <span>{language === 'am' ? 'ሙሉ ብሎክ አቅድ' : 'Plan Full Routine Block'}</span>
-              </button>
+              {!isStickyDayPast ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const day = stickyNoteDay;
+                    setStickyNoteDay(null);
+                    setSelectedTimelineDate(day);
+                    handleOpenAddStreamTask();
+                  }}
+                  className="text-xs font-bold text-amber-900 hover:text-amber-950 dark:text-amber-200 dark:hover:text-white flex items-center gap-1 transition cursor-pointer"
+                >
+                  <Plus size={13} />
+                  <span>{language === 'am' ? 'ሙሉ ብሎክ አቅድ' : 'Plan Full Routine Block'}</span>
+                </button>
+              ) : (
+                <span className="text-[11px] font-semibold text-amber-800/80 dark:text-amber-300/80 flex items-center gap-1">
+                  <span>📜</span>
+                  <span>{language === 'am' ? 'የታሪክ ዕይታ ብቻ' : 'Read-only Past Record'}</span>
+                </span>
+              )}
 
               <button
                 type="button"
