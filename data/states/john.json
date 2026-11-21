@@ -535,6 +535,97 @@
           "done": false
         }
       ]
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-16",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932878"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-17",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932878"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-18",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932878"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-19",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932879"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-20",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932879"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-21",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932879"
+    },
+    {
+      "title": "Sketching",
+      "domain": "OIL_PAINTING",
+      "startTime": "08:00 AM",
+      "durationMin": 60,
+      "color": "#e11d48",
+      "badge": "Art",
+      "completed": false,
+      "date": "2026-11-22",
+      "checklist": [],
+      "notes": "Improve skills (Weekly Routine)",
+      "id": "task-1795256932879"
     }
   ],
   "workouts": [
