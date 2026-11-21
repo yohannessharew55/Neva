@@ -205,7 +205,7 @@
     {
       "domain": "GUITAR",
       "title": "finger exercises ",
-      "startTime": "03:30 PM",
+      "startTime": "09:00",
       "durationMin": 10,
       "completed": false,
       "color": "#ec4899",
@@ -260,6 +260,17 @@
       "dayOfWeek": 6
     },
     {
+      "title": "Guitar Scales & Finger Independence",
+      "domain": "GUITAR",
+      "startTime": "03:30 PM",
+      "durationMin": 10,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1795208974194-1-ozfv",
+      "date": "2026-11-21",
+      "badge": "Music & Guitar"
+    },
+    {
       "domain": "GUITAR",
       "title": "finger exercises ",
       "startTime": "03:30 PM",
@@ -282,17 +293,6 @@
       "id": "task-1795208974194-3-h3kr",
       "date": "2026-11-21",
       "dayOfWeek": 6
-    },
-    {
-      "title": "Guitar Scales & Finger Independence",
-      "domain": "GUITAR",
-      "startTime": "09:00",
-      "durationMin": 10,
-      "completed": false,
-      "color": "#ec4899",
-      "id": "task-1795208974194-1-ozfv",
-      "date": "2026-11-21",
-      "badge": "Music & Guitar"
     },
     {
       "title": "xauusd",
