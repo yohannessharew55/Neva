@@ -472,11 +472,14 @@ export const Navbar: React.FC = () => {
                   setDrawerOpen(false);
                   openSyncModal();
                 }}
-                className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-50 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-slate-800/80 border border-blue-200/80 dark:border-blue-800/80 flex items-center justify-between gap-2.5 cursor-pointer hover:border-[#0082ff] transition shadow-2xs"
+                className="relative overflow-hidden p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-slate-50 dark:from-[#151c2e] dark:via-[#192238] dark:to-[#1a2035] border border-blue-200/80 dark:border-indigo-900/50 flex items-center justify-between gap-3 cursor-pointer hover:border-[#0082ff] dark:hover:border-indigo-500/60 transition-all duration-300 shadow-[0_2px_12px_-2px_rgba(0,130,255,0.06)] hover:shadow-md group"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                {/* Ambient glow */}
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-400/10 dark:bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
+
+                <div className="relative z-10 flex items-center gap-3 min-w-0">
                   <div 
-                    className="w-10 h-10 rounded-xl overflow-hidden text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0"
+                    className="w-10 h-10 rounded-xl overflow-hidden text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0 ring-2 ring-blue-500/20 group-hover:scale-105 transition-transform"
                     style={{ backgroundColor: currentUser?.avatarColor || '#0082ff' }}
                   >
                     {currentUser ? (
@@ -489,104 +492,141 @@ export const Navbar: React.FC = () => {
                       <User size={18} />
                     )}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 space-y-0.5">
                     <div className="flex items-center gap-1.5 font-extrabold text-xs text-slate-900 dark:text-white truncate">
-                      <span className="truncate">{currentUser ? currentUser.name : 'Personal Profile'}</span>
+                      <span className="truncate">{currentUser ? currentUser.name : (language === 'am' ? 'የግል መገለጫ' : 'Personal Profile')}</span>
                       {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />}
                     </div>
-                    <div className="text-[10px] font-mono text-[#0082ff] font-bold truncate">
-                      {currentUser ? `@${currentUser.username}` : 'Sign in & Cloud Sync'}
+                    <div className="text-[10px] font-mono text-[#0082ff] dark:text-sky-400 font-bold truncate flex items-center gap-1">
+                      <Cloud size={10} className="shrink-0" />
+                      <span className="truncate">{currentUser ? `@${currentUser.username}` : (language === 'am' ? 'ይግቡና ዳታ ያመሳስሉ' : 'Sign in & Cloud Sync')}</span>
                     </div>
                   </div>
                 </div>
-                <ChevronRight size={14} className="text-slate-400 shrink-0" />
+
+                <div className="relative z-10 w-7 h-7 rounded-xl bg-white/90 dark:bg-slate-800/90 shadow-2xs border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-[#0082ff] group-hover:border-blue-200 dark:group-hover:border-blue-800 group-hover:translate-x-0.5 transition-all shrink-0">
+                  <ChevronRight size={14} />
+                </div>
               </div>
 
               {/* Main Categories Section */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                    {t('categoriesTitle')} ({allCategories.length})
-                  </span>
+              <div className="space-y-2">
+                {/* Header Row: Title & + Add Button */}
+                <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsManagingCategories(!isManagingCategories)}
-                      className={`text-[11px] font-bold cursor-pointer transition ${
-                        isManagingCategories 
-                          ? 'text-rose-600 dark:text-rose-400 underline font-black' 
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                      }`}
-                      title={language === 'am' ? 'ዘርፎችን አስተካክል / ሰርዝ' : 'Manage / delete main streams'}
-                    >
-                      {isManagingCategories ? (language === 'am' ? 'ጨርስ' : 'Done') : (language === 'am' ? 'አስተካክል' : 'Edit')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        openManageCategoriesModal();
-                      }}
-                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition"
-                      title={language === 'am' ? 'ሁሉንም ዘርፎች በዝርዝር አስተዳድር' : 'Manage all streams & priorities'}
-                    >
-                      {language === 'am' ? 'አስተዳድር' : 'Manage'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        openNewCategoryModal();
-                      }}
-                      className="text-[11px] font-bold text-[#0082ff] hover:underline flex items-center gap-0.5 cursor-pointer"
-                    >
-                      <Plus size={12} /> {language === 'am' ? 'አዲስ' : 'Add'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        setShowWeeklyReviewModal(true);
-                      }}
-                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-                      title={language === 'am' ? 'ሳምንታዊ ግምገማ እና የደረጃዎች እድገት' : 'Weekly Review & Milestones'}
-                    >
-                      <Trophy size={11} /> {language === 'am' ? 'ግምገማ' : 'Review'}
-                    </button>
+                    <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <Sparkles size={12} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                        {t('categoriesTitle')}
+                      </span>
+                      <span className="px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0082ff] dark:text-sky-400 text-[10px] font-mono font-black border border-blue-200/60 dark:border-blue-900/60">
+                        {allCategories.length}
+                      </span>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      openNewCategoryModal();
+                    }}
+                    className="px-3 py-1 rounded-full bg-[#0082ff] hover:bg-[#0070df] text-white text-[11px] font-bold shadow-xs flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Plus size={12} strokeWidth={2.5} />
+                    <span>{language === 'am' ? 'አዲስ' : 'Add'}</span>
+                  </button>
                 </div>
-                <p className="text-[11px] text-slate-500 px-2 pb-1">
+
+                {/* Sub-toolbar: Edit (manage mode), Manage modal, Review */}
+                <div className="flex items-center gap-1.5 px-1 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsManagingCategories(!isManagingCategories)}
+                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer transition flex items-center gap-1 ${
+                      isManagingCategories 
+                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-black' 
+                        : 'bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    }`}
+                    title={language === 'am' ? 'ዘርፎችን አስተካክል / ሰርዝ' : 'Manage / delete main streams'}
+                  >
+                    <SlidersHorizontal size={10} />
+                    <span>{isManagingCategories ? (language === 'am' ? 'ጨርስ' : 'Done') : (language === 'am' ? 'አስተካክል' : 'Edit')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      openManageCategoriesModal();
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold cursor-pointer transition flex items-center gap-1"
+                    title={language === 'am' ? 'ሁሉንም ዘርፎች በዝርዝር አስተዳድር' : 'Manage all streams & priorities'}
+                  >
+                    <SettingsIcon size={10} />
+                    <span>{language === 'am' ? 'አስተዳድር' : 'Manage'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      setShowWeeklyReviewModal(true);
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold cursor-pointer transition flex items-center gap-1 ml-auto"
+                    title={language === 'am' ? 'ሳምንታዊ ግምገማ እና የደረጃዎች እድገት' : 'Weekly Review & Milestones'}
+                  >
+                    <Trophy size={10} className="text-amber-500" />
+                    <span>{language === 'am' ? 'ግምገማ' : 'Review'}</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 px-1 font-medium leading-relaxed">
                   {language === 'am' 
                     ? 'ሙሉ እቅዶችን፣ ስኬቶችንና ቀጣይ ደረጃዎችን ለማየት ማንኛውንም ዘርፍ ይንኩ።' 
                     : 'Click any category to open its full plan, achievements, and roadmap.'}
                 </p>
 
-                <div className="space-y-1 max-h-[58vh] overflow-y-auto pr-1">
+                <div className="space-y-1.5 max-h-[56vh] overflow-y-auto pr-1">
                   {allCategories.map((cat) => {
                     const CatIcon = getIconForCategory(cat.id);
+                    const isCurrentSelected = selectedCategoryId === cat.id;
+
                     return (
                       <div
                         key={cat.id}
-                        className="w-full text-left p-2.5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center justify-between cursor-pointer group"
+                        className={`w-full text-left p-2.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer group ${
+                          isCurrentSelected
+                            ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/80 shadow-2xs'
+                            : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-800/80 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'
+                        }`}
                         onClick={() => handleSelectCategory(cat.id)}
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div 
-                            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
-                            style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
+                            style={{ 
+                              backgroundColor: `${cat.color}18`, 
+                              color: cat.color,
+                              border: `1px solid ${cat.color}35`
+                            }}
                           >
                             <CatIcon size={16} />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-[#0082ff] block truncate">
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-[#0082ff] block truncate">
                               {getCategoryTitleTranslated(cat.id, cat.title)}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              {cat.weeklyTargetHours}{t('hoursShort')} / {language === 'am' ? 'ሳምንት' : 'week'}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-bold px-1.5 py-0.2 rounded-md bg-white dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-700/60">
+                                {cat.weeklyTargetHours}{t('hoursShort')} / {language === 'am' ? 'ሳምንት' : 'week'}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
                           {/* Delete Category Button */}
                           <button
                             type="button"
@@ -597,16 +637,18 @@ export const Navbar: React.FC = () => {
                                 title: getCategoryTitleTranslated(cat.id, cat.title) 
                               });
                             }}
-                            className={`p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition ${
-                              isManagingCategories ? 'opacity-100 text-rose-500 scale-105' : 'opacity-0 group-hover:opacity-100'
+                            className={`p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition ${
+                              isManagingCategories ? 'opacity-100 text-rose-500 bg-rose-50 dark:bg-rose-950/40 scale-105' : 'opacity-0 group-hover:opacity-100'
                             }`}
                             title={language === 'am' ? `${getCategoryTitleTranslated(cat.id, cat.title)} ዋና ዘርፍ ሰርዝ` : `Delete ${cat.title} Main Stream`}
                             aria-label={`Delete ${cat.title}`}
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                           </button>
 
-                          <ChevronRight size={14} className="text-slate-400 group-hover:text-[#0082ff] group-hover:translate-x-0.5 transition-all" />
+                          <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-[#0082ff] group-hover:border-blue-200 group-hover:translate-x-0.5 transition-all">
+                            <ChevronRight size={13} />
+                          </div>
                         </div>
                       </div>
                     );

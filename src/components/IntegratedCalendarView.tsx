@@ -1679,17 +1679,9 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <div 
-                                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider"
-                                          style={{ backgroundColor: `${catInfo.color}20`, color: catInfo.color }}
-                                        >
-                                          <TaskIcon size={12} />
-                                          <span>{getCategoryTitleTranslated(catInfo.id, catInfo.title).toUpperCase()}</span>
-                                        </div>
-
-                                        <div className={`inline-flex items-center gap-1 text-[11px] font-semibold ${currentTheme.textSecondary} bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md`}>
-                                          <Clock size={11} />
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <div className={`inline-flex items-center gap-1 text-[11px] font-semibold ${currentTheme.textSecondary} bg-black/5 dark:bg-white/5 px-2.5 py-0.5 rounded-md`}>
+                                          <Clock size={11} className="text-[#0082ff]" />
                                           <span>{formatTaskTime(task.startTime)}</span>
                                           <span>•</span>
                                           <span className="font-bold text-[#0082ff]">
@@ -1697,9 +1689,11 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                           </span>
                                         </div>
 
-                                        <span className="text-[10px] text-slate-400 font-medium">
-                                          {task.date ? 'Single Date' : 'Weekly Routine'}
-                                        </span>
+                                        {!task.date && (
+                                          <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">
+                                            Weekly
+                                          </span>
+                                        )}
                                       </div>
 
                                       <h4 className={`text-sm sm:text-base font-bold ${currentTheme.textPrimary} tracking-tight`}>
