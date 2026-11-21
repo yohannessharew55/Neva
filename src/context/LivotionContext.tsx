@@ -28,6 +28,7 @@ import {
   initialReviews,
   initialDailyStickyNotes
 } from '../data/seedData';
+import { autoResolveOverlappingTasks } from '../utils/scheduleConflictDetector';
 import { soundEngine } from '../utils/audio';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { timerNotificationService } from '../utils/timerNotificationService';
@@ -469,7 +470,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const parsed: ScheduleTask[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return parsed
+          const sanitized = parsed
             .map((t) => {
               // Self-heal any tasks saved with 2025-11- date due to previous calendar year calculation offset
               if (t && t.date && t.date.startsWith('2025-11-')) {
@@ -483,12 +484,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               !t.id?.startsWith('carry-') && 
               !['Compound Strength & Conditioning', 'Tactical Chess Study & Calculation', 'Guitar Repertoire & Fretboard Mastery', 'Dawn Gratitude & Bible Reading', 'Evening Examen & Prayer', 'Morning Devotion & Scripture Study', 'Evening Reflection & Gratitude Prayer', 'Evening Prayer & Spiritual Rest', 'Sunday Worship & Word Meditation'].includes(t.title)
             );
+          return autoResolveOverlappingTasks(sanitized);
         }
       } catch (e) {
-        return initialTasks;
+        return autoResolveOverlappingTasks(initialTasks);
       }
     }
-    return initialTasks;
+    return autoResolveOverlappingTasks(initialTasks);
   });
 
   const [workouts, setWorkouts] = useState<WorkoutProtocol[]>(() => {
@@ -1602,7 +1604,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addTask = (newTask: Omit<ScheduleTask, 'id'>) => {
     const id = `task-${Date.now()}`;
-    setTasks((prev) => [...prev, { ...newTask, id }]);
+    setTasks((prev) => autoResolveOverlappingTasks([...prev, { ...newTask, id }]));
   };
 
   const updateTask = (taskId: string, updates: Partial<ScheduleTask>) => {
@@ -1923,7 +1925,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const streamTasksToAdd = defaultTasks.filter((dt) => !isRepresented(dt));
 
       return {
-        tasks: [...customTasks, ...streamTasksToAdd],
+        tasks: autoResolveOverlappingTasks([...customTasks, ...streamTasksToAdd]),
         isCustom: true,
         source: 'custom' as const,
         dateStr,

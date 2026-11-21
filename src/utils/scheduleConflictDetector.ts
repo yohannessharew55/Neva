@@ -43,6 +43,65 @@ export const formatMinutesToTime = (totalMinutes: number): string => {
   return `${String(h12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
 };
 
+/**
+ * Automatically detects and resolves overlapping start times for tasks scheduled on the same date/day.
+ * If two tasks have the same start time or overlap (e.g. Pushup at 08:00 AM 45m and Pullup at 08:00 AM 45m),
+ * the subsequent task is automatically sequenced to begin right after the preceding task completes (08:45 AM).
+ */
+export const autoResolveOverlappingTasks = (taskList: ScheduleTask[]): ScheduleTask[] => {
+  if (!taskList || taskList.length <= 1) return taskList;
+
+  // Group tasks by their specific date or day-of-week identifier
+  const dateGroups: Record<string, ScheduleTask[]> = {};
+  const ungroupedTasks: ScheduleTask[] = [];
+
+  taskList.forEach((t) => {
+    const key = t.date || (t.dayOfWeek ? `dow-${t.dayOfWeek}` : null);
+    if (key) {
+      if (!dateGroups[key]) dateGroups[key] = [];
+      dateGroups[key].push({ ...t });
+    } else {
+      ungroupedTasks.push({ ...t });
+    }
+  });
+
+  const resolvedTasks: ScheduleTask[] = [];
+
+  Object.values(dateGroups).forEach((group) => {
+    let occupiedUntilMin = 0;
+
+    group.forEach((task) => {
+      // Ignore tasks without valid start times or marked as Flexible
+      if (!task.startTime || task.startTime.toLowerCase().includes('flex')) {
+        resolvedTasks.push(task);
+        return;
+      }
+
+      const startMin = parseTimeToMinutes(task.startTime);
+      if (startMin < 0) {
+        resolvedTasks.push(task);
+        return;
+      }
+
+      const duration = task.durationMin && task.durationMin > 0 ? task.durationMin : 45;
+
+      // If this task starts before the previous task finishes on the exact same day:
+      if (startMin < occupiedUntilMin) {
+        // Shift this task to begin cleanly when the previous one ends!
+        const newStartTime = formatMinutesToTime(occupiedUntilMin);
+        task.startTime = newStartTime;
+        occupiedUntilMin = occupiedUntilMin + duration;
+      } else {
+        occupiedUntilMin = startMin + duration;
+      }
+
+      resolvedTasks.push(task);
+    });
+  });
+
+  return [...resolvedTasks, ...ungroupedTasks];
+};
+
 export const getPillarForCategory = (categoryId?: string, domain?: DomainType, title?: string): 'career' | 'hobby' | 'living' => {
   const text = `${categoryId || ''} ${title || ''}`.toLowerCase();
   if (

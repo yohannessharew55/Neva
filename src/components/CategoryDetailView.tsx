@@ -16,7 +16,13 @@ import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { gregorianToEthiopian, getEthiopianMonthCalendar, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { getLocalDateStr } from '../utils/dateUtils';
-import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { 
+  checkScheduleConflict, 
+  ScheduleConflictResult, 
+  autoResolveOverlappingTasks, 
+  parseTimeToMinutes, 
+  formatMinutesToTime 
+} from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 export const CategoryDetailView: React.FC = () => {
@@ -58,10 +64,30 @@ export const CategoryDetailView: React.FC = () => {
 
   const isStickyDayPast = useMemo(() => {
     if (!stickyNoteDay) return false;
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const targetStart = new Date(stickyNoteDay.getFullYear(), stickyNoteDay.getMonth(), stickyNoteDay.getDate()).getTime();
-    return targetStart < todayStart;
+    const targetStr = getLocalDateStr(stickyNoteDay);
+    const todayStr = getLocalDateStr(new Date());
+    return targetStr < todayStr;
+  }, [stickyNoteDay]);
+
+  // When stickyNoteDay opens, automatically calculate the next free start time so tasks never overlap
+  useEffect(() => {
+    if (!stickyNoteDay) return;
+    const existing = getTasksForStreamDate(stickyNoteDay);
+    if (existing.length > 0) {
+      let maxEndMin = 0;
+      existing.forEach((t) => {
+        const s = parseTimeToMinutes(t.startTime);
+        if (s >= 0) {
+          const e = s + (t.durationMin || 45);
+          if (e > maxEndMin) maxEndMin = e;
+        }
+      });
+      if (maxEndMin > 0) {
+        setStickyQuickTime(formatMinutesToTime(maxEndMin));
+        return;
+      }
+    }
+    setStickyQuickTime('08:00 AM');
   }, [stickyNoteDay]);
 
   const today = useMemo(() => new Date(), []);
@@ -410,7 +436,7 @@ export const CategoryDetailView: React.FC = () => {
       return matches && (t.date === dateStr || (t.date && dateStr.startsWith('2026-11-') && t.date === dateStr.replace('2026-11-', '2025-11-')));
     });
 
-    if (explicitTasks.length > 0) return explicitTasks;
+    if (explicitTasks.length > 0) return autoResolveOverlappingTasks(explicitTasks);
 
     // 2. Check weekly schedule summary cadence slots for this day
     const daySlots = (category.weeklyScheduleSummary || []).filter((s) =>
@@ -418,7 +444,7 @@ export const CategoryDetailView: React.FC = () => {
     );
 
     if (daySlots.length > 0) {
-      return daySlots.map((slot, idx) => {
+      const generated = daySlots.map((slot, idx) => {
         const timeMatch = slot.match(/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i);
         const timeStr = timeMatch ? timeMatch[0] : '08:00 AM';
         const cleanTitle = slot
@@ -447,6 +473,7 @@ export const CategoryDetailView: React.FC = () => {
           notes: `${category.title} Scheduled Cadence`,
         };
       });
+      return autoResolveOverlappingTasks(generated);
     }
 
     // 3. Category daily plans if targetDate is today
@@ -621,11 +648,16 @@ export const CategoryDetailView: React.FC = () => {
     if (!stickyNoteDay || !stickyQuickTitle.trim() || !category) return;
 
     const dateStr = getLocalDateStr(stickyNoteDay);
+    const duration = stickyQuickDuration || 45;
+    const currentStartMin = parseTimeToMinutes(stickyQuickTime);
+    const safeStartMin = currentStartMin >= 0 ? currentStartMin : 8 * 60; // 08:00 AM default
+    const startTimeStr = formatMinutesToTime(safeStartMin);
+
     addTask({
       domain: domainTypes[0],
       title: stickyQuickTitle.trim(),
-      startTime: stickyQuickTime,
-      durationMin: stickyQuickDuration,
+      startTime: startTimeStr,
+      durationMin: duration,
       completed: false,
       color: category.color,
       badge: category.title.split(' ')[0],
@@ -633,6 +665,10 @@ export const CategoryDetailView: React.FC = () => {
       checklist: [],
       notes: `Added from ${category.title} Calendar Sticky Note`,
     });
+
+    // Automatically advance start time for the next task so tasks never overlap!
+    const nextStartMin = safeStartMin + duration;
+    setStickyQuickTime(formatMinutesToTime(nextStartMin));
 
     setStickyQuickTitle('');
     try { soundEngine.playSuccess(); } catch {}
@@ -3034,26 +3070,7 @@ export const CategoryDetailView: React.FC = () => {
                     className="p-3 rounded-2xl bg-white/85 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 flex items-start justify-between gap-2.5 shadow-2xs hover:shadow-xs transition"
                   >
                     <div className="flex items-start gap-2.5 min-w-0">
-                      {isStickyDayPast ? (
-                        // Show Done symbol if checked, or Undone symbol if not done
-                        t.completed ? (
-                          <div 
-                            className="px-2 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 shrink-0 shadow-2xs"
-                            title={language === 'am' ? 'የተጠናቀቀ' : 'Done & Checked'}
-                          >
-                            <Check size={13} strokeWidth={3} className="text-emerald-600 dark:text-emerald-400" />
-                            <span>{language === 'am' ? 'ተጠናቋል' : 'Done'}</span>
-                          </div>
-                        ) : (
-                          <div 
-                            className="px-2 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-300 text-[11px] font-bold flex items-center gap-1.5 shrink-0 shadow-2xs"
-                            title={language === 'am' ? 'ያልተጠናቀቀ' : 'Undone / Missed'}
-                          >
-                            <X size={13} strokeWidth={3} className="text-rose-600 dark:text-rose-400" />
-                            <span>{language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}</span>
-                          </div>
-                        )
-                      ) : (
+                      {!isStickyDayPast && (
                         <button
                           type="button"
                           onClick={() => handleToggleStickyTask(t, stickyNoteDay)}

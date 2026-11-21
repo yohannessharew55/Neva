@@ -15,6 +15,7 @@ import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
+import { autoResolveOverlappingTasks } from '../utils/scheduleConflictDetector';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 
@@ -505,10 +506,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth() + 1).padStart(2, '0')}-${String(nowObj.getDate()).padStart(2, '0')}`;
   const isViewingToday = activeDateStr === todayStr;
   const isPastDay = useMemo(() => {
-    const todayStart = new Date(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate()).getTime();
-    const activeStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    return activeStart < todayStart;
-  }, [today, nowObj]);
+    return activeDateStr < todayStr;
+  }, [activeDateStr, todayStr]);
   const activeDayOfWeek = (today.getDay() + 6) % 7 + 1; // 1 = Mon, ..., 7 = Sun
   const isSunday = activeDayOfWeek === 7;
 
@@ -641,7 +640,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
 
   // Resolve Day Schedule (Unique vs Default Routine)
   const daySchedule = getDaySchedule(today);
-  const dayTasks = daySchedule.tasks;
+  const dayTasks = useMemo(() => autoResolveOverlappingTasks(daySchedule.tasks), [daySchedule.tasks]);
   const isCustomDay = daySchedule.isCustom;
 
   const handleCustomizeDay = () => {
@@ -1471,34 +1470,38 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                 >
                   {/* Left: Drag Handle, Main Stream Subject Checkbox & Title */}
                   <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 mr-2 overflow-hidden">
-                    {/* Drag Handle: Desktop mouse grab & Mobile touch handle */}
-                    <div
-                      className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
-                      title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
-                      onClick={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => handleTouchStart(e, group.id)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                    >
-                      <GripVertical size={13} />
-                    </div>
+                    {/* Drag Handle: Desktop mouse grab & Mobile touch handle (hidden on past days) */}
+                    {!isPastDay && (
+                      <div
+                        className="text-black/30 hover:text-black/80 cursor-grab active:cursor-grabbing p-1 touch-none shrink-0"
+                        title={language === 'am' ? 'ይጎትቱና ቦታውን ይቀይሩ' : 'Drag to reorder subjects'}
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => handleTouchStart(e, group.id)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                      >
+                        <GripVertical size={13} />
+                      </div>
+                    )}
 
-                    {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleSubject(group.tasks, group.isAllDone);
-                      }}
-                      className={`w-4.5 h-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                        group.isAllDone
-                          ? `${theme.checkBgDone} border-transparent shadow-xs scale-105`
-                          : `${theme.checkBorder} bg-transparent hover:scale-110`
-                      }`}
-                      title={group.isAllDone ? 'All tasks completed! Click to uncheck all' : 'Mark all tasks in this subject as completed'}
-                    >
-                      {group.isAllDone && <Check size={12} strokeWidth={3.5} />}
-                    </button>
+                    {/* Master Checkbox: Automatically checks itself when all under tasks are marked done! (hidden on past days) */}
+                    {!isPastDay && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleSubject(group.tasks, group.isAllDone);
+                        }}
+                        className={`w-4.5 h-4.5 rounded-lg border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                          group.isAllDone
+                            ? `${theme.checkBgDone} border-transparent shadow-xs scale-105`
+                            : `${theme.checkBorder} bg-transparent hover:scale-110`
+                        }`}
+                        title={group.isAllDone ? 'All tasks completed! Click to uncheck all' : 'Mark all tasks in this subject as completed'}
+                      >
+                        {group.isAllDone && <Check size={12} strokeWidth={3.5} />}
+                      </button>
+                    )}
 
                     {/* Subject Icon - Display only */}
                     <div 
@@ -1672,26 +1675,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                                     </div>
                                   )}
 
-                                  {isPastDay ? (
-                                    // Show Done symbol if checked, or Undone symbol if not correctly done
-                                    task.completed ? (
-                                      <div
-                                        className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 select-none shadow-2xs"
-                                        title={language === 'am' ? 'የተጠናቀቀ' : 'Done & Checked'}
-                                      >
-                                        <Check size={11} strokeWidth={3} />
-                                        <span>{language === 'am' ? 'ተጠናቋል' : 'Done'}</span>
-                                      </div>
-                                    ) : (
-                                      <div
-                                        className="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 select-none shadow-2xs"
-                                        title={language === 'am' ? 'ያልተጠናቀቀ' : 'Undone / Missed'}
-                                      >
-                                        <X size={11} strokeWidth={3} />
-                                        <span>{language === 'am' ? 'ያልተጠናቀቀ' : 'Undone'}</span>
-                                      </div>
-                                    )
-                                  ) : (
+                                  {!isPastDay && (
                                     <button
                                       type="button"
                                       onClick={() => handleToggleTask(task)}
