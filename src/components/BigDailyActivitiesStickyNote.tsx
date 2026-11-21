@@ -341,7 +341,6 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'completed'>('all');
   const [showStickyMenu, setShowStickyMenu] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
   const [openTaskMenuId, setOpenTaskMenuId] = useState<string | null>(null);
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
@@ -594,7 +593,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (titleLower.includes('art') || titleLower.includes('painting') || titleLower.includes('oil') || titleLower.includes('drawing')) {
       return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', icon: Palette };
     }
-    if (titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('crypto') || titleLower.includes('market')) {
+    if (titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('crypto') || titleLower.includes('market') || titleLower.includes('trade') || titleLower.includes('xau') || titleLower.includes('gold') || titleLower.includes('nasdaq')) {
       return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', icon: TrendingUp };
     }
     if (titleLower.includes('architect') || titleLower.includes('design') || titleLower.includes('autocad') || titleLower.includes('site')) {
@@ -1520,15 +1519,15 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                       {group.completedCount}/{group.totalCount} {group.isAllDone ? '✓ Done' : group.formattedDuration}
                     </span>
 
-                    {/* Expand Little Sign on the Main Stream */}
+                    {/* Expand Little Sign on Category */}
                     <div
                       className={`p-1 rounded-md transition flex items-center justify-center ${
                         isExpanded 
                           ? 'bg-black/10 opacity-100 scale-105' 
                           : 'opacity-70 hover:opacity-100 hover:bg-black/10'
                       }`}
-                      title={isExpanded ? (language === 'am' ? 'ንዑስ ተግባራትን ሰብስብ' : 'Collapse sub-tasks') : (language === 'am' ? 'ንዑስ ተግባራትን ዘርጋ' : 'Expand sub-tasks')}
-                      aria-label={isExpanded ? 'Collapse sub-tasks' : 'Expand sub-tasks'}
+                      title={isExpanded ? (language === 'am' ? 'ተግባራትን ሰብስብ' : 'Collapse tasks') : (language === 'am' ? 'ተግባራትን ዘርጋ' : 'Expand tasks')}
+                      aria-label={isExpanded ? 'Collapse tasks' : 'Expand tasks'}
                     >
                       {isExpanded ? (
                         <ChevronUp size={13} strokeWidth={2.5} />
@@ -1539,14 +1538,11 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                   </div>
                 </div>
 
-                {/* Tasks under this Main Stream Subject - directly on the main sticky */}
+                {/* Tasks under this Category - directly on the main sticky */}
                 {isExpanded && (
                   <div className="space-y-1.5 pt-2 pb-1 pl-1 sm:pl-2 transition-all duration-200">
                     {group.displayedTasks.map((task) => {
                           const formattedDuration = formatTaskDuration(task.durationMin);
-                          const isSubtasksOpen = !!expandedSubtasks[task.id];
-                          const hasSubtasks = task.checklist && task.checklist.length > 0;
-                          const completedSubCount = task.checklist ? task.checklist.filter((c) => c.done).length : 0;
                           const isActive = activeTask?.id === task.id;
 
                           return (

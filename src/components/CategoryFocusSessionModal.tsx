@@ -9,6 +9,7 @@ import { useLivotion } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { soundEngine } from '../utils/audio';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
+import { DurationPicker } from './DurationPicker';
 
 interface CategoryFocusSessionModalProps {
   categoryId: string;
@@ -350,17 +351,12 @@ export const CategoryFocusSessionModal: React.FC<CategoryFocusSessionModalProps>
                 className="w-full px-4 py-2.5 rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-bold"
               />
               <div className="flex items-center gap-2">
-                <select
+                <DurationPicker
                   value={newDuration}
-                  onChange={(e) => setNewDuration(Number(e.target.value))}
-                  className="flex-1 px-3 py-2.5 rounded-2xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold"
-                >
-                  <option value={15}>15 minutes</option>
-                  <option value={25}>25 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>60 minutes</option>
-                </select>
+                  onChange={setNewDuration}
+                  size="md"
+                  className="flex-1"
+                />
                 <button
                   type="submit"
                   className="px-5 py-2.5 rounded-2xl bg-[#0082ff] hover:bg-[#0070df] text-white text-xs font-bold shadow-xs cursor-pointer"

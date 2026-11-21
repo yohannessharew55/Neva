@@ -13,6 +13,7 @@ import { soundEngine } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { StrategicHorizonsView } from './StrategicHorizonsView';
+import { DurationPicker } from './DurationPicker';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 type PlannerHorizon = 'daily' | 'weekly' | 'monthly' | 'goals';
@@ -601,7 +602,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     if (titleLower.includes('paint') || titleLower.includes('art') || titleLower.includes('draw')) {
       return { id: 'art', title: categoryPlans['art']?.title || 'Art & Painting', color: categoryPlans['art']?.color || '#e11d48', Icon: PaletteIcon };
     }
-    if (titleLower.includes('trade') || titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('chart') || titleLower.includes('market')) {
+    if (titleLower.includes('trade') || titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('chart') || titleLower.includes('market') || titleLower.includes('xau') || titleLower.includes('gold') || titleLower.includes('crypto') || titleLower.includes('nasdaq')) {
       return { id: 'trading', title: categoryPlans['trading']?.title || 'Trading', color: categoryPlans['trading']?.color || '#10b981', Icon: TrendingUp };
     }
     if (titleLower.includes('architect') || titleLower.includes('blueprint') || titleLower.includes('site') || titleLower.includes('design')) {
@@ -1320,8 +1321,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
               }}
               title={
                 isStreamFiltersExpanded
-                  ? (language === 'am' ? 'የዥረት ማጣሪያዎችን አሳንስ' : 'Collapse Stream Filters')
-                  : (language === 'am' ? 'የዥረት ማጣሪያዎችን ዘርጋ' : 'Expand Stream Filters')
+                  ? (language === 'am' ? 'የክፍል ማጣሪያዎችን አሳንስ' : 'Collapse Category Filters')
+                  : (language === 'am' ? 'የክፍል ማጣሪያዎችን ዘርጋ' : 'Expand Category Filters')
               }
               className={`p-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center relative border shadow-xs active:scale-95 ${
                 isStreamFiltersExpanded
@@ -1793,7 +1794,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     <p className={`text-xs ${currentTheme.textSecondary} max-w-sm mx-auto mt-1 mb-5`}>
                       {language === 'am'
                         ? 'ዕለታዊ ትኩረትህን ለመገንባት ከታች ካሉት ዘርፎች አንዱን ምረጥ ወይም አዲስ ብሎክ አቅድ።'
-                        : 'Design your daily focus by scheduling a routine block from your main streams below.'}
+                        : 'Design your daily focus by scheduling a routine block from your categories below.'}
                     </p>
 
                     <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto">
@@ -1962,12 +1963,12 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {weeklyInfo.activeStreamsCount} {language === 'am' ? 'ንቁ ዘርፎች' : 'Active Streams'} • {weeklyInfo.totalPlannedRoutines} {language === 'am' ? 'የተመዘገቡ ሳምንታዊ ሪትሞች' : 'recurring routine slots'}
+                    {weeklyInfo.activeStreamsCount} {language === 'am' ? 'ንቁ ክፍሎች' : 'Active Categories'} • {weeklyInfo.totalPlannedRoutines} {language === 'am' ? 'የተመዘገቡ ሳምንታዊ ሪትሞች' : 'recurring routine slots'}
                   </div>
                 </div>
 
                 <div className="text-xs font-bold text-slate-400 dark:text-slate-500 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-xl">
-                  {language === 'am' ? 'ከታች የሰዓት ድልድልን አስተካክል' : 'Adjust target hours & days per stream'}
+                  {language === 'am' ? 'ከታች የሰዓት ድልድልን አስተካክል' : 'Adjust target hours & days per category'}
                 </div>
               </div>
             </div>
@@ -2076,7 +2077,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                         onClick={() => setSelectedCategoryId(cat.id)}
                         className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
                       >
-                        <span>{language === 'am' ? 'ዝርዝር እይ' : 'Stream Details'}</span>
+                        <span>{language === 'am' ? 'ዝርዝር እይ' : 'Category Details'}</span>
                         <ArrowRight size={12} />
                       </button>
                     </div>
@@ -2168,7 +2169,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                   )}
                 </span>
                 <span className={`text-[11px] font-mono font-bold ${currentTheme.textSecondary}`}>
-                  {language === 'am' ? 'ቀኑን በመጫን ተግባራትን ይመልከቱ' : 'Tap any day to preview stream blocks'}
+                  {language === 'am' ? 'ቀኑን በመጫን ተግባራትን ይመልከቱ' : 'Tap any day to preview category blocks'}
                 </span>
               </div>
 
@@ -2305,7 +2306,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {monthlyInfo.deliverablesCount} of {monthlyInfo.activeStreamsCount} {language === 'am' ? 'ዘርፎች ወርሃዊ ግብ አላቸው' : 'streams have active monthly deliverables'}
+                    {monthlyInfo.deliverablesCount} of {monthlyInfo.activeStreamsCount} {language === 'am' ? 'ክፍሎች ወርሃዊ ግብ አላቸው' : 'categories have active monthly deliverables'}
                   </div>
                 </div>
 
@@ -2445,7 +2446,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                         onClick={() => setSelectedCategoryId(cat.id)}
                         className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
                       >
-                        <span>{language === 'am' ? 'የዘርፉ ዝርዝር' : 'View Stream Roadmap'}</span>
+                        <span>{language === 'am' ? 'የክፍሉ ዝርዝር' : 'View Category Roadmap'}</span>
                         <ArrowRight size={12} />
                       </button>
                     </div>
@@ -2475,7 +2476,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
       <div className="mt-4 p-2.5 rounded-2xl bg-white/70 dark:bg-[#141822]/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
-            {language === 'am' ? 'ዘርፎች:' : 'Streams:'}
+            {language === 'am' ? 'ክፍሎች:' : 'Categories:'}
           </span>
           {Object.values(categoryPlans).filter(cat => cat && cat.id).map(cat => {
             const Icon = getCategoryIcon(cat.id);
@@ -2536,7 +2537,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
               {/* 1. Select Stream */}
               <div>
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                  1. {language === 'am' ? 'ዋና ዘርፍ ምረጥ' : 'Select Stream'}
+                  1. {language === 'am' ? 'ዋና ክፍል ምረጥ' : 'Select Category'}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {Object.values(categoryPlans).filter(cat => cat && cat.id).map(cat => {
@@ -2625,22 +2626,12 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                     {language === 'am' ? 'ቆይታ' : 'Duration'}
                   </label>
-                  <div className="flex items-center gap-1">
-                    {[15, 30, 45, 60, 90].map(dur => (
-                      <button
-                        key={dur}
-                        type="button"
-                        onClick={() => setModalDuration(dur)}
-                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          modalDuration === dur
-                            ? 'bg-[#0082ff] text-white shadow-2xs'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                        }`}
-                      >
-                        {dur}m
-                      </button>
-                    ))}
-                  </div>
+                  <DurationPicker
+                    value={modalDuration}
+                    onChange={setModalDuration}
+                    size="md"
+                    className="w-full justify-between"
+                  />
                 </div>
               </div>
 
@@ -2852,7 +2843,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
               {/* Select Stream */}
               <div>
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                  1. {language === 'am' ? 'ዋና ዘርፍ ምረጥ' : 'Select Stream'}
+                  1. {language === 'am' ? 'ዋና ክፍል ምረጥ' : 'Select Category'}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {Object.values(categoryPlans).filter(cat => cat && cat.id).map(cat => {
