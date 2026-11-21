@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   ArrowLeft, Play, CheckCircle2, Clock, 
-  Plus, Target, Award, Calendar, CheckSquare, 
+  Plus, Target, Award, Calendar, CalendarDays, ChevronLeft, CheckSquare, 
   Square, Sparkles, TrendingUp, ChevronRight,
   Flame, Swords, ChessKnight, Palette, Music, Dumbbell,
   Building2, BookOpen, Shield, Edit3, Trash2, 
@@ -14,7 +14,7 @@ import { CategoryFocusSessionModal } from './CategoryFocusSessionModal';
 import { DurationPicker } from './DurationPicker';
 import { soundEngine } from '../utils/audio';
 import { formatTaskDuration } from '../utils/formatDuration';
-import { gregorianToEthiopian } from '../utils/ethiopianCalendar';
+import { gregorianToEthiopian, getEthiopianMonthCalendar, ETHIOPIAN_MONTHS, AMHARIC_DAYS } from '../utils/ethiopianCalendar';
 import { getLocalDateStr } from '../utils/dateUtils';
 import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
@@ -45,7 +45,19 @@ export const CategoryDetailView: React.FC = () => {
     setActiveTab: setGlobalActiveTab
   } = useLivotion();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'inprogress' | 'achieved' | 'upcoming'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'calendar' | 'inprogress' | 'achieved' | 'upcoming'>('overview');
+  const [timelineViewMode, setTimelineViewMode] = useState<'strip' | 'calendar'>('strip');
+  const [stickyNoteDay, setStickyNoteDay] = useState<Date | null>(null);
+  const [stickyQuickTitle, setStickyQuickTitle] = useState('');
+  const [stickyQuickTime, setStickyQuickTime] = useState('08:00 AM');
+  const [stickyQuickDuration, setStickyQuickDuration] = useState(45);
+
+  const today = useMemo(() => new Date(), []);
+  const todayEth = useMemo(() => gregorianToEthiopian(today), [today]);
+  const [selectedEthYear, setSelectedEthYear] = useState<number>(todayEth.year);
+  const [selectedEthMonth, setSelectedEthMonth] = useState<number>(todayEth.month);
+  const [selectedGregYear, setSelectedGregYear] = useState<number>(today.getFullYear());
+  const [selectedGregMonth, setSelectedGregMonth] = useState<number>(today.getMonth());
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showEditDailyModal, setShowEditDailyModal] = useState(false);
   const [showEditWeeklyModal, setShowEditWeeklyModal] = useState(false);
@@ -364,17 +376,18 @@ export const CategoryDetailView: React.FC = () => {
     return days;
   }, [selectedTimelineDate, calendarSystem]);
 
-  // Tasks for category on selected date
-  const streamTasksForSelectedDay = useMemo(() => {
+  // Helper to extract all tasks for a specific date in this stream
+  const getTasksForStreamDate = (targetDate: Date): ScheduleTask[] => {
     if (!category) return [];
-    const dateStr = getLocalDateStr(selectedTimelineDate);
-    const dayIndex = selectedTimelineDate.getDay();
+    const dateStr = getLocalDateStr(targetDate);
+    const dayIndex = targetDate.getDay();
     const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex];
 
     // 1. Explicit tasks in context matching domain/badge and this date
     const explicitTasks = tasks.filter((t) => {
       const matches = domainTypes.includes(t.domain) || 
-        (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase()));
+        (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase())) ||
+        (t.title && t.title.toLowerCase().includes(category.title.toLowerCase()));
       return matches && t.date === dateStr;
     });
 
@@ -417,13 +430,201 @@ export const CategoryDetailView: React.FC = () => {
       });
     }
 
-    // 3. Fallback recurring tasks without date
-    return tasks.filter((t) => {
-      const matches = domainTypes.includes(t.domain) || 
-        (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase()));
-      return matches && (!t.date || t.date === '');
+    // 3. Category daily plans if targetDate is today
+    if (targetDate.toDateString() === new Date().toDateString() && category.dailyPlans && category.dailyPlans.length > 0) {
+      return category.dailyPlans.map(dp => ({
+        id: dp.id,
+        title: dp.title,
+        domain: domainTypes[0],
+        startTime: '08:00 AM',
+        durationMin: 45,
+        color: category.color,
+        badge: category.title.split(' ')[0],
+        completed: dp.completed,
+        date: dateStr,
+        checklist: [],
+        notes: 'Daily Plan',
+      }));
+    }
+
+    // 4. Fallback recurring tasks without date (only if targetDate is today)
+    if (targetDate.toDateString() === new Date().toDateString()) {
+      return tasks.filter((t) => {
+        const matches = domainTypes.includes(t.domain) || 
+          (t.badge && t.badge.toLowerCase().includes(category.id.toLowerCase()));
+        return matches && (!t.date || t.date === '');
+      });
+    }
+
+    return [];
+  };
+
+  // Tasks for category on selected date
+  const streamTasksForSelectedDay = useMemo(() => {
+    return getTasksForStreamDate(selectedTimelineDate);
+  }, [selectedTimelineDate, tasks, category, domainTypes]);
+
+  // Calendar month data calculation (Ethiopian / Dual / Gregorian)
+  const calendarMonthData = useMemo(() => {
+    if (calendarSystem === 'et' || calendarSystem === 'dual') {
+      const data = getEthiopianMonthCalendar(selectedEthYear, selectedEthMonth);
+      const monthMeta = ETHIOPIAN_MONTHS[selectedEthMonth - 1] || { am: '', en: '' };
+      return {
+        type: 'ethiopian' as const,
+        title: `${monthMeta.am} (${monthMeta.en}) ${selectedEthYear} ዓ.ም.`,
+        subTitle: data.days[0]?.gregDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        startDayOfWeek: data.startDayOfWeek,
+        days: data.days.map(d => ({
+          key: `eth-${d.ethYear}-${d.ethMonth}-${d.ethDay}`,
+          primaryNum: d.ethDay,
+          secondaryNum: d.gregDate.getDate(),
+          secondaryLabel: d.gregDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          gregDate: d.gregDate,
+          dateStr: getLocalDateStr(d.gregDate),
+          isToday: d.ethDay === todayEth.day && d.ethMonth === todayEth.month && d.ethYear === todayEth.year,
+        }))
+      };
+    } else {
+      // Gregorian calendar
+      const firstDay = new Date(selectedGregYear, selectedGregMonth, 1);
+      const lastDay = new Date(selectedGregYear, selectedGregMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startDayOfWeek = firstDay.getDay();
+      const monthName = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const days = [];
+      for (let i = 1; i <= daysInMonth; i++) {
+        const d = new Date(selectedGregYear, selectedGregMonth, i);
+        const eth = gregorianToEthiopian(d);
+        days.push({
+          key: `greg-${selectedGregYear}-${selectedGregMonth}-${i}`,
+          primaryNum: i,
+          secondaryNum: eth.day,
+          secondaryLabel: `${eth.monthNameAm} ${eth.day}`,
+          gregDate: d,
+          dateStr: getLocalDateStr(d),
+          isToday: d.toDateString() === today.toDateString(),
+        });
+      }
+      return {
+        type: 'gregorian' as const,
+        title: monthName,
+        subTitle: `${gregorianToEthiopian(firstDay).monthNameAm} ${gregorianToEthiopian(firstDay).year} ዓ.ም.`,
+        startDayOfWeek,
+        days,
+      };
+    }
+  }, [calendarSystem, selectedEthYear, selectedEthMonth, selectedGregYear, selectedGregMonth, today, todayEth]);
+
+  // Calendar Navigation Handlers
+  const handlePrevMonth = () => {
+    try { soundEngine.playClick(); } catch {}
+    if (calendarSystem === 'et' || calendarSystem === 'dual') {
+      if (selectedEthMonth === 1) {
+        setSelectedEthMonth(13);
+        setSelectedEthYear(prev => prev - 1);
+      } else {
+        setSelectedEthMonth(prev => prev - 1);
+      }
+    } else {
+      if (selectedGregMonth === 0) {
+        setSelectedGregMonth(11);
+        setSelectedGregYear(prev => prev - 1);
+      } else {
+        setSelectedGregMonth(prev => prev - 1);
+      }
+    }
+  };
+
+  const handleNextMonth = () => {
+    try { soundEngine.playClick(); } catch {}
+    if (calendarSystem === 'et' || calendarSystem === 'dual') {
+      if (selectedEthMonth === 13) {
+        setSelectedEthMonth(1);
+        setSelectedEthYear(prev => prev + 1);
+      } else {
+        setSelectedEthMonth(prev => prev + 1);
+      }
+    } else {
+      if (selectedGregMonth === 11) {
+        setSelectedGregMonth(0);
+        setSelectedGregYear(prev => prev + 1);
+      } else {
+        setSelectedGregMonth(prev => prev + 1);
+      }
+    }
+  };
+
+  const handleJumpToday = () => {
+    try { soundEngine.playClick(); } catch {}
+    setSelectedEthYear(todayEth.year);
+    setSelectedEthMonth(todayEth.month);
+    setSelectedGregYear(today.getFullYear());
+    setSelectedGregMonth(today.getMonth());
+    setSelectedTimelineDate(today);
+  };
+
+  const handleCalendarDayClick = (dayDate: Date) => {
+    try { soundEngine.playClick(); } catch {}
+    setSelectedTimelineDate(dayDate);
+    setStickyNoteDay(dayDate);
+  };
+
+  const handleToggleStickyTask = (task: ScheduleTask, date: Date) => {
+    try { soundEngine.playClick(); } catch {}
+    const dateStr = getLocalDateStr(date);
+
+    if (task.id.startsWith('cadence-')) {
+      addTask({
+        domain: task.domain,
+        title: task.title,
+        startTime: task.startTime,
+        durationMin: task.durationMin,
+        completed: true,
+        color: task.color,
+        badge: task.badge,
+        date: dateStr,
+        checklist: [],
+        notes: task.notes,
+      });
+      try { soundEngine.playSuccess(); } catch {}
+    } else {
+      const willBeCompleted = !task.completed;
+      updateTask(task.id, { completed: willBeCompleted });
+      toggleTaskCompletion(task.id);
+      if (willBeCompleted) {
+        try { soundEngine.playSuccess(); } catch {}
+      }
+    }
+  };
+
+  const handleAddStickyQuickTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stickyNoteDay || !stickyQuickTitle.trim() || !category) return;
+
+    const dateStr = getLocalDateStr(stickyNoteDay);
+    addTask({
+      domain: domainTypes[0],
+      title: stickyQuickTitle.trim(),
+      startTime: stickyQuickTime,
+      durationMin: stickyQuickDuration,
+      completed: false,
+      color: category.color,
+      badge: category.title.split(' ')[0],
+      date: dateStr,
+      checklist: [],
+      notes: `Added from ${category.title} Calendar Sticky Note`,
     });
-  }, [category, domainTypes, selectedTimelineDate, tasks]);
+
+    setStickyQuickTitle('');
+    try { soundEngine.playSuccess(); } catch {}
+  };
+
+  const handleStartStickyTaskFocus = (task: ScheduleTask) => {
+    try { soundEngine.playClick(); } catch {}
+    startTask(task);
+    setStickyNoteDay(null);
+    setGlobalActiveTab('practice');
+  };
 
   // Daily task completion stats
   const dayTotalCount = streamTasksForSelectedDay.length;
@@ -712,6 +913,175 @@ export const CategoryDetailView: React.FC = () => {
     setShowEditMonthlyModal(false);
   };
 
+  // Render Stream Month Calendar Grid
+  const renderStreamMonthCalendar = () => {
+    return (
+      <div className="p-4 sm:p-6 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs space-y-4 animate-fadeIn">
+        {/* Calendar Header with Navigation */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div 
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-2xs"
+              style={{ backgroundColor: category.color }}
+            >
+              <Icon size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                  {calendarMonthData.title}
+                </h3>
+                <span 
+                  className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider"
+                  style={{ backgroundColor: `${category.color}15`, color: category.color }}
+                >
+                  {getCategoryTitleTranslated(category.id, category.title)}
+                </span>
+              </div>
+              {calendarMonthData.subTitle && (
+                <p className="text-[11px] font-medium text-slate-400">
+                  {calendarMonthData.subTitle}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Month Navigation Controls */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer"
+              title={language === 'am' ? 'ያለፈው ወር' : 'Previous Month'}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleJumpToday}
+              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-[#0082ff] text-xs font-bold transition cursor-pointer"
+            >
+              {language === 'am' ? 'ዛሬ' : 'Today'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer"
+              title={language === 'am' ? 'ቀጣዩ ወር' : 'Next Month'}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Week Days Header (7 Columns: Sun, Mon, Tue, Wed, Thu, Fri, Sat) */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          {AMHARIC_DAYS.map((d, idx) => (
+            <div key={idx} className="py-1">
+              <span className="block sm:hidden">{calendarSystem === 'et' ? d.short : d.en.slice(0, 3)}</span>
+              <span className="hidden sm:block">{calendarSystem === 'et' ? `${d.am} (${d.en.slice(0, 3)})` : d.en}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Month Days Matrix */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          {/* Empty cells before start of month */}
+          {Array.from({ length: calendarMonthData.startDayOfWeek }).map((_, i) => (
+            <div 
+              key={`empty-${i}`} 
+              className="min-h-[72px] sm:min-h-[92px] rounded-2xl bg-slate-50/40 dark:bg-slate-900/20 border border-transparent" 
+            />
+          ))}
+
+          {/* Days of Month */}
+          {calendarMonthData.days.map((dayItem) => {
+            const dayTasks = getTasksForStreamDate(dayItem.gregDate);
+            const hasTasks = dayTasks.length > 0;
+            const isSelected = selectedTimelineDate.toDateString() === dayItem.gregDate.toDateString();
+
+            return (
+              <div
+                key={dayItem.key}
+                onClick={() => handleCalendarDayClick(dayItem.gregDate)}
+                className={`min-h-[72px] sm:min-h-[92px] p-1.5 sm:p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                  isSelected
+                    ? 'bg-blue-50/90 dark:bg-blue-950/60 border-[#0082ff] ring-2 ring-[#0082ff] shadow-md scale-[1.02]'
+                    : dayItem.isToday
+                    ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-400 dark:border-blue-700 shadow-2xs'
+                    : hasTasks
+                    ? 'bg-white dark:bg-[#151c28] border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'
+                    : 'bg-slate-50/30 dark:bg-slate-900/10 border-slate-200/50 dark:border-slate-800/60 hover:border-slate-300'
+                }`}
+                title={language === 'am' ? 'የዕለቱ ማስታወሻና ተግባራት ለመመልከት ይጫኑ' : `Click to open ${category.title} Sticky Note for this day`}
+              >
+                {/* Day Header */}
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs sm:text-sm font-black font-mono ${
+                    isSelected ? 'text-[#0082ff]' : dayItem.isToday ? 'text-[#0082ff]' : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {dayItem.primaryNum}
+                  </span>
+
+                  {dayItem.secondaryNum !== undefined && (
+                    <span className="text-[9px] font-mono text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">
+                      {dayItem.secondaryNum}
+                    </span>
+                  )}
+                </div>
+
+                {/* Tasks Indicators / Stream Badges */}
+                <div className="space-y-1 mt-1 flex-1 flex flex-col justify-end">
+                  {hasTasks ? (
+                    <>
+                      <div 
+                        className="px-1.5 py-0.5 rounded-lg text-[8.5px] sm:text-[9.5px] font-bold truncate flex items-center justify-between gap-1 shadow-2xs"
+                        style={{ 
+                          backgroundColor: `${category.color}20`, 
+                          color: category.color,
+                          border: `1px solid ${category.color}40`
+                        }}
+                      >
+                        <span className="truncate">{dayTasks[0].title}</span>
+                      </div>
+
+                      {dayTasks.length > 1 && (
+                        <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 pl-0.5">
+                          +{dayTasks.length - 1} more
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[9px] text-transparent group-hover:text-amber-500 font-bold transition flex items-center gap-0.5 pl-0.5">
+                      📌 <span className="hidden sm:inline">note</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Helpful Hint Legend */}
+        <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <span className="flex items-center gap-1.5">
+            <span>📌</span>
+            <span>{language === 'am' ? 'የትኛውንም ቀን በመጫን የዕለቱን ማስታወሻ (Sticky Note) እና ተግባራት መክፈት ይችላሉ።' : 'Click any day to pop up its Sticky Note and view/schedule tasks.'}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => handleCalendarDayClick(new Date())}
+            className="text-xs font-bold text-[#0082ff] hover:underline cursor-pointer"
+          >
+            {language === 'am' ? "የዛሬ ማስታወሻ ክፈት" : "Today's Sticky Note"}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
       {/* Top Back Navigation Bar */}
@@ -729,6 +1099,17 @@ export const CategoryDetailView: React.FC = () => {
             className="px-3 py-2 bg-[#0082ff] hover:bg-[#0070df] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
           >
             <Plus size={13} /> <span>{t('addTask')}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('calendar')}
+            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border shrink-0 ${
+              activeTab === 'calendar'
+                ? 'bg-blue-50 text-[#0082ff] border-blue-200 dark:bg-blue-950/60 dark:border-blue-800'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700'
+            }`}
+            title={language === 'am' ? 'የዘርፉ የቀን መቁጠሪያ ሰሌዳ' : 'Open Stream Calendar'}
+          >
+            <CalendarDays size={13} className="text-[#0082ff]" /> <span>{language === 'am' ? 'የቀን መቁጠሪያ' : 'Calendar'}</span>
           </button>
           <button
             onClick={() => setShowEditDailyModal(true)}
@@ -944,6 +1325,18 @@ export const CategoryDetailView: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('calendar')}
+            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+              activeTab === 'calendar'
+                ? 'bg-white text-[#0082ff] shadow-xs dark:bg-slate-900 dark:text-[#0082ff]'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+            }`}
+          >
+            <CalendarDays size={13} className="text-[#0082ff]" />
+            <span>{language === 'am' ? 'የቀን መቁጠሪያ' : 'Calendar'}</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('inprogress')}
             className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
               activeTab === 'inprogress'
@@ -1121,46 +1514,93 @@ export const CategoryDetailView: React.FC = () => {
                   </h2>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleOpenAddStreamTask}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
-                  style={{ backgroundColor: category.color }}
-                >
-                  <Plus size={14} />
-                  <span>{language === 'am' ? 'ብሎክ አቅድ' : 'Plan Block'}</span>
-                </button>
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  {/* View Mode Toggle: 7 Days Strip vs Month Calendar */}
+                  <div className="inline-flex p-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-[10px] font-bold border border-slate-200/60 dark:border-slate-700/60">
+                    <button
+                      type="button"
+                      onClick={() => setTimelineViewMode('strip')}
+                      className={`px-2 py-1 rounded-lg transition cursor-pointer ${
+                        timelineViewMode === 'strip' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                      }`}
+                    >
+                      {language === 'am' ? '7 ቀናት' : '7 Days'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTimelineViewMode('calendar')}
+                      className={`px-2 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                        timelineViewMode === 'calendar' ? 'bg-white dark:bg-slate-900 text-[#0082ff] shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                      }`}
+                    >
+                      <CalendarDays size={11} />
+                      <span>{language === 'am' ? 'የወር ሰሌዳ' : 'Calendar'}</span>
+                    </button>
+                  </div>
+
+                  {/* Quick Open Sticky Note for Selected Day */}
+                  <button
+                    type="button"
+                    onClick={() => setStickyNoteDay(selectedTimelineDate)}
+                    className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800/60 flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                    title="Open Sticky Note for this day"
+                  >
+                    <span>📌</span>
+                    <span className="hidden sm:inline">Sticky Note</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenAddStreamTask}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
+                    style={{ backgroundColor: category.color }}
+                  >
+                    <Plus size={14} />
+                    <span>{language === 'am' ? 'ብሎክ አቅድ' : 'Plan Block'}</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Horizontal 7-Day Day Selector Strip */}
-              <div className="flex items-center justify-between gap-1 sm:gap-1.5 px-1">
-                {timelineWeekDays.map((day) => (
-                  <button
-                    key={day.dayShort}
-                    type="button"
-                    onClick={() => setSelectedTimelineDate(day.date)}
-                    className={`flex-1 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
-                      day.isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/50 text-[#0082ff] font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60 scale-102'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                    }`}
-                  >
-                    <span className="text-[8.5px] sm:text-[9.5px] font-semibold opacity-80 uppercase tracking-normal">
-                      {calendarSystem === 'et' ? day.ethDate.dayOfWeekAm : (language === 'am' ? day.dayAm : day.dayShort)}
-                      {day.isSunday ? ' 🌿' : ''}
-                    </span>
-                    <span className={`text-xs sm:text-[13px] font-bold ${day.isSelected ? 'text-[#0082ff]' : 'text-slate-900 dark:text-slate-200'}`}>
-                      {day.dayNum}
-                      {day.secondaryDayNum !== null && (
-                        <span className="text-[8px] font-normal opacity-70 ml-0.5">({day.secondaryDayNum})</span>
+              {/* Horizontal 7-Day Day Selector Strip OR Full Month Calendar */}
+              {timelineViewMode === 'strip' ? (
+                <div className="flex items-center justify-between gap-1 sm:gap-1.5 px-1">
+                  {timelineWeekDays.map((day) => (
+                    <button
+                      key={day.dayShort}
+                      type="button"
+                      onClick={() => setSelectedTimelineDate(day.date)}
+                      onDoubleClick={() => {
+                        setSelectedTimelineDate(day.date);
+                        setStickyNoteDay(day.date);
+                      }}
+                      className={`flex-1 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
+                        day.isSelected
+                          ? 'bg-blue-50 dark:bg-blue-950/50 text-[#0082ff] font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60 scale-102'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      }`}
+                      title={language === 'am' ? 'ይጫኑ (ወይም ሁለቴ ይጫኑ ለማስታወሻ)' : 'Click to select date, double-click for Sticky Note'}
+                    >
+                      <span className="text-[8.5px] sm:text-[9.5px] font-semibold opacity-80 uppercase tracking-normal">
+                        {calendarSystem === 'et' ? day.ethDate.dayOfWeekAm : (language === 'am' ? day.dayAm : day.dayShort)}
+                        {day.isSunday ? ' 🌿' : ''}
+                      </span>
+                      <span className={`text-xs sm:text-[13px] font-bold ${day.isSelected ? 'text-[#0082ff]' : 'text-slate-900 dark:text-slate-200'}`}>
+                        {day.dayNum}
+                        {day.secondaryDayNum !== null && (
+                          <span className="text-[8px] font-normal opacity-70 ml-0.5">({day.secondaryDayNum})</span>
+                        )}
+                      </span>
+                      {day.isSelected && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff] mt-0.5" />
                       )}
-                    </span>
-                    {day.isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff] mt-0.5" />
-                    )}
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="pt-1">
+                  {renderStreamMonthCalendar()}
+                </div>
+              )}
 
               {/* Vertical Timeline & Task Cards */}
               <div className="relative pl-6 sm:pl-7 pt-2 space-y-3.5">
@@ -1418,6 +1858,13 @@ export const CategoryDetailView: React.FC = () => {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab: Dedicated Stream Calendar View */}
+      {activeTab === 'calendar' && (
+        <div className="space-y-6">
+          {renderStreamMonthCalendar()}
         </div>
       )}
 
@@ -2383,6 +2830,225 @@ export const CategoryDetailView: React.FC = () => {
           isOpen={showFocusSessionModal}
           onClose={() => setShowFocusSessionModal(false)}
         />
+      )}
+
+      {/* Small Window Sticky Note Popup for Specific Day (Requested by User) */}
+      {stickyNoteDay && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setStickyNoteDay(null)}
+        >
+          <div 
+            className="relative w-full max-w-md bg-[#fef9c3] dark:bg-[#231e0c] border-2 border-[#fef08a] dark:border-amber-700/60 rounded-3xl p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.4)] text-amber-950 dark:text-amber-100 animate-scaleUp transition-all overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundImage: 'linear-gradient(rgba(217, 119, 6, 0.06) 1px, transparent 1px)',
+              backgroundSize: '100% 28px',
+            }}
+          >
+            {/* Top Tape Graphic */}
+            <div className="w-28 h-5 mx-auto -mt-8 mb-3 bg-amber-100/90 dark:bg-amber-800/60 border border-amber-300/80 dark:border-amber-700/80 rounded-sm shadow-xs backdrop-blur-xs" />
+
+            {/* Header: Date + Stream Badge + Close Button */}
+            <div className="flex items-start justify-between gap-3 border-b border-amber-300/60 dark:border-amber-800/60 pb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div 
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
+                  style={{ backgroundColor: category.color }}
+                >
+                  <Icon size={20} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span 
+                      className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                    >
+                      {getCategoryTitleTranslated(category.id, category.title)}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-800/80 dark:text-amber-300/80 flex items-center gap-0.5">
+                      <span>📌</span> Sticky Note
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black tracking-tight mt-0.5 truncate text-amber-950 dark:text-white">
+                    {stickyNoteDay.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-amber-800/70 dark:text-amber-300/70">
+                    {(() => {
+                      const eth = gregorianToEthiopian(stickyNoteDay);
+                      return `${eth.dayOfWeekAm}፣ ${eth.monthNameAm} ${eth.day} ቀን ${eth.year} ዓ.ም.`;
+                    })()}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setStickyNoteDay(null)}
+                className="w-8 h-8 rounded-full bg-amber-200/60 hover:bg-amber-300/80 dark:bg-amber-900/60 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 flex items-center justify-center transition cursor-pointer shrink-0"
+                title="Close Sticky Note"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Task List on This Specific Day */}
+            <div className="my-4 space-y-2.5 max-h-60 overflow-y-auto pr-1">
+              <div className="flex items-center justify-between text-xs font-bold text-amber-800/80 dark:text-amber-300/80 px-1">
+                <span>{language === 'am' ? 'የዕለቱ ተግባራት' : 'TASKS FOR THIS DAY'}</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-200/60 dark:bg-amber-900/60 text-[10px] font-mono">
+                  {getTasksForStreamDate(stickyNoteDay).filter(t => t.completed).length} / {getTasksForStreamDate(stickyNoteDay).length} {language === 'am' ? 'ተጠናቋል' : 'done'}
+                </span>
+              </div>
+
+              {getTasksForStreamDate(stickyNoteDay).length > 0 ? (
+                getTasksForStreamDate(stickyNoteDay).map((t) => (
+                  <div 
+                    key={t.id}
+                    className="p-3 rounded-2xl bg-white/85 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 flex items-start justify-between gap-2.5 shadow-2xs hover:shadow-xs transition"
+                  >
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStickyTask(t, stickyNoteDay)}
+                        className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center mt-0.5 transition cursor-pointer shrink-0 ${
+                          t.completed
+                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            : 'border-amber-400 dark:border-amber-600 bg-white/90 dark:bg-amber-900/40 hover:border-amber-600'
+                        }`}
+                        title={t.completed ? 'Mark incomplete' : 'Mark complete'}
+                      >
+                        {t.completed && <Check size={12} strokeWidth={3} />}
+                      </button>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">
+                            🕒 {t.startTime || '08:00 AM'}
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                            ⏱️ {formatTaskDuration(t.durationMin || 45)}
+                          </span>
+                        </div>
+
+                        <h4 className={`text-xs sm:text-sm font-bold tracking-tight mt-1 text-slate-900 dark:text-white ${
+                          t.completed ? 'line-through opacity-60 text-slate-500' : ''
+                        }`}>
+                          {t.title}
+                        </h4>
+
+                        {t.notes && (
+                          <p className="text-[11px] text-amber-800/70 dark:text-amber-300/70 mt-0.5 line-clamp-2">
+                            {t.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Play & Action */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStartStickyTaskFocus(t)}
+                        className="p-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/60 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 transition cursor-pointer"
+                        title="Run Focus Timer"
+                      >
+                        <Play size={12} fill="currentColor" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center bg-amber-100/40 dark:bg-amber-950/20 rounded-2xl border border-dashed border-amber-300/80 dark:border-amber-800/60 p-4">
+                  <span className="text-2xl block mb-1">📝</span>
+                  <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                    {language === 'am' ? 'ለዚህ ቀን ምንም የታቀደ ተግባር የለም' : 'No tasks scheduled for this day yet'}
+                  </p>
+                  <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70 mt-0.5">
+                    {language === 'am' ? 'ከታች አዲስ ተግባር በፈጣን ይጻፉ' : 'Quickly jot down a task for this day below:'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Add Task Input on the Sticky Note */}
+            <form onSubmit={handleAddStickyQuickTask} className="pt-2 border-t border-amber-300/60 dark:border-amber-800/60 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={stickyQuickTitle}
+                  onChange={(e) => setStickyQuickTitle(e.target.value)}
+                  placeholder={language === 'am' ? '+ አዲስ ተግባር ለዚህ ቀን...' : '+ Add task for this day...'}
+                  className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold bg-white/90 dark:bg-amber-950/60 border border-amber-300/80 dark:border-amber-700/80 text-amber-950 dark:text-white placeholder:text-amber-800/50 dark:placeholder:text-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                />
+                <button
+                  type="submit"
+                  disabled={!stickyQuickTitle.trim()}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1"
+                >
+                  <Plus size={13} />
+                  <span>{language === 'am' ? 'መዝግብ' : 'Add'}</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-amber-800/80 dark:text-amber-300/80 px-1">
+                <div className="flex items-center gap-1.5">
+                  <span>🕒</span>
+                  <input
+                    type="text"
+                    value={stickyQuickTime}
+                    onChange={(e) => setStickyQuickTime(e.target.value)}
+                    placeholder="08:00 AM"
+                    className="w-20 px-1.5 py-0.5 rounded-lg text-[10px] font-mono bg-white/80 dark:bg-amber-950/60 border border-amber-300/70 dark:border-amber-700/70 text-amber-950 dark:text-amber-100"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <span>⏱️</span>
+                  {[25, 45, 60].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setStickyQuickDuration(d)}
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                        stickyQuickDuration === d
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                      }`}
+                    >
+                      {d}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </form>
+
+            {/* Footer Toolbar: Plan Full Block & Close */}
+            <div className="mt-3 pt-3 border-t border-amber-300/60 dark:border-amber-800/60 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const day = stickyNoteDay;
+                  setStickyNoteDay(null);
+                  setSelectedTimelineDate(day);
+                  handleOpenAddStreamTask();
+                }}
+                className="text-xs font-bold text-amber-900 hover:text-amber-950 dark:text-amber-200 dark:hover:text-white flex items-center gap-1 transition cursor-pointer"
+              >
+                <Plus size={13} />
+                <span>{language === 'am' ? 'ሙሉ ብሎክ አቅድ' : 'Plan Full Routine Block'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStickyNoteDay(null)}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-200/80 hover:bg-amber-300 dark:bg-amber-900 dark:hover:bg-amber-800 text-amber-950 dark:text-amber-100 text-xs font-bold transition cursor-pointer"
+              >
+                {language === 'am' ? 'ጨርስ' : 'Done'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
