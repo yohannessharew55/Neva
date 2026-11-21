@@ -3,7 +3,7 @@ import {
   Sun, Moon, Download, Upload, RotateCcw, 
   Menu, X, Calendar, Dumbbell, Target, Timer, 
   MoreHorizontal, Swords, ChessKnight, Palette, Music, Building2, 
-  TrendingUp, BookOpen, Shield, ChevronRight, SlidersHorizontal,
+  TrendingUp, BookOpen, Shield, ChevronRight,
   PlusCircle, CalendarDays, CalendarRange, BellRing, Plus, Sparkles, Database, Cloud, Star,
   Languages, Globe, SquarePen, StickyNote, User, LogOut,
   PieChart, RefreshCw, Trash2, FileText, Trophy, Settings as SettingsIcon
@@ -55,7 +55,6 @@ export const Navbar: React.FC = () => {
   const [showClearModal, setShowClearModal] = useState(false);
   const [showWeeklyReviewModal, setShowWeeklyReviewModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; title: string } | null>(null);
-  const [isManagingCategories, setIsManagingCategories] = useState(false);
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalCount = tasks.length;
@@ -539,33 +538,19 @@ export const Navbar: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Sub-toolbar: Edit (manage mode), Manage modal, Review */}
-                <div className="flex items-center gap-1.5 px-1 pb-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsManagingCategories(!isManagingCategories)}
-                    className={`px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer transition flex items-center gap-1 ${
-                      isManagingCategories 
-                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-black' 
-                        : 'bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                    title={language === 'am' ? 'ዘርፎችን አስተካክል / ሰርዝ' : 'Manage / delete main streams'}
-                  >
-                    <SlidersHorizontal size={10} />
-                    <span>{isManagingCategories ? (language === 'am' ? 'ጨርስ' : 'Done') : (language === 'am' ? 'አስተካክል' : 'Edit')}</span>
-                  </button>
-
+                {/* Sub-toolbar: Manage modal & Review */}
+                <div className="flex items-center justify-between gap-2 px-1 pb-1">
                   <button
                     type="button"
                     onClick={() => {
                       setDrawerOpen(false);
                       openManageCategoriesModal();
                     }}
-                    className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold cursor-pointer transition flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold cursor-pointer transition flex items-center gap-1.5"
                     title={language === 'am' ? 'ሁሉንም ዘርፎች በዝርዝር አስተዳድር' : 'Manage all streams & priorities'}
                   >
-                    <SettingsIcon size={10} />
-                    <span>{language === 'am' ? 'አስተዳድር' : 'Manage'}</span>
+                    <SettingsIcon size={12} />
+                    <span>{language === 'am' ? 'ዘርፎችን አስተዳድር' : 'Manage Streams'}</span>
                   </button>
 
                   <button
@@ -574,11 +559,11 @@ export const Navbar: React.FC = () => {
                       setDrawerOpen(false);
                       setShowWeeklyReviewModal(true);
                     }}
-                    className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold cursor-pointer transition flex items-center gap-1 ml-auto"
+                    className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold cursor-pointer transition flex items-center gap-1.5"
                     title={language === 'am' ? 'ሳምንታዊ ግምገማ እና የደረጃዎች እድገት' : 'Weekly Review & Milestones'}
                   >
-                    <Trophy size={10} className="text-amber-500" />
-                    <span>{language === 'am' ? 'ግምገማ' : 'Review'}</span>
+                    <Trophy size={12} className="text-amber-500" />
+                    <span>{language === 'am' ? 'ሳምንታዊ ግምገማ' : 'Weekly Review'}</span>
                   </button>
                 </div>
 
@@ -626,29 +611,8 @@ export const Navbar: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                          {/* Delete Category Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCategoryToDelete({ 
-                                id: cat.id, 
-                                title: getCategoryTitleTranslated(cat.id, cat.title) 
-                              });
-                            }}
-                            className={`p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition ${
-                              isManagingCategories ? 'opacity-100 text-rose-500 bg-rose-50 dark:bg-rose-950/40 scale-105' : 'opacity-0 group-hover:opacity-100'
-                            }`}
-                            title={language === 'am' ? `${getCategoryTitleTranslated(cat.id, cat.title)} ዋና ዘርፍ ሰርዝ` : `Delete ${cat.title} Main Stream`}
-                            aria-label={`Delete ${cat.title}`}
-                          >
-                            <Trash2 size={13} />
-                          </button>
-
-                          <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-[#0082ff] group-hover:border-blue-200 group-hover:translate-x-0.5 transition-all">
-                            <ChevronRight size={13} />
-                          </div>
+                        <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-[#0082ff] group-hover:border-blue-200 group-hover:translate-x-0.5 transition-all shrink-0 ml-2">
+                          <ChevronRight size={14} />
                         </div>
                       </div>
                     );
