@@ -1,10 +1,28 @@
-const CACHE_NAME = 'neva-cache-v1.0.24-clean';
+const CACHE_NAME = 'neva-cache-v1.0.25-offline';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.png',
-  '/apple-touch-icon.png'
+  '/apple-touch-icon.png',
+  '/sounds/tibetan_bowl.wav',
+  '/sounds/zen_gong.wav',
+  '/sounds/temple_bell.wav',
+  '/sounds/gentle_bell.wav',
+  '/sounds/crystal_chime.wav',
+  '/sounds/sacred_chimes.wav',
+  '/sounds/gentle_harp.wav',
+  '/sounds/digital_alert.wav',
+  '/sounds/timer_start_music.wav',
+  '/sounds/touch_pencil.wav',
+  '/sounds/touch_pop.wav',
+  '/sounds/touch_click.wav',
+  '/sounds/touch_chime.wav',
+  '/sounds/touch_wood.wav',
+  '/sounds/ambience_432hz.wav',
+  '/sounds/ambience_rain.wav',
+  '/sounds/ambience_stream.wav',
+  '/sounds/ambience_whitenoise.wav'
 ];
 
 self.addEventListener('install', (event) => {
@@ -37,6 +55,25 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/') || url.pathname.includes('version.json')) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' }).catch(() => new Response('{"offline":true}', { headers: { 'Content-Type': 'application/json' } }))
+    );
+    return;
+  }
+
+  // Sound assets - Cache-first with network fallback (instant playback, 0 network latency, 100% offline)
+  if (url.pathname.startsWith('/sounds/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        }).catch(() => new Response('', { status: 404 }));
+      })
     );
     return;
   }
