@@ -469,17 +469,6 @@ export const PracticeFlowView: React.FC = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
-            {/* Live Telemetry Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 text-[11px] font-bold text-[#0082ff] dark:text-blue-300 shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0082ff]" />
-              </span>
-              <span className="tracking-wide uppercase font-mono">
-                {language === 'am' ? 'የትኩረት ኮክፒት • NEVA FLOW ENGINE' : 'NEVA FLOW COCKPIT • NEURO-FOCUS'}
-              </span>
-            </div>
-
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-[#0082ff] to-cyan-400 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
                 <Timer className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
