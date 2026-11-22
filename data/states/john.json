@@ -552,7 +552,7 @@
     {
       "domain": "CHESS",
       "title": "Puzzle training",
-      "startTime": "01:00 AM",
+      "startTime": "01:45 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -574,7 +574,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "01:00 AM",
+      "startTime": "02:15 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -618,7 +618,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:00 PM",
+      "startTime": "12:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -640,7 +640,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:00 PM",
+      "startTime": "12:35 PM",
       "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
@@ -662,7 +662,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "12:00 PM",
+      "startTime": "01:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -713,6 +713,29 @@
       "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1794859007649"
+    },
+    {
+      "domain": "CHESS",
+      "title": "ui",
+      "startTime": "12 PM",
+      "durationMin": 45,
+      "completed": false,
+      "date": "2026-11-22",
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795345281401-1",
+          "text": "Initial set up",
+          "done": false
+        },
+        {
+          "id": "c-1795345281401-2",
+          "text": "Execute deliberate focus",
+          "done": false
+        }
+      ],
+      "id": "task-1795345281401"
     }
   ],
   "workouts": [
