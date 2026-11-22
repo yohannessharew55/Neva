@@ -3,7 +3,7 @@ import { RefreshCw, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 
 // Current client build timestamp generated at compile time
-export const APP_BUILD_VERSION = 'v1.0.21-20261122-1115';
+export const APP_BUILD_VERSION = 'v1.0.22-20261122-1130';
 
 export const AutoUpdateBanner: React.FC = () => {
   const { language } = useLivotion();

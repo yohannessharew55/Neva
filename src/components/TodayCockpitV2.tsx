@@ -77,20 +77,21 @@ export const TodayCockpitV2: React.FC = () => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  // Date formatting for Today
-  const now = new Date();
-  const ethDate = gregorianToEthiopian(now);
-  const dayNameEn = now.toLocaleDateString('en-US', { weekday: 'long' });
-  const monthDayEn = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  const dayNameAm = AMHARIC_DAYS[now.getDay()]?.am || '';
+  // Active viewing date state synced with BigDailyActivitiesStickyNote
+  const [viewingDate, setViewingDate] = useState<Date>(() => new Date());
+
+  const ethDate = gregorianToEthiopian(viewingDate);
+  const dayNameEn = viewingDate.toLocaleDateString('en-US', { weekday: 'long' });
+  const monthDayEn = viewingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const dayNameAm = AMHARIC_DAYS[viewingDate.getDay()]?.am || '';
   const ethMonthName = ethDate.monthNameAm;
   
   const todayDateDisplay = language === 'am' 
     ? `${dayNameAm}፣ ${ethMonthName} ${ethDate.day} (${monthDayEn})`
     : `${dayNameEn}, ${monthDayEn} • ${ethDate.monthNameEn} ${ethDate.day}`;
 
-  // Active Day Schedule & Tasks
-  const daySchedule = getDaySchedule(now);
+  // Active Day Schedule & Tasks for viewing date
+  const daySchedule = getDaySchedule(viewingDate);
   const dayTasks = daySchedule.tasks;
 
   // Today's metrics (matches today's schedule)
@@ -101,9 +102,9 @@ export const TodayCockpitV2: React.FC = () => {
   const remainingMinutes = dayTasks.filter(t => !t.completed).reduce((sum, t) => sum + (t.durationMin || 0), 0);
   const remainingFormatted = formatTaskDuration(remainingMinutes);
 
-  // Helper to map task to category key
+  // Helper to map task to category key (strictly matching sticky note logic)
   const getCategoryKeyForTask = (task: ScheduleTask): string => {
-    if (task.badge) {
+    if (task.badge && task.badge.toUpperCase() !== 'STREAM' && task.badge.toUpperCase() !== 'FOCUS') {
       const badgeLower = task.badge.toLowerCase();
       for (const [id, plan] of Object.entries(categoryPlans)) {
         if (!plan) continue;
@@ -112,23 +113,66 @@ export const TodayCockpitV2: React.FC = () => {
         }
       }
     }
-    switch (task.domain) {
-      case 'PHYSICAL_FITNESS':
-      case 'EXERCISE': return 'exercise';
-      case 'CHESS': return 'chess';
-      case 'OIL_PAINTING':
-      case 'ART': return 'art';
-      case 'GUITAR':
-      case 'MUSIC': return 'music';
-      case 'ARCHITECTURE_DESIGN':
-      case 'SITE_SUPERVISION':
-      case 'ARCHITECTURE': return 'architecture';
-      case 'FOREX_TRADING':
-      case 'TRADING': return 'trading';
-      case 'DEVOTION_PRAYER':
-      case 'DEVOTION': return 'devotion';
-      default: return 'buffer';
+
+    if (task.id) {
+      const idLower = task.id.toLowerCase();
+      for (const catId of Object.keys(categoryPlans)) {
+        if (idLower.includes(catId)) return catId;
+      }
     }
+
+    if (task.domain) {
+      switch (task.domain) {
+        case 'PHYSICAL_FITNESS':
+        case 'EXERCISE': return 'exercise';
+        case 'CHESS': return 'chess';
+        case 'OIL_PAINTING':
+        case 'ART': return 'art';
+        case 'GUITAR':
+        case 'MUSIC': return 'music';
+        case 'ARCHITECTURE_DESIGN':
+        case 'SITE_SUPERVISION':
+        case 'ARCHITECTURE': return 'architecture';
+        case 'FOREX_TRADING':
+        case 'TRADING': return 'trading';
+        case 'DEVOTION_PRAYER':
+        case 'DEVOTION': return 'devotion';
+        default: break;
+      }
+    }
+
+    // Title keyword matching
+    const titleLower = (task.title || '').toLowerCase();
+    for (const [id, plan] of Object.entries(categoryPlans)) {
+      if (!plan) continue;
+      if (titleLower.includes(id) || titleLower.includes(plan.title.toLowerCase())) {
+        return id;
+      }
+    }
+
+    if (titleLower.includes('trading') || titleLower.includes('forex') || titleLower.includes('crypto') || titleLower.includes('market') || titleLower.includes('trade') || titleLower.includes('xau') || titleLower.includes('gold') || titleLower.includes('nasdaq')) {
+      return 'trading';
+    }
+    if (titleLower.includes('chess') || titleLower.includes('tactic') || titleLower.includes('puzzle') || titleLower.includes('grandmaster')) {
+      return 'chess';
+    }
+    if (titleLower.includes('guitar') || titleLower.includes('repertoire') || titleLower.includes('music') || titleLower.includes('finger')) {
+      return 'music';
+    }
+    if (titleLower.includes('workout') || titleLower.includes('fitness') || titleLower.includes('gym') || titleLower.includes('exercise')) {
+      return 'exercise';
+    }
+    if (titleLower.includes('art') || titleLower.includes('painting') || titleLower.includes('oil') || titleLower.includes('drawing')) {
+      return 'art';
+    }
+    if (titleLower.includes('architect') || titleLower.includes('design') || titleLower.includes('autocad') || titleLower.includes('site')) {
+      return 'architecture';
+    }
+    if (titleLower.includes('devotion') || titleLower.includes('bible') || titleLower.includes('prayer') || titleLower.includes('scripture') || titleLower.includes('ጸሎት')) {
+      return 'devotion';
+    }
+
+    return 'buffer';
   };
 
   // Order categories according to live custom categoryOrder
@@ -280,7 +324,10 @@ export const TodayCockpitV2: React.FC = () => {
   return (
     <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-3.5 sm:py-6 space-y-4 sm:space-y-6 max-w-full overflow-x-clip">
       {/* 1. The Stationary Sticky Note: Central Hub & First Impression for Today's Execution */}
-      <BigDailyActivitiesStickyNote />
+      <BigDailyActivitiesStickyNote 
+        targetDate={viewingDate}
+        onDateChange={setViewingDate}
+      />
 
       {/* Active Focus Session Timer (if currently running) */}
       {activeTask && (
@@ -400,42 +447,6 @@ export const TodayCockpitV2: React.FC = () => {
               >
                 <Play size={13} fill="currentColor" />
                 <span>{language === 'am' ? 'ትኩረት ጀምር' : 'Start Focus Block'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sunday Rest & Sabbath Day Hero Card (when on Sunday with no active weekday task) */}
-      {!activeTask && (!activeFocusTask || now.getDay() === 0) && now.getDay() === 0 && (
-        <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-indigo-500/10 bg-white dark:bg-[#121927] p-5 sm:p-6 shadow-xs relative overflow-hidden transition-all">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-xl">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1.5">
-                <span>🌿</span>
-                <span>{language === 'am' ? 'የእሁድ እረፍትና ሰንበት' : 'Sunday Sabbath & Sacred Rest'}</span>
-              </span>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                {language === 'am' ? 'የመንፈስ ጽሞናና የአካል ማገገሚያ ቀን' : 'Spiritual Stillness & Total Renewal'}
-              </h2>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                {language === 'am'
-                  ? 'ስድስት ቀን የልፋትህ ስራ ሲሆን፣ በሰባተኛው ቀን ግን ለነፍስህ ዕረፍት ትሰጣለህ። ከስራ ጫና ነፃ ሆነህ በጸሎት፣ በቤተሰብና በማሰላሰል እራስህን አድስ።'
-                  : 'Six days you shall labor; on the seventh day you shall rest. Take time today for prayer, reflection, family, and deep rest with zero work pressure.'}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  try { soundEngine.playPencil(); } catch {}
-                  setActiveTab('devotion');
-                }}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-2 transition cursor-pointer active:scale-95 shadow-md shadow-emerald-500/20"
-              >
-                <span>🙏</span>
-                <span>{language === 'am' ? 'ወደ ጸሎት ፕሮቶኮል' : 'Devotion Protocol'}</span>
               </button>
             </div>
           </div>

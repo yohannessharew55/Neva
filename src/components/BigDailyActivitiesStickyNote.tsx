@@ -265,12 +265,14 @@ export interface BigDailyActivitiesStickyNoteProps {
   targetDate?: Date;
   onClose?: () => void;
   showScheduleBar?: boolean;
+  onDateChange?: (date: Date) => void;
 }
 
 export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNoteProps> = ({
   targetDate,
   onClose,
   showScheduleBar = false,
+  onDateChange,
 }) => {
   const { 
     tasks, 
@@ -320,6 +322,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setCurrentDate((prev) => {
       const d = new Date(prev);
       d.setDate(d.getDate() - 1);
+      onDateChange?.(d);
       return d;
     });
     try { soundEngine.playPencil(); } catch {}
@@ -329,13 +332,16 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setCurrentDate((prev) => {
       const d = new Date(prev);
       d.setDate(d.getDate() + 1);
+      onDateChange?.(d);
       return d;
     });
     try { soundEngine.playPencil(); } catch {}
   };
 
   const handleResetToToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    setCurrentDate(today);
+    onDateChange?.(today);
     try { soundEngine.playPencil(); } catch {}
   };
 
@@ -1245,6 +1251,22 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
                               />
                             ))}
                           </div>
+                        </div>
+
+                        {/* Devotion & Sabbath Protocol Quick Link */}
+                        <div className="pt-2 border-t border-black/5 dark:border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowStickyMenu(false);
+                              try { soundEngine.playPencil(); } catch {}
+                              setActiveTab('devotion');
+                            }}
+                            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition cursor-pointer"
+                          >
+                            <span className="text-sm">🌿</span>
+                            <span>{language === 'am' ? 'የእሁድ ጸሎትና መንፈሳዊ እድሳት' : 'Devotion Protocol & Sabbath Rest'}</span>
+                          </button>
                         </div>
                       </div>
                     </div>
