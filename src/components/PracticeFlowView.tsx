@@ -457,7 +457,7 @@ export const PracticeFlowView: React.FC = () => {
   const themeColor = getThemeColor();
 
   return (
-    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn select-none">
+    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-fadeIn select-none overflow-x-hidden">
       
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
@@ -584,13 +584,13 @@ export const PracticeFlowView: React.FC = () => {
 
       {/* Today's Focus Activities Hub: Click any task to launch its tailored focus & motion graphics */}
       {tasks.length > 0 && (
-        <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Sparkles size={14} className="text-[#0082ff]" />
-              {language === 'am' ? 'የዛሬ ተግባራትን በመንካት ትኩረትና እንቅስቃሴ ይጀምሩ' : "Click Today's Tasks to Trigger Focus & Motion Graphics"}
+        <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-2.5 max-w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 min-w-0">
+              <Sparkles size={14} className="text-[#0082ff] shrink-0" />
+              <span className="truncate">{language === 'am' ? 'የዛሬ ተግባራትን በመንካት ትኩረት ይጀምሩ' : "Click Today's Tasks to Trigger Focus"}</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={async () => {
@@ -614,23 +614,23 @@ export const PracticeFlowView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full">
             {tasks.map((task) => {
               const isSelected = activeTaskTitle === task.title;
               return (
                 <button
                   key={task.id}
                   onClick={() => handleLaunchTaskFocus(task)}
-                  className={`px-3 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95 ${
+                  className={`px-3 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2 shrink-0 max-w-[240px] sm:max-w-[280px] transition-all cursor-pointer active:scale-95 ${
                     isSelected
                       ? 'bg-[#0082ff] text-white border-[#0082ff] shadow-xs'
                       : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700'
                   }`}
                   title={`Launch Focus Mode for ${task.title}`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${task.completed ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
-                  <span className="truncate max-w-[170px]">{task.title}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${isSelected ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${task.completed ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
+                  <span className="truncate">{task.title}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md shrink-0 ${isSelected ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>
                     {task.durationMin}m
                   </span>
                 </button>
@@ -1284,7 +1284,7 @@ export const PracticeFlowView: React.FC = () => {
         const secondAngle = ((currentDisplaySeconds % 60) / 60) * 2 * Math.PI;
 
         return (
-          <div className="fixed inset-0 z-[99990] bg-[#faf9f6] dark:bg-[#080c14] flex flex-col items-center justify-between p-6 sm:p-10 select-none animate-fadeIn">
+          <div className="fixed inset-0 z-[99990] bg-[#faf9f6] dark:bg-[#080c14] flex flex-col items-center justify-between p-6 sm:p-10 select-none animate-fadeIn overflow-hidden">
             {/* Ambient Breathing Background Aura */}
             <div 
               className={`absolute w-[450px] h-[450px] sm:w-[650px] sm:h-[650px] rounded-full blur-[140px] pointer-events-none transition-all duration-700 ${
