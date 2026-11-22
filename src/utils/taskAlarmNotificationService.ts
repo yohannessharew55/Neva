@@ -117,25 +117,83 @@ class TaskAlarmNotificationService {
 
       // 4. SUNDAY REST DAY STRICT PROTECTION:
       // In NEVA, Sunday is designated as the Day of Rest & Devotion.
-      // Weekday execution domains must NEVER trigger notifications on Sunday!
+      // Weekday execution domains, exercise, workouts, trading, chess, etc. must NEVER trigger alarms on Sunday!
       if (isSunday) {
         const domainUpper = (task.domain || '').toUpperCase();
         const badgeLower = (task.badge || '').toLowerCase();
         const titleLower = (task.title || '').toLowerCase();
 
-        const isWeekdayDomain = weekdayDomains.some(
-          wd => domainUpper.includes(wd) || badgeLower.includes(wd.toLowerCase())
-        );
+        // 4a. Devotion & Prayer tasks are unconditionally allowed on Sunday
+        const isDevotion = 
+          domainUpper === 'DEVOTION_PRAYER' || 
+          badgeLower.includes('devotion') || 
+          titleLower.includes('devotion') ||
+          titleLower.includes('prayer') || 
+          titleLower.includes('ጸሎት') ||
+          titleLower.includes('church') ||
+          titleLower.includes('ቅዳሴ') ||
+          titleLower.includes('worship');
 
-        if (isWeekdayDomain) {
-          // Only allow if explicitly customized/named for Sunday or dayOfWeek === 7
-          const explicitlySunday = 
-            task.dayOfWeek === 7 ||
+        if (isDevotion) {
+          return true;
+        }
+
+        // 4b. STRICT EXERCISE / FITNESS BLOCK:
+        // Any exercise, workout, fitness, or gym activity is 100% BLOCKED on Sunday.
+        // NEVER allow task.dayOfWeek === 7 to bypass this because dayOfWeek: 7 is automatically stamped when editing tasks on Sunday!
+        const isExerciseOrFitness = 
+          domainUpper.includes('FITNESS') ||
+          domainUpper.includes('EXERCISE') ||
+          badgeLower.includes('fitness') ||
+          badgeLower.includes('exercise') ||
+          badgeLower.includes('workout') ||
+          titleLower.includes('pushup') ||
+          titleLower.includes('pullup') ||
+          titleLower.includes('exercise') ||
+          titleLower.includes('fitness') ||
+          titleLower.includes('workout') ||
+          titleLower.includes('gym') ||
+          titleLower.includes('warmup') ||
+          titleLower.includes('cardio') ||
+          titleLower.includes('squat') ||
+          titleLower.includes('training') ||
+          titleLower.includes('hiit');
+
+        if (isExerciseOrFitness) {
+          return false;
+        }
+
+        // 4c. WEEKDAY WORK DOMAINS BLOCK:
+        const isWeekdayDomainOrTitle = 
+          weekdayDomains.some(wd => domainUpper.includes(wd) || badgeLower.includes(wd.toLowerCase())) ||
+          titleLower.includes('trading') ||
+          titleLower.includes('forex') ||
+          titleLower.includes('market') ||
+          titleLower.includes('chess') ||
+          titleLower.includes('puzzle training') ||
+          titleLower.includes('aagard') ||
+          titleLower.includes('guitar') ||
+          titleLower.includes('sketch') ||
+          titleLower.includes('painting');
+
+        if (isWeekdayDomainOrTitle) {
+          // Only allow if explicitly named for Sunday in text
+          const explicitlySundayText = 
             titleLower.includes('sunday') || 
             titleLower.includes('እሁድ') || 
             badgeLower.includes('sunday');
 
-          if (!explicitlySunday) {
+          if (!explicitlySundayText) {
+            return false;
+          }
+        } else {
+          // For untagged/custom tasks on Sunday, require explicit Sunday marker in text
+          const hasExplicitSundayTag = 
+            titleLower.includes('sunday') || 
+            titleLower.includes('እሁድ') || 
+            badgeLower.includes('sunday');
+
+          if (!hasExplicitSundayTag) {
             return false;
           }
         }
@@ -203,14 +261,32 @@ class TaskAlarmNotificationService {
       // Filter to legitimate, deduplicated tasks for TODAY only
       const todayTasks = this.filterTasksForToday(tasks, now);
 
-      // On Sunday, if no explicit Sunday/devotion tasks exist, do not schedule any alarms
-      if (isSunday && todayTasks.length === 0) {
+      // On Sunday, only allow devotion tasks to be scheduled
+      const tasksToSchedule = isSunday
+        ? todayTasks.filter((t) => {
+            const dom = (t.domain || '').toUpperCase();
+            const badge = (t.badge || '').toLowerCase();
+            const title = (t.title || '').toLowerCase();
+            return (
+              dom === 'DEVOTION_PRAYER' ||
+              badge.includes('devotion') ||
+              title.includes('devotion') ||
+              title.includes('prayer') ||
+              title.includes('ጸሎት') ||
+              title.includes('church') ||
+              title.includes('ቅዳሴ') ||
+              title.includes('worship')
+            );
+          })
+        : todayTasks;
+
+      if (isSunday && tasksToSchedule.length === 0) {
         return;
       }
 
       const notificationsToSchedule: any[] = [];
 
-      todayTasks.forEach((task) => {
+      tasksToSchedule.forEach((task) => {
         const taskMinutes = parseTimeToMinutes(task.startTime);
         if (taskMinutes <= 0 && !task.startTime.includes('12:00 AM')) return;
 
@@ -298,6 +374,30 @@ class TaskAlarmNotificationService {
 
   // 6. Trigger active alarm event & notification
   public triggerTaskAlarm(task: ScheduleTask): void {
+    // 0. Hard Sunday Fail-Safe: Under NO circumstances can any exercise, workout, or non-devotion alarm fire on Sunday!
+    const now = new Date();
+    const isSunday = ((now.getDay() + 6) % 7 + 1) === 7;
+    if (isSunday) {
+      const domainUpper = (task.domain || '').toUpperCase();
+      const badgeLower = (task.badge || '').toLowerCase();
+      const titleLower = (task.title || '').toLowerCase();
+
+      const isDevotion =
+        domainUpper === 'DEVOTION_PRAYER' ||
+        badgeLower.includes('devotion') ||
+        titleLower.includes('devotion') ||
+        titleLower.includes('prayer') ||
+        titleLower.includes('ጸሎት') ||
+        titleLower.includes('church') ||
+        titleLower.includes('ቅዳሴ') ||
+        titleLower.includes('worship');
+
+      if (!isDevotion) {
+        console.warn(`[TaskAlarmNotificationService] STRICT SUNDAY FAIL-SAFE: Blocked non-devotion alarm for "${task.title}" (domain: ${task.domain}, badge: ${task.badge})`);
+        return;
+      }
+    }
+
     const catId = (task.badge || 'focus').toLowerCase();
     const catPlan = this.currentCategories[catId] || Object.values(this.currentCategories).find(p => p.title.toLowerCase().includes(catId));
     const categoryTitle = catPlan ? catPlan.title : (task.badge || 'Focus');

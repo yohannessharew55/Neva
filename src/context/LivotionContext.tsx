@@ -1852,12 +1852,65 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Seamlessly merges explicit user recurring tasks and Main Stream weekly routine schedules
   const getWeekdayDefaultTasks = (dayOfWeek: number): ScheduleTask[] => {
     if (dayOfWeek === 7) {
-      const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
+      const weekdayDomains = [
+        'PHYSICAL_FITNESS', 'EXERCISE', 'CHESS', 'GUITAR', 'MUSIC',
+        'ARCHITECTURE_DESIGN', 'ARCHITECTURE', 'SITE_SUPERVISION',
+        'FOREX_TRADING', 'TRADING', 'OIL_PAINTING', 'ART'
+      ];
       const sundayTasks = tasks.filter((t) => {
         if (t.date) return false;
         if (t.id.startsWith('def-') || t.id.startsWith('carry-')) return false;
-        if (weekdayDomains.includes(t.domain)) return false;
-        return t.domain === 'DEVOTION_PRAYER' || t.dayOfWeek === 7;
+
+        const domainUpper = (t.domain || '').toUpperCase();
+        const badgeLower = (t.badge || '').toLowerCase();
+        const titleLower = (t.title || '').toLowerCase();
+
+        const isDevotion =
+          domainUpper === 'DEVOTION_PRAYER' ||
+          badgeLower.includes('devotion') ||
+          titleLower.includes('devotion') ||
+          titleLower.includes('prayer') ||
+          titleLower.includes('ጸሎት') ||
+          titleLower.includes('church') ||
+          titleLower.includes('ቅዳሴ') ||
+          titleLower.includes('worship');
+
+        if (isDevotion) return true;
+
+        // Hard block any exercise, workout, or gym task on Sunday
+        const isExerciseOrFitness =
+          domainUpper.includes('FITNESS') ||
+          domainUpper.includes('EXERCISE') ||
+          badgeLower.includes('fitness') ||
+          badgeLower.includes('exercise') ||
+          badgeLower.includes('workout') ||
+          titleLower.includes('pushup') ||
+          titleLower.includes('pullup') ||
+          titleLower.includes('exercise') ||
+          titleLower.includes('fitness') ||
+          titleLower.includes('workout') ||
+          titleLower.includes('gym') ||
+          titleLower.includes('warmup') ||
+          titleLower.includes('cardio') ||
+          titleLower.includes('squat');
+
+        if (isExerciseOrFitness) return false;
+
+        const isWeekdayDomainOrTitle =
+          weekdayDomains.some(wd => domainUpper.includes(wd) || badgeLower.includes(wd.toLowerCase())) ||
+          titleLower.includes('trading') ||
+          titleLower.includes('chess') ||
+          titleLower.includes('guitar') ||
+          titleLower.includes('sketch') ||
+          titleLower.includes('painting');
+
+        if (isWeekdayDomainOrTitle) {
+          const hasSundayText = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+          return hasSundayText;
+        }
+
+        const hasExplicitSundayTag = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+        return hasExplicitSundayTag;
       });
       const streamSunTasks = getStreamTasksForDayOfWeek(7);
       const combinedSun: ScheduleTask[] = [...sundayTasks];
@@ -1932,15 +1985,62 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     if (dayOfWeek === 7) {
       // SUNDAY REST DAY:
-      const weekdayDomains = ['PHYSICAL_FITNESS', 'CHESS', 'GUITAR', 'ARCHITECTURE_DESIGN', 'SITE_SUPERVISION', 'FOREX_TRADING', 'OIL_PAINTING'];
+      const weekdayDomains = [
+        'PHYSICAL_FITNESS', 'EXERCISE', 'CHESS', 'GUITAR', 'MUSIC',
+        'ARCHITECTURE_DESIGN', 'ARCHITECTURE', 'SITE_SUPERVISION',
+        'FOREX_TRADING', 'TRADING', 'OIL_PAINTING', 'ART'
+      ];
       const sundayAllowed = customTasks.filter((t) => {
-        if (t.domain === 'DEVOTION_PRAYER') return true;
-        if (weekdayDomains.includes(t.domain)) {
-          const titleLower = (t.title || '').toLowerCase();
-          const badgeLower = (t.badge || '').toLowerCase();
-          return titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+        const domainUpper = (t.domain || '').toUpperCase();
+        const badgeLower = (t.badge || '').toLowerCase();
+        const titleLower = (t.title || '').toLowerCase();
+
+        const isDevotion =
+          domainUpper === 'DEVOTION_PRAYER' ||
+          badgeLower.includes('devotion') ||
+          titleLower.includes('devotion') ||
+          titleLower.includes('prayer') ||
+          titleLower.includes('ጸሎት') ||
+          titleLower.includes('church') ||
+          titleLower.includes('ቅዳሴ') ||
+          titleLower.includes('worship');
+
+        if (isDevotion) return true;
+
+        // Hard block any exercise, workout, or gym task on Sunday
+        const isExerciseOrFitness =
+          domainUpper.includes('FITNESS') ||
+          domainUpper.includes('EXERCISE') ||
+          badgeLower.includes('fitness') ||
+          badgeLower.includes('exercise') ||
+          badgeLower.includes('workout') ||
+          titleLower.includes('pushup') ||
+          titleLower.includes('pullup') ||
+          titleLower.includes('exercise') ||
+          titleLower.includes('fitness') ||
+          titleLower.includes('workout') ||
+          titleLower.includes('gym') ||
+          titleLower.includes('warmup') ||
+          titleLower.includes('cardio') ||
+          titleLower.includes('squat');
+
+        if (isExerciseOrFitness) return false;
+
+        const isWeekdayDomainOrTitle =
+          weekdayDomains.some(wd => domainUpper.includes(wd) || badgeLower.includes(wd.toLowerCase())) ||
+          titleLower.includes('trading') ||
+          titleLower.includes('chess') ||
+          titleLower.includes('guitar') ||
+          titleLower.includes('sketch') ||
+          titleLower.includes('painting');
+
+        if (isWeekdayDomainOrTitle) {
+          const hasSundayText = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+          return hasSundayText;
         }
-        return true;
+
+        const hasExplicitSundayTag = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
+        return hasExplicitSundayTag;
       });
 
       if (sundayAllowed.length > 0) {

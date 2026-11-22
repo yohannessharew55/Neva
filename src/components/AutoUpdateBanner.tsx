@@ -3,7 +3,7 @@ import { RefreshCw, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 
 // Current client build timestamp generated at compile time
-export const APP_BUILD_VERSION = 'v1.0.19-20261122-1020';
+export const APP_BUILD_VERSION = 'v1.0.20-20261122-1100';
 
 export const AutoUpdateBanner: React.FC = () => {
   const { language } = useLivotion();
@@ -48,11 +48,10 @@ export const AutoUpdateBanner: React.FC = () => {
           setRemoteVersion(data.version);
           setUpdateAvailable(true);
 
-          // If user hasn't interacted for 3 seconds, or on app open, auto-apply update!
-          // We apply automatically so the user doesn't have to reinstall anything
+          // Fast auto-apply update so in-memory timers in open tabs are promptly updated
           setTimeout(() => {
             applyUpdate();
-          }, 2500);
+          }, 1200);
         }
       }
     } catch (e) {
@@ -61,11 +60,11 @@ export const AutoUpdateBanner: React.FC = () => {
   }, [applyUpdate]);
 
   useEffect(() => {
-    // 1. Initial check after 1.5s
-    const timer = setTimeout(checkForUpdate, 1500);
+    // 1. Initial check after 1s
+    const timer = setTimeout(checkForUpdate, 1000);
 
-    // 2. Periodic background check every 45s
-    const interval = setInterval(checkForUpdate, 45000);
+    // 2. Periodic background check every 15s
+    const interval = setInterval(checkForUpdate, 15000);
 
     // 3. When user returns to tab / unlocks phone / switches back to PWA
     const handleVisibility = () => {
