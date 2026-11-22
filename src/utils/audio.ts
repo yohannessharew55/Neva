@@ -1,5 +1,6 @@
-// Web Audio API acoustic engine for iOS 16+ & Web
-// High-fidelity synthesized meditation bells, Tibetan singing bowls, zen gongs, and ambient audio
+// Web Audio API acoustic engine with clean studio-grade audio assets for iOS, Android & Web
+// Pristine sampled bells, singing bowls, zen gongs, tactile clicks, and loopable ambient soundscapes.
+// Routed through a hardware dynamics compressor limiter with smooth ramps to eliminate mobile speaker crackle.
 
 export type StartSoundType = 'none' | 'gentle_bell' | 'tibetan_bowl' | 'zen_gong' | 'crystal_chime';
 export type AlarmSoundType = 'none' | 'tibetan_bowl' | 'temple_bell' | 'zen_gong' | 'sacred_chimes' | 'digital_alert' | 'gentle_harp';
@@ -31,11 +32,58 @@ export const DEFAULT_SOUND_SETTINGS: FocusSoundSettings = {
   touchSoundEnabled: true,
 };
 
+const SOUND_FILES: Record<string, string> = {
+  // Meditation instruments & alarms
+  tibetan_bowl: '/sounds/tibetan_bowl.wav',
+  zen_gong: '/sounds/zen_gong.wav',
+  temple_bell: '/sounds/temple_bell.wav',
+  gentle_bell: '/sounds/gentle_bell.wav',
+  crystal_chime: '/sounds/crystal_chime.wav',
+  sacred_chimes: '/sounds/sacred_chimes.wav',
+  gentle_harp: '/sounds/gentle_harp.wav',
+  digital_alert: '/sounds/digital_alert.wav',
+  timer_start_music: '/sounds/timer_start_music.wav',
+
+  // Tactile touch clicks
+  touch_pencil: '/sounds/touch_pencil.wav',
+  touch_pop: '/sounds/touch_pop.wav',
+  touch_click: '/sounds/touch_click.wav',
+  touch_chime: '/sounds/touch_chime.wav',
+  touch_wood: '/sounds/touch_wood.wav',
+
+  // Ambience loops
+  ambience_432hz: '/sounds/ambience_432hz.wav',
+  ambience_rain: '/sounds/ambience_rain.wav',
+  ambience_stream: '/sounds/ambience_stream.wav',
+  ambience_whitenoise: '/sounds/ambience_whitenoise.wav',
+};
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private ambienceSource: AudioNode | null = null;
+  private limiter: DynamicsCompressorNode | null = null;
+  private ambienceSource: AudioBufferSourceNode | null = null;
   private ambienceGain: GainNode | null = null;
   private currentAmbienceType: AmbienceType = 'none';
+
+  private bufferCache: Map<string, AudioBuffer> = new Map();
+  private loadingPromises: Map<string, Promise<AudioBuffer | null>> = new Map();
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const warmUp = () => {
+        try {
+          this.getAudioContext();
+          this.preloadCommonSounds();
+        } catch {}
+        window.removeEventListener('pointerdown', warmUp);
+        window.removeEventListener('touchstart', warmUp);
+        window.removeEventListener('click', warmUp);
+      };
+      window.addEventListener('pointerdown', warmUp, { once: true, passive: true });
+      window.addEventListener('touchstart', warmUp, { once: true, passive: true });
+      window.addEventListener('click', warmUp, { once: true, passive: true });
+    }
+  }
 
   private getAudioContext(): AudioContext | null {
     try {
@@ -55,6 +103,73 @@ class SoundEngine {
     }
   }
 
+  // Master brickwall limiter: prevents mobile DAC clipping & crackling
+  private getLimiter(ctx: AudioContext): DynamicsCompressorNode {
+    if (!this.limiter || this.limiter.context !== ctx) {
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.setValueAtTime(-2.0, ctx.currentTime);
+      comp.knee.setValueAtTime(0.0, ctx.currentTime);
+      comp.ratio.setValueAtTime(20.0, ctx.currentTime);
+      comp.attack.setValueAtTime(0.003, ctx.currentTime);
+      comp.release.setValueAtTime(0.05, ctx.currentTime);
+      comp.connect(ctx.destination);
+      this.limiter = comp;
+    }
+    return this.limiter;
+  }
+
+  // Pre-load common sounds into memory for zero latency
+  public preloadCommonSounds(): void {
+    const keys = [
+      'touch_pencil',
+      'touch_pop',
+      'touch_click',
+      'touch_wood',
+      'touch_chime',
+      'gentle_bell',
+      'tibetan_bowl',
+      'timer_start_music'
+    ];
+    for (const key of keys) {
+      this.loadAudio(key).catch(() => {});
+    }
+  }
+
+  // Fetch, decode, and cache an audio file into an AudioBuffer
+  public async loadAudio(soundKey: string): Promise<AudioBuffer | null> {
+    if (this.bufferCache.has(soundKey)) {
+      return this.bufferCache.get(soundKey)!;
+    }
+    if (this.loadingPromises.has(soundKey)) {
+      return this.loadingPromises.get(soundKey)!;
+    }
+
+    const url = SOUND_FILES[soundKey];
+    if (!url) return null;
+
+    const promise = (async () => {
+      try {
+        const ctx = this.getAudioContext();
+        if (!ctx) return null;
+
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        this.bufferCache.set(soundKey, audioBuffer);
+        return audioBuffer;
+      } catch (err) {
+        console.warn(`Failed to load audio file for ${soundKey}`, err);
+        return null;
+      } finally {
+        this.loadingPromises.delete(soundKey);
+      }
+    })();
+
+    this.loadingPromises.set(soundKey, promise);
+    return promise;
+  }
+
   // Load sound settings from localStorage
   getSettings(): FocusSoundSettings {
     try {
@@ -70,431 +185,124 @@ class SoundEngine {
     } catch (e) {}
   }
 
-  // Play Tibetan Singing Bowl (Warm multi-harmonic resonance)
+  // Clean studio sound file playback through limiter
+  public async playSoundFile(soundKey: string, volume = 0.8, loop = false): Promise<AudioBufferSourceNode | null> {
+    if (volume <= 0) return null;
+    const ctx = this.getAudioContext();
+    if (!ctx) return null;
+
+    try {
+      const buffer = await this.loadAudio(soundKey);
+      if (!buffer) {
+        this.playFallbackBeep(volume);
+        return null;
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = loop;
+
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      // Gentle 2ms micro-ramp to eliminate any DC pop
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(Math.min(1.0, Math.max(0.001, volume)), now + 0.003);
+
+      source.connect(gain);
+      gain.connect(this.getLimiter(ctx));
+
+      source.start(now);
+      return source;
+    } catch (err) {
+      console.warn('playSoundFile error', err);
+      return null;
+    }
+  }
+
+  // Safe minimal fallback if audio files are ever unreachable
+  private playFallbackBeep(volume = 0.5): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(528, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(volume * 0.3, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this.getLimiter(ctx));
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch {}
+  }
+
+  // 1. Tibetan Singing Bowl
   playTibetanBowl(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const now = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(volume * 0.7, now);
-      master.connect(ctx.destination);
-
-      // Fundamental and spiritual harmonic partials
-      const partials = [
-        { freq: 216, gain: 0.8, decay: 4.5 },
-        { freq: 594, gain: 0.35, decay: 3.5 },
-        { freq: 1188, gain: 0.15, decay: 2.2 },
-        { freq: 1782, gain: 0.05, decay: 1.5 }
-      ];
-
-      partials.forEach(p => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(p.freq, now);
-
-        // subtle wobble / shimmer
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.setValueAtTime(4.5, now);
-        lfoGain.gain.setValueAtTime(1.5, now);
-        lfo.connect(osc.frequency);
-        lfo.start(now);
-        lfo.stop(now + p.decay);
-
-        g.gain.setValueAtTime(p.gain, now);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
-
-        osc.connect(g);
-        g.connect(master);
-
-        osc.start(now);
-        osc.stop(now + p.decay);
-      });
-    } catch (e) {
-      console.warn('Audio play error', e);
-    }
+    this.playSoundFile('tibetan_bowl', volume * 0.85);
   }
 
-  // Play Zen Bronze Gong
+  // 2. Zen Bronze Gong
   playZenGong(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const now = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(volume * 0.8, now);
-      master.connect(ctx.destination);
-
-      const partials = [
-        { freq: 115, gain: 0.9, decay: 5.0 },
-        { freq: 278, gain: 0.4, decay: 4.0 },
-        { freq: 442, gain: 0.25, decay: 3.0 },
-        { freq: 720, gain: 0.1, decay: 2.0 }
-      ];
-
-      partials.forEach(p => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(p.freq, now);
-
-        g.gain.setValueAtTime(p.gain, now);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
-
-        osc.connect(g);
-        g.connect(master);
-
-        osc.start(now);
-        osc.stop(now + p.decay);
-      });
-    } catch (e) {}
+    this.playSoundFile('zen_gong', volume * 0.9);
   }
 
-  // Play Temple Bell (Clear high overtone bell)
+  // 3. Temple Bell
   playTempleBell(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const now = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(volume * 0.7, now);
-      master.connect(ctx.destination);
-
-      const partials = [
-        { freq: 528, gain: 0.8, decay: 3.8 },
-        { freq: 1056, gain: 0.4, decay: 2.5 },
-        { freq: 2112, gain: 0.15, decay: 1.8 }
-      ];
-
-      partials.forEach(p => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(p.freq, now);
-
-        g.gain.setValueAtTime(p.gain, now);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
-
-        osc.connect(g);
-        g.connect(master);
-
-        osc.start(now);
-        osc.stop(now + p.decay);
-      });
-    } catch (e) {}
+    this.playSoundFile('temple_bell', volume * 0.8);
   }
 
-  // Play Gentle Bell (Calming start chime)
+  // 4. Gentle Bell
   playGentleBell(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, now); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.1); // A5
-
-      gain.gain.setValueAtTime(volume * 0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 2.2);
-    } catch (e) {}
+    this.playSoundFile('gentle_bell', volume * 0.8);
   }
 
-  // Play Crystal Chime (Sparkling uplifting start)
+  // 5. Crystal Chime
   playCrystalChime(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      notes.forEach((freq, idx) => {
-        const now = ctx.currentTime + idx * 0.08;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-
-        gain.gain.setValueAtTime(volume * 0.35, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 1.8);
-      });
-    } catch (e) {}
+    this.playSoundFile('crystal_chime', volume * 0.8);
   }
 
-  // Play Sacred Chimes
+  // 6. Sacred Chimes
   playSacredChimes(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
-      notes.forEach((freq, idx) => {
-        const now = ctx.currentTime + idx * 0.15;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now);
-
-        gain.gain.setValueAtTime(volume * 0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 2.5);
-      });
-    } catch (e) {}
+    this.playSoundFile('sacred_chimes', volume * 0.85);
   }
 
-  // Play Gentle Harp
+  // 7. Gentle Harp
   playGentleHarp(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const chord = [329.63, 392.00, 493.88, 587.33, 659.25]; // E minor 9
-      chord.forEach((freq, idx) => {
-        const now = ctx.currentTime + idx * 0.1;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-
-        gain.gain.setValueAtTime(volume * 0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 2.8);
-      });
-    } catch (e) {}
+    this.playSoundFile('gentle_harp', volume * 0.85);
   }
 
-  // Play Uplifting Melodic Chime & Ambient Harp Music Effect for Block Timer Start
+  // 8. Block Timer Start Music (Warm 432 pad + sparkling Dmaj9 arpeggio)
   playBlockTimerStartMusic(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const baseNow = ctx.currentTime;
-
-      // Master gain node
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(volume * 0.8, baseNow);
-      master.connect(ctx.destination);
-
-      // 1. Resonant Warm Solfeggio & Harmonic Ambient Pad (Swells smoothly under chord)
-      const dronePartials = [
-        { freq: 432.0, gain: 0.26, decay: 3.4 }, // A4 432Hz Solfeggio / Natural tuning
-        { freq: 528.0, gain: 0.22, decay: 3.2 }, // C5 528Hz Solfeggio transformation tone
-        { freq: 216.0, gain: 0.22, decay: 3.8 }  // Sub-octave warm acoustic body
-      ];
-
-      dronePartials.forEach((p) => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(p.freq, baseNow);
-
-        // Subtle warm LFO shimmer
-        const lfo = ctx.createOscillator();
-        const lfoGain = ctx.createGain();
-        lfo.frequency.setValueAtTime(4.2, baseNow);
-        lfoGain.gain.setValueAtTime(1.2, baseNow);
-        lfo.connect(osc.frequency);
-        lfo.start(baseNow);
-        lfo.stop(baseNow + p.decay);
-
-        g.gain.setValueAtTime(0.001, baseNow);
-        g.gain.linearRampToValueAtTime(p.gain, baseNow + 0.12);
-        g.gain.exponentialRampToValueAtTime(0.0001, baseNow + p.decay);
-
-        osc.connect(g);
-        g.connect(master);
-
-        osc.start(baseNow);
-        osc.stop(baseNow + p.decay);
-      });
-
-      // 2. Sparkling Celestial Music Arpeggio (Dmaj9 / Golden Flow Chord)
-      // D4, A4, D5, F#5, A5, E6 (pure harmonic sequence)
-      const melodyNotes = [
-        { freq: 293.66, delay: 0.00, gain: 0.38, decay: 2.6 }, // D4
-        { freq: 440.00, delay: 0.08, gain: 0.35, decay: 2.5 }, // A4
-        { freq: 587.33, delay: 0.16, gain: 0.38, decay: 2.8 }, // D5
-        { freq: 739.99, delay: 0.24, gain: 0.36, decay: 3.0 }, // F#5
-        { freq: 880.00, delay: 0.32, gain: 0.32, decay: 3.2 }, // A5
-        { freq: 1318.51, delay: 0.42, gain: 0.26, decay: 3.5 } // E6
-      ];
-
-      melodyNotes.forEach((n) => {
-        const noteTime = baseNow + n.delay;
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-
-        // Harmonically rich acoustic chime
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(n.freq, noteTime);
-
-        g.gain.setValueAtTime(0.001, noteTime);
-        g.gain.linearRampToValueAtTime(n.gain, noteTime + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, noteTime + n.decay);
-
-        osc.connect(g);
-        g.connect(master);
-
-        osc.start(noteTime);
-        osc.stop(noteTime + n.decay);
-      });
-    } catch (e) {
-      console.warn('Block timer start music error', e);
-    }
+    this.playSoundFile('timer_start_music', volume * 0.9);
   }
 
-  // Play Modern Digital Alert
+  // 9. Modern Digital Alert
   playDigitalAlert(volume = 0.8): void {
-    if (volume <= 0) return;
-    try {
-      const ctx = this.getAudioContext();
-      [0, 0.16].forEach((delay) => {
-        const now = ctx.currentTime + delay;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.08);
-
-        gain.gain.setValueAtTime(volume * 0.6, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.12);
-      });
-    } catch (e) {}
+    this.playSoundFile('digital_alert', volume * 0.7);
   }
 
-  // High-fidelity tactile touch feedback sounds
+  // Tactile touch feedback sounds
   playPencilRaw(vol = 0.7): void {
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1800, now);
-      gain.gain.setValueAtTime(vol * 0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } catch (e) {}
+    this.playSoundFile('touch_pencil', vol * 0.4);
   }
 
   playPop(vol = 0.7): void {
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(450, now);
-      osc.frequency.exponentialRampToValueAtTime(1250, now + 0.03);
-      gain.gain.setValueAtTime(vol * 0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.06);
-    } catch (e) {}
+    this.playSoundFile('touch_pop', vol * 0.5);
   }
 
   playClick(vol = 0.7): void {
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc1.type = 'square';
-      osc2.type = 'triangle';
-      osc1.frequency.setValueAtTime(2400, now);
-      osc2.frequency.setValueAtTime(3600, now);
-      gain.gain.setValueAtTime(vol * 0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 0.025);
-      osc2.stop(now + 0.025);
-    } catch (e) {}
+    this.playSoundFile('touch_click', vol * 0.45);
   }
 
   playChime(vol = 0.7): void {
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      [1318.5, 1975.5].forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.02);
-        gain.gain.setValueAtTime(vol * 0.08, now + idx * 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.02);
-        osc.stop(now + 0.22);
-      });
-    } catch (e) {}
+    this.playSoundFile('touch_chime', vol * 0.4);
   }
 
   playWood(vol = 0.7): void {
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(760, now);
-      osc.frequency.exponentialRampToValueAtTime(480, now + 0.05);
-      gain.gain.setValueAtTime(vol * 0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.07);
-    } catch (e) {}
+    this.playSoundFile('touch_wood', vol * 0.5);
   }
 
   // Unified Touch / Tap sound dispatcher
@@ -509,7 +317,7 @@ class SoundEngine {
     const effectiveVol = Math.max(0, Math.min(1, baseVol * (settings.masterVolume ?? 0.8)));
     if (effectiveVol <= 0) return;
 
-    // Haptic tick if enabled
+    // Subtle tactile haptic tick if supported
     if (settings.vibrationEnabled !== false && typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate(8); } catch {}
     }
@@ -534,7 +342,7 @@ class SoundEngine {
     }
   }
 
-  // Backward-compatible playPencil now routes through playTouchSound!
+  // Backward-compatible playPencil routes through playTouchSound
   playPencil(): void {
     this.playTouchSound();
   }
@@ -661,7 +469,7 @@ class SoundEngine {
     }
   }
 
-  // Background Ambience Synthesizer (Rain, 432Hz Alpha, Forest, White Noise)
+  // Seamless Ambience Playback (Rain, 432Hz Alpha, Forest, White Noise)
   startAmbience(type?: AmbienceType, customVol?: number): void {
     this.stopAmbience();
 
@@ -669,99 +477,77 @@ class SoundEngine {
     const ambience = type || settings.ambience;
     if (ambience === 'none') return;
 
+    let soundKey = '';
+    switch (ambience) {
+      case 'alpha432':
+        soundKey = 'ambience_432hz';
+        break;
+      case 'rain':
+        soundKey = 'ambience_rain';
+        break;
+      case 'forest_stream':
+        soundKey = 'ambience_stream';
+        break;
+      case 'white_noise':
+        soundKey = 'ambience_whitenoise';
+        break;
+      default:
+        return;
+    }
+
     try {
       const ctx = this.getAudioContext();
+      if (!ctx) return;
+
       const vol = (customVol !== undefined ? customVol : settings.ambienceVolume) * settings.masterVolume;
+      const targetGain = Math.max(0.001, Math.min(1.0, vol * 0.75));
 
-      this.ambienceGain = ctx.createGain();
-      this.ambienceGain.gain.setValueAtTime(Math.max(0.001, vol * 0.4), ctx.currentTime);
-      this.ambienceGain.connect(ctx.destination);
       this.currentAmbienceType = ambience;
+      const gainNode = ctx.createGain();
+      const now = ctx.currentTime;
+      // Smooth fade-in over 350ms to prevent click
+      gainNode.gain.setValueAtTime(0.0001, now);
+      gainNode.gain.exponentialRampToValueAtTime(targetGain, now + 0.35);
+      gainNode.connect(this.getLimiter(ctx));
+      this.ambienceGain = gainNode;
 
-      if (ambience === 'alpha432') {
-        // Binaural Meditative 432Hz with 10Hz alpha difference
-        const oscLeft = ctx.createOscillator();
-        const oscRight = ctx.createOscillator();
-        oscLeft.type = 'sine';
-        oscRight.type = 'sine';
-        oscLeft.frequency.setValueAtTime(432, ctx.currentTime);
-        oscRight.frequency.setValueAtTime(442, ctx.currentTime); // 10Hz alpha wave difference
-
-        const merger = ctx.createChannelMerger(2);
-        oscLeft.connect(merger, 0, 0);
-        oscRight.connect(merger, 0, 1);
-        merger.connect(this.ambienceGain);
-
-        oscLeft.start();
-        oscRight.start();
-        this.ambienceSource = oscLeft; // reference for stopping
-      } else {
-        // Noise buffer generator for Rain / Stream / White Noise
-        const bufferSize = ctx.sampleRate * 2;
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-
-        let lastOut = 0.0;
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          if (ambience === 'rain') {
-            // Brown noise (gentle rain)
-            output[i] = (lastOut + 0.02 * white) / 1.02;
-            lastOut = output[i];
-            output[i] *= 3.5;
-          } else if (ambience === 'forest_stream') {
-            // Pinkish filtered noise
-            output[i] = (lastOut + 0.05 * white) / 1.05;
-            lastOut = output[i];
-            output[i] *= 2.5;
-          } else {
-            // Smooth white noise
-            output[i] = white * 0.3;
-          }
-        }
-
-        const whiteNoise = ctx.createBufferSource();
-        whiteNoise.buffer = noiseBuffer;
-        whiteNoise.loop = true;
-
-        const filter = ctx.createBiquadFilter();
-        if (ambience === 'rain') {
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(800, ctx.currentTime);
-        } else if (ambience === 'forest_stream') {
-          filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(1200, ctx.currentTime);
-          filter.Q.setValueAtTime(1.0, ctx.currentTime);
-        } else {
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1500, ctx.currentTime);
-        }
-
-        whiteNoise.connect(filter);
-        filter.connect(this.ambienceGain);
-        whiteNoise.start();
-        this.ambienceSource = whiteNoise;
-      }
+      this.loadAudio(soundKey).then((buffer) => {
+        if (!buffer || this.currentAmbienceType !== ambience) return;
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(gainNode);
+        source.start(0);
+        this.ambienceSource = source;
+      });
     } catch (e) {
       console.warn('Ambience start error', e);
     }
   }
 
   stopAmbience(): void {
-    if (this.ambienceSource) {
+    if (this.ambienceGain && this.ctx) {
       try {
-        (this.ambienceSource as any).stop?.();
-        this.ambienceSource.disconnect();
-      } catch (e) {}
-      this.ambienceSource = null;
+        const now = this.ctx.currentTime;
+        const currentGain = this.ambienceGain.gain.value;
+        this.ambienceGain.gain.setValueAtTime(Math.max(0.0001, currentGain), now);
+        this.ambienceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+      } catch {}
     }
-    if (this.ambienceGain) {
-      try {
-        this.ambienceGain.disconnect();
-      } catch (e) {}
-      this.ambienceGain = null;
-    }
+
+    const sourceToStop = this.ambienceSource;
+    const gainToDisconnect = this.ambienceGain;
+    this.ambienceSource = null;
+    this.ambienceGain = null;
     this.currentAmbienceType = 'none';
+
+    setTimeout(() => {
+      try {
+        (sourceToStop as any)?.stop?.();
+        sourceToStop?.disconnect();
+        gainToDisconnect?.disconnect();
+      } catch {}
+    }, 280);
   }
 
   isAmbiencePlaying(): boolean {

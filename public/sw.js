@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neva-cache-v1.0.11-clean';
+const CACHE_NAME = 'neva-cache-v1.0.24-clean';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

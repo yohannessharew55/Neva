@@ -57,9 +57,7 @@ class MobileTimerEngine {
   private timerInterval: any = null;
   private wakeLock: any = null;
   private silentAudio: HTMLAudioElement | null = null;
-  private audioCtx: AudioContext | null = null;
-  private audioOsc: OscillatorNode | null = null;
-  private audioGain: GainNode | null = null;
+
   private onCompleteCallback: (() => void) | null = null;
 
   // Picture-in-Picture Canvas & Video elements
@@ -322,28 +320,6 @@ class MobileTimerEngine {
       }
 
       this.silentAudio.play().catch(() => {});
-
-      // Maintain Web Audio sub-audible oscillator to keep JS event loop running in background
-      try {
-        if (!this.audioCtx) {
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioCtx) {
-            this.audioCtx = new AudioCtx();
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
-            osc.frequency.setValueAtTime(10, this.audioCtx.currentTime); // 10Hz sub-audible
-            gain.gain.setValueAtTime(0.0001, this.audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(this.audioCtx.destination);
-            osc.start();
-            this.audioOsc = osc;
-            this.audioGain = gain;
-          }
-        }
-        if (this.audioCtx && this.audioCtx.state === 'suspended') {
-          this.audioCtx.resume().catch(() => {});
-        }
-      } catch (e) {}
     } catch (e) {}
   }
 
@@ -352,9 +328,6 @@ class MobileTimerEngine {
       if (this.silentAudio) {
         this.silentAudio.pause();
         this.silentAudio.currentTime = 0;
-      }
-      if (this.audioCtx && this.audioCtx.state === 'running') {
-        this.audioCtx.suspend().catch(() => {});
       }
     } catch (e) {}
   }
