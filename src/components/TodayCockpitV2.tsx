@@ -36,6 +36,7 @@ export const TodayCockpitV2: React.FC = () => {
     getCategoryTitleTranslated,
     getDaySchedule,
     categoryOrder,
+    formatDisplayTime,
   } = useLivotion();
 
   const [showPlanningModal, setShowPlanningModal] = useState(false);
@@ -342,7 +343,7 @@ export const TodayCockpitV2: React.FC = () => {
                 {activeTask.title}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Clock size={12} className="text-[#30d158]" /> {activeTask.startTime} • {activeTask.durationMin} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
+                <Clock size={12} className="text-[#30d158]" /> {formatDisplayTime(activeTask.startTime)} • {activeTask.durationMin} {language === 'am' ? 'ደቂቃዎች' : 'minutes'}
               </p>
             </div>
 
@@ -424,7 +425,7 @@ export const TodayCockpitV2: React.FC = () => {
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
                   <span className="flex items-center gap-1 font-mono font-semibold">
                     <Clock size={11} className={currentTheme.accentText} />
-                    {activeFocusTask.startTime || 'Flexible'}
+                    {formatDisplayTime(activeFocusTask.startTime) || 'Flexible'}
                   </span>
                   <span>•</span>
                   <span>

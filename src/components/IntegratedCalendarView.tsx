@@ -273,7 +273,9 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     toggleTaskCompletion,
     startTimerForTask,
     activeTask,
-    isRunning
+    isRunning,
+    timeFormat,
+    formatDisplayTime
   } = useLivotion();
 
   // Active Horizon: Daily, Weekly, Monthly, Goals
@@ -330,8 +332,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
     const startMin = parseTimeToMinutes(timeStr);
     if (startMin < 0) return timeStr;
     const endMin = (startMin + durationMin) % (24 * 60);
-    const startFormatted = formatTaskTime(timeStr);
-    const endFormatted = formatMinutesToTime(endMin);
+    const startFormatted = formatMinutesToTime(startMin, timeFormat);
+    const endFormatted = formatMinutesToTime(endMin, timeFormat);
     return `${startFormatted} – ${endFormatted}`;
   };
 
@@ -519,17 +521,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   }, [mondayOfWeek, selectedDate, tasks, categoryPlans, selectedStreamFilter, getDaySchedule]);
 
   const formatTaskTime = (timeStr?: string) => {
-    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 'Flexible';
-    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-    if (!match) return timeStr;
-    let [_, hStr, mStr, meridiem] = match;
-    let h = parseInt(hStr, 10);
-    if (meridiem) {
-      return `${String(h).padStart(2, '0')}:${mStr} ${meridiem.toUpperCase()}`;
-    }
-    const isPM = h >= 12;
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${String(h12).padStart(2, '0')}:${mStr} ${isPM ? 'PM' : 'AM'}`;
+    return formatDisplayTime(timeStr);
   };
 
   // Category Icon resolver
@@ -1003,6 +995,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
       }));
 
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const selectedDateTasks = getDaySchedule(selectedDate).tasks;
 
     const conflict = checkScheduleConflict({
       proposedTask: {
@@ -1016,8 +1009,10 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
       },
       dateStr,
       dayOfWeek: modalCadenceType !== 'daily' ? modalSelectedDays[0] : undefined,
-      existingTasks: tasks,
+      existingTasks: selectedDateTasks,
+      isAlreadyScopedToDay: true,
       categoryPlans,
+      timeFormat,
     });
 
     if (conflict.hasConflict) {

@@ -7,7 +7,7 @@ import { useLivotion } from '../context/LivotionContext';
 import { DomainType, PriorityLevel, ScheduleTask } from '../types';
 
 export const MasterScheduleView: React.FC = () => {
-  const { tasks, startTask, toggleTaskCompletion, toggleChecklistItem, addTask, deleteTask, domains } = useLivotion();
+  const { tasks, startTask, toggleTaskCompletion, toggleChecklistItem, addTask, deleteTask, domains, formatDisplayTime } = useLivotion();
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterDomain, setFilterDomain] = useState<string>('ALL');
 
@@ -112,7 +112,7 @@ export const MasterScheduleView: React.FC = () => {
                       {task.badge || task.domain}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1">
-                      <Clock size={11} className="text-slate-400" /> {task.startTime} ({task.durationMin} mins)
+                      <Clock size={11} className="text-slate-400" /> {formatDisplayTime(task.startTime)} ({task.durationMin} mins)
                     </span>
                     <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#162032] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
                       {task.priority}

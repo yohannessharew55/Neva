@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import { 
   X, Calendar, CalendarDays, CalendarRange, 
   Sparkles, Plus, Check, CheckCircle2, RotateCcw, 
-  Sliders
+  Sliders, Clock
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { DomainType } from '../types';
+import { 
+  checkScheduleConflict, 
+  ScheduleConflictResult, 
+  getAvailableFreeSlots 
+} from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
+import { soundEngine } from '../utils/audio';
 
 interface PlanningModalProps {
   isOpen: boolean;
@@ -18,7 +25,9 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
     addTask, 
     categoryPlans, 
     updateCategoryPlan, 
-    applySystematicPreset 
+    applySystematicPreset,
+    getDaySchedule,
+    timeFormat
   } = useLivotion();
 
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly' | 'systematic'>(defaultTab);
@@ -32,7 +41,24 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
   // Category select for weekly/monthly
   const [selectedPlanCategory, setSelectedPlanCategory] = useState<string>('chess');
 
+  // Schedule Overlap Conflict State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+
   if (!isOpen) return null;
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const daySchedule = getDaySchedule(today);
+  const dayTasks = daySchedule.tasks;
+
+  const availableFreeSlots = getAvailableFreeSlots({
+    existingTasks: dayTasks,
+    dateStr: todayStr,
+    proposedDurationMin: Number(taskDuration) || 30,
+    timeFormat,
+    isAlreadyScopedToDay: true,
+  });
 
   const currentPlan = categoryPlans[selectedPlanCategory] || Object.values(categoryPlans).filter(Boolean)[0] || { id: 'buffer', title: 'Focus', color: '#0082ff', inProgressItems: [], completedItems: [] };
 
@@ -53,12 +79,36 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
     e.preventDefault();
     if (!taskTitle.trim()) return;
 
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        title: taskTitle.trim(),
+        startTime: taskTime.trim() || 'Flexible',
+        durationMin: Number(taskDuration),
+        categoryId: taskCategory,
+        domain: getDomainType(taskCategory),
+        badge: categoryPlans[taskCategory]?.title?.split(' ')[0] || 'Focus',
+      },
+      dateStr: todayStr,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
+      categoryPlans,
+      timeFormat,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Stoppage: Do not allow saving overlapping schedule block!
+    }
+
     addTask({
       domain: getDomainType(taskCategory),
-      title: taskTitle,
-      startTime: taskTime,
+      title: taskTitle.trim(),
+      startTime: taskTime.trim() || 'Flexible',
       durationMin: Number(taskDuration),
       completed: false,
+      date: todayStr,
       color: categoryPlans[taskCategory]?.color || '#0082ff',
       badge: categoryPlans[taskCategory]?.title?.split(' ')[0] || 'Focus',
       checklist: [
@@ -68,7 +118,7 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
     });
 
     setTaskTitle('');
-    alert('Daily block added to your schedule!');
+    try { soundEngine.playPencil(); } catch {}
     onClose();
   };
 
@@ -191,6 +241,38 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
                 />
               </div>
             </div>
+
+            {/* Quick Available Free Time Slots Bar */}
+            {availableFreeSlots.length > 0 && (
+              <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
+                  <span className="flex items-center gap-1">
+                    <Clock size={11} /> Open Free Slots Today
+                  </span>
+                  <span className="text-[9px] text-slate-400 lowercase">tap to select</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableFreeSlots.slice(0, 4).map((slot, sIdx) => (
+                    <button
+                      key={`slot-${sIdx}`}
+                      type="button"
+                      onClick={() => {
+                        setTaskTime(slot.start);
+                        try { soundEngine.playTouchSound(); } catch {}
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer flex items-center gap-1 ${
+                        taskTime === slot.start
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-emerald-200 dark:border-emerald-800/60 hover:border-emerald-400'
+                      }`}
+                    >
+                      <span>{slot.start}</span>
+                      <span className="text-[9px] opacity-80">({Math.round(slot.durationMinutes / 60 * 10) / 10}h)</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
               <button
@@ -374,6 +456,16 @@ export const PlanningModal: React.FC<PlanningModalProps> = ({ isOpen, onClose, d
           </div>
         )}
       </div>
+
+      {/* Schedule Conflict Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(suggestedTime) => {
+          setTaskTime(suggestedTime);
+        }}
+      />
     </div>
   );
 };

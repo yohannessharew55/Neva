@@ -34,6 +34,7 @@ export const DayDefaultsModal: React.FC<DayDefaultsModalProps> = ({
     getCategoryTitleTranslated,
     getWeekdayDefaultTasks,
     updateWeekdayDefaultSchedule,
+    formatDisplayTime,
   } = useLivotion();
 
   const [activeDay, setActiveDay] = useState<number>(initialDayOfWeek);
@@ -472,7 +473,7 @@ export const DayDefaultsModal: React.FC<DayDefaultsModalProps> = ({
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
                         <span className="flex items-center gap-0.5">
-                          <Clock size={10} /> {task.startTime || 'Flexible'}
+                          <Clock size={10} /> {formatDisplayTime(task.startTime) || 'Flexible'}
                         </span>
                         <span>•</span>
                         <span>{task.durationMin} min</span>

@@ -15,7 +15,8 @@ import { ApplyDayScheduleModal } from './ApplyDayScheduleModal';
 import { ScheduleSaveScopeModal, ScheduleSaveScope } from './ScheduleSaveScopeModal';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
-import { autoResolveOverlappingTasks } from '../utils/scheduleConflictDetector';
+import { autoResolveOverlappingTasks, checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 
@@ -307,6 +308,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     setIsAutoStickyColor,
     setActiveTab,
     theme: appTheme,
+    timeFormat,
+    formatDisplayTime,
   } = useLivotion();
 
   // Active viewing date state with Quick-Swipe & day step support
@@ -479,6 +482,10 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   const [editStartTime, setEditStartTime] = useState('');
   const [editDurationMin, setEditDurationMin] = useState(30);
 
+  // Schedule Overlap Conflict Modal State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+
   const startEditTask = (task: ScheduleTask) => {
     setEditingTaskId(task.id);
     setEditTitle(task.title);
@@ -490,6 +497,30 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     e.preventDefault();
     if (!editTitle.trim()) return;
     const targetTask = dayTasks.find((t) => t.id === taskId);
+
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        id: taskId,
+        title: editTitle.trim(),
+        startTime: editStartTime.trim() || 'Flexible',
+        durationMin: Number(editDurationMin),
+        badge: targetTask?.badge,
+        domain: targetTask?.domain,
+      },
+      dateStr: activeDateStr,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
+      categoryPlans,
+      timeFormat,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping block
+    }
+
     setPendingScopeAction({
       isOpen: true,
       action: 'edit',
@@ -541,17 +572,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
   };
 
   const formatTaskTime = (timeStr?: string) => {
-    if (!timeStr || timeStr.toLowerCase().includes('flex')) return 'Flexible';
-    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-    if (!match) return timeStr;
-    let [_, hStr, mStr, meridiem] = match;
-    let h = parseInt(hStr, 10);
-    if (meridiem) {
-      return `${String(h).padStart(2, '0')}:${mStr} ${meridiem.toUpperCase()}`;
-    }
-    const isPM = h >= 12;
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${String(h12).padStart(2, '0')}:${mStr} ${isPM ? 'PM' : 'AM'}`;
+    return formatDisplayTime(timeStr);
   };
 
   // Helper to map a task to its Subject / Category
@@ -1932,6 +1953,16 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
           onConfirm={handleConfirmScope}
         />
       )}
+
+      {/* Schedule Overlap Conflict Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(time) => {
+          setEditStartTime(time);
+        }}
+      />
     </div>
   );
 };

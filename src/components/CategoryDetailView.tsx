@@ -48,7 +48,10 @@ export const CategoryDetailView: React.FC = () => {
     language,
     t,
     getCategoryTitleTranslated,
-    setActiveTab: setGlobalActiveTab
+    setActiveTab: setGlobalActiveTab,
+    getDaySchedule,
+    timeFormat,
+    formatDisplayTime
   } = useLivotion();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'calendar' | 'inprogress' | 'achieved' | 'upcoming'>('overview');
@@ -334,6 +337,7 @@ export const CategoryDetailView: React.FC = () => {
     if (!taskTitle.trim()) return;
 
     const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const timelineDateTasks = getDaySchedule(selectedTimelineDate).tasks;
     const conflict = checkScheduleConflict({
       proposedTask: {
         title: taskTitle.trim(),
@@ -344,8 +348,10 @@ export const CategoryDetailView: React.FC = () => {
         badge: category.title.split(' ')[0],
       },
       dateStr,
-      existingTasks: tasks,
+      existingTasks: timelineDateTasks,
+      isAlreadyScopedToDay: true,
       categoryPlans,
+      timeFormat,
     });
 
     if (conflict.hasConflict) {
@@ -902,6 +908,7 @@ export const CategoryDetailView: React.FC = () => {
     const dateStr = selectedTimelineDate.toISOString().split('T')[0];
     const dayOfWeek = selectedTimelineDate.getDay();
     const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek;
+    const timelineDateTasks = getDaySchedule(selectedTimelineDate).tasks;
 
     const conflict = checkScheduleConflict({
       proposedTask: {
@@ -915,8 +922,10 @@ export const CategoryDetailView: React.FC = () => {
       },
       dateStr,
       dayOfWeek: taskPlanHorizon !== 'daily' ? dayNum : undefined,
-      existingTasks: tasks,
+      existingTasks: timelineDateTasks,
+      isAlreadyScopedToDay: true,
       categoryPlans,
+      timeFormat,
     });
 
     if (conflict.hasConflict) {
@@ -1807,7 +1816,7 @@ export const CategoryDetailView: React.FC = () => {
                                     ? 'bg-white/20 text-white'
                                     : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                                 }`}>
-                                  {task.startTime || '08:00 AM'}
+                                  {formatDisplayTime(task.startTime) || '08:00 AM'}
                                 </span>
                                 <span className={`text-[10px] font-bold ${isActiveRunning ? 'text-white/80' : 'text-[#0082ff]'}`}>
                                   {formatTaskDuration(task.durationMin || 45)}

@@ -34,7 +34,9 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
     getDaySchedule, 
     materializeDaySchedule,
     resetDayScheduleToDefault,
-    applyTaskActionWithScope 
+    applyTaskActionWithScope,
+    timeFormat,
+    formatDisplayTime
   } = useLivotion();
 
   const [editingTaskId, setEditingTaskId] = useState<string | null>(initialEditingTaskId || null);
@@ -154,8 +156,10 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
         badge: catPlan?.title?.split(' ')[0] || 'Chess',
       },
       dateStr,
-      existingTasks: tasks,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
       categoryPlans,
+      timeFormat,
     });
 
     if (conflict.hasConflict) {
@@ -211,8 +215,10 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
         badge: catPlan?.title?.split(' ')[0] || 'Chess',
       },
       dateStr,
-      existingTasks: tasks,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
       categoryPlans,
+      timeFormat,
     });
 
     if (conflict.hasConflict) {
@@ -536,7 +542,7 @@ export const CalendarDayBlockEditorModal: React.FC<CalendarDayBlockEditorModalPr
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5">
-                      <span>{task.startTime || 'Flexible'}</span>
+                      <span>{formatDisplayTime(task.startTime) || 'Flexible'}</span>
                       <span>•</span>
                       <span>{formatTaskDuration(task.durationMin || 30)}</span>
                     </div>

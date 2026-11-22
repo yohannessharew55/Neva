@@ -7,6 +7,9 @@ import { useLivotion, StickyNoteColor } from '../context/LivotionContext';
 import { ScheduleTask, DomainType } from '../types';
 import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
+import { checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
+import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
+import { soundEngine } from '../utils/audio';
 
 interface DailyPlansStickyCardProps {
   categoryId: string;
@@ -224,7 +227,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
     setCategoryStickyNoteColor,
     dailyStickyColor,
     language,
-    t
+    t,
+    getDaySchedule,
+    timeFormat,
+    formatDisplayTime
   } = useLivotion();
 
   const category = categoryPlans[categoryId];
@@ -348,6 +354,10 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
   const [editStartTime, setEditStartTime] = useState<string>('');
   const [editDurationMin, setEditDurationMin] = useState<number>(45);
 
+  // Schedule Overlap Conflict Modal State
+  const [scheduleConflict, setScheduleConflict] = useState<ScheduleConflictResult | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+
   const startEditTask = (task: ScheduleTask) => {
     setEditingTaskId(task.id);
     setEditTitle(task.title);
@@ -355,9 +365,38 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
     setEditDurationMin(task.durationMin || 45);
   };
 
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const daySchedule = getDaySchedule(today);
+  const dayTasks = daySchedule.tasks;
+
   const handleSaveEditTask = (taskId: string, e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!editTitle.trim()) return;
+
+    const targetTask = dayTasks.find((t) => t.id === taskId);
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        id: taskId,
+        title: editTitle.trim(),
+        startTime: editStartTime.trim() || 'Flexible',
+        durationMin: Number(editDurationMin),
+        badge: targetTask?.badge || category?.title?.split(' ')[0] || 'Focus',
+        domain: targetTask?.domain || domainTypes[0],
+      },
+      dateStr: todayStr,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
+      categoryPlans,
+      timeFormat,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping block
+    }
 
     updateTask(taskId, {
       title: editTitle.trim(),
@@ -377,12 +416,35 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
     if (e) e.preventDefault();
     if (!newTitle.trim()) return;
 
+    const conflict = checkScheduleConflict({
+      proposedTask: {
+        title: newTitle.trim(),
+        startTime: newStartTime.trim() || 'Flexible',
+        durationMin: Number(newDurationMin),
+        badge: category?.title?.split(' ')[0] || 'Focus',
+        domain: domainTypes[0],
+      },
+      dateStr: todayStr,
+      existingTasks: dayTasks,
+      isAlreadyScopedToDay: true,
+      categoryPlans,
+      timeFormat,
+    });
+
+    if (conflict.hasConflict) {
+      setScheduleConflict(conflict);
+      setIsConflictModalOpen(true);
+      try { soundEngine.playTouchSound(); } catch {}
+      return; // Do not save overlapping block
+    }
+
     addTask({
       domain: domainTypes[0],
       title: newTitle.trim(),
       startTime: newStartTime.trim() || 'Flexible',
       durationMin: Number(newDurationMin),
       completed: false,
+      date: todayStr,
       color: category?.color || '#0082ff',
       badge: category?.title?.split(' ')[0] || 'Focus',
       checklist: [
@@ -643,7 +705,7 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${theme.badgeBg} ${theme.badgeText} shrink-0`}>
-                        {task.startTime || 'Flexible'}
+                        {formatDisplayTime(task.startTime) || 'Flexible'}
                       </span>
                       <span 
                         onClick={() => startEditTask(task)}
@@ -792,6 +854,20 @@ export const DailyPlansStickyCard: React.FC<DailyPlansStickyCardProps> = ({
         )}
       </div>
       </div>
+
+      {/* Schedule Conflict Modal */}
+      <ScheduleConflictNotificationModal
+        conflict={scheduleConflict}
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onApplySuggestedTime={(time) => {
+          if (editingTaskId) {
+            setEditStartTime(time);
+          } else {
+            setNewStartTime(time);
+          }
+        }}
+      />
     </div>
   );
 };

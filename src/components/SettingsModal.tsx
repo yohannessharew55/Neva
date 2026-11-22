@@ -4,7 +4,7 @@ import {
   VolumeX, Bell, Vibrate, Check, Play, Smartphone, 
   Download, Upload, RotateCcw, Sparkles, User, Shield, 
   Sliders, SlidersHorizontal, CheckCircle2, ChevronRight, Layers,
-  Palette, Calendar
+  Palette, Calendar, Clock
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { AccentColor, CalendarSystem } from '../types';
@@ -130,6 +130,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setAccentColor,
     calendarSystem,
     setCalendarSystem,
+    timeFormat,
+    setTimeFormat,
     language,
     setLanguage,
     openSyncModal,
@@ -583,6 +585,78 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {language === 'am' ? 'ኢትዮጵያ + ጎርጎሪዮሳዊ' : 'Side-by-side both'}
                       </div>
                     </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Time Display Format Setting (12-Hour vs 24-Hour) */}
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock size={14} className="text-[#0082ff]" />
+                      <span>{language === 'am' ? 'የሰዓት አቀራረብ ስርዓት (Time Format)' : 'Time Display Format'}</span>
+                    </span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {language === 'am'
+                        ? 'በ12 ሰዓት (AM/PM) እና በ24 ሰዓት ዓለም አቀፍ ቅርጸት መካከል ይምረጡ'
+                        : 'Choose between 12-Hour (AM/PM) and 24-Hour (Military / International) format'}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0082ff]/10 text-[#0082ff] uppercase font-mono">
+                    {timeFormat.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTimeFormat('12h');
+                      soundEngine.playTouchSound();
+                      iosNativeBridge.haptic('light');
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                      timeFormat === '12h'
+                        ? 'bg-white dark:bg-slate-800 border-[#0082ff] shadow-md ring-2 ring-[#0082ff]/20 text-slate-900 dark:text-white'
+                        : 'bg-white/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-[#0082ff] flex items-center justify-center font-mono font-black text-xs">
+                        12h
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{language === 'am' ? '12 ሰዓት (AM/PM)' : '12-Hour'}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">02:30 PM</div>
+                      </div>
+                    </div>
+                    {timeFormat === '12h' && <CheckCircle2 size={16} className="text-[#0082ff]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTimeFormat('24h');
+                      soundEngine.playTouchSound();
+                      iosNativeBridge.haptic('light');
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                      timeFormat === '24h'
+                        ? 'bg-white dark:bg-slate-800 border-[#0082ff] shadow-md ring-2 ring-[#0082ff]/20 text-slate-900 dark:text-white'
+                        : 'bg-white/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-mono font-black text-xs">
+                        24h
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{language === 'am' ? '24 ሰዓት (ዓለም አቀፍ)' : '24-Hour'}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">14:30</div>
+                      </div>
+                    </div>
+                    {timeFormat === '24h' && <CheckCircle2 size={16} className="text-[#0082ff]" />}
                   </button>
                 </div>
               </div>

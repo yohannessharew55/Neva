@@ -28,7 +28,7 @@ import {
   initialReviews,
   initialDailyStickyNotes
 } from '../data/seedData';
-import { autoResolveOverlappingTasks } from '../utils/scheduleConflictDetector';
+import { autoResolveOverlappingTasks, formatDisplayTime as formatDisplayTimeUtil } from '../utils/scheduleConflictDetector';
 import { soundEngine } from '../utils/audio';
 import { mobileTimerEngine } from '../utils/mobileTimerEngine';
 import { timerNotificationService } from '../utils/timerNotificationService';
@@ -262,6 +262,8 @@ export const INITIAL_CATEGORY_PLANS: Record<string, CategoryPlan> = {
   }
 };
 
+export type TimeFormat = '12h' | '24h';
+
 interface LivotionContextType {
   user: UserProfile;
   updateUser: (updates: Partial<UserProfile>) => void;
@@ -311,6 +313,9 @@ interface LivotionContextType {
   setAccentColor: (color: AccentColor) => void;
   calendarSystem: CalendarSystem;
   setCalendarSystem: (system: CalendarSystem) => void;
+  timeFormat: TimeFormat;
+  setTimeFormat: (format: TimeFormat) => void;
+  formatDisplayTime: (timeStr?: string) => string;
   language: Language;
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
@@ -982,6 +987,28 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   };
 
+  // Time Display Format: '12h' (02:30 PM) or '24h' (14:30)
+  const [timeFormat, setTimeFormatState] = useState<TimeFormat>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_time_format`) as TimeFormat;
+      if (saved === '12h' || saved === '24h') {
+        return saved;
+      }
+    } catch {}
+    return '12h';
+  });
+
+  const setTimeFormat = (format: TimeFormat) => {
+    setTimeFormatState(format);
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_time_format`, format);
+    } catch {}
+  };
+
+  const formatDisplayTime = (timeStr?: string): string => {
+    return formatDisplayTimeUtil(timeStr, timeFormat);
+  };
+
   // Cross-Device Cloud Sync State & User Account
   const [currentUser, setCurrentUserState] = useState<UserAccountProfile | null>(() => getStoredUserAccount());
 
@@ -1621,9 +1648,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const taskToAdd: ScheduleTask = {
       ...newTask,
       id,
+      date: newTask.date || todayStr,
       completed: newTask.date && newTask.date > todayStr ? false : (newTask.completed ?? false),
     };
-    setTasks((prev) => autoResolveOverlappingTasks([...prev, taskToAdd]));
+    setTasks((prev) => autoResolveOverlappingTasks([...prev, taskToAdd], timeFormat));
   };
 
   const updateTask = (taskId: string, updates: Partial<ScheduleTask>) => {
@@ -1966,7 +1994,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const isFutureDay = dateStr > todayStr;
 
     const sanitizeScheduleTasks = (list: ScheduleTask[]): ScheduleTask[] => {
-      const resolved = autoResolveOverlappingTasks(list);
+      const resolved = autoResolveOverlappingTasks(list, timeFormat);
       if (!isFutureDay) return resolved;
       // Future days are upcoming plans: checking as done is locked, so all future tasks are strictly uncompleted
       return resolved.map((t) => ({
@@ -3207,6 +3235,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setAccentColor,
         calendarSystem,
         setCalendarSystem,
+        timeFormat,
+        setTimeFormat,
+        formatDisplayTime,
         language,
         setLanguage,
         toggleLanguage,
