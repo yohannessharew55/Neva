@@ -1240,15 +1240,6 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => clearTimeout(syncTimer);
   }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
 
-  // Sync high-priority task start-time alarms for mobile notifications & in-app alerts
-  useEffect(() => {
-    try {
-      taskAlarmService.syncTaskAlarms(tasks, categoryPlans);
-    } catch (e) {
-      console.warn('Task alarm sync error:', e);
-    }
-  }, [tasks, categoryPlans]);
-
   // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {
     const handleAutoSync = async () => {
@@ -2002,6 +1993,16 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       dayOfWeek
     };
   };
+
+  // Sync high-priority task start-time alarms for mobile notifications & in-app alerts (strictly for today's active schedule)
+  useEffect(() => {
+    try {
+      const todaySched = getDaySchedule(new Date());
+      taskAlarmService.syncTaskAlarms(todaySched.tasks, categoryPlans);
+    } catch (e) {
+      console.warn('Task alarm sync error:', e);
+    }
+  }, [tasks, categoryPlans, deletedTaskIds]);
 
   // Synchronize Devotion rhythms & routines across the entire system
   const updateDevotionRoutine = (id: string, updates: { title?: string; durationMinutes?: number; startTime?: string; completed?: boolean }) => {
