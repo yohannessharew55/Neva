@@ -41,10 +41,10 @@ export const ScheduleConflictNotificationModal: React.FC<ScheduleConflictNotific
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/60">
-                Schedule Time Occupied
+                Time Conflict
               </span>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-                Cannot Overlap Existing Task
+                Slot Already Scheduled
               </h3>
             </div>
           </div>
@@ -65,7 +65,7 @@ export const ScheduleConflictNotificationModal: React.FC<ScheduleConflictNotific
           </p>
           <div className="text-[11px] font-semibold text-amber-800/80 dark:text-amber-300/80 flex items-center gap-1.5 pt-0.5">
             <ShieldAlert size={13} className="shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>This block was not saved to protect your schedule from overlapping.</span>
+            <span>To maintain clean deep work blocks, scheduled sessions cannot overlap.</span>
           </div>
         </div>
 

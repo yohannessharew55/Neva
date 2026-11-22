@@ -1828,41 +1828,19 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                       <div className="flex items-center gap-1.5 flex-wrap mb-1">
                                         {/* Time Range Pill - Themed with Stream Color */}
                                         <div 
-                                          className="inline-flex items-center gap-1 sm:gap-1.5 text-[7.5px] sm:text-[10.5px] font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded-md tracking-tight"
+                                          className="inline-flex items-center gap-1 sm:gap-1.5 text-[7.5px] sm:text-[10.5px] font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded-md tracking-tight shadow-2xs border"
                                           style={{ 
                                             backgroundColor: `${group.category.color}15`, 
-                                            color: group.category.color 
+                                            color: group.category.color,
+                                            borderColor: `${group.category.color}30`
                                           }}
                                         >
                                           <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" strokeWidth={2.3} style={{ color: group.category.color }} />
                                           <span>{timeRange}</span>
                                         </div>
 
-                                        {/* Duration Badge */}
-                                        <span 
-                                          className="text-[7.5px] sm:text-[9.5px] font-mono font-extrabold px-1.5 py-0.5 rounded-md border"
-                                          style={{ 
-                                            backgroundColor: `${group.category.color}0a`, 
-                                            color: group.category.color,
-                                            borderColor: `${group.category.color}20`
-                                          }}
-                                        >
-                                          {formatTaskDuration(task.durationMin || 45)}
-                                        </span>
-
-                                        {/* Cadence Badge */}
-                                        {!task.date ? (
-                                          <span 
-                                            className="text-[7.5px] sm:text-[8.5px] font-bold px-1.5 py-0.5 rounded-md border"
-                                            style={{
-                                              backgroundColor: `${group.category.color}08`,
-                                              color: group.category.color,
-                                              borderColor: `${group.category.color}25`
-                                            }}
-                                          >
-                                            {language === 'am' ? 'ሳምንታዊ' : 'Weekly'}
-                                          </span>
-                                        ) : (
+                                        {/* Only show custom date badge if in multi-day horizon (weekly/monthly) and task has explicit date */}
+                                        {plannerHorizon !== 'daily' && task.date && (
                                           <span className="text-[7.5px] sm:text-[8.5px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">
                                             {task.date}
                                           </span>
@@ -2011,6 +1989,30 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                       </div>
                     );
                   })
+                ) : isSelectedSunday ? (
+                  <div className="py-8 px-4 text-center rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-indigo-500/10 border border-emerald-500/20 backdrop-blur-md">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-2xl mb-3 shadow-inner border border-emerald-500/20">
+                      🌿
+                    </div>
+                    <h4 className="text-base sm:text-lg font-black text-emerald-950 dark:text-emerald-200 tracking-tight">
+                      {language === 'am' ? 'የእሁድ እረፍትና መንፈሳዊ እድሳት' : 'Sunday Rest & Sabbath Peace'}
+                    </h4>
+                    <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                      {language === 'am' 
+                        ? 'ስድስት ቀን ስራህን ታከናውናለህ፤ በሰባተኛው ቀን ግን ታርፋለህ። ይህ ቀን ለመንፈሳዊ ጽሞና፣ ለጸሎት፣ ለቤተሰብና ለማገገም የተለየ ነው።' 
+                        : 'A dedicated sanctuary for spiritual stillness, prayer, family, and physical recovery. No weekday work pressure.'}
+                    </p>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenNewBlockModal('devotion')}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Plus size={14} />
+                        <span>{language === 'am' ? 'የጸሎት / መንፈሳዊ ብሎክ ጨምር' : 'Add Devotion / Rest Block'}</span>
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="py-10 text-center">
                     <div className="w-14 h-14 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center mx-auto text-2xl mb-3 shadow-inner">

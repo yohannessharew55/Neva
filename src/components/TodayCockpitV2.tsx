@@ -406,6 +406,42 @@ export const TodayCockpitV2: React.FC = () => {
         </div>
       )}
 
+      {/* Sunday Rest & Sabbath Day Hero Card (when on Sunday with no active weekday task) */}
+      {!activeTask && (!activeFocusTask || now.getDay() === 0) && now.getDay() === 0 && (
+        <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-indigo-500/10 bg-white dark:bg-[#121927] p-5 sm:p-6 shadow-xs relative overflow-hidden transition-all">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-xl">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1.5">
+                <span>🌿</span>
+                <span>{language === 'am' ? 'የእሁድ እረፍትና ሰንበት' : 'Sunday Sabbath & Sacred Rest'}</span>
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የመንፈስ ጽሞናና የአካል ማገገሚያ ቀን' : 'Spiritual Stillness & Total Renewal'}
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                {language === 'am'
+                  ? 'ስድስት ቀን የልፋትህ ስራ ሲሆን፣ በሰባተኛው ቀን ግን ለነፍስህ ዕረፍት ትሰጣለህ። ከስራ ጫና ነፃ ሆነህ በጸሎት፣ በቤተሰብና በማሰላሰል እራስህን አድስ።'
+                  : 'Six days you shall labor; on the seventh day you shall rest. Take time today for prayer, reflection, family, and deep rest with zero work pressure.'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  try { soundEngine.playPencil(); } catch {}
+                  setActiveTab('devotion');
+                }}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-2 transition cursor-pointer active:scale-95 shadow-md shadow-emerald-500/20"
+              >
+                <span>🙏</span>
+                <span>{language === 'am' ? 'ወደ ጸሎት ፕሮቶኮል' : 'Devotion Protocol'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 4. Core Pillars & Milestones: High-End Graphic Widget (Default Collapsed) */}
       <div className="pt-1">
         {!isPillarsExpanded ? (

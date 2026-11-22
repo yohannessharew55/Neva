@@ -23,6 +23,9 @@ import { AutoUpdateBanner } from './components/AutoUpdateBanner';
 import { SplashMotionIntro } from './components/SplashMotionIntro';
 import { TimerCompletionModal } from './components/TimerCompletionModal';
 import { TaskAlarmBanner } from './components/TaskAlarmBanner';
+import { PlanningModal } from './components/PlanningModal';
+import { Plus } from 'lucide-react';
+import { soundEngine } from './utils/audio';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -148,6 +151,8 @@ const AppFooter: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
+
   return (
     <ErrorBoundary>
       <LivotionProvider>
@@ -164,6 +169,25 @@ export const App: React.FC = () => {
           <MainContent />
           <IosBottomTabBar />
           <AppFooter />
+
+          {/* Mobile Sleek Quick-Add Floating Action Button */}
+          <button
+            type="button"
+            onClick={() => {
+              try { soundEngine.playPencil(); } catch {}
+              setIsQuickAddOpen(true);
+            }}
+            className="md:hidden fixed bottom-20 right-4 z-30 w-12 h-12 rounded-full bg-gradient-to-tr from-[#0070df] to-[#00a2ff] text-white flex items-center justify-center shadow-lg shadow-blue-500/35 active:scale-90 transition-all cursor-pointer border border-white/25 hover:brightness-110"
+            title="Quick Add Plan Block"
+            aria-label="Quick Add Plan Block"
+          >
+            <Plus size={22} strokeWidth={2.6} />
+          </button>
+
+          <PlanningModal 
+            isOpen={isQuickAddOpen} 
+            onClose={() => setIsQuickAddOpen(false)} 
+          />
         </div>
       </LivotionProvider>
     </ErrorBoundary>

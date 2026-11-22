@@ -56,6 +56,34 @@ export const PracticeFlowView: React.FC = () => {
   // Sound Chooser & iPhone Alarm Modal
   const [isSoundModalOpen, setIsSoundModalOpen] = useState<boolean>(false);
 
+  // Ambient Sound Quick-Bar State
+  const [currentAmbience, setCurrentAmbience] = useState<string>(() => {
+    try {
+      return soundEngine.getSettings().ambience || 'none';
+    } catch {
+      return 'none';
+    }
+  });
+
+  const handleToggleAmbience = (type: string) => {
+    try {
+      if (type === 'none' || currentAmbience === type) {
+        soundEngine.stopAmbience();
+        setCurrentAmbience('none');
+        const s = soundEngine.getSettings();
+        soundEngine.saveSettings({ ...s, ambience: 'none' });
+      } else {
+        const s = soundEngine.getSettings();
+        const vol = s.ambienceVolume ?? 0.5;
+        soundEngine.startAmbience(type as any, vol);
+        setCurrentAmbience(type);
+        soundEngine.saveSettings({ ...s, ambience: type as any });
+      }
+    } catch (e) {
+      console.warn('Ambience sound toggle error:', e);
+    }
+  };
+
   // Timer Core State
   const [secondsRemaining, setSecondsRemaining] = useState<number>(25 * 60);
   const [totalDurationSeconds, setTotalDurationSeconds] = useState<number>(25 * 60);
@@ -872,6 +900,62 @@ export const PracticeFlowView: React.FC = () => {
             </span>
             <span className="text-emerald-600 dark:text-emerald-400">∞ Zero Limit</span>
           </div>
+        </div>
+      </div>
+
+      {/* 1-Tap Ambient Focus Sound Quick-Bar */}
+      <div className="bg-white/90 dark:bg-[#121927]/90 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-md">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-2xs">
+            <Waves size={16} className={currentAmbience !== 'none' ? 'animate-pulse' : ''} />
+          </div>
+          <div>
+            <span className="text-xs font-black text-slate-900 dark:text-white block">
+              {language === 'am' ? 'የትኩረት ድባብ ድምፅ' : 'Ambient Flow Sounds'}
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+              {currentAmbience === 'none' 
+                ? (language === 'am' ? 'ጸጥታ' : 'Silent Focus') 
+                : currentAmbience === 'alpha432' 
+                ? '432Hz Alpha Waves' 
+                : currentAmbience === 'rain' 
+                ? 'Peaceful Rain' 
+                : currentAmbience === 'forest_stream' 
+                ? 'Forest Stream' 
+                : 'White Noise'}
+            </span>
+          </div>
+        </div>
+
+        {/* Sound Pills Carousel */}
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          {[
+            { id: 'none', label: language === 'am' ? 'ጸጥታ' : 'Silent', icon: '🔇' },
+            { id: 'alpha432', label: '432Hz', icon: '🧘' },
+            { id: 'rain', label: language === 'am' ? 'ዝናብ' : 'Rain', icon: '🌧' },
+            { id: 'forest_stream', label: language === 'am' ? 'ምንጭ' : 'Stream', icon: '🌲' },
+            { id: 'white_noise', label: language === 'am' ? 'ጫጫታ' : 'Noise', icon: '🌊' },
+          ].map((snd) => {
+            const isPlaying = currentAmbience === snd.id;
+            return (
+              <button
+                key={snd.id}
+                type="button"
+                onClick={() => handleToggleAmbience(snd.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 border ${
+                  isPlaying
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-500/30 font-extrabold'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <span>{snd.icon}</span>
+                <span>{snd.label}</span>
+                {isPlaying && snd.id !== 'none' && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping ml-0.5" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
