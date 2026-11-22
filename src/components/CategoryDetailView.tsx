@@ -1658,13 +1658,28 @@ export const CategoryDetailView: React.FC = () => {
                       return selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     })()}
                   </span>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {selectedTimelineDate.toDateString() === new Date().toDateString() 
-                      ? (language === 'am' ? 'ዛሬ' : 'Today') 
-                      : (calendarSystem === 'et'
-                          ? gregorianToEthiopian(selectedTimelineDate).dayOfWeekAm
-                          : selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' }))}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {selectedTimelineDate.toDateString() === new Date().toDateString() 
+                        ? (language === 'am' ? 'ዛሬ' : 'Today') 
+                        : (calendarSystem === 'et'
+                            ? gregorianToEthiopian(selectedTimelineDate).dayOfWeekAm
+                            : selectedTimelineDate.toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { weekday: 'long' }))}
+                    </h2>
+                    {selectedTimelineDate.toDateString() !== new Date().toDateString() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTimelineDate(new Date());
+                          try { soundEngine.playTouchSound(); } catch {}
+                        }}
+                        className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 dark:bg-blue-900/40 text-[#0082ff] hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 transition cursor-pointer"
+                        title={language === 'am' ? 'ወደ ዛሬ ተመለስ' : 'Jump to Today'}
+                      >
+                        {language === 'am' ? 'ዛሬ' : 'Today'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -1720,40 +1735,79 @@ export const CategoryDetailView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Horizontal 7-Day Day Selector Strip OR Full Month Calendar */}
+              {/* Horizontal 7-Day Day Selector Strip with Previous/Next Week Navigation OR Full Month Calendar */}
               {timelineViewMode === 'strip' ? (
-                <div className="flex items-center justify-between gap-1 sm:gap-1.5 px-1">
-                  {timelineWeekDays.map((day) => (
-                    <button
-                      key={day.dayShort}
-                      type="button"
-                      onClick={() => setSelectedTimelineDate(day.date)}
-                      onDoubleClick={() => {
-                        setSelectedTimelineDate(day.date);
-                        setStickyNoteDay(day.date);
-                      }}
-                      className={`flex-1 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
-                        day.isSelected
-                          ? 'bg-blue-50 dark:bg-blue-950/50 text-[#0082ff] font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60 scale-102'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                      }`}
-                      title={language === 'am' ? 'ይጫኑ (ወይም ሁለቴ ይጫኑ ለማስታወሻ)' : 'Click to select date, double-click for Sticky Note'}
-                    >
-                      <span className="text-[8.5px] sm:text-[9.5px] font-semibold opacity-80 uppercase tracking-normal">
-                        {calendarSystem === 'et' ? day.ethDate.dayOfWeekAm : (language === 'am' ? day.dayAm : day.dayShort)}
-                        {day.isSunday ? ' 🌿' : ''}
-                      </span>
-                      <span className={`text-xs sm:text-[13px] font-bold ${day.isSelected ? 'text-[#0082ff]' : 'text-slate-900 dark:text-slate-200'}`}>
-                        {day.dayNum}
-                        {day.secondaryDayNum !== null && (
-                          <span className="text-[8px] font-normal opacity-70 ml-0.5">({day.secondaryDayNum})</span>
+                <div className="flex items-center gap-1 sm:gap-2 px-0.5">
+                  {/* Previous Week Navigation Button (<) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTimelineDate((prev) => {
+                        const d = new Date(prev);
+                        d.setDate(d.getDate() - 7);
+                        return d;
+                      });
+                      try { soundEngine.playTouchSound(); } catch {}
+                    }}
+                    className="w-7 h-8 sm:w-8 sm:h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 active:scale-90 transition cursor-pointer shrink-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                    title={language === 'am' ? 'ያለፈው ሳምንት' : 'Previous Week'}
+                    aria-label="Previous Week"
+                  >
+                    <ChevronLeft size={18} strokeWidth={2.4} />
+                  </button>
+
+                  {/* 7 Days of the Week */}
+                  <div className="flex-1 grid grid-cols-7 gap-1 sm:gap-1.5">
+                    {timelineWeekDays.map((day) => (
+                      <button
+                        key={day.dateStr}
+                        type="button"
+                        onClick={() => setSelectedTimelineDate(day.date)}
+                        onDoubleClick={() => {
+                          setSelectedTimelineDate(day.date);
+                          setStickyNoteDay(day.date);
+                        }}
+                        className={`py-1.5 sm:py-2 rounded-xl sm:rounded-2xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
+                          day.isSelected
+                            ? 'bg-blue-50 dark:bg-blue-950/50 text-[#0082ff] font-bold shadow-2xs border border-blue-200 dark:border-blue-900/60 scale-102'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                        }`}
+                        title={language === 'am' ? 'ይጫኑ (ወይም ሁለቴ ይጫኑ ለማስታወሻ)' : 'Click to select date, double-click for Sticky Note'}
+                      >
+                        <span className="text-[8.5px] sm:text-[9.5px] font-semibold opacity-80 uppercase tracking-normal">
+                          {calendarSystem === 'et' ? day.ethDate.dayOfWeekAm : (language === 'am' ? day.dayAm : day.dayShort)}
+                          {day.isSunday ? ' 🌿' : ''}
+                        </span>
+                        <span className={`text-xs sm:text-[13px] font-bold ${day.isSelected ? 'text-[#0082ff]' : 'text-slate-900 dark:text-slate-200'}`}>
+                          {day.dayNum}
+                          {day.secondaryDayNum !== null && (
+                            <span className="text-[8px] font-normal opacity-70 ml-0.5">({day.secondaryDayNum})</span>
+                          )}
+                        </span>
+                        {day.isSelected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff] mt-0.5" />
                         )}
-                      </span>
-                      {day.isSelected && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#0082ff] mt-0.5" />
-                      )}
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Next Week Navigation Button (>) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTimelineDate((prev) => {
+                        const d = new Date(prev);
+                        d.setDate(d.getDate() + 7);
+                        return d;
+                      });
+                      try { soundEngine.playTouchSound(); } catch {}
+                    }}
+                    className="w-7 h-8 sm:w-8 sm:h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 active:scale-90 transition cursor-pointer shrink-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                    title={language === 'am' ? 'ቀጣይ ሳምንት' : 'Next Week'}
+                    aria-label="Next Week"
+                  >
+                    <ChevronRight size={18} strokeWidth={2.4} />
+                  </button>
                 </div>
               ) : (
                 <div className="pt-1">
