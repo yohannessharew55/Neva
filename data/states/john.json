@@ -142,7 +142,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:30 AM",
+      "startTime": "01:00 AM",
       "durationMin": 45,
       "completed": false,
       "color": "#8b5cf6",
@@ -164,7 +164,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "02:15 AM",
+      "startTime": "01:00 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -208,7 +208,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -230,7 +230,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:35 PM",
+      "startTime": "12:00 PM",
       "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
@@ -252,7 +252,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "01:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -331,7 +331,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:30 AM",
+      "startTime": "01:00 AM",
       "durationMin": 45,
       "completed": true,
       "color": "#8b5cf6",
@@ -355,7 +355,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "02:15 AM",
+      "startTime": "01:00 AM",
       "durationMin": 30,
       "completed": true,
       "color": "#8b5cf6",
@@ -403,7 +403,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -427,7 +427,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:35 PM",
+      "startTime": "12:00 PM",
       "durationMin": 45,
       "completed": true,
       "color": "#ec4899",
@@ -451,7 +451,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "01:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -536,7 +536,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:30 AM",
+      "startTime": "01:00 AM",
       "durationMin": 45,
       "completed": false,
       "color": "#8b5cf6",
@@ -560,7 +560,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "02:15 AM",
+      "startTime": "01:00 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -608,7 +608,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -632,7 +632,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:35 PM",
+      "startTime": "12:00 PM",
       "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
@@ -656,7 +656,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "01:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -713,6 +713,30 @@
       "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
       "dayOfWeek": 2
+    },
+    {
+      "id": "task-1794895375661-9-ncjh",
+      "domain": "PHYSICAL_FITNESS",
+      "title": "Compound Strength & Conditioning",
+      "startTime": "06:00 PM",
+      "durationMin": 60,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Workout",
+      "dayOfWeek": 2,
+      "checklist": [
+        {
+          "id": "c-1794895375661-9-0",
+          "text": "Dynamic mobility & warm-up",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-9-1",
+          "text": "Target compound sets & cool down",
+          "done": false
+        }
+      ],
+      "date": "2026-11-17"
     }
   ],
   "workouts": [
@@ -863,8 +887,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     },
     "chess": {
       "id": "chess",
@@ -883,8 +906,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "yellow",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "art": {
       "id": "art",
@@ -903,8 +925,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "music": {
       "id": "music",
@@ -923,8 +944,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "rose",
-      "dailyPlans": [],
-      "triple8Type": "hobby"
+      "dailyPlans": []
     },
     "architecture": {
       "id": "architecture",
@@ -943,8 +963,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "cyan",
-      "dailyPlans": [],
-      "triple8Type": "career"
+      "dailyPlans": []
     },
     "trading": {
       "id": "trading",
@@ -963,8 +982,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": [],
-      "triple8Type": "career"
+      "dailyPlans": []
     },
     "devotion": {
       "id": "devotion",
@@ -983,8 +1001,7 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "lavender",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     },
     "buffer": {
       "id": "buffer",
@@ -1003,12 +1020,11 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": [],
-      "triple8Type": "living"
+      "dailyPlans": []
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "canary",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
