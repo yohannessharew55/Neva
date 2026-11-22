@@ -713,30 +713,6 @@
       "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
       "dayOfWeek": 2
-    },
-    {
-      "id": "task-1794895375661-9-ncjh",
-      "domain": "PHYSICAL_FITNESS",
-      "title": "Compound Strength & Conditioning",
-      "startTime": "06:00 PM",
-      "durationMin": 60,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Workout",
-      "dayOfWeek": 2,
-      "checklist": [
-        {
-          "id": "c-1794895375661-9-0",
-          "text": "Dynamic mobility & warm-up",
-          "done": false
-        },
-        {
-          "id": "c-1794895375661-9-1",
-          "text": "Target compound sets & cool down",
-          "done": false
-        }
-      ],
-      "date": "2026-11-17"
     }
   ],
   "workouts": [
@@ -887,7 +863,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     },
     "chess": {
       "id": "chess",
@@ -906,7 +883,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "yellow",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "art": {
       "id": "art",
@@ -925,7 +903,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "peach",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "music": {
       "id": "music",
@@ -944,7 +923,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "rose",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "hobby"
     },
     "architecture": {
       "id": "architecture",
@@ -963,7 +943,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "cyan",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "career"
     },
     "trading": {
       "id": "trading",
@@ -982,7 +963,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "career"
     },
     "devotion": {
       "id": "devotion",
@@ -1001,7 +983,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "lavender",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     },
     "buffer": {
       "id": "buffer",
@@ -1020,7 +1003,8 @@
       "achievedItems": [],
       "upcomingItems": [],
       "stickyNoteColor": "mint",
-      "dailyPlans": []
+      "dailyPlans": [],
+      "triple8Type": "living"
     }
   },
   "dailyStickyNotes": [],
