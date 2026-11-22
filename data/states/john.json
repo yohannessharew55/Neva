@@ -142,7 +142,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:00 AM",
+      "startTime": "01:30 AM",
       "durationMin": 45,
       "completed": false,
       "color": "#8b5cf6",
@@ -164,7 +164,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "01:00 AM",
+      "startTime": "02:15 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -208,7 +208,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:00 PM",
+      "startTime": "12:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -230,7 +230,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:00 PM",
+      "startTime": "12:35 PM",
       "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
@@ -252,7 +252,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "12:00 PM",
+      "startTime": "01:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -331,7 +331,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:00 AM",
+      "startTime": "01:30 AM",
       "durationMin": 45,
       "completed": true,
       "color": "#8b5cf6",
@@ -355,7 +355,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "01:00 AM",
+      "startTime": "02:15 AM",
       "durationMin": 30,
       "completed": true,
       "color": "#8b5cf6",
@@ -403,7 +403,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:00 PM",
+      "startTime": "12:20 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -427,7 +427,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:00 PM",
+      "startTime": "12:35 PM",
       "durationMin": 45,
       "completed": true,
       "color": "#ec4899",
@@ -451,7 +451,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "12:00 PM",
+      "startTime": "01:20 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -536,7 +536,7 @@
     {
       "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:00 AM",
+      "startTime": "01:30 AM",
       "durationMin": 45,
       "completed": false,
       "color": "#8b5cf6",
@@ -560,7 +560,7 @@
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
-      "startTime": "01:00 AM",
+      "startTime": "02:15 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -608,7 +608,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:00 PM",
+      "startTime": "12:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
@@ -632,7 +632,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:00 PM",
+      "startTime": "12:35 PM",
       "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
@@ -656,7 +656,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "12:00 PM",
+      "startTime": "01:20 PM",
       "durationMin": 15,
       "completed": false,
       "color": "#ec4899",
