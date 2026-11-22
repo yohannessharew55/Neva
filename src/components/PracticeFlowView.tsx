@@ -5,7 +5,7 @@ import {
   SkipForward, Clock, History, Award, Shield, BookOpen,
   Dumbbell, Swords, ChessKnight, Palette, Music, Building2, TrendingUp,
   Check, Brain, Maximize2, Minimize2, Activity, Waves,
-  Volume2, Bell, Smartphone, Tv
+  Volume2, Bell, Smartphone, Tv, Target
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLivotion } from '../context/LivotionContext';
@@ -459,137 +459,451 @@ export const PracticeFlowView: React.FC = () => {
   return (
     <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-fadeIn select-none overflow-x-hidden">
       
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Timer className="text-[#0082ff]" /> 
-            {language === 'am' ? 'የትኩረት ስራ ሰዓት ቆጣሪ' : 'Deep Focus & Flow Timer'}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {language === 'am'
-              ? 'የቲማቲም ዘዴ (ፖሞዶሮ)፣ የ90/20 ጥልቅ የትኩረት ሥርዓት፣ እና ብጁ የደቂቃ ቆጣሪ።'
-              : 'Choose the Pomodoro Tomato system, Ultradian rhythm, Custom countdown, or Open Stopwatch.'}
-          </p>
+      {/* Top Header - Executive Flow Cockpit Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-slate-50/70 to-blue-50/30 dark:from-[#121927] dark:via-[#0f172a] dark:to-[#1e293b]/40 border border-slate-200/90 dark:border-slate-800/90 p-4 sm:p-6 shadow-xs">
+        {/* Ambient atmospheric lighting */}
+        <div 
+          className="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-20 dark:opacity-30 transition-all duration-700"
+          style={{ backgroundColor: themeColor }}
+        />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2 max-w-2xl">
+            {/* Live Telemetry Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 text-[11px] font-bold text-[#0082ff] dark:text-blue-300 shadow-2xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0082ff]" />
+              </span>
+              <span className="tracking-wide uppercase font-mono">
+                {language === 'am' ? 'የትኩረት ኮክፒት • NEVA FLOW ENGINE' : 'NEVA FLOW COCKPIT • NEURO-FOCUS'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-[#0082ff] to-cyan-400 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                <Timer className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {language === 'am' ? 'የትኩረትና ፍሰት ስራ ሰዓት ቆጣሪ' : 'Deep Focus & Flow Engine'}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  {language === 'am'
+                    ? 'የተረጋገጡ የሳይንስ የትኩረት ስልቶችን ይምረጡ፡ ፖሞዶሮ፣ 90/20 ጥልቅ ሪትም፣ ብጁ ቆጣሪ ወይም ክፍት ስቶፕዎች።'
+                    : 'Scientifically-tuned cognitive protocols: Pomodoro cadence, Ultradian 90/20 bio-rhythm, bespoke target blocks, or unbounded flow.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Mode Cockpit Telemetry Badge */}
+          <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
+            <div className="px-3.5 py-2 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center gap-2.5">
+              <div 
+                className="w-3 h-3 rounded-full transition-all duration-300"
+                style={{ 
+                  backgroundColor: themeColor,
+                  boxShadow: `0 0 10px ${themeColor}`
+                }}
+              />
+              <div className="text-left">
+                <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 dark:text-slate-500 block font-bold">
+                  {language === 'am' ? 'የተመረጠ ሁነታ' : 'Active Protocol'}
+                </span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  <span>
+                    {selectedSystem === 'pomodoro' 
+                      ? (language === 'am' ? 'ፖሞዶሮ 🍅' : `Pomodoro (${pomodoroLength}m) 🍅`)
+                      : selectedSystem === 'ultradian' 
+                      ? (language === 'am' ? 'ጥልቅ ስራ (90/20) 🧠' : 'Deep Work (90/20) 🧠')
+                      : selectedSystem === 'custom' 
+                      ? (language === 'am' ? `ብጁ (${customMinutes}ደ) 🎯` : `Custom (${customMinutes}m) 🎯`)
+                      : (language === 'am' ? 'ስቶፕዎች ⏱️' : 'Stopwatch Flow ⏱️')}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Focus System Switcher Tabs - 4 Core Spacious Systems */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+      {/* Focus System Switcher Tabs - 4 High-Performance Interactive Protocol Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
-        {/* 1. Pomodoro / Tomato System */}
-        <button
-          type="button"
+        {/* 1. Pomodoro / Tomato Cadence Card */}
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => applySystem('pomodoro', pomodoroLength, customMinutes)}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') applySystem('pomodoro', pomodoroLength, customMinutes); }}
+          className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border p-3.5 sm:p-4 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'pomodoro'
-              ? 'bg-red-50/90 dark:bg-red-950/40 border-red-300 dark:border-red-800 shadow-xs ring-2 ring-red-400/30 -translate-y-0.5'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
+              ? 'bg-gradient-to-br from-rose-500/10 via-red-500/5 to-white dark:from-rose-950/40 dark:via-red-950/20 dark:to-[#121927] border-rose-400 dark:border-rose-500/70 shadow-md shadow-rose-500/10 ring-2 ring-rose-400/30 -translate-y-1'
+              : 'bg-white/90 dark:bg-[#121927]/90 border-slate-200/90 dark:border-slate-800/90 hover:border-rose-300 dark:hover:border-rose-700/60 hover:shadow-xs hover:-translate-y-0.5'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl">🍅</span>
-            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300">
-              {pomodoroLength}m / {pomodoroLength === 50 ? '10m' : '5m'}
-            </span>
+          {/* Subtle Watermark Arc */}
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none opacity-5 dark:opacity-10 group-hover:opacity-15 transition-opacity">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-rose-500 stroke-current" strokeWidth="6">
+              <circle cx="50" cy="50" r="40" strokeDasharray="15 8" />
+            </svg>
           </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'የቲማቲም ዘዴ' : 'Pomodoro Flow'}
-            </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' ? '25ደ/50ደ ዑደት' : '25m / 50m Cycles'}
-            </div>
-          </div>
-        </button>
 
-        {/* 2. Ultradian 90/20 Protocol */}
-        <button
-          type="button"
+          <div>
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              {/* Bespoke Tomato Vector Art */}
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br from-rose-500/20 via-red-500/10 to-transparent border border-rose-200 dark:border-rose-800/60 shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
+                  <defs>
+                    <linearGradient id="pomoArtGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#ff453a" />
+                      <stop offset="1" stopColor="#e11d48" />
+                    </linearGradient>
+                    <linearGradient id="pomoLeafGrad" x1="0" y1="0" x2="10" y2="10" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#34d399" />
+                      <stop offset="1" stopColor="#059669" />
+                    </linearGradient>
+                  </defs>
+                  {/* Cadence orbit */}
+                  <circle cx="18" cy="20" r="13" stroke="#ff453a" strokeWidth="1" strokeDasharray="2.5 2.5" opacity="0.3" />
+                  {/* 4 cadence dots */}
+                  <circle cx="18" cy="7" r="1.2" fill="#ff453a" />
+                  <circle cx="31" cy="20" r="1.2" fill="#ff453a" />
+                  <circle cx="18" cy="33" r="1.2" fill="#ff453a" />
+                  <circle cx="5" cy="20" r="1.2" fill="#ff453a" />
+                  {/* Tomato Body */}
+                  <path d="M18 11C12 11 8.5 15 8.5 21C8.5 26.5 12.5 30 18 30C23.5 30 27.5 26.5 27.5 21C27.5 15 24 11 18 11Z" fill="url(#pomoArtGrad)" />
+                  <ellipse cx="14.5" cy="16.5" rx="2.5" ry="1.2" transform="rotate(-30 14.5 16.5)" fill="white" opacity="0.4" />
+                  {/* Stem & Leaves */}
+                  <path d="M18 7C18 8.5 17.5 10 18 11.5M18 9C20 7.5 22.5 8 23.5 9.5C21 10 19.5 10 18 9ZM18 9C16 7.5 13.5 8 12.5 9.5C15 10 16.5 10 18 9Z" stroke="url(#pomoLeafGrad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center gap-1 shrink-0">
+                {selectedSystem === 'pomodoro' && (
+                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded-md bg-rose-500 text-white tracking-wider animate-pulse">
+                    ACTIVE
+                  </span>
+                )}
+                <span className={`text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  selectedSystem === 'pomodoro'
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 dark:border-rose-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}>
+                  {pomodoroLength}m / {pomodoroLength === 50 ? '10m' : '5m'}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5">
+              <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የቲማቲም ዘዴ' : 'Pomodoro Flow'}
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'am' ? '25ደ/50ደ የትኩረት ዑደት' : '25m / 50m Cycles'}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Segmented Duration Toggle (25m vs 50m) */}
+          <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPomodoroLength(25);
+                applySystem('pomodoro', 25, customMinutes);
+              }}
+              className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold font-mono text-center transition-all cursor-pointer ${
+                pomodoroLength === 25
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              25m Classic
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPomodoroLength(50);
+                applySystem('pomodoro', 50, customMinutes);
+              }}
+              className={`flex-1 py-1 px-1.5 rounded-lg text-[10px] font-bold font-mono text-center transition-all cursor-pointer ${
+                pomodoroLength === 50
+                  ? 'bg-rose-500 text-white shadow-2xs font-extrabold'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              50m Deep
+            </button>
+          </div>
+        </div>
+
+        {/* 2. Ultradian 90/20 Protocol Card */}
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => applySystem('ultradian', pomodoroLength, customMinutes)}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') applySystem('ultradian', pomodoroLength, customMinutes); }}
+          className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border p-3.5 sm:p-4 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'ultradian'
-              ? 'bg-purple-50/90 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 shadow-xs ring-2 ring-purple-400/30 -translate-y-0.5'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
+              ? 'bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-white dark:from-purple-950/40 dark:via-indigo-950/20 dark:to-[#121927] border-purple-400 dark:border-purple-500/70 shadow-md shadow-purple-500/10 ring-2 ring-purple-400/30 -translate-y-1'
+              : 'bg-white/90 dark:bg-[#121927]/90 border-slate-200/90 dark:border-slate-800/90 hover:border-purple-300 dark:hover:border-purple-700/60 hover:shadow-xs hover:-translate-y-0.5'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl">🧠</span>
-            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300">
-              90m / 20m
-            </span>
+          {/* Subtle Watermark Wave */}
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none opacity-5 dark:opacity-10 group-hover:opacity-15 transition-opacity">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-purple-500 stroke-current" strokeWidth="6">
+              <path d="M10 50 Q 30 20, 50 50 T 90 50" />
+            </svg>
           </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'የ90/20 ጥልቅ ዘዴ' : 'Deep Work Flow'}
-            </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' ? 'የተፈጥሮ ሪትም' : 'Ultradian Rhythm'}
-            </div>
-          </div>
-        </button>
 
-        {/* 3. Custom Countdown */}
-        <button
-          type="button"
+          <div>
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              {/* Bespoke Brain & Ultradian Sine Wave Art */}
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br from-purple-500/20 via-indigo-500/10 to-transparent border border-purple-200 dark:border-purple-800/60 shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
+                  <defs>
+                    <linearGradient id="ultraArtGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#c084fc" />
+                      <stop offset="1" stopColor="#7c3aed" />
+                    </linearGradient>
+                    <linearGradient id="waveArtGrad" x1="0" y1="18" x2="36" y2="18" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#a855f7" />
+                      <stop offset="0.7" stopColor="#6366f1" />
+                      <stop offset="1" stopColor="#34d399" />
+                    </linearGradient>
+                  </defs>
+                  {/* Brain silhouette */}
+                  <path d="M18 9C15 9 13 11 13 13C11.5 13 10 14.5 10 16.5C10 18 11 19.5 12 20C11.5 21 11.5 22.5 12.5 23.5C13.5 24.5 15 24.5 16 24M18 9C21 9 23 11 23 13C24.5 13 26 14.5 26 16.5C26 18 25 19.5 24 20C24.5 21 24.5 22.5 23.5 23.5C22.5 24.5 21 24.5 20 24" stroke="url(#ultraArtGrad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Ultradian Harmonic Wave */}
+                  <path d="M5 28C9 28 12 18 18 18C24 18 27 30 31 30" stroke="url(#waveArtGrad)" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="18" cy="18" r="1.8" fill="#a855f7" />
+                  <circle cx="29" cy="29.5" r="1.4" fill="#34d399" />
+                </svg>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center gap-1 shrink-0">
+                {selectedSystem === 'ultradian' && (
+                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded-md bg-purple-600 text-white tracking-wider animate-pulse">
+                    ACTIVE
+                  </span>
+                )}
+                <span className={`text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  selectedSystem === 'ultradian'
+                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}>
+                  90m / 20m
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5">
+              <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'የ90/20 ጥልቅ ዘዴ' : 'Deep Work Flow'}
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'am' ? 'የተፈጥሮ 90ደ ጥልቅ ሪትም' : 'Ultradian Rhythm'}
+              </div>
+            </div>
+          </div>
+
+          {/* Ultradian Frequency Tag */}
+          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+              <span>90m Peak Alert</span>
+            </span>
+            <span className="text-emerald-600 dark:text-emerald-400">20m Rest</span>
+          </div>
+        </div>
+
+        {/* 3. Custom Countdown Card */}
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => applySystem('custom', pomodoroLength, customMinutes)}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') applySystem('custom', pomodoroLength, customMinutes); }}
+          className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border p-3.5 sm:p-4 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'custom'
-              ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 shadow-xs ring-2 ring-blue-400/30 -translate-y-0.5'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
+              ? 'bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-white dark:from-cyan-950/40 dark:via-blue-950/20 dark:to-[#121927] border-cyan-400 dark:border-cyan-500/70 shadow-md shadow-cyan-500/10 ring-2 ring-cyan-400/30 -translate-y-1'
+              : 'bg-white/90 dark:bg-[#121927]/90 border-slate-200/90 dark:border-slate-800/90 hover:border-cyan-300 dark:hover:border-cyan-700/60 hover:shadow-xs hover:-translate-y-0.5'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl">🎯</span>
-            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
-              {customMinutes}m
-            </span>
+          {/* Subtle Watermark Reticle */}
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none opacity-5 dark:opacity-10 group-hover:opacity-15 transition-opacity">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-cyan-500 stroke-current" strokeWidth="6">
+              <circle cx="50" cy="50" r="38" strokeDasharray="10 10" />
+              <line x1="50" y1="5" x2="50" y2="95" strokeWidth="2" />
+            </svg>
           </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'ብጁ ቆጣሪ' : 'Custom Minutes'}
-            </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' ? 'የሚፈልጉትን ደቂቃ ይምረጡ' : 'Set Any Duration'}
-            </div>
-          </div>
-        </button>
 
-        {/* 4. Open Stopwatch */}
-        <button
-          type="button"
+          <div>
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              {/* Bespoke Precision Target Reticle Art */}
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-transparent border border-cyan-200 dark:border-cyan-800/60 shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
+                  <defs>
+                    <linearGradient id="targetArtGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#38bdf8" />
+                      <stop offset="1" stopColor="#0284c7" />
+                    </linearGradient>
+                  </defs>
+                  {/* Outer reticle */}
+                  <circle cx="18" cy="18" r="13" stroke="url(#targetArtGrad)" strokeWidth="1.2" strokeDasharray="3.5 2.5" />
+                  <circle cx="18" cy="18" r="8" stroke="url(#targetArtGrad)" strokeWidth="1.6" />
+                  {/* Crosshairs */}
+                  <line x1="18" y1="3" x2="18" y2="7" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" />
+                  <line x1="18" y1="29" x2="18" y2="33" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" />
+                  <line x1="3" y1="18" x2="7" y2="18" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" />
+                  <line x1="29" y1="18" x2="33" y2="18" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" />
+                  {/* Center pip */}
+                  <circle cx="18" cy="18" r="2.8" fill="#0284c7" />
+                  <circle cx="18" cy="18" r="1" fill="#ffffff" />
+                </svg>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center gap-1 shrink-0">
+                {selectedSystem === 'custom' && (
+                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded-md bg-cyan-600 text-white tracking-wider animate-pulse">
+                    ACTIVE
+                  </span>
+                )}
+                <span className={`text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  selectedSystem === 'custom'
+                    ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/80 dark:text-cyan-300 border-cyan-300 dark:border-cyan-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}>
+                  {customMinutes}m
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5">
+              <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'ብጁ ቆጣሪ' : 'Custom Minutes'}
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'am' ? 'የሚፈልጉትን ደቂቃ ይምረጡ' : 'Set Any Duration'}
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Duration Sub-Detail */}
+          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+              <span>Target Duration</span>
+            </span>
+            <span className="text-slate-600 dark:text-slate-300 font-extrabold">{customMinutes} Min Block</span>
+          </div>
+        </div>
+
+        {/* 4. Open Stopwatch Card */}
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => applySystem('stopwatch', pomodoroLength, customMinutes)}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') applySystem('stopwatch', pomodoroLength, customMinutes); }}
+          className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border p-3.5 sm:p-4 text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
             selectedSystem === 'stopwatch'
-              ? 'bg-indigo-50/90 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-800 shadow-xs ring-2 ring-indigo-400/30 -translate-y-0.5'
-              : 'bg-white dark:bg-[#121927] border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-2xs'
+              ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-[#121927] border-emerald-400 dark:border-emerald-500/70 shadow-md shadow-emerald-500/10 ring-2 ring-emerald-400/30 -translate-y-1'
+              : 'bg-white/90 dark:bg-[#121927]/90 border-slate-200/90 dark:border-slate-800/90 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:shadow-xs hover:-translate-y-0.5'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl">⏱️</span>
-            <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
-              Open
+          {/* Subtle Watermark Tachymeter */}
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 pointer-events-none opacity-5 dark:opacity-10 group-hover:opacity-15 transition-opacity">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-emerald-500 stroke-current" strokeWidth="6">
+              <circle cx="50" cy="50" r="38" strokeDasharray="5 5" />
+            </svg>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+              {/* Bespoke Chronometer & Infinity Flow Art */}
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-transparent border border-emerald-200 dark:border-emerald-800/60 shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
+                  <defs>
+                    <linearGradient id="chronoArtGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#34d399" />
+                      <stop offset="1" stopColor="#059669" />
+                    </linearGradient>
+                  </defs>
+                  {/* Top Crown & Pushers */}
+                  <rect x="16" y="2.5" width="4" height="2.5" rx="1" fill="#34d399" />
+                  <line x1="14" y1="3" x2="22" y2="3" stroke="#059669" strokeWidth="1.2" strokeLinecap="round" />
+                  <line x1="26" y1="5.5" x2="28" y2="7.5" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" />
+                  {/* Chrono casing */}
+                  <circle cx="18" cy="20" r="12.5" stroke="url(#chronoArtGrad)" strokeWidth="1.6" />
+                  {/* Inner tick ring */}
+                  <circle cx="18" cy="20" r="9.5" stroke="#34d399" strokeWidth="0.8" strokeDasharray="1.5 3" opacity="0.6" />
+                  {/* Infinity Symbol representing unbounded flow */}
+                  <path d="M14 20C14 18.6 12.6 17.5 11.2 17.5C9.8 17.5 8.7 18.6 8.7 20C8.7 21.4 9.8 22.5 11.2 22.5C12.6 22.5 14 21.4 14 20ZM14 20L22 20M22 20C22 18.6 23.4 17.5 24.8 17.5C26.2 17.5 27.3 18.6 27.3 20C27.3 21.4 26.2 22.5 24.8 22.5C23.4 22.5 22 21.4 22 20Z" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex items-center gap-1 shrink-0">
+                {selectedSystem === 'stopwatch' && (
+                  <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.5 rounded-md bg-emerald-600 text-white tracking-wider animate-pulse">
+                    ACTIVE
+                  </span>
+                )}
+                <span className={`text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  selectedSystem === 'stopwatch'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}>
+                  Open
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2.5">
+              <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'am' ? 'ክፍት ስቶፕዎች' : 'Stopwatch Flow'}
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'am' ? 'ቆጥሮ የሚጨምር ክፍት ፍሰት' : 'Open Count Up'}
+              </div>
+            </div>
+          </div>
+
+          {/* Stopwatch Immersion Tag */}
+          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Unbounded Flow</span>
             </span>
+            <span className="text-emerald-600 dark:text-emerald-400">∞ Zero Limit</span>
           </div>
-          <div className="mt-2.5">
-            <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              {language === 'am' ? 'ክፍት ስቶፕዎች' : 'Stopwatch'}
-            </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              {language === 'am' ? 'ቆጥሮ የሚጨምር' : 'Open Count Up'}
-            </div>
-          </div>
-        </button>
+        </div>
       </div>
 
-      {/* Today's Focus Activities Hub: Click any task to launch its tailored focus & motion graphics */}
+      {/* Today's Focus Activities Hub: Mission Launch Deck */}
       {tasks.length > 0 && (
-        <div className="bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-2.5 max-w-full overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 min-w-0">
-              <Sparkles size={14} className="text-[#0082ff] shrink-0" />
-              <span className="truncate">{language === 'am' ? 'የዛሬ ተግባራትን በመንካት ትኩረት ይጀምሩ' : "Click Today's Tasks to Trigger Focus"}</span>
-            </span>
+        <div className="bg-gradient-to-b from-white via-white to-slate-50/50 dark:from-[#121927] dark:via-[#121927] dark:to-[#0f172a] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-4 sm:p-5 shadow-xs space-y-3 max-w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#0082ff] flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60 shadow-2xs">
+                <Sparkles size={14} className="animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 block truncate">
+                  {language === 'am' ? 'የዛሬ ተግባራትን በመንካት ትኩረት ይጀምሩ' : "Click Today's Tasks to Trigger Focus"}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:block font-medium">
+                  {language === 'am' ? 'የተግባሩን ሰዓት እና ዘርፍ በቅጽበት ወደ ሰዓት ቆጣሪው ይጭናል' : 'Instantly maps task duration and domain into tailored flow rhythm'}
+                </span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
@@ -602,37 +916,39 @@ export const PracticeFlowView: React.FC = () => {
                   await iosNativeBridge.syncTasksToReminders(items);
                   alert(language === 'am' ? 'ተግባራት ወደ iPhone Reminders ተልከዋል!' : 'Tasks synced to iPhone Reminders!');
                 }}
-                className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[11px] font-bold flex items-center gap-1 hover:bg-blue-100 transition cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-[#0082ff] dark:text-blue-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95 border border-blue-200/60 dark:border-blue-800/60"
                 title="Sync tasks to iPhone Reminders"
               >
-                <Smartphone size={12} />
+                <Smartphone size={13} />
                 <span>{language === 'am' ? 'ወደ Reminders' : 'To Reminders'}</span>
               </button>
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
                 {tasks.filter(t => !t.completed).length} {language === 'am' ? 'የቀሩ' : 'remaining'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full">
+          {/* Task pills carousel with category icons and instant launch */}
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none w-full max-w-full">
             {tasks.map((task) => {
               const isSelected = activeTaskTitle === task.title;
               return (
                 <button
                   key={task.id}
                   onClick={() => handleLaunchTaskFocus(task)}
-                  className={`px-3 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2 shrink-0 max-w-[240px] sm:max-w-[280px] transition-all cursor-pointer active:scale-95 ${
+                  className={`group px-3.5 py-2 rounded-2xl border text-xs font-bold flex items-center gap-2 shrink-0 max-w-[240px] sm:max-w-[280px] transition-all cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-[#0082ff] text-white border-[#0082ff] shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-[#0082ff] text-white border-[#0082ff] shadow-md shadow-blue-500/20'
+                      : 'bg-white hover:bg-slate-50 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700/90 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-2xs'
                   }`}
                   title={`Launch Focus Mode for ${task.title}`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${task.completed ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
                   <span className="truncate">{task.title}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md shrink-0 ${isSelected ? 'bg-white/20' : 'bg-black/5 dark:bg-white/10'}`}>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                     {task.durationMin}m
                   </span>
+                  <Play size={10} className={`shrink-0 transition-transform group-hover:scale-125 ${isSelected ? 'text-white fill-white' : 'text-blue-500 dark:text-blue-400'}`} />
                 </button>
               );
             })}
