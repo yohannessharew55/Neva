@@ -737,30 +737,6 @@
         }
       ],
       "date": "2026-11-17"
-    },
-    {
-      "domain": "DEVOTION_PRAYER",
-      "title": "Pray",
-      "startTime": "11:00 PM",
-      "durationMin": 30,
-      "completed": true,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "checklist": [
-        {
-          "id": "c-1795377852907-0-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1795377852907-0-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795377852907-0-ncta",
-      "date": "2026-11-22",
-      "dayOfWeek": 7
     }
   ],
   "workouts": [
@@ -1048,7 +1024,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "canary",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
