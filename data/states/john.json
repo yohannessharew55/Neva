@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -118,1876 +118,830 @@
   ],
   "tasks": [
     {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
       "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607192262-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607192262-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607192262"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607215059-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607215060-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607215060"
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607244907-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607244907-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607244907"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647533131-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647533131-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647533131"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647582698-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647582698-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647582698"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647598186-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647598186-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647598186"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647622674-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647622674-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647622674"
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": false,
       "color": "#a855f7",
       "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794858942586-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794858942586-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794858942586"
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859007649"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-0-lc3x",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-1-vnmx",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-2-qjrq",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-3-hfor",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-4-4ob8",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-5-zi6k",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-6-2bib",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
       "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794859102709-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-7-32x0",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859102709-8-b65w",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-0-cdyc",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-1-hlh7",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375661-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-2-vg2z",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-3-j6md",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-4-f5sj",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-5-fovr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-6-nktw",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794895375661-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-7-qcrr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794895375661-8-vjdf",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1795377852907-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795377852907-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795377852907-0-ncta",
+      "date": "2026-11-22",
+      "dayOfWeek": 7
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795422048137-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-0-kcik",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
+      "dayOfWeek": 1
     },
     {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:00 AM",
+      "durationMin": 45,
       "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795422048137-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-1-18ug",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
+      "dayOfWeek": 1
     },
     {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "01:00 AM",
       "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
       "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795422048137-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-2-8eov",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795420063013"
+      "dayOfWeek": 1
     },
     {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
       "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795422048137-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-3-xvvn",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
+      "dayOfWeek": 1
     },
     {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
       "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795422048137-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-4-h2lu",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
+      "dayOfWeek": 1
     },
     {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:00 PM",
+      "durationMin": 45,
       "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795422048137-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-5-2s4d",
       "date": "2026-11-23",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
+      "dayOfWeek": 1
     },
     {
-      "title": "Prayer",
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "12:00 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795422048137-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-6-1pqj",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
+    },
+    {
       "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
+      "title": "Pray",
+      "startTime": "11:00 PM",
       "durationMin": 30,
+      "completed": false,
       "color": "#a855f7",
       "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795420063014"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-24",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-25",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-26",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-27",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 1)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Main tasks session (Week 1)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-28",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-29",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-29",
-      "checklist": [],
-      "notes": "Week 1 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-11-30",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-01",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-02",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919018"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-03",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-04",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 2)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Main tasks session (Week 2)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-05",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-06",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-06",
-      "checklist": [],
-      "notes": "Week 2 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-07",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795420063015"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-08",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-09",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-10",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-11",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 3)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Main tasks session (Week 3)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-12",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-13",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-13",
-      "checklist": [],
-      "notes": "Week 3 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-14",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-15",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-16",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-16",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-16",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-16",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-16",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-17",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Overall body",
-      "domain": "PHYSICAL_FITNESS",
-      "startTime": "09:00 AM",
-      "durationMin": 30,
-      "color": "#ef4444",
-      "badge": "Exercise",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795420063016"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-18",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-19",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-19",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
-    },
-    {
-      "title": "Deep calculation camp",
-      "domain": "CHESS",
-      "startTime": "10:00 AM",
-      "durationMin": 60,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "completed": false,
-      "date": "2026-12-19",
-      "checklist": [],
-      "notes": "To train deep calculation skill on Aagards calculation book and playing long games (Week 4)",
-      "id": "task-1795420398561"
-    },
-    {
-      "title": "Daily design tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "11:00 AM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-19",
-      "checklist": [],
-      "notes": "Main tasks session (Week 4)",
-      "id": "task-1795421276889"
-    },
-    {
-      "title": "Secondary tasks",
-      "domain": "ARCHITECTURE_DESIGN",
-      "startTime": "02:00 PM",
-      "durationMin": 120,
-      "color": "#0082ff",
-      "badge": "Architecture",
-      "completed": false,
-      "date": "2026-12-19",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795421318185"
-    },
-    {
-      "title": "Prayer",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:00 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-20",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419873118"
-    },
-    {
-      "title": "Bible reading",
-      "domain": "DEVOTION_PRAYER",
-      "startTime": "08:30 AM",
-      "durationMin": 30,
-      "color": "#a855f7",
-      "badge": "Devotion",
-      "completed": false,
-      "date": "2026-12-20",
-      "checklist": [],
-      "notes": "Week 4 Routine",
-      "id": "task-1795419919019"
+      "checklist": [
+        {
+          "id": "c-1795422048137-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795422048137-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795422048137-7-vmoe",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1795422048137-8-ft1e",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
     }
   ],
   "workouts": [
@@ -2049,7 +1003,75 @@
     }
   ],
   "meals": [],
-  "goals": [],
+  "goals": [
+    {
+      "title": "Ship N e v a Architecture & Core Modules",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "architecture",
+      "targetMetric": "100% Core Modules",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 75,
+      "isCompleted": false,
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": true
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": true
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ],
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "50h Deep Focus Practice in Q4",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "devotion",
+      "targetMetric": "50h Practice Logged",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 60,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "Master Forex & Algorithmic Trading Execution",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "trading",
+      "targetMetric": "15% Alpha",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 70,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "10 Master Oil Paintings & Studio Portfolio",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "art",
+      "targetMetric": "10 Canvases",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 80,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    }
+  ],
   "sessions": [],
   "reviews": [],
   "categoryPlans": {
@@ -2077,7 +1099,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
