@@ -114,6 +114,18 @@
         "technique": "",
         "subject": ""
       }
+    },
+    {
+      "id": "domain-content_creation",
+      "domainType": "CONTENT_CREATION",
+      "title": "Content creation",
+      "currentTier": "Level 1: Novice Initiation",
+      "weeklyTargetHours": 2,
+      "accentColor": "#06b6d4",
+      "currentHours": 0,
+      "config": {
+        "monthlyTargetMetric": "Verified standard execution"
+      }
     }
   ],
   "tasks": [
@@ -1070,6 +1082,17 @@
       "progressPercentage": 80,
       "isCompleted": false,
       "id": "goal-1794592578664"
+    },
+    {
+      "id": "goal-content_creation",
+      "domainId": "domain-content_creation",
+      "horizon": "MONTHLY",
+      "title": "Content creation Core Monthly Milestone",
+      "targetMetric": "Verified standard execution",
+      "startDate": "2026-11-23",
+      "endDate": "2026-12-23",
+      "progressPercentage": 0,
+      "isCompleted": false
     }
   ],
   "sessions": [],
@@ -1226,6 +1249,32 @@
       "upcomingItems": [],
       "stickyNoteColor": "mint",
       "dailyPlans": []
+    },
+    "content_creation": {
+      "id": "content_creation",
+      "title": "Content creation",
+      "color": "#06b6d4",
+      "weeklyTargetHours": 2,
+      "currentWeeklyHours": 0,
+      "baseWeeklyHours": 0,
+      "baseMonthlyHours": 0,
+      "weeklyScheduleSummary": [
+        "Wed/Fri: Core Deep Work Session"
+      ],
+      "monthlyGoalTitle": "Content creation Core Monthly Milestone",
+      "monthlyTargetMetric": "Verified standard execution",
+      "monthlyProgress": 0,
+      "monthlyTargetHours": 8,
+      "triple8Type": "hobby",
+      "inProgressItems": [
+        "Initial mastery syllabus setup and immersion",
+        "Daily consistent practice habit baseline"
+      ],
+      "achievedItems": [],
+      "upcomingItems": [
+        "Advanced sprint and performance benchmark evaluation"
+      ],
+      "isCustom": true
     }
   },
   "dailyStickyNotes": [],
