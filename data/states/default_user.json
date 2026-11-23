@@ -306,6 +306,76 @@
       "checklist": [],
       "notes": "",
       "id": "task-1795247155364"
+    },
+    {
+      "title": "Acoustic Guitar & Repertoire",
+      "domain": "GUITAR",
+      "startTime": "09:00",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#ec4899",
+      "id": "task-1795413690228-0-8c7y",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
+    },
+    {
+      "title": "Chess Tactics & Grandmaster Drills",
+      "domain": "CHESS",
+      "startTime": "01:00 AM",
+      "durationMin": 180,
+      "completed": false,
+      "color": "#8b5cf6",
+      "id": "task-1795413690228-1-4rz4",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle",
+      "startTime": "09:00",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795413690229-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795413690229-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795413690228-2-02zj",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "finger exercises ",
+      "startTime": "09:00",
+      "durationMin": 10,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795413690229-3-0",
+          "text": "Initial set up",
+          "done": false
+        },
+        {
+          "id": "c-1795413690229-3-1",
+          "text": "Execute deliberate focus",
+          "done": false
+        }
+      ],
+      "id": "task-1795413690229-3-ufcb",
+      "date": "2026-11-23",
+      "dayOfWeek": 1
     }
   ],
   "workouts": [
