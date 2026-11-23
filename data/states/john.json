@@ -849,25 +849,25 @@
     },
     {
       "domain": "GUITAR",
-      "title": "Lick of the day",
-      "startTime": "12:20 PM",
-      "durationMin": 15,
+      "title": "Song practice",
+      "startTime": "12:35 PM",
+      "durationMin": 45,
       "completed": false,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
         {
-          "id": "c-1795422048137-4-0",
+          "id": "c-1795422048137-5-0",
           "text": "Warm-up & mental setup",
           "done": false
         },
         {
-          "id": "c-1795422048137-4-1",
+          "id": "c-1795422048137-5-1",
           "text": "Core deliberate execution",
           "done": false
         }
       ],
-      "id": "task-1795422048137-4-h2lu",
+      "id": "task-1795422048137-5-2s4d",
       "date": "2026-11-23",
       "dayOfWeek": 1
     },
