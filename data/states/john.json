@@ -825,30 +825,6 @@
     },
     {
       "domain": "GUITAR",
-      "title": "Warmup exercise",
-      "startTime": "12:00 PM",
-      "durationMin": 20,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1795422048137-3-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1795422048137-3-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795422048137-3-xvvn",
-      "date": "2026-11-23",
-      "dayOfWeek": 1
-    },
-    {
-      "domain": "GUITAR",
       "title": "Song practice",
       "startTime": "12:35 PM",
       "durationMin": 45,
