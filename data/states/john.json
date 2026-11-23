@@ -896,30 +896,6 @@
       "dayOfWeek": 1
     },
     {
-      "domain": "GUITAR",
-      "title": "Freeplay",
-      "startTime": "01:20 PM",
-      "durationMin": 15,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1795422048137-6-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1795422048137-6-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795422048137-6-1pqj",
-      "date": "2026-11-23",
-      "dayOfWeek": 1
-    },
-    {
       "domain": "DEVOTION_PRAYER",
       "title": "Pray",
       "startTime": "11:00 PM",
