@@ -150,7 +150,7 @@
       "durationMin": 30,
       "color": "#ef4444",
       "badge": "Exercise",
-      "completed": false,
+      "completed": true,
       "date": "2026-11-23",
       "checklist": [],
       "notes": "Week 1 Routine",
