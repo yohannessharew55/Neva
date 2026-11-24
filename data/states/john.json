@@ -887,7 +887,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 30,
-      "completed": true,
+      "completed": false,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
@@ -1252,6 +1252,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:33:22.423Z",
-  "_updatedTimestamp": 1795527202423
+  "_updatedAt": "2026-11-24T13:33:23.349Z",
+  "_updatedTimestamp": 1795527203349
 }
