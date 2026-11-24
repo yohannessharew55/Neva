@@ -466,13 +466,35 @@ export async function saveUserState(username, payload) {
     } catch (e) {}
   }
 
-  // Smart server-side merge so completions from other devices are NEVER overwritten,
-  // EXCEPT when an explicit full reset / scratch wipe is requested by the user
-  let finalPayload = payload;
+  // Authoritative vs Concurrent Merge:
+  // If the pushing device was already synced with the latest server state (baseServerTs >= existingServerTs - 1500)
+  // or requested a full reset, accept its edits & deletions authoritatively!
+  // Only merge if another device updated the server AFTER this device's last pull (concurrent offline/simultaneous edit).
+  let finalPayload = { ...payload };
   const isFullReset = payload && (payload._isFullReset === true || payload.reset === true);
-  if (existingPayload && !isFullReset) {
+  const baseServerTs = Number(payload?._baseServerTimestamp || 0);
+  const existingServerTs = Number(existingPayload?._updatedTimestamp || 0);
+  const isConcurrentConflict = existingPayload && !isFullReset && baseServerTs > 0 && existingServerTs > baseServerTs + 1500;
+
+  if (isConcurrentConflict) {
     finalPayload = mergeUserStates(existingPayload, payload);
+  } else if (Array.isArray(finalPayload.tasks)) {
+    // Disambiguate any duplicate task IDs on authoritative save
+    const seenIds = new Set();
+    finalPayload.tasks = finalPayload.tasks.map((t) => {
+      if (t && t.id && seenIds.has(t.id)) {
+        const newId = `${t.id}-${t.date || Math.random().toString(36).slice(2, 6)}`;
+        seenIds.add(newId);
+        return { ...t, id: newId };
+      }
+      if (t && t.id) seenIds.add(t.id);
+      return t;
+    });
   }
+
+  delete finalPayload._baseServerTimestamp;
+  delete finalPayload._isFullReset;
+  delete finalPayload.reset;
 
   const nowIso = new Date().toISOString();
   if (typeof finalPayload === 'object' && finalPayload !== null) {

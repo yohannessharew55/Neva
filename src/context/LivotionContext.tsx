@@ -1138,6 +1138,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const isFirstMount = useRef(true);
   const hydrationLockUntilRef = useRef<number>(0);
   const fastSyncTimeoutRef = useRef<any>(null);
+  const lastServerTimestampRef = useRef<number>(0);
 
   // Push all local state to cloud immediately using latest fresh state
   const pushStateToCloudImmediate = async (customSyncKey?: string): Promise<boolean> => {
@@ -1150,7 +1151,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setCloudSyncStatus('syncing');
     try {
-      const res = await syncStateToCloud(latestStateRef.current, keyToUse);
+      const payloadWithBase = {
+        ...latestStateRef.current,
+        _baseServerTimestamp: lastServerTimestampRef.current || 0,
+      };
+      const res = await syncStateToCloud(payloadWithBase, keyToUse);
 
       if (res.success) {
         clearPendingSync(keyToUse);
@@ -1158,14 +1163,19 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (res.database) setCloudDatabase(res.database);
         setLastSyncedAt(res.updatedAt || new Date().toISOString());
 
-        // If server returned merged data, seamlessly update local state without scheduling return push
+        const serverTs = Number(res.data?._updatedTimestamp || (res.updatedAt ? new Date(res.updatedAt).getTime() : Date.now()));
+        if (serverTs > 0) {
+          lastServerTimestampRef.current = serverTs;
+        }
+
+        // If server returned merged data from a concurrent edit, update local state without scheduling return push
         if (res.data) {
           hydrationLockUntilRef.current = Date.now() + 1500;
           if (res.data.tasks && Array.isArray(res.data.tasks)) {
-            setTasks((prev) => mergeTasksFromRemote(prev, res.data.tasks));
+            setTasks(res.data.tasks);
           }
           if (res.data.categoryPlans && typeof res.data.categoryPlans === 'object') {
-            setCategoryPlans((prev) => mergeCategoryPlansFromRemote(prev, res.data.categoryPlans));
+            setCategoryPlans(res.data.categoryPlans);
           }
         }
         return true;
@@ -1400,31 +1410,66 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const remote = await fetchStateFromCloud(keyToUse);
       if (remote && remote.data) {
         const d = remote.data;
-        const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
-        const lastSyncTime = lastSyncedAt ? new Date(lastSyncedAt).getTime() : 0;
+        const remoteTs = Number(d._updatedTimestamp || (remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0));
 
-        // Perform bidirectional smart merge and lock return pushes
+        // If server timestamp hasn't changed since our last sync, skip unnecessary re-hydration
+        if (!force && remoteTs > 0 && remoteTs === lastServerTimestampRef.current) {
+          return true;
+        }
+
+        const hasLocalPending = hasPendingSync(keyToUse);
+
+        // Lock return pushes while applying cloud state
         hydrationLockUntilRef.current = Date.now() + 2000;
-        if (fastSyncTimeoutRef.current) {
+        if (!hasLocalPending && fastSyncTimeoutRef.current) {
           clearTimeout(fastSyncTimeoutRef.current);
           fastSyncTimeoutRef.current = null;
         }
 
-        if (d.tasks && Array.isArray(d.tasks)) {
-          setTasks((prev) => mergeTasksFromRemote(prev, d.tasks));
+        if (!hasLocalPending) {
+          // Device has no unsynced local edits: apply server state authoritatively so EVERY edit & delete syncs identically!
+          if (d.tasks && Array.isArray(d.tasks)) {
+            setTasks(d.tasks);
+          }
+          if (d.categoryPlans && typeof d.categoryPlans === 'object') {
+            setCategoryPlans(d.categoryPlans);
+          }
+          if (d.dailyStickyNotes && Array.isArray(d.dailyStickyNotes)) {
+            setDailyStickyNotes(d.dailyStickyNotes);
+          }
+          if (d.iosNotes && Array.isArray(d.iosNotes)) {
+            setIosNotes(d.iosNotes);
+            try { localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes)); } catch {}
+          }
+          if (d.deletedTaskIds && Array.isArray(d.deletedTaskIds)) {
+            setDeletedTaskIds(d.deletedTaskIds);
+            try { localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify(d.deletedTaskIds)); } catch {}
+          }
+        } else {
+          // Concurrent local edits exist: merge while honoring deletedTaskIds
+          const deletedSet = new Set<string>(Array.isArray(d.deletedTaskIds) ? d.deletedTaskIds : []);
+          if (d.tasks && Array.isArray(d.tasks)) {
+            setTasks((prev) => mergeTasksFromRemote(prev, d.tasks).filter((t) => !t.id || !deletedSet.has(t.id)));
+          }
+          if (d.categoryPlans && typeof d.categoryPlans === 'object') {
+            setCategoryPlans((prev) => mergeCategoryPlansFromRemote(prev, d.categoryPlans));
+          }
+          if (d.dailyStickyNotes && Array.isArray(d.dailyStickyNotes)) {
+            setDailyStickyNotes((prev) => mergeDailyStickyNotesFromRemote(prev, d.dailyStickyNotes));
+          }
+          if (d.iosNotes && Array.isArray(d.iosNotes)) {
+            setIosNotes((prev) => mergeIosNotesFromRemote(prev, d.iosNotes));
+            try { localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes)); } catch {}
+          }
+          if (d.deletedTaskIds && Array.isArray(d.deletedTaskIds)) {
+            setDeletedTaskIds((prev) => {
+              const mergedIds = Array.from(new Set([...prev, ...d.deletedTaskIds]));
+              try { localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify(mergedIds)); } catch {}
+              return mergedIds;
+            });
+          }
         }
-        if (d.categoryPlans && typeof d.categoryPlans === 'object') {
-          setCategoryPlans((prev) => mergeCategoryPlansFromRemote(prev, d.categoryPlans));
-        }
-        if (d.dailyStickyNotes && Array.isArray(d.dailyStickyNotes)) {
-          setDailyStickyNotes((prev) => mergeDailyStickyNotesFromRemote(prev, d.dailyStickyNotes));
-        }
-        if (d.iosNotes && Array.isArray(d.iosNotes)) {
-          setIosNotes((prev) => mergeIosNotesFromRemote(prev, d.iosNotes));
-          try {
-            localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes));
-          } catch {}
-        }
+
         if (d.user && !currentUser) {
           setUser(d.user);
         }
@@ -1453,17 +1498,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setCategoryOrderState(d.categoryOrder);
           try { localStorage.setItem('neva_category_order_v1', JSON.stringify(d.categoryOrder)); } catch {}
         }
-        if (d.deletedTaskIds && Array.isArray(d.deletedTaskIds)) {
-          setDeletedTaskIds((prev) => {
-            const mergedIds = Array.from(new Set([...prev, ...d.deletedTaskIds]));
-            try { localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify(mergedIds)); } catch {}
-            return mergedIds;
-          });
-        }
 
+        if (remoteTs > 0) {
+          lastServerTimestampRef.current = remoteTs;
+        }
         if (remote.database) setCloudDatabase(remote.database);
         setLastSyncedAt(remote.updatedAt || new Date().toISOString());
-        clearPendingSync(keyToUse);
+        if (!hasLocalPending) {
+          clearPendingSync(keyToUse);
+        }
         setCloudSyncStatus('synced');
         return true;
       }
