@@ -3,7 +3,9 @@ import {
   X, Plus, Swords, Palette, Music, 
   Dumbbell, Building2, TrendingUp, BookOpen, Shield, 
   Code, Flame, Target, Compass, Laptop, Feather, AlertCircle,
-  Briefcase, Heart
+  Briefcase, Heart, Brain, Camera, Video, Mic, Headphones,
+  Gamepad2, Globe, GraduationCap, DollarSign, Rocket, Cpu,
+  Lightbulb, Leaf, Coffee, Sun, Moon, Star, Award, Wrench, Calculator
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import confetti from 'canvas-confetti';
@@ -28,19 +30,53 @@ const AVAILABLE_ICONS = [
   { id: 'Compass', label: 'Exploration', icon: Compass },
   { id: 'Laptop', label: 'Deep Work', icon: Laptop },
   { id: 'Feather', label: 'Writing / Journal', icon: Feather },
+  { id: 'Brain', label: 'Mind / Thinking', icon: Brain },
+  { id: 'GraduationCap', label: 'Learning / Study', icon: GraduationCap },
+  { id: 'Rocket', label: 'Startup / Launch', icon: Rocket },
+  { id: 'Cpu', label: 'AI / Tech', icon: Cpu },
+  { id: 'Lightbulb', label: 'Ideas / Research', icon: Lightbulb },
+  { id: 'Briefcase', label: 'Career / Business', icon: Briefcase },
+  { id: 'DollarSign', label: 'Finance / Wealth', icon: DollarSign },
+  { id: 'Calculator', label: 'Math / Analytics', icon: Calculator },
+  { id: 'Globe', label: 'Language / World', icon: Globe },
+  { id: 'Camera', label: 'Photo / Visual', icon: Camera },
+  { id: 'Video', label: 'Film / Video', icon: Video },
+  { id: 'Mic', label: 'Podcast / Voice', icon: Mic },
+  { id: 'Headphones', label: 'Audio / Listening', icon: Headphones },
+  { id: 'Gamepad2', label: 'Gaming / Strategy', icon: Gamepad2 },
+  { id: 'Heart', label: 'Health / Family', icon: Heart },
+  { id: 'Leaf', label: 'Nature / Wellness', icon: Leaf },
+  { id: 'Coffee', label: 'Break / Routine', icon: Coffee },
+  { id: 'Sun', label: 'Morning / Energy', icon: Sun },
+  { id: 'Moon', label: 'Evening / Sleep', icon: Moon },
+  { id: 'Star', label: 'Mastery / Peak', icon: Star },
+  { id: 'Award', label: 'Achievement', icon: Award },
+  { id: 'Wrench', label: 'Engineering / Craft', icon: Wrench },
 ];
 
 const PRESET_COLORS = [
   '#0082ff', // Electric Blue
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#e11d48', // Crimson Rose
-  '#ef4444', // Red
-  '#f59e0b', // Amber
-  '#10b981', // Emerald
+  '#2563eb', // Royal Blue
+  '#38bdf8', // Sky Blue
   '#06b6d4', // Cyan
+  '#0d9488', // Teal
+  '#10b981', // Emerald
+  '#22c55e', // Green
+  '#84cc16', // Lime
+  '#eab308', // Yellow
+  '#f59e0b', // Amber
+  '#f97316', // Orange
+  '#ef4444', // Red
+  '#e11d48', // Crimson Rose
+  '#ec4899', // Pink
+  '#d946ef', // Fuchsia
+  '#a855f7', // Purple
+  '#8b5cf6', // Violet
   '#6366f1', // Indigo
+  '#78716c', // Stone
   '#64748b', // Slate
+  '#475569', // Charcoal
+  '#1e293b', // Midnight
 ];
 
 const STREAM_PRESETS = [
@@ -298,6 +334,23 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
                   style={{ backgroundColor: c }}
                 />
               ))}
+              <label
+                title="Custom Color"
+                className={`w-7 h-7 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer transition hover:scale-110 overflow-hidden relative ${
+                  !PRESET_COLORS.includes(selectedColor) ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white scale-110' : ''
+                }`}
+                style={{ backgroundColor: !PRESET_COLORS.includes(selectedColor) ? selectedColor : 'transparent' }}
+              >
+                <input
+                  type="color"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                />
+                {PRESET_COLORS.includes(selectedColor) && (
+                  <Plus size={14} className="text-slate-500 dark:text-slate-400 pointer-events-none" />
+                )}
+              </label>
             </div>
           </div>
 
@@ -306,7 +359,7 @@ export const NewCategoryModal: React.FC<NewCategoryModalProps> = ({
             <label className="text-slate-600 dark:text-slate-400 block mb-1.5">
               Category Icon
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 max-h-32 overflow-y-auto p-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 max-h-44 overflow-y-auto p-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
               {AVAILABLE_ICONS.map((item) => {
                 const IconComp = item.icon;
                 const isSelected = selectedIconName === item.id;

@@ -1621,7 +1621,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                     return (
                       <div 
                         key={group.category.id} 
-                        className="mb-4 rounded-2xl sm:rounded-3xl border transition-all overflow-hidden backdrop-blur-md"
+                        className="mb-4 rounded-2xl sm:rounded-3xl border transition-all overflow-visible relative backdrop-blur-md"
                         style={{
                           borderColor: `${group.category.color}35`,
                           backgroundColor: `${group.category.color}05`,
@@ -1631,7 +1631,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                         {/* Category Group Header Card */}
                         <div 
                           onClick={() => toggleCategoryExpand(group.category.id)}
-                          className="flex items-center justify-between p-3.5 sm:p-4 transition-all cursor-pointer select-none border-b"
+                          className={`flex items-center justify-between p-3.5 sm:p-4 transition-all cursor-pointer select-none border-b rounded-t-2xl sm:rounded-t-3xl ${!isExpanded ? 'rounded-b-2xl sm:rounded-b-3xl' : ''}`}
                           style={{
                             borderColor: `${group.category.color}20`,
                             background: `linear-gradient(to right, ${group.category.color}15, ${group.category.color}05 60%, transparent 100%)`,
@@ -1754,6 +1754,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                     setDragOverTaskId(null);
                                   }}
                                   className={`group/task px-3.5 py-3 sm:px-4 sm:py-3.5 transition-all duration-150 flex items-center justify-between gap-2.5 sm:gap-3 ${
+                                    openTaskMenuId === task.id ? 'relative z-40' : 'relative'
+                                  } ${
                                     draggedTaskId === task.id
                                       ? 'opacity-30'
                                       : dragOverTaskId === task.id
@@ -1934,7 +1936,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-[#0082ff] transition-colors cursor-pointer"
                                             >
                                               <Edit3 size={13} className="text-indigo-500" />
-                                              <span>{language === 'am' ? 'አስተካክል' : 'Edit Block'}</span>
+                                              <span>{language === 'am' ? 'አስተካክል' : 'Edit'}</span>
                                             </button>
                                             <button
                                               type="button"
@@ -1969,7 +1971,7 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
                                               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors cursor-pointer"
                                             >
                                               <Trash2 size={13} className="text-rose-500" />
-                                              <span>{language === 'am' ? 'ሰርዝ' : 'Delete'}</span>
+                                              <span>{language === 'am' ? 'አስወግድ' : 'Remove'}</span>
                                             </button>
                                           </div>
                                         </>
