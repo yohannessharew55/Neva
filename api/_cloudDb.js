@@ -283,14 +283,15 @@ export function mergeUserStates(existing, incoming) {
           checklist = match.checklist;
         }
 
+        const baseTask = incomingTime >= existingTime ? { ...match, ...it } : { ...it, ...match };
+        const maxTime = Math.max(existingTime, incomingTime);
         const mergedTask = {
-          ...match,
-          ...it,
+          ...baseTask,
           id: match.id || it.id,
           completed,
           completedAt,
           checklist,
-          updatedAt: new Date(Math.max(existingTime, incomingTime, Date.now())).toISOString()
+          ...(maxTime > 0 ? { updatedAt: new Date(maxTime).toISOString() } : {})
         };
 
         taskMap.set(mergedTask.id, mergedTask);
@@ -306,6 +307,7 @@ export function mergeUserStates(existing, incoming) {
     ]);
 
     const seenKeys = new Set();
+    const seenIds = new Set();
     const finalTasks = [];
     for (const t of taskMap.values()) {
       if (t.id && deletedSet.has(t.id)) continue;
@@ -314,10 +316,15 @@ export function mergeUserStates(existing, incoming) {
       if (titleDateKey !== '::') {
         if (!seenKeys.has(titleDateKey)) {
           seenKeys.add(titleDateKey);
+          if (t.id && seenIds.has(t.id)) {
+            t.id = `${t.id}-${t.date || Math.random().toString(36).slice(2, 6)}`;
+          }
+          if (t.id) seenIds.add(t.id);
           finalTasks.push(t);
         }
       } else if (!seenKeys.has(uniqueKey)) {
         seenKeys.add(uniqueKey);
+        if (t.id) seenIds.add(t.id);
         finalTasks.push(t);
       }
     }
@@ -420,21 +427,9 @@ export function mergeUserStates(existing, incoming) {
   return merged;
 }
 
-// Get user saved state from data-sync branch
+// Get user saved state from data-sync branch (always fetch fresh from GitHub so multi-lambda Vercel never serves stale cache)
 export async function getUserState(username) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-
-  // Check in-memory hot cache first
-  if (memCache.states && memCache.states.has(cleanUser)) {
-    const cached = memCache.states.get(cleanUser);
-    if (cached && cached.payload) {
-      return {
-        payload: cached.payload,
-        sha: cached.sha || null,
-        updatedAt: cached.updatedAt || new Date().toISOString()
-      };
-    }
-  }
 
   const res = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync&_cb=${Date.now()}`);
   if (res.status === 200 && res.data && res.data.content) {

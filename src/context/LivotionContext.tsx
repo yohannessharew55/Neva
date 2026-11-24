@@ -1111,6 +1111,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     sessions,
     reviews,
     categoryPlans,
+    categoryOrder,
+    deletedTaskIds,
     dailyStickyNotes,
     dailyStickyColor,
     iosNotes,
@@ -1126,6 +1128,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     sessions,
     reviews,
     categoryPlans,
+    categoryOrder,
+    deletedTaskIds,
     dailyStickyNotes,
     dailyStickyColor,
     iosNotes,
@@ -1250,14 +1254,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           mergedChecklist = rt.checklist;
         }
 
+        const baseTask = remoteTime >= localTime ? { ...match, ...rt } : { ...rt, ...match };
+        const maxTime = Math.max(localTime, remoteTime);
         const merged: ScheduleTask = {
-          ...match,
-          ...rt,
+          ...baseTask,
           id: match.id || rt.id,
           completed: isCompleted,
           completedAt,
           checklist: mergedChecklist,
-          updatedAt: new Date(Math.max(localTime, remoteTime, Date.now())).toISOString(),
+          ...(maxTime > 0 ? { updatedAt: new Date(maxTime).toISOString() } : {}),
         };
 
         taskMap.set(merged.id, merged);
@@ -1267,18 +1272,24 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     });
 
-    // Deduplicate by title + date
+    // Deduplicate by title + date and disambiguate any duplicate IDs across dates
     const seen = new Set<string>();
+    const seenIds = new Set<string>();
     const deduplicated: ScheduleTask[] = [];
     for (const t of taskMap.values()) {
       const key = getTaskKey(t);
       if (key !== '::') {
         if (!seen.has(key)) {
           seen.add(key);
-          deduplicated.push(t);
+          const uniqueT = t.id && seenIds.has(t.id)
+            ? { ...t, id: `${t.id}-${t.date || Math.random().toString(36).slice(2, 6)}` }
+            : t;
+          if (uniqueT.id) seenIds.add(uniqueT.id);
+          deduplicated.push(uniqueT);
         }
       } else if (!seen.has(t.id)) {
         seen.add(t.id);
+        if (t.id) seenIds.add(t.id);
         deduplicated.push(t);
       }
     }
@@ -1438,6 +1449,17 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (d.dailyStickyColor) {
           setDailyStickyColorState(d.dailyStickyColor);
         }
+        if (d.categoryOrder && Array.isArray(d.categoryOrder) && d.categoryOrder.length > 0) {
+          setCategoryOrderState(d.categoryOrder);
+          try { localStorage.setItem('neva_category_order_v1', JSON.stringify(d.categoryOrder)); } catch {}
+        }
+        if (d.deletedTaskIds && Array.isArray(d.deletedTaskIds)) {
+          setDeletedTaskIds((prev) => {
+            const mergedIds = Array.from(new Set([...prev, ...d.deletedTaskIds]));
+            try { localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify(mergedIds)); } catch {}
+            return mergedIds;
+          });
+        }
 
         if (remote.database) setCloudDatabase(remote.database);
         setLastSyncedAt(remote.updatedAt || new Date().toISOString());
@@ -1521,7 +1543,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 1000);
 
     return () => clearTimeout(syncTimer);
-  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
+  }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, categoryOrder, deletedTaskIds, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
 
   // 3. Automatic Realtime Sync: Pull updates on focus, on reconnect, or on 3s heartbeat while active
   useEffect(() => {
@@ -1973,12 +1995,13 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try { localStorage.removeItem('neva_is_cleared_scratch'); } catch {}
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const id = `task-${Date.now()}`;
+    const id = `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const taskToAdd: ScheduleTask = {
       ...newTask,
       id,
       date: newTask.date || todayStr,
       completed: newTask.date && newTask.date > todayStr ? false : (newTask.completed ?? false),
+      updatedAt: now.toISOString(),
     };
     setTasks((prev) => autoResolveOverlappingTasks([...prev, taskToAdd], timeFormat));
     triggerFastCloudPush(250);
@@ -1993,7 +2016,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (exists) {
         return prev.map((t) => {
           if (t.id === taskId) {
-            const updated = { ...t, ...updates };
+            const updated = { ...t, ...updates, updatedAt: now.toISOString() };
             if (updated.date && updated.date > todayStr) {
               updated.completed = false;
             }
