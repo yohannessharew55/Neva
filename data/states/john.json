@@ -119,28 +119,6 @@
   "tasks": [
     {
       "domain": "CHESS",
-      "title": "Puzzle training",
-      "startTime": "01:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794607192262-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794607192262-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794607192262"
-    },
-    {
-      "domain": "CHESS",
       "title": "Aagard book",
       "startTime": "01:30 AM",
       "durationMin": 45,
@@ -159,7 +137,31 @@
           "done": false
         }
       ],
-      "id": "task-1794607215060"
+      "id": "task-1794607215060",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607192262-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607192262-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607192262",
+      "updatedAt": "2026-11-24T13:52:09.770Z"
     },
     {
       "domain": "CHESS",
@@ -181,7 +183,8 @@
           "done": false
         }
       ],
-      "id": "task-1794607244907"
+      "id": "task-1794607244907",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -203,7 +206,8 @@
           "done": false
         }
       ],
-      "id": "task-1794647533131"
+      "id": "task-1794647533131",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -225,7 +229,8 @@
           "done": false
         }
       ],
-      "id": "task-1794647582698"
+      "id": "task-1794647582698",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -247,7 +252,8 @@
           "done": false
         }
       ],
-      "id": "task-1794647598186"
+      "id": "task-1794647598186",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -269,7 +275,8 @@
           "done": false
         }
       ],
-      "id": "task-1794647622674"
+      "id": "task-1794647622674",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "DEVOTION_PRAYER",
@@ -291,7 +298,8 @@
           "done": false
         }
       ],
-      "id": "task-1794858942586"
+      "id": "task-1794858942586",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "title": "Et",
@@ -302,7 +310,8 @@
       "color": "#10b981",
       "completed": true,
       "soundProfile": "SOLFEGGIO_432",
-      "id": "task-1794859007649"
+      "id": "task-1794859007649",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -326,7 +335,8 @@
       ],
       "id": "task-1794859102709-0-lc3x",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -350,7 +360,8 @@
       ],
       "id": "task-1794859102709-1-vnmx",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -374,7 +385,8 @@
       ],
       "id": "task-1794859102709-2-qjrq",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -398,7 +410,8 @@
       ],
       "id": "task-1794859102709-3-hfor",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -422,7 +435,8 @@
       ],
       "id": "task-1794859102709-4-4ob8",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -446,7 +460,8 @@
       ],
       "id": "task-1794859102709-5-zi6k",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -470,7 +485,8 @@
       ],
       "id": "task-1794859102709-6-2bib",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "DEVOTION_PRAYER",
@@ -494,7 +510,8 @@
       ],
       "id": "task-1794859102709-7-32x0",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "title": "Et",
@@ -507,7 +524,8 @@
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1794859102709-8-b65w",
       "date": "2026-11-16",
-      "dayOfWeek": 1
+      "dayOfWeek": 1,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -531,7 +549,8 @@
       ],
       "id": "task-1794895375660-0-cdyc",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -555,7 +574,8 @@
       ],
       "id": "task-1794895375660-1-hlh7",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -579,7 +599,8 @@
       ],
       "id": "task-1794895375661-2-vg2z",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -603,7 +624,8 @@
       ],
       "id": "task-1794895375661-3-j6md",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -627,7 +649,8 @@
       ],
       "id": "task-1794895375661-4-f5sj",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -651,7 +674,8 @@
       ],
       "id": "task-1794895375661-5-fovr",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
@@ -675,7 +699,8 @@
       ],
       "id": "task-1794895375661-6-nktw",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "DEVOTION_PRAYER",
@@ -699,7 +724,8 @@
       ],
       "id": "task-1794895375661-7-qcrr",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "title": "Et",
@@ -712,7 +738,8 @@
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -736,7 +763,8 @@
       ],
       "id": "task-1795516638284-0-7ajj",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -760,7 +788,8 @@
       ],
       "id": "task-1795516638284-1-1pqr",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "CHESS",
@@ -784,50 +813,40 @@
       ],
       "id": "task-1795516638284-2-h7mh",
       "date": "2026-11-24",
-      "dayOfWeek": 2
-    },
-    {
-      "domain": "GUITAR",
-      "title": "Warmup exercise",
-      "startTime": "12:00 PM",
-      "durationMin": 20,
-      "completed": false,
-      "color": "#ec4899",
-      "badge": "Music",
-      "checklist": [
-        {
-          "id": "c-1795516638284-3-0",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1795516638284-3-1",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1795516638284-3-zv5n",
-      "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "id": "inst-2026-11-24-task-1794647533131",
       "originalId": "task-1794647533131",
       "title": "Warmup exercise",
       "date": "2026-11-24",
-      "completed": false,
+      "completed": true,
       "startTime": "12:20 PM",
       "durationMin": 20,
       "color": "#ec4899",
       "badge": "Music",
-      "domain": "GUITAR"
+      "domain": "GUITAR",
+      "updatedAt": "2026-11-24T13:52:09.771Z",
+      "checklist": [
+        {
+          "id": "c-2026-11-24-warmup-0",
+          "text": "Warm-up & mental setup",
+          "done": true
+        },
+        {
+          "id": "c-2026-11-24-warmup-1",
+          "text": "Core deliberate execution",
+          "done": true
+        }
+      ]
     },
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
       "startTime": "12:40 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -844,14 +863,15 @@
       ],
       "id": "task-1795516638284-4-wzx9",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
       "title": "Song practice",
       "startTime": "12:55 PM",
       "durationMin": 45,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -868,14 +888,15 @@
       ],
       "id": "task-1795516638284-5-71n4",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "GUITAR",
       "title": "Freeplay",
       "startTime": "01:40 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -892,7 +913,8 @@
       ],
       "id": "task-1795516638284-6-83dl",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "domain": "DEVOTION_PRAYER",
@@ -916,7 +938,8 @@
       ],
       "id": "task-1795516638284-7-l0ik",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     },
     {
       "title": "Et",
@@ -925,11 +948,13 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "completedAt": "2026-11-24T13:33:40.960Z",
+      "updatedAt": "2026-11-24T13:52:09.771Z"
     }
   ],
   "workouts": [
@@ -1252,6 +1277,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:56.856Z",
-  "_updatedTimestamp": 1795527296856
+  "_updatedAt": "2026-11-24T13:52:09.771Z",
+  "_updatedTimestamp": 1795528329771
 }
