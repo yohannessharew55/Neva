@@ -214,15 +214,230 @@ export async function updateUserProfile(username, updates) {
   };
 }
 
+// Helper to merge user states bidirectionally without losing completions or recent edits
+export function mergeUserStates(existing, incoming) {
+  if (!existing || typeof existing !== 'object') return incoming;
+  if (!incoming || typeof incoming !== 'object') return existing;
+
+  const merged = { ...existing, ...incoming };
+
+  // 1. Merge tasks
+  if (Array.isArray(existing.tasks) && Array.isArray(incoming.tasks)) {
+    const taskMap = new Map();
+
+    const getTaskKey = (t) => {
+      const datePart = t.date || '';
+      const titlePart = (t.title || '').trim().toLowerCase();
+      return `${titlePart}::${datePart}`;
+    };
+
+    existing.tasks.forEach((et) => {
+      if (et.id) taskMap.set(et.id, et);
+      const key = getTaskKey(et);
+      if (key !== '::') taskMap.set(key, et);
+    });
+
+    incoming.tasks.forEach((it) => {
+      const key = getTaskKey(it);
+      let match = (it.id && taskMap.get(it.id)) || (key !== '::' && taskMap.get(key));
+
+      if (match) {
+        const existingTime = match.updatedAt ? new Date(match.updatedAt).getTime() : 0;
+        const incomingTime = it.updatedAt ? new Date(it.updatedAt).getTime() : 0;
+
+        let completed = match.completed;
+        let completedAt = match.completedAt;
+
+        if (incomingTime > existingTime + 500) {
+          completed = it.completed;
+          completedAt = it.completedAt;
+        } else if (existingTime > incomingTime + 500) {
+          completed = match.completed;
+          completedAt = match.completedAt;
+        } else {
+          completed = !!(match.completed || it.completed);
+          completedAt = match.completed ? match.completedAt : it.completedAt;
+        }
+
+        let checklist = match.checklist;
+        if (Array.isArray(match.checklist) && Array.isArray(it.checklist) && match.checklist.length > 0 && it.checklist.length > 0) {
+          const checkMap = new Map();
+          match.checklist.forEach((c) => checkMap.set((c.text || '').trim().toLowerCase(), c));
+          it.checklist.forEach((ic) => {
+            const k = (ic.text || '').trim().toLowerCase();
+            const mc = checkMap.get(k);
+            if (mc) {
+              checkMap.set(k, {
+                ...mc,
+                ...ic,
+                done: !!(mc.done || ic.done)
+              });
+            } else {
+              checkMap.set(k, ic);
+            }
+          });
+          checklist = Array.from(checkMap.values());
+        } else if (Array.isArray(it.checklist) && it.checklist.length > 0) {
+          checklist = it.checklist;
+        } else if (Array.isArray(match.checklist) && match.checklist.length > 0) {
+          checklist = match.checklist;
+        }
+
+        const mergedTask = {
+          ...match,
+          ...it,
+          id: match.id || it.id,
+          completed,
+          completedAt,
+          checklist,
+          updatedAt: new Date(Math.max(existingTime, incomingTime, Date.now())).toISOString()
+        };
+
+        taskMap.set(mergedTask.id, mergedTask);
+        if (key !== '::') taskMap.set(key, mergedTask);
+      } else {
+        taskMap.set(it.id || key, it);
+      }
+    });
+
+    const seenKeys = new Set();
+    const finalTasks = [];
+    for (const t of taskMap.values()) {
+      const uniqueKey = t.id || getTaskKey(t);
+      const titleDateKey = getTaskKey(t);
+      if (titleDateKey !== '::') {
+        if (!seenKeys.has(titleDateKey)) {
+          seenKeys.add(titleDateKey);
+          finalTasks.push(t);
+        }
+      } else if (!seenKeys.has(uniqueKey)) {
+        seenKeys.add(uniqueKey);
+        finalTasks.push(t);
+      }
+    }
+    merged.tasks = finalTasks;
+  }
+
+  // 2. Merge categoryPlans
+  if (existing.categoryPlans && incoming.categoryPlans) {
+    const mergedPlans = { ...existing.categoryPlans };
+    for (const [catId, incPlan] of Object.entries(incoming.categoryPlans)) {
+      if (!mergedPlans[catId]) {
+        mergedPlans[catId] = incPlan;
+      } else {
+        const exPlan = mergedPlans[catId];
+        const dpMap = new Map();
+        (exPlan.dailyPlans || []).forEach((p) => dpMap.set(p.id || p.text, p));
+        (incPlan.dailyPlans || []).forEach((ip) => {
+          const k = ip.id || ip.text;
+          const ep = dpMap.get(k);
+          if (ep) {
+            dpMap.set(k, { ...ep, ...ip, completed: !!(ep.completed || ip.completed) });
+          } else {
+            dpMap.set(k, ip);
+          }
+        });
+
+        const achieved = new Set([...(exPlan.achievedItems || []), ...(incPlan.achievedItems || [])]);
+        const inProgress = new Set([...(exPlan.inProgressItems || []), ...(incPlan.inProgressItems || [])]);
+        achieved.forEach(a => inProgress.delete(a));
+
+        mergedPlans[catId] = {
+          ...exPlan,
+          ...incPlan,
+          dailyPlans: Array.from(dpMap.values()),
+          achievedItems: Array.from(achieved),
+          inProgressItems: Array.from(inProgress)
+        };
+      }
+    }
+    merged.categoryPlans = mergedPlans;
+  }
+
+  // 3. Merge dailyStickyNotes
+  if (Array.isArray(existing.dailyStickyNotes) && Array.isArray(incoming.dailyStickyNotes)) {
+    const noteMap = new Map();
+    existing.dailyStickyNotes.forEach((n) => noteMap.set(n.id || n.date, n));
+    incoming.dailyStickyNotes.forEach((n) => {
+      const k = n.id || n.date;
+      const ex = noteMap.get(k);
+      if (!ex) {
+        noteMap.set(k, n);
+      } else {
+        const exTime = ex.updatedAt ? new Date(ex.updatedAt).getTime() : 0;
+        const incTime = n.updatedAt ? new Date(n.updatedAt).getTime() : 0;
+        noteMap.set(k, incTime >= exTime ? n : ex);
+      }
+    });
+    merged.dailyStickyNotes = Array.from(noteMap.values());
+  }
+
+  // 4. Merge iosNotes
+  if (Array.isArray(existing.iosNotes) && Array.isArray(incoming.iosNotes)) {
+    const noteMap = new Map();
+    existing.iosNotes.forEach((n) => noteMap.set(n.id, n));
+    incoming.iosNotes.forEach((n) => {
+      const ex = noteMap.get(n.id);
+      if (!ex) {
+        noteMap.set(n.id, n);
+      } else {
+        const exTime = ex.updatedAt ? new Date(ex.updatedAt).getTime() : 0;
+        const incTime = n.updatedAt ? new Date(n.updatedAt).getTime() : 0;
+        noteMap.set(n.id, incTime >= exTime ? n : ex);
+      }
+    });
+    merged.iosNotes = Array.from(noteMap.values());
+  }
+
+  // 5. Merge goals, workouts, meals, sessions, reviews
+  const mergeById = (exList, incList) => {
+    if (!Array.isArray(incList)) return exList;
+    if (!Array.isArray(exList)) return incList;
+    const map = new Map();
+    exList.forEach((item) => { if (item.id) map.set(item.id, item); });
+    incList.forEach((item) => {
+      if (item.id) {
+        const ex = map.get(item.id);
+        map.set(item.id, ex ? { ...ex, ...item } : item);
+      }
+    });
+    return Array.from(map.values());
+  };
+
+  if (existing.goals && incoming.goals) merged.goals = mergeById(existing.goals, incoming.goals);
+  if (existing.workouts && incoming.workouts) merged.workouts = mergeById(existing.workouts, incoming.workouts);
+  if (existing.meals && incoming.meals) merged.meals = mergeById(existing.meals, incoming.meals);
+  if (existing.sessions && incoming.sessions) merged.sessions = mergeById(existing.sessions, incoming.sessions);
+  if (existing.reviews && incoming.reviews) merged.reviews = mergeById(existing.reviews, incoming.reviews);
+
+  return merged;
+}
+
 // Get user saved state from data-sync branch
 export async function getUserState(username) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  const res = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync`);
+
+  // Check in-memory hot cache first
+  if (memCache.states && memCache.states.has(cleanUser)) {
+    const cached = memCache.states.get(cleanUser);
+    if (cached && cached.payload) {
+      return {
+        payload: cached.payload,
+        sha: cached.sha || null,
+        updatedAt: cached.updatedAt || new Date().toISOString()
+      };
+    }
+  }
+
+  const res = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync&_cb=${Date.now()}`);
   if (res.status === 200 && res.data && res.data.content) {
     try {
       const content = Buffer.from(res.data.content, 'base64').toString('utf-8');
       const payload = JSON.parse(content);
       const savedUpdatedAt = payload._updatedAt || payload._metadata?.updatedAt || null;
+      if (memCache.states) {
+        memCache.states.set(cleanUser, { payload, sha: res.data.sha, updatedAt: savedUpdatedAt });
+      }
       return { 
         payload, 
         sha: res.data.sha, 
@@ -233,44 +448,65 @@ export async function getUserState(username) {
   return { payload: null, sha: null, updatedAt: null };
 }
 
-// Save user state to data-sync branch
+// Save user state to data-sync branch with smart server-side merging
 export async function saveUserState(username, payload) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   
-  // Ensure timestamp is stamped inside the payload
-  const nowIso = new Date().toISOString();
-  if (typeof payload === 'object' && payload !== null) {
-    payload._updatedAt = nowIso;
-    payload._updatedTimestamp = Date.now();
-  }
-
-  // Get current sha from data-sync branch if exists
-  const existing = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync`);
+  // Get current state from data-sync branch if exists to merge
+  const existing = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync&_cb=${Date.now()}`);
   const sha = existing.status === 200 ? existing.data.sha : undefined;
+  let existingPayload = null;
 
-  // Deduplicate redundant identical commits to save GitHub API quota and prevent commit spamming
   if (existing.status === 200 && existing.data && existing.data.content) {
     try {
       const existingStr = Buffer.from(existing.data.content, 'base64').toString('utf-8');
-      const existingPayload = JSON.parse(existingStr);
-      
-      // Compare core payload content ignoring transient timestamps
+      existingPayload = JSON.parse(existingStr);
+    } catch (e) {}
+  }
+
+  // Smart server-side merge so completions from other devices are NEVER overwritten
+  let finalPayload = payload;
+  if (existingPayload) {
+    finalPayload = mergeUserStates(existingPayload, payload);
+  }
+
+  const nowIso = new Date().toISOString();
+  if (typeof finalPayload === 'object' && finalPayload !== null) {
+    finalPayload._updatedAt = nowIso;
+    finalPayload._updatedTimestamp = Date.now();
+  }
+
+  // Deduplicate redundant identical commits to save GitHub API quota and prevent commit spamming
+  if (existingPayload) {
+    try {
       const cleanExisting = { ...existingPayload, _updatedAt: undefined, _updatedTimestamp: undefined, _metadata: undefined };
-      const cleanNew = { ...payload, _updatedAt: undefined, _updatedTimestamp: undefined, _metadata: undefined };
-      if (JSON.stringify(cleanExisting) === JSON.stringify(cleanNew)) {
-        // Data is identical! No need to create a redundant commit
-        return true;
+      const cleanFinal = { ...finalPayload, _updatedAt: undefined, _updatedTimestamp: undefined, _metadata: undefined };
+      if (JSON.stringify(cleanExisting) === JSON.stringify(cleanFinal)) {
+        if (memCache.states) {
+          memCache.states.set(cleanUser, { payload: existingPayload, sha, updatedAt: existingPayload._updatedAt });
+        }
+        return { success: true, payload: existingPayload, updatedAt: existingPayload._updatedAt };
       }
     } catch (e) {}
   }
 
   const putData = {
     message: `Sync state for ${cleanUser} [skip ci]`,
-    content: Buffer.from(JSON.stringify(payload, null, 2)).toString('base64'),
+    content: Buffer.from(JSON.stringify(finalPayload, null, 2)).toString('base64'),
     branch: 'data-sync'
   };
   if (sha) putData.sha = sha;
 
   const res = await githubRequest(`/contents/data/states/${cleanUser}.json`, 'PUT', putData);
-  return res.status === 200 || res.status === 201;
+  const success = res.status === 200 || res.status === 201;
+
+  if (success && memCache.states) {
+    memCache.states.set(cleanUser, {
+      payload: finalPayload,
+      sha: res.data?.content?.sha || res.data?.commit?.sha,
+      updatedAt: nowIso
+    });
+  }
+
+  return { success, payload: finalPayload, updatedAt: nowIso };
 }

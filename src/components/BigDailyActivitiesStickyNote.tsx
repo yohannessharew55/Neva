@@ -721,7 +721,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     }
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
-      const match = materialized.find((m) => m.title === task.title) || materialized[0];
+      const targetTitle = (task.title || '').trim().toLowerCase();
+      const match = materialized.find((m) => (m.title || '').trim().toLowerCase() === targetTitle) || materialized[0];
       if (match) {
         toggleTaskCompletion(match.id);
       }
@@ -734,7 +735,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     if (isPastDay || isFutureDay) return;
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
-      const match = materialized.find((m) => m.title === task.title);
+      const targetTitle = (task.title || '').trim().toLowerCase();
+      const match = materialized.find((m) => (m.title || '').trim().toLowerCase() === targetTitle);
       if (match && match.checklist) {
         const cMatch = match.checklist.find((c) => c.text === task.checklist?.find((tc) => tc.id === checklistId)?.text) || match.checklist[0];
         if (cMatch) {
@@ -1017,8 +1019,8 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     let currentTasks = groupTasks;
     if (!isCustomDay) {
       const materialized = materializeDaySchedule(activeDateStr);
-      const titles = new Set(groupTasks.map((t) => t.title));
-      currentTasks = materialized.filter((t) => titles.has(t.title));
+      const titles = new Set(groupTasks.map((t) => (t.title || '').trim().toLowerCase()));
+      currentTasks = materialized.filter((t) => titles.has((t.title || '').trim().toLowerCase()));
     }
     const nextCompletedState = !isCurrentlyAllDone;
     if (nextCompletedState) {

@@ -5,6 +5,7 @@ export interface CloudSyncResult {
   database: string;
   syncId?: string;
   message?: string;
+  data?: any;
   updatedAt?: string;
 }
 
@@ -137,6 +138,7 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
         database: result.database || 'NEVA Cloud Storage',
         syncId: result.syncId || cleanSyncId,
         message: result.message || 'Synced successfully to NEVA Cloud.',
+        data: result.data || null,
         updatedAt: result.updatedAt || new Date().toISOString(),
       };
     } else {

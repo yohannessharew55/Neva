@@ -62,14 +62,16 @@ export default async function handler(req, res) {
     const payload = body.payload || body.state || body;
 
     try {
-      const success = await saveUserState(syncId, payload);
-      if (success) {
+      const result = await saveUserState(syncId, payload);
+      const isSuccess = result === true || (result && result.success);
+      if (isSuccess) {
         return res.status(200).json({
           status: 'success',
           message: 'Synced state to NEVA Cloud Storage successfully.',
           database: 'NEVA Cloud Storage',
           syncId,
-          updatedAt: new Date().toISOString()
+          data: result?.payload || null,
+          updatedAt: result?.updatedAt || new Date().toISOString()
         });
       } else {
         throw new Error('Failed to save to cloud storage.');
