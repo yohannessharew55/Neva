@@ -1143,6 +1143,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const pullLatestStateFromCloud = async (force: boolean = false): Promise<boolean> => {
     if (isDeviceOffline()) return false;
     const keyToUse = syncKey.trim() || 'default_user';
+
+    // Guest users or unauthenticated sessions with 'default_user' should never have their local edits wiped by public cloud state
+    if (!currentUser && keyToUse === 'default_user') {
+      return false;
+    }
+
     try {
       const remote = await fetchStateFromCloud(keyToUse);
       if (remote && remote.data) {
@@ -1150,8 +1156,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const lastLocalEdit = localStorage.getItem('neva_last_local_edit_time');
         const localEditTime = lastLocalEdit ? new Date(lastLocalEdit).getTime() : 0;
 
-        // If remote was updated on website, or no pending local edits, or force: hydrate immediately!
-        if (force || !hasPendingSync(keyToUse) || remoteTime > localEditTime) {
+        const isRemoteNewer = remoteTime > localEditTime;
+
+        // Only hydrate if forced AND remote has data, or if remote is strictly newer than our local edits and no pending unsaved edits exist
+        if ((force && remote.data) || (!hasPendingSync(keyToUse) && isRemoteNewer)) {
           const d = remote.data;
           if (d.user) setUser(d.user);
           if (d.domains) setDomains(d.domains);
@@ -1174,8 +1182,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           clearPendingSync(keyToUse);
           setCloudSyncStatus('synced');
           return true;
-        } else if (hasPendingSync(keyToUse)) {
-          // Local has newer edits, push to cloud
+        } else if (localEditTime > remoteTime || hasPendingSync(keyToUse)) {
+          // Local has newer edits, push to cloud to keep cloud updated
           await pushStateToCloudImmediate(keyToUse);
         }
       }
@@ -1194,9 +1202,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
+      // Guest / unauthenticated users default to local offline-first storage
+      if (!currentUser && (!syncKey || syncKey.trim() === 'default_user')) {
+        if (isMounted) setCloudSyncStatus('offline');
+        return;
+      }
+
       try {
         if (isMounted) setCloudSyncStatus('syncing');
-        await pullLatestStateFromCloud(true);
+        await pullLatestStateFromCloud(false);
       } catch (err) {
         if (isMounted) setCloudSyncStatus('offline');
       }
@@ -1204,7 +1218,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     initializeSync();
     return () => { isMounted = false; };
-  }, [syncKey]);
+  }, [syncKey, currentUser]);
 
   // Persist locally immediately & debounced push to Cloud
   useEffect(() => {
@@ -1269,6 +1283,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
   useEffect(() => {
+    // Only execute background auto-sync if user has an account or custom sync key
+    if (!currentUser && (!syncKey || syncKey.trim() === 'default_user')) {
+      return;
+    }
+
     const handleAutoSync = async () => {
       if (isDeviceOffline()) return;
 
@@ -1309,7 +1328,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       window.removeEventListener('focus', handleForeground);
       clearInterval(heartbeat);
     };
-  }, [syncKey]);
+  }, [syncKey, currentUser]);
 
   // Auto-migration & stream preservation:
   // If the user has created tasks (e.g. on Saturday or under date/dayOfWeek) and there are no global tasks,
@@ -2012,76 +2031,26 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     if (dayOfWeek === 7) {
-      // SUNDAY REST DAY:
-      const weekdayDomains = [
-        'PHYSICAL_FITNESS', 'EXERCISE', 'CHESS', 'GUITAR', 'MUSIC',
-        'ARCHITECTURE_DESIGN', 'ARCHITECTURE', 'SITE_SUPERVISION',
-        'FOREX_TRADING', 'TRADING', 'OIL_PAINTING', 'ART'
-      ];
-      const sundayAllowed = customTasks.filter((t) => {
-        const domainUpper = (t.domain || '').toUpperCase();
-        const badgeLower = (t.badge || '').toLowerCase();
-        const titleLower = (t.title || '').toLowerCase();
+      // SUNDAY SCHEDULE:
+      // If user has explicitly planned custom tasks for this Sunday, honor and show all of them!
+      if (customTasks.length > 0) {
+        const defaultSunday = getWeekdayDefaultTasks(7);
+        const isRepresented = (dt: ScheduleTask) => 
+          deletedTaskIds.includes(dt.id) || 
+          customTasks.some((ct) => ct.id === dt.id || ((ct as any).originalId && (ct as any).originalId === dt.id) || ct.title.toLowerCase().trim() === dt.title.toLowerCase().trim());
+        const devotionTasksToAdd = defaultSunday.filter((dt) => !isRepresented(dt));
 
-        const isDevotion =
-          domainUpper === 'DEVOTION_PRAYER' ||
-          badgeLower.includes('devotion') ||
-          titleLower.includes('devotion') ||
-          titleLower.includes('prayer') ||
-          titleLower.includes('ጸሎት') ||
-          titleLower.includes('church') ||
-          titleLower.includes('ቅዳሴ') ||
-          titleLower.includes('worship');
-
-        if (isDevotion) return true;
-
-        // Hard block any exercise, workout, or gym task on Sunday
-        const isExerciseOrFitness =
-          domainUpper.includes('FITNESS') ||
-          domainUpper.includes('EXERCISE') ||
-          badgeLower.includes('fitness') ||
-          badgeLower.includes('exercise') ||
-          badgeLower.includes('workout') ||
-          titleLower.includes('pushup') ||
-          titleLower.includes('pullup') ||
-          titleLower.includes('exercise') ||
-          titleLower.includes('fitness') ||
-          titleLower.includes('workout') ||
-          titleLower.includes('gym') ||
-          titleLower.includes('warmup') ||
-          titleLower.includes('cardio') ||
-          titleLower.includes('squat');
-
-        if (isExerciseOrFitness) return false;
-
-        const isWeekdayDomainOrTitle =
-          weekdayDomains.some(wd => domainUpper.includes(wd) || badgeLower.includes(wd.toLowerCase())) ||
-          titleLower.includes('trading') ||
-          titleLower.includes('chess') ||
-          titleLower.includes('guitar') ||
-          titleLower.includes('sketch') ||
-          titleLower.includes('painting');
-
-        if (isWeekdayDomainOrTitle) {
-          const hasSundayText = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
-          return hasSundayText;
-        }
-
-        const hasExplicitSundayTag = titleLower.includes('sunday') || titleLower.includes('እሁድ') || badgeLower.includes('sunday');
-        return hasExplicitSundayTag;
-      });
-
-      if (sundayAllowed.length > 0) {
         return {
-          tasks: sanitizeScheduleTasks(sundayAllowed),
+          tasks: sanitizeScheduleTasks([...customTasks, ...devotionTasksToAdd]),
           isCustom: true,
-          source: 'rest_day' as const,
+          source: 'custom' as const,
           dateStr,
           dayOfWeek
         };
       }
 
-      const defaultSunday = getWeekdayDefaultTasks(7);
+      // If no custom tasks planned yet for Sunday, show default sacred devotion & sabbath rest routine
+      const defaultSunday = getWeekdayDefaultTasks(7).filter((dt) => !deletedTaskIds.includes(dt.id));
       return {
         tasks: sanitizeScheduleTasks(defaultSunday),
         isCustom: false,
@@ -3105,8 +3074,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDailyStickyNotes([]);
     setCategoryPlans(INITIAL_CATEGORY_PLANS);
     setSelectedCategoryId(null);
+    setDeletedTaskIds([]);
     stopTimer();
+
+    const nowIso = new Date().toISOString();
     try {
+      localStorage.removeItem('neva_deleted_task_ids_v1');
       Object.keys(localStorage).forEach((key) => {
         if ((key.startsWith('livotion_') || key.startsWith('neva_')) && 
             !key.includes('theme') && 
@@ -3117,23 +3090,27 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           localStorage.removeItem(key);
         }
       });
+      // Mark local edit time so local state is authoritative over old cloud snapshots
+      localStorage.setItem('neva_last_local_edit_time', nowIso);
     } catch (e) {}
 
-    // Synchronize the fresh reset state with Neon PostgreSQL so all paired devices reset
-    syncStateToCloud({
-      user: initialUser,
-      domains: initialDomains,
-      tasks: [],
-      workouts: initialWorkouts,
-      meals: [],
-      goals: [],
-      sessions: [],
-      reviews: [],
-      categoryPlans: INITIAL_CATEGORY_PLANS,
-      dailyStickyNotes: [],
-      dailyStickyColor: 'canary',
-      iosNotes: DEFAULT_IOS_NOTES,
-    }, syncKey);
+    // Synchronize the fresh reset state with cloud if authenticated or using custom key
+    if (currentUser || (syncKey && syncKey.trim() !== 'default_user')) {
+      syncStateToCloud({
+        user: initialUser,
+        domains: initialDomains,
+        tasks: [],
+        workouts: initialWorkouts,
+        meals: [],
+        goals: [],
+        sessions: [],
+        reviews: [],
+        categoryPlans: INITIAL_CATEGORY_PLANS,
+        dailyStickyNotes: [],
+        dailyStickyColor: 'canary',
+        iosNotes: DEFAULT_IOS_NOTES,
+      }, syncKey);
+    }
   };
 
   const exportDataJson = () => {

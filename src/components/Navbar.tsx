@@ -331,6 +331,94 @@ export const Navbar: React.FC = () => {
                     )}
                   </div>
                   
+                  {/* Programs & Protocols: Devotion, Nutrition, Exercise */}
+                  <div className="p-2 rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 space-y-1">
+                    <div className="px-2 py-0.5 text-[9px] font-black tracking-wider uppercase text-slate-400 dark:text-slate-500">
+                      {language === 'am' ? 'ፕሮግራሞችና ፕሮቶኮሎች' : 'Programs & Protocols'}
+                    </div>
+
+                    {/* Devotion Protocol */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryId(null);
+                        setActiveTab('devotion');
+                        setShowMoreMenu(false);
+                        try { soundEngine.playTouchSound(); } catch {}
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200 flex items-center justify-between transition cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm group-hover:scale-105 transition-transform">
+                          🙏
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {language === 'am' ? 'የጸሎትና መንፈሳዊ ፕሮቶኮል' : 'Devotion Protocol'}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {language === 'am' ? 'የሰንበት እረፍት፣ መጽሐፍ ቅዱስና ጸሎት' : 'Sabbath rest, scripture & prayer'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={13} className="text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+
+                    {/* Meal Plan & Nutrition */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryId(null);
+                        setActiveTab('nutrition');
+                        setShowMoreMenu(false);
+                        try { soundEngine.playTouchSound(); } catch {}
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200 flex items-center justify-between transition cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm group-hover:scale-105 transition-transform">
+                          🥗
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-slate-800 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                            {language === 'am' ? 'የምግብ እቅድና ኒውትሪሽን' : 'Meal Plan & Nutrition'}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {language === 'am' ? 'ማክሮ፣ ካሎሪና ጤናማ አመጋገብ' : 'Macros, calories & hydration'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={13} className="text-slate-400 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+
+                    {/* Exercise & Fitness Plan */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryId(null);
+                        setActiveTab('fitness');
+                        setShowMoreMenu(false);
+                        try { soundEngine.playTouchSound(); } catch {}
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200 flex items-center justify-between transition cursor-pointer group shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm group-hover:scale-105 transition-transform">
+                          🏋️‍♂️
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-slate-800 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                            {language === 'am' ? 'የአካል ብቃትና ስፖርት እቅድ' : 'Exercise & Fitness Plan'}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {language === 'am' ? 'የጡንቻ ጥንካሬ፣ ካርዲዮና እረፍት ሰዓት' : 'Splits, movements & rest timer'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={13} className="text-slate-400 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                  </div>
+
                   {/* System Settings Primary Action */}
                   <button
                     onClick={() => {

@@ -4,7 +4,7 @@ import {
   Play, Pause, RotateCcw, Plus, Trash2, Check, 
   Volume2, Flame, Sun, Moon, Sunrise, Clock, Star,
   Share2, BookmarkCheck, Shield, ChevronRight, ChevronDown, ChevronUp, Pencil, X,
-  Dumbbell
+  Dumbbell, ArrowLeft
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
@@ -128,7 +128,8 @@ export const DevotionProtocolView: React.FC = () => {
     tasks,
     getDaySchedule, 
     updateDevotionRoutine, 
-    startTask 
+    startTask,
+    setActiveTab
   } = useLivotion();
   const devotionCategory = categoryPlans['devotion'];
 
@@ -627,6 +628,18 @@ export const DevotionProtocolView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                try { soundEngine.playTouchSound(); } catch {}
+                setActiveTab('cockpit');
+              }}
+              className="p-2 -ml-1 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs active:scale-95"
+              title={language === 'am' ? 'ወደ ኮክፒት ተመለስ' : 'Back to Cockpit'}
+              aria-label="Back to Cockpit"
+            >
+              <ArrowLeft size={18} />
+            </button>
             <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-[#a855f7] flex items-center justify-center font-bold shadow-xs">
               <BookOpen size={22} />
             </div>

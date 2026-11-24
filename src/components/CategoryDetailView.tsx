@@ -336,7 +336,7 @@ export const CategoryDetailView: React.FC = () => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
 
-    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateStr(selectedTimelineDate);
     const timelineDateTasks = getDaySchedule(selectedTimelineDate).tasks;
     const conflict = checkScheduleConflict({
       proposedTask: {
@@ -810,7 +810,7 @@ export const CategoryDetailView: React.FC = () => {
     for (let i = 0; i < 30; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
-      const ds = d.toISOString().split('T')[0];
+      const ds = getLocalDateStr(d);
       const hasDone = tasks.some(t => 
         (domainTypes.includes(t.domain) || t.badge?.toLowerCase().includes(category.id.toLowerCase())) &&
         t.completed &&
@@ -850,7 +850,7 @@ export const CategoryDetailView: React.FC = () => {
         color: task.color,
         badge: task.badge,
         completed: true,
-        date: task.date || selectedTimelineDate.toISOString().split('T')[0],
+        date: task.date || getLocalDateStr(selectedTimelineDate),
         checklist: task.checklist || [],
         notes: task.notes,
       });
@@ -905,7 +905,7 @@ export const CategoryDetailView: React.FC = () => {
     e.preventDefault();
     if (!taskModalTitle.trim()) return;
 
-    const dateStr = selectedTimelineDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateStr(selectedTimelineDate);
     const dayOfWeek = selectedTimelineDate.getDay();
     const dayNum = dayOfWeek === 0 ? 7 : dayOfWeek;
     const timelineDateTasks = getDaySchedule(selectedTimelineDate).tasks;
@@ -952,7 +952,7 @@ export const CategoryDetailView: React.FC = () => {
           color: category.color,
           badge: category.title.split(' ')[0],
           completed: false,
-          date: selectedTimelineDate.toISOString().split('T')[0],
+          date: getLocalDateStr(selectedTimelineDate),
           checklist: [],
           notes: taskModalNotes.trim(),
         });
@@ -974,7 +974,7 @@ export const CategoryDetailView: React.FC = () => {
             color: category.color,
             badge: category.title.split(' ')[0],
             completed: false,
-            date: d.toISOString().split('T')[0],
+            date: getLocalDateStr(d),
             checklist: [],
             notes: taskModalNotes.trim() ? `${taskModalNotes.trim()} (Weekly Routine)` : 'Weekly Routine',
           });
@@ -999,7 +999,7 @@ export const CategoryDetailView: React.FC = () => {
               color: category.color,
               badge: category.title.split(' ')[0],
               completed: false,
-              date: d.toISOString().split('T')[0],
+              date: getLocalDateStr(d),
               checklist: [],
               notes: taskModalNotes.trim() ? `${taskModalNotes.trim()} (Week ${w + 1})` : `Week ${w + 1} Routine`,
             });

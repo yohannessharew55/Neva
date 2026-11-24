@@ -170,14 +170,14 @@ export const App: React.FC = () => {
           <IosBottomTabBar />
           <AppFooter />
 
-          {/* Mobile Sleek Quick-Add Floating Action Button */}
+          {/* Mobile Sleek Quick-Add Floating Action Button (Elevated comfortably above iPhone X home indicator & bottom dock) */}
           <button
             type="button"
             onClick={() => {
               try { soundEngine.playPencil(); } catch {}
               setIsQuickAddOpen(true);
             }}
-            className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom,0px)+86px)] right-4 z-30 w-12 h-12 rounded-full bg-gradient-to-tr from-[#0070df] to-[#00a2ff] text-white flex items-center justify-center shadow-lg shadow-blue-500/35 active:scale-90 transition-all cursor-pointer border border-white/25 hover:brightness-110"
+            className="md:hidden fixed bottom-[max(calc(env(safe-area-inset-bottom,0px)+104px),108px)] right-4.5 z-30 w-12 h-12 rounded-full bg-gradient-to-tr from-[#0070df] to-[#00a2ff] text-white flex items-center justify-center shadow-xl shadow-blue-500/40 active:scale-90 transition-all cursor-pointer border border-white/25 hover:brightness-110"
             title="Quick Add Plan Block"
             aria-label="Quick Add Plan Block"
           >

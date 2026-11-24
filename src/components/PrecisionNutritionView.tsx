@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { 
   Utensils, CheckCircle2, Square, Droplet, 
-  Flame, Clock, Plus, Minus
+  Flame, Clock, Plus, Minus, ArrowLeft
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
+import { soundEngine } from '../utils/audio';
 
 export const PrecisionNutritionView: React.FC = () => {
-  const { user, meals, toggleMealConsumed } = useLivotion();
+  const { user, meals, toggleMealConsumed, setActiveTab, language } = useLivotion();
   const [waterGlasses, setWaterGlasses] = useState<number>(5);
 
   const consumedCalories = meals
@@ -20,16 +21,33 @@ export const PrecisionNutritionView: React.FC = () => {
   const proPercent = Math.min(100, Math.round((consumedProtein / user.targetProteinGrams) * 100));
 
   return (
-    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Utensils className="text-emerald-500" /> Meals & Nutrition
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Track your meals and stay hydrated throughout the day.
-          </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              try { soundEngine.playTouchSound(); } catch {}
+              setActiveTab('cockpit');
+            }}
+            className="p-2 -ml-1 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs active:scale-95"
+            title={language === 'am' ? 'ወደ ኮክፒት ተመለስ' : 'Back to Cockpit'}
+            aria-label="Back to Cockpit"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Utensils className="text-emerald-500" />
+              <span>{language === 'am' ? 'የምግብ እቅድና ኒውትሪሽን' : 'Meals & Nutrition'}</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+              {language === 'am'
+                ? 'ምግቦችዎን ይከታተሉ፣ ማክሮዎችን ያመዛዝኑ እና ቀኑን ሙሉ የውሃ መጠንዎን ይጠብቁ።'
+                : 'Track your meals and stay hydrated throughout the day.'}
+            </p>
+          </div>
         </div>
 
         {/* Water Hydration Pill */}

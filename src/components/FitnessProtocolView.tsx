@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Dumbbell, Clock, CheckCircle2, Square, 
   Play, Pause, RotateCcw, Plus, Edit3, Trash2, 
-  ChevronUp, ChevronDown, Check, X, Sparkles, Flame
+  ChevronUp, ChevronDown, Check, X, Sparkles, Flame, ArrowLeft
 } from 'lucide-react';
 import { useLivotion } from '../context/LivotionContext';
 import { soundEngine } from '../utils/audio';
@@ -17,7 +17,9 @@ export const FitnessProtocolView: React.FC = () => {
     addExerciseToWorkout,
     updateExerciseInWorkout,
     deleteExerciseFromWorkout,
-    reorderExerciseInWorkout
+    reorderExerciseInWorkout,
+    setActiveTab,
+    language
   } = useLivotion();
 
   const [selectedDay, setSelectedDay] = useState<number>(1);
@@ -214,13 +216,30 @@ export const FitnessProtocolView: React.FC = () => {
     <div className="w-full max-w-7xl xl:max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fadeIn">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Dumbbell className="text-rose-500" /> Workouts & Exercise Protocols
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Your weekly exercise plan. Fully customizable daily splits, exercise types, sets, and durations.
-          </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              try { soundEngine.playTouchSound(); } catch {}
+              setActiveTab('cockpit');
+            }}
+            className="p-2 -ml-1 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs active:scale-95"
+            title={language === 'am' ? 'ወደ ኮክፒት ተመለስ' : 'Back to Cockpit'}
+            aria-label="Back to Cockpit"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Dumbbell className="text-rose-500" />
+              <span>{language === 'am' ? 'የአካል ብቃትና ስፖርት እቅድ' : 'Workouts & Exercise Protocols'}</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+              {language === 'am' 
+                ? 'የሳምንቱ የስፖርት እቅድ። የጡንቻ ክፍፍል፣ እንቅስቃሴዎች፣ ስብስቦችና የእረፍት ሰዓት።' 
+                : 'Your weekly exercise plan. Fully customizable daily splits, exercise types, sets, and durations.'}
+            </p>
+          </div>
         </div>
 
         {/* Rest Timer */}
