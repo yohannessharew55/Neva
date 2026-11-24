@@ -24,6 +24,7 @@ import {
   formatMinutesToTime 
 } from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
+import { resolveCategoryIcon } from '../utils/categoryIcons';
 
 export const CategoryDetailView: React.FC = () => {
   const { 
@@ -317,20 +318,35 @@ export const CategoryDetailView: React.FC = () => {
   const [editTargetMetric, setEditTargetMetric] = useState(category.monthlyTargetMetric);
   const [editMonthlyTargetHours, setEditMonthlyTargetHours] = useState(category.monthlyTargetHours);
 
-  const getIcon = (id: string) => {
-    switch (id) {
-      case 'exercise': return Dumbbell;
-      case 'chess': return ChessKnight;
-      case 'art': return Palette;
-      case 'music': return Music;
-      case 'architecture': return Building2;
-      case 'trading': return TrendingUp;
-      case 'devotion': return BookOpen;
-      default: return Shield;
+  const Icon = resolveCategoryIcon(category.id, category.icon);
+
+  const getCategoryBannerImage = (id: string, title?: string): string => {
+    const key = `${id} ${title || ''}`.toLowerCase();
+    if (key.includes('exercise') || key.includes('fitness') || key.includes('workout') || key.includes('gym') || key.includes('run')) {
+      return '/images/pillars/exercise.jpg';
     }
+    if (key.includes('chess')) {
+      return '/images/pillars/chess.jpg';
+    }
+    if (key.includes('art') || key.includes('paint') || key.includes('draw') || key.includes('sketch')) {
+      return '/images/pillars/art.jpg';
+    }
+    if (key.includes('music') || key.includes('guitar') || key.includes('piano') || key.includes('song')) {
+      return '/images/pillars/music.jpg';
+    }
+    if (key.includes('arch') || key.includes('design') || key.includes('build')) {
+      return '/images/pillars/architecture.jpg';
+    }
+    if (key.includes('trad') || key.includes('forex') || key.includes('market') || key.includes('finance') || key.includes('stock')) {
+      return '/images/pillars/trading.jpg';
+    }
+    if (key.includes('devotion') || key.includes('prayer') || key.includes('bible') || key.includes('spiritual') || key.includes('study')) {
+      return '/images/pillars/devotion.jpg';
+    }
+    return '/images/pillars/buffer.jpg';
   };
 
-  const Icon = getIcon(category.id);
+  const bannerImageUrl = getCategoryBannerImage(category.id, category.title);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1318,8 +1334,16 @@ export const CategoryDetailView: React.FC = () => {
 
       {/* Hero Category Banner */}
       <div className="p-6 sm:p-8 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        {/* Atmospheric Pillar Background Photo */}
+        <img
+          src={bannerImageUrl}
+          alt={category.title}
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-35 dark:opacity-30 pointer-events-none select-none transition-opacity duration-300"
+        />
+        {/* Smooth Readability Gradient Scrim */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-white/45 dark:from-[#121927]/95 dark:via-[#121927]/85 dark:to-[#121927]/45 pointer-events-none" />
         <div 
-          className="absolute -right-16 -top-16 w-64 h-64 rounded-full blur-3xl opacity-15 pointer-events-none"
+          className="absolute -right-16 -top-16 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
           style={{ backgroundColor: category.color }}
         />
 

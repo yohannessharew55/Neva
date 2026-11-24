@@ -17,6 +17,7 @@ import { formatTaskDuration } from '../utils/formatDuration';
 import { DurationPicker } from './DurationPicker';
 import { autoResolveOverlappingTasks, checkScheduleConflict, ScheduleConflictResult } from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
+import { resolveCategoryIcon } from '../utils/categoryIcons';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 
@@ -222,18 +223,7 @@ const THEMES: Record<StickyColorTheme, {
   },
 };
 
-const getCategoryIcon = (catId: string) => {
-  switch (catId) {
-    case 'exercise': return Dumbbell;
-    case 'chess': return ChessKnight;
-    case 'art': return Palette;
-    case 'music': return Music;
-    case 'architecture': return Building2;
-    case 'trading': return TrendingUp;
-    case 'devotion': return BookOpen;
-    default: return Shield;
-  }
-};
+const getCategoryIcon = (catId: string, iconName?: string) => resolveCategoryIcon(catId, iconName);
 
 export function getStreamStickyTheme(categoryKey?: string, categoryColor?: string): StickyColorTheme {
   const key = (categoryKey || '').toLowerCase();
@@ -962,7 +952,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
         title: plan?.title || catKey,
         translatedTitle: getCategoryTitleTranslated(catKey, plan?.title || catKey),
         color: plan?.color || '#0082ff',
-        icon: getCategoryIcon(catKey),
+        icon: getCategoryIcon(catKey, plan?.icon),
         tasks: catTasks,
         displayedTasks: filteredTasks,
         completedCount,

@@ -22,6 +22,7 @@ import {
   formatMinutesToTime
 } from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
+import { resolveCategoryIcon } from '../utils/categoryIcons';
 
 type StickyColorTheme = 'canary' | 'peach' | 'mint' | 'sky' | 'rose' | 'lavender' | 'darkgrey' | 'charcoal' | 'graphite';
 type PlannerHorizon = 'daily' | 'weekly' | 'monthly' | 'goals';
@@ -525,17 +526,8 @@ export const IntegratedCalendarView: React.FC<IntegratedCalendarViewProps> = ({ 
   };
 
   // Category Icon resolver
-  const getCategoryIcon = (catId: string) => {
-    switch (catId) {
-      case 'exercise': return Dumbbell;
-      case 'chess': return ChessKnight;
-      case 'art': return PaletteIcon;
-      case 'music': return Music;
-      case 'architecture': return Building2;
-      case 'trading': return TrendingUp;
-      case 'devotion': return BookOpen;
-      default: return ChessKnight;
-    }
+  const getCategoryIcon = (catId: string, iconName?: string) => {
+    return resolveCategoryIcon(catId, iconName || categoryPlans[catId]?.icon);
   };
 
   const resolveTaskCategory = (task: ScheduleTask): { id: string; title: string; color: string; Icon: any } => {

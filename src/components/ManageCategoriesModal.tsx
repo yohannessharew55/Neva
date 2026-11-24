@@ -1,30 +1,22 @@
 import React, { useState } from 'react';
 import { 
-  X, Trash2, Plus, ArrowUp, ArrowDown, 
-  ChessKnight, Palette, Music, Dumbbell, Building2, 
-  TrendingUp, BookOpen, Shield, AlertTriangle, RotateCcw, 
+  X, Trash2, Plus, ArrowUp, ArrowDown, Palette,
+  AlertTriangle, RotateCcw, 
   SlidersHorizontal, CheckCircle2, ChevronRight, Layers,
   Edit3, Check, Settings, Briefcase, Heart, Sparkles
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
+import {
+  CATEGORY_PRESET_COLORS as PRESET_COLORS,
+  CATEGORY_ICON_OPTIONS,
+  getDefaultCategoryIconId,
+  resolveCategoryIcon
+} from '../utils/categoryIcons';
 
 interface ManageCategoriesModalProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
-
-const PRESET_COLORS = [
-  '#0082ff', // Electric Blue
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#e11d48', // Crimson Rose
-  '#ef4444', // Red
-  '#f59e0b', // Amber
-  '#10b981', // Emerald
-  '#06b6d4', // Cyan
-  '#6366f1', // Indigo
-  '#64748b', // Slate
-];
 
 export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
   isOpen: propIsOpen,
@@ -53,26 +45,17 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editColor, setEditColor] = useState('#0082ff');
+  const [editIcon, setEditIcon] = useState('Shield');
   const [editWeeklyHours, setEditWeeklyHours] = useState<number>(5);
   const [editMonthlyGoal, setEditMonthlyGoal] = useState('');
+  const [editMonthlyMetric, setEditMonthlyMetric] = useState('');
   const [editMonthlyHours, setEditMonthlyHours] = useState<number>(20);
   const [editTriple8Type, setEditTriple8Type] = useState<'career' | 'hobby' | 'living'>('hobby');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const getIcon = (id: string) => {
-    switch (id) {
-      case 'chess': return ChessKnight;
-      case 'art': return Palette;
-      case 'music': return Music;
-      case 'exercise': return Dumbbell;
-      case 'architecture': return Building2;
-      case 'trading': return TrendingUp;
-      case 'devotion': return BookOpen;
-      default: return Shield;
-    }
-  };
+  const getIcon = (id: string, iconName?: string) => resolveCategoryIcon(id, iconName);
 
   const baseCategoryKeys = Object.keys(categoryPlans);
   const orderedCategoryKeys = [...baseCategoryKeys].sort((a, b) => {
@@ -100,8 +83,10 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
     setEditingCatId(cat.id);
     setEditTitle(cat.title);
     setEditColor(cat.color || PRESET_COLORS[0]);
+    setEditIcon(cat.icon || getDefaultCategoryIconId(cat.id));
     setEditWeeklyHours(cat.weeklyTargetHours || 5);
     setEditMonthlyGoal(cat.monthlyGoalTitle || '');
+    setEditMonthlyMetric(cat.monthlyTargetMetric || '');
     setEditMonthlyHours(cat.monthlyTargetHours || 20);
     const defaultType = (cat.id === 'architecture' || cat.id === 'trading' || cat.id === 'career' || cat.id === 'work')
       ? 'career'
@@ -125,8 +110,10 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
     updateCategoryPlan(catId, {
       title: editTitle.trim(),
       color: editColor,
+      icon: editIcon,
       weeklyTargetHours: Math.max(0.5, Number(editWeeklyHours) || 1),
       monthlyGoalTitle: editMonthlyGoal.trim(),
+      monthlyTargetMetric: editMonthlyMetric.trim(),
       monthlyTargetHours: Math.max(1, Number(editMonthlyHours) || 1),
       triple8Type: editTriple8Type
     });
@@ -245,7 +232,7 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
             </div>
           ) : (
             categories.map((cat, idx) => {
-              const Icon = getIcon(cat.id);
+              const Icon = getIcon(cat.id, cat.icon);
               const isConfirming = confirmDeleteId === cat.id;
               const isEditing = editingCatId === cat.id;
               const catTasksCount = tasks.filter((t) => (t.badge && t.badge.toLowerCase().includes(cat.id)) || (t.domain && t.domain.toLowerCase().includes(cat.id))).length;
@@ -487,6 +474,58 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
                               )}
                             </button>
                           ))}
+                          <label
+                            title={language === 'am' ? 'ሌላ ቀለም ምረጥ' : 'Custom Color'}
+                            className={`w-7 h-7 rounded-full border border-dashed border-slate-400 dark:border-slate-600 flex items-center justify-center cursor-pointer transition hover:scale-110 overflow-hidden relative ${
+                              !PRESET_COLORS.some((c) => c.toLowerCase() === editColor.toLowerCase())
+                                ? 'scale-110 ring-2 ring-offset-2 ring-[#0082ff] dark:ring-offset-slate-900'
+                                : ''
+                            }`}
+                            style={{
+                              backgroundColor: !PRESET_COLORS.some((c) => c.toLowerCase() === editColor.toLowerCase())
+                                ? editColor
+                                : 'transparent'
+                            }}
+                          >
+                            <input
+                              type="color"
+                              value={editColor}
+                              onChange={(e) => setEditColor(e.target.value)}
+                              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                            />
+                            {PRESET_COLORS.some((c) => c.toLowerCase() === editColor.toLowerCase()) && (
+                              <Plus size={13} className="text-slate-500 dark:text-slate-300 pointer-events-none" />
+                            )}
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Category Icon Selector */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                          <span>{language === 'am' ? 'የዘርፉ ምልክት (Category Icon)' : 'Category Icon'}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{editIcon}</span>
+                        </label>
+                        <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
+                          {CATEGORY_ICON_OPTIONS.map((item) => {
+                            const IconItemComp = item.icon;
+                            const isSelectedIcon = editIcon === item.id;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => setEditIcon(item.id)}
+                                title={item.label}
+                                className={`p-2 rounded-xl flex flex-col items-center gap-0.5 transition cursor-pointer ${
+                                  isSelectedIcon
+                                    ? 'bg-[#0082ff] text-white shadow-xs font-bold'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                              >
+                                <IconItemComp size={15} />
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -533,18 +572,32 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Monthly Milestone / Goal Title */}
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          {language === 'am' ? 'የወሩ ዋና ግብ (Monthly Focus Milestone)' : 'Monthly Focus Milestone'}
-                        </label>
-                        <input
-                          type="text"
-                          value={editMonthlyGoal}
-                          onChange={(e) => setEditMonthlyGoal(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
-                          placeholder="e.g., Master 10 classical opening positions"
-                        />
+                      {/* Monthly Milestone / Goal Title & Target Metric */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {language === 'am' ? 'የወሩ ዋና ግብ (Monthly Goal)' : 'Monthly Focus Milestone'}
+                          </label>
+                          <input
+                            type="text"
+                            value={editMonthlyGoal}
+                            onChange={(e) => setEditMonthlyGoal(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
+                            placeholder="e.g., Master 10 classical opening positions"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {language === 'am' ? 'የመለኪያ ዝርዝር (Target Metric)' : 'Target Metric / Details'}
+                          </label>
+                          <input
+                            type="text"
+                            value={editMonthlyMetric}
+                            onChange={(e) => setEditMonthlyMetric(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
+                            placeholder="e.g., 20 sessions / 100% consistency"
+                          />
+                        </div>
                       </div>
 
                       {/* Save & Cancel Row */}
