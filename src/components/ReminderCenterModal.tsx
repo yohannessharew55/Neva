@@ -40,6 +40,10 @@ const SOUND_LABELS: Record<AlarmSoundType, { name: string; desc: string }> = {
   sacred_chimes: { name: 'Chimes', desc: 'Triad' },
   gentle_harp: { name: 'Gentle Harp', desc: 'Acoustic' },
   digital_alert: { name: 'Crisp Alert', desc: 'Digital' },
+  celestial_harp: { name: 'Celestial Harp', desc: 'Arpeggio' },
+  mindful_chime: { name: '528Hz Chime', desc: 'Mindful' },
+  pulse_alert: { name: 'Radar Pulse', desc: 'Modern' },
+  morning_dew: { name: 'Sunrise Awakening', desc: 'Bright' },
   none: { name: 'Vibrate Only', desc: 'Silent' }
 };
 

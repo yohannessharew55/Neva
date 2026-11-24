@@ -13,7 +13,8 @@ import {
   FocusSoundSettings, 
   TouchSoundType, 
   StartSoundType, 
-  AlarmSoundType 
+  AlarmSoundType,
+  CompletionSoundType
 } from '../utils/audio';
 import { iosNativeBridge } from '../utils/iosNativeBridge';
 
@@ -156,6 +157,88 @@ const ALARM_SOUND_OPTIONS: Array<{ id: AlarmSoundType; nameEn: string; nameAm: s
   { id: 'none', nameEn: 'Silent', nameAm: 'ጸጥታ' }
 ];
 
+const COMPLETION_SOUND_OPTIONS: Array<{
+  id: CompletionSoundType;
+  nameEn: string;
+  nameAm: string;
+  descEn: string;
+  descAm: string;
+  icon: string;
+}> = [
+  {
+    id: 'crystal_chime',
+    nameEn: 'Crystal Chime',
+    nameAm: 'ክሪስታል ቻይም',
+    descEn: 'Sparkling, uplifting celestial accomplishment chime',
+    descAm: 'ደማቅ እና መንፈስን የሚያነቃቃ የክሪስታል ቻይም',
+    icon: '✨'
+  },
+  {
+    id: 'celestial_harp',
+    nameEn: 'Celestial Harp',
+    nameAm: 'ሰማያዊ በገና',
+    descEn: 'Harmonious cascading harp arpeggio',
+    descAm: 'ተስማሚ እና ማራኪ የበገና ዜማ',
+    icon: '🎵'
+  },
+  {
+    id: 'morning_dew',
+    nameEn: 'Sunrise Awakening',
+    nameAm: 'የንጋት ዜማ',
+    descEn: 'Bright, celebratory sunrise chord',
+    descAm: 'ብሩህና አስደሳች የንጋት ዜማ',
+    icon: '🌅'
+  },
+  {
+    id: 'marimba',
+    nameEn: 'Wooden Marimba',
+    nameAm: 'የማሪምባ ዜማ',
+    descEn: 'Warm, organic melodic wood celebration',
+    descAm: 'ሞቅ ያለና የተፈጥሮ የማሪምባ ዜማ',
+    icon: '🪵'
+  },
+  {
+    id: 'droplet',
+    nameEn: 'Water Droplet',
+    nameAm: 'የውሃ ጠብታ',
+    descEn: 'Crisp, peaceful pure droplet tone',
+    descAm: 'ጥርት ያለና ጸጥተኛ የውሃ ጠብታ ቅላጼ',
+    icon: '💧'
+  },
+  {
+    id: 'pop',
+    nameEn: 'Celebration Pop',
+    nameAm: 'የደስታ ፖፕ',
+    descEn: 'Punchy, juicy modern achievement pop',
+    descAm: 'ደማቅና ፈጣን የውጤት ፖፕ ድምፅ',
+    icon: '🫧'
+  },
+  {
+    id: 'tibetan_bowl',
+    nameEn: 'Tibetan Singing Bowl',
+    nameAm: 'ቲቤታን ቦውል',
+    descEn: 'Deep, serene meditative resonance',
+    descAm: 'ጥልቅና ረጋ ያለ የቲቤታን ቦውል ቅላጼ',
+    icon: '🥣'
+  },
+  {
+    id: 'gentle_bell',
+    nameEn: 'Gentle Bell',
+    nameAm: 'ለስላሳ ደወል',
+    descEn: 'Classic, pure peaceful bell tone',
+    descAm: 'ክላሲክና ረጋ ያለ የደወል ድምፅ',
+    icon: '🔔'
+  },
+  {
+    id: 'none',
+    nameEn: 'Silent / Muted',
+    nameAm: 'ጸጥታ (ድምፅ አልባ)',
+    descEn: 'Completely silent task completion',
+    descAm: 'ምንም አይነት የማጠናቀቂያ ድምፅ የለም',
+    icon: '🔇'
+  }
+];
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen: propIsOpen,
   onClose: propOnClose
@@ -228,6 +311,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     iosNativeBridge.haptic('medium');
     soundEngine.playAlarmSound(type, soundSettings.masterVolume);
     setTimeout(() => setPreviewingId(null), 2500);
+  };
+
+  const handleSelectCompletionSound = (type: CompletionSoundType) => {
+    updateSoundSettings({ completionSound: type, completionSoundEnabled: type !== 'none' });
+    setPreviewingId(`completion-${type}`);
+    iosNativeBridge.haptic('medium');
+    if (type !== 'none') {
+      soundEngine.playCompletionSound(type, soundSettings.completionSoundVolume);
+    }
+    setTimeout(() => setPreviewingId(null), 1500);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -847,6 +940,120 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       }`} 
                     />
                   </button>
+                </div>
+              </div>
+
+              {/* Task & Goal Completion Sound Card */}
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <CheckCircle2 size={15} className="text-emerald-500" />
+                      <span>{language === 'am' ? 'የስራና ግብ ማጠናቀቂያ ድምፅ (Task Completion)' : 'Task & Goal Completion Sound'}</span>
+                    </span>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {language === 'am'
+                        ? 'ስራዎችን፣ ምድቦችን እና እቅዶችን ሲጨርሱ የሚሰማ አስደሳች ድምፅ'
+                        : 'Celebratory acoustic feedback when completing tasks, categories & goals'}
+                    </p>
+                  </div>
+
+                  {/* Toggle Enable/Mute */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !soundSettings.completionSoundEnabled;
+                      updateSoundSettings({ completionSoundEnabled: next });
+                      if (next) soundEngine.playCompletionSound();
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 transition cursor-pointer ${
+                      soundSettings.completionSoundEnabled
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                        : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border border-transparent'
+                    }`}
+                  >
+                    {soundSettings.completionSoundEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+                    <span>{soundSettings.completionSoundEnabled ? (language === 'am' ? 'በርቷል' : 'Enabled') : (language === 'am' ? 'ጠፍቷል' : 'Muted')}</span>
+                  </button>
+                </div>
+
+                {/* Completion Sound Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {COMPLETION_SOUND_OPTIONS.map((opt) => {
+                    const isSelected = soundSettings.completionSound === opt.id;
+                    const isPreviewing = previewingId === `completion-${opt.id}`;
+
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => handleSelectCompletionSound(opt.id)}
+                        className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-white dark:bg-slate-800 border-emerald-500 shadow-md ring-2 ring-emerald-500/25 text-slate-900 dark:text-white'
+                            : 'bg-white/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <span className="text-lg shrink-0">{opt.icon}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold truncate">
+                              {language === 'am' ? opt.nameAm : opt.nameEn}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate">
+                              {language === 'am' ? opt.descAm : opt.descEn}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                          {opt.id !== 'none' && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectCompletionSound(opt.id);
+                              }}
+                              className={`w-7 h-7 rounded-xl flex items-center justify-center transition cursor-pointer ${
+                                isPreviewing
+                                  ? 'bg-emerald-500 text-white scale-110'
+                                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200'
+                              }`}
+                              title={language === 'am' ? 'ድምፁን አድምጥ' : 'Preview Sound'}
+                            >
+                              <Play size={10} fill="currentColor" />
+                            </button>
+                          )}
+                          {isSelected && <CheckCircle2 size={16} className="text-emerald-500" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Completion Sound Volume Slider */}
+                <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span className="flex items-center gap-1.5">
+                      <Volume2 size={13} className="text-slate-400" />
+                      <span>{language === 'am' ? 'የማጠናቀቂያ ድምፅ መጠን' : 'Completion Sound Volume'}</span>
+                    </span>
+                    <span className="font-mono text-emerald-500 font-bold">
+                      {Math.round((soundSettings.completionSoundVolume ?? 0.8) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={soundSettings.completionSoundVolume ?? 0.8}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      updateSoundSettings({ completionSoundVolume: val });
+                      soundEngine.playCompletionSound(undefined, val);
+                    }}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
                 </div>
               </div>
 

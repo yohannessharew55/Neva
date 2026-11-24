@@ -1583,7 +1583,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!match.date) {
           const nextCompleted = !match.completed;
           if (nextCompleted) {
-            soundEngine.playSound('CHIME_MEDITATION');
+            soundEngine.playCompletionSound();
           }
           const instantiated: ScheduleTask = {
             ...match,
@@ -1598,7 +1598,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (t.id === taskId) {
             const nextCompleted = !t.completed;
             if (nextCompleted) {
-              soundEngine.playSound('CHIME_MEDITATION');
+              soundEngine.playCompletionSound();
             }
             return { ...t, completed: nextCompleted };
           }
@@ -1610,7 +1610,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const sched = getDaySchedule(now);
       const dynamicTask = sched.tasks.find((t) => t.id === taskId);
       if (dynamicTask) {
-        soundEngine.playSound('CHIME_MEDITATION');
+        soundEngine.playCompletionSound();
         return [
           ...prev,
           {

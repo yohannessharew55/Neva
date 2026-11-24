@@ -1022,7 +1022,7 @@ export const BigDailyActivitiesStickyNote: React.FC<BigDailyActivitiesStickyNote
     }
     const nextCompletedState = !isCurrentlyAllDone;
     if (nextCompletedState) {
-      soundEngine.playSound('CHIME_MEDITATION');
+      try { soundEngine.playCompletionSound(); } catch {}
     }
     currentTasks.forEach((t) => {
       if (t.completed !== nextCompletedState) {

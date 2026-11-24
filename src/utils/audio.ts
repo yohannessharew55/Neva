@@ -4,12 +4,16 @@
 
 export type StartSoundType = 'none' | 'gentle_bell' | 'tibetan_bowl' | 'zen_gong' | 'crystal_chime' | 'celestial_harp' | 'mindful_chime' | 'morning_dew';
 export type AlarmSoundType = 'none' | 'tibetan_bowl' | 'temple_bell' | 'zen_gong' | 'sacred_chimes' | 'digital_alert' | 'gentle_harp' | 'celestial_harp' | 'mindful_chime' | 'pulse_alert' | 'morning_dew';
+export type CompletionSoundType = 'crystal_chime' | 'celestial_harp' | 'morning_dew' | 'marimba' | 'droplet' | 'pop' | 'tibetan_bowl' | 'gentle_bell' | 'none';
 export type AmbienceType = 'none' | 'alpha432' | 'rain' | 'forest_stream' | 'white_noise';
 export type TouchSoundType = 'pencil' | 'pop' | 'click' | 'chime' | 'wood' | 'droplet' | 'haptic' | 'paper' | 'marimba' | 'none';
 
 export interface FocusSoundSettings {
   startSound: StartSoundType;
   alarmSound: AlarmSoundType;
+  completionSound: CompletionSoundType;
+  completionSoundVolume: number; // 0.0 to 1.0
+  completionSoundEnabled: boolean;
   ambience: AmbienceType;
   masterVolume: number; // 0.0 to 1.0
   ambienceVolume: number; // 0.0 to 1.0
@@ -23,6 +27,9 @@ export interface FocusSoundSettings {
 export const DEFAULT_SOUND_SETTINGS: FocusSoundSettings = {
   startSound: 'gentle_bell',
   alarmSound: 'tibetan_bowl',
+  completionSound: 'crystal_chime',
+  completionSoundVolume: 0.8,
+  completionSoundEnabled: true,
   ambience: 'none',
   masterVolume: 0.8,
   ambienceVolume: 0.4,
@@ -508,6 +515,52 @@ class SoundEngine {
         break;
       case 'none':
       default:
+        break;
+    }
+  }
+
+  // Task & Goal Completion Sound (Celebratory feedback when marking a task or category as done)
+  playCompletionSound(customType?: CompletionSoundType, customVol?: number): void {
+    const settings = this.getSettings();
+    if (settings.completionSoundEnabled === false) return;
+
+    const type = customType || settings.completionSound || 'crystal_chime';
+    if (type === 'none') return;
+
+    const baseVol = customVol !== undefined ? customVol : (settings.completionSoundVolume ?? 0.8);
+    const effectiveVol = Math.max(0, Math.min(1, baseVol * (settings.masterVolume ?? 0.8)));
+    if (effectiveVol <= 0) return;
+
+    // Mobile celebration haptic pulse
+    if (settings.vibrationEnabled !== false && typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate([20, 50, 25]); } catch {}
+    }
+
+    switch (type) {
+      case 'celestial_harp':
+        this.playCelestialHarp(effectiveVol);
+        break;
+      case 'morning_dew':
+        this.playMorningDew(effectiveVol);
+        break;
+      case 'marimba':
+        this.playMarimba(effectiveVol);
+        break;
+      case 'droplet':
+        this.playDroplet(effectiveVol);
+        break;
+      case 'pop':
+        this.playPop(effectiveVol);
+        break;
+      case 'tibetan_bowl':
+        this.playTibetanBowl(effectiveVol);
+        break;
+      case 'gentle_bell':
+        this.playGentleBell(effectiveVol);
+        break;
+      case 'crystal_chime':
+      default:
+        this.playCrystalChime(effectiveVol);
         break;
     }
   }
