@@ -117,7 +117,64 @@
     }
   ],
   "tasks": [],
-  "workouts": [],
+  "workouts": [
+    {
+      "id": "wo-1",
+      "dayOfWeek": 1,
+      "workoutName": "Monday: Workout Routine",
+      "exerciseType": "STRENGTH_COMPOUND",
+      "targetDurationMinutes": 60,
+      "movementList": []
+    },
+    {
+      "id": "wo-2",
+      "dayOfWeek": 2,
+      "workoutName": "Tuesday: Workout Routine",
+      "exerciseType": "STRENGTH_COMPOUND",
+      "targetDurationMinutes": 60,
+      "movementList": []
+    },
+    {
+      "id": "wo-3",
+      "dayOfWeek": 3,
+      "workoutName": "Wednesday: Cardio & Mobility",
+      "exerciseType": "ZONE_2_CARDIO",
+      "targetDurationMinutes": 45,
+      "movementList": []
+    },
+    {
+      "id": "wo-4",
+      "dayOfWeek": 4,
+      "workoutName": "Thursday: Workout Routine",
+      "exerciseType": "HYPERTROPHY",
+      "targetDurationMinutes": 60,
+      "movementList": []
+    },
+    {
+      "id": "wo-5",
+      "dayOfWeek": 5,
+      "workoutName": "Friday: Workout Routine",
+      "exerciseType": "HYPERTROPHY",
+      "targetDurationMinutes": 60,
+      "movementList": []
+    },
+    {
+      "id": "wo-6",
+      "dayOfWeek": 6,
+      "workoutName": "Saturday: Conditioning & Active",
+      "exerciseType": "HIIT",
+      "targetDurationMinutes": 45,
+      "movementList": []
+    },
+    {
+      "id": "wo-7",
+      "dayOfWeek": 7,
+      "workoutName": "Sunday: Rest & Recovery",
+      "exerciseType": "ACTIVE_RECOVERY",
+      "targetDurationMinutes": 30,
+      "movementList": []
+    }
+  ],
   "meals": [],
   "goals": [],
   "sessions": [],
@@ -265,7 +322,7 @@
     },
     "buffer": {
       "id": "buffer",
-      "title": "Buffer & Living",
+      "title": "Rest & Buffer",
       "color": "#64748b",
       "weeklyTargetHours": 5,
       "currentWeeklyHours": 0,
@@ -279,16 +336,41 @@
       "inProgressItems": [],
       "achievedItems": [],
       "upcomingItems": [],
-      "stickyNoteColor": "yellow",
+      "stickyNoteColor": "mint",
       "dailyPlans": [],
       "triple8Type": "living"
     }
   },
   "dailyStickyNotes": [],
   "dailyStickyColor": "canary",
-  "iosNotes": [],
+  "iosNotes": [
+    {
+      "id": "note-1",
+      "title": "Neva Mastery OS • Core Directives",
+      "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
+      "folder": "Work",
+      "pinned": true,
+      "updatedAt": "2026-11-24T20:09:50.898Z"
+    },
+    {
+      "id": "note-2",
+      "title": "Guitar Solo Phrasing & Dorian Scale",
+      "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
+      "folder": "Ideas",
+      "pinned": false,
+      "updatedAt": "2026-11-23T21:09:50.899Z"
+    },
+    {
+      "id": "note-3",
+      "title": "Architecture & Site Supervision Checkpoints",
+      "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
+      "folder": "Work",
+      "pinned": false,
+      "updatedAt": "2026-11-22T21:09:50.899Z"
+    }
+  ],
   "deletedTaskIds": [],
   "_isFullReset": true,
-  "_updatedAt": "2026-11-24T17:14:10.873Z",
-  "_updatedTimestamp": 1795540450874
+  "_updatedAt": "2026-11-24T21:32:41.149Z",
+  "_updatedTimestamp": 1795555961149
 }
