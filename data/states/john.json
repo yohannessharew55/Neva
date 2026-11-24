@@ -719,7 +719,7 @@
       "title": "Puzzle training",
       "startTime": "01:00 AM",
       "durationMin": 30,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -736,15 +736,14 @@
       ],
       "id": "task-1795516638284-0-7ajj",
       "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "completedAt": "2026-11-24T13:33:34.991Z"
+      "dayOfWeek": 2
     },
     {
       "domain": "CHESS",
       "title": "Aagard book",
       "startTime": "01:30 AM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -761,15 +760,14 @@
       ],
       "id": "task-1795516638284-1-1pqr",
       "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "completedAt": "2026-11-24T13:33:34.991Z"
+      "dayOfWeek": 2
     },
     {
       "domain": "CHESS",
       "title": "15+10 game and analysis",
       "startTime": "02:15 AM",
       "durationMin": 30,
-      "completed": true,
+      "completed": false,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -786,8 +784,7 @@
       ],
       "id": "task-1795516638284-2-h7mh",
       "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "completedAt": "2026-11-24T13:33:34.991Z"
+      "dayOfWeek": 2
     },
     {
       "id": "inst-2026-11-24-task-1794647533131",
@@ -1256,6 +1253,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:05.658Z",
-  "_updatedTimestamp": 1795527245658
+  "_updatedAt": "2026-11-24T13:34:06.422Z",
+  "_updatedTimestamp": 1795527246422
 }
