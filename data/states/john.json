@@ -791,7 +791,7 @@
       "title": "Warmup exercise",
       "startTime": "12:00 PM",
       "durationMin": 20,
-      "completed": true,
+      "completed": false,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -815,7 +815,7 @@
       "originalId": "task-1794647533131",
       "title": "Warmup exercise",
       "date": "2026-11-24",
-      "completed": true,
+      "completed": false,
       "startTime": "12:20 PM",
       "durationMin": 20,
       "color": "#ec4899",
@@ -827,7 +827,7 @@
       "title": "Lick of the day",
       "startTime": "12:40 PM",
       "durationMin": 15,
-      "completed": true,
+      "completed": false,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -851,7 +851,7 @@
       "title": "Song practice",
       "startTime": "12:55 PM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -875,7 +875,7 @@
       "title": "Freeplay",
       "startTime": "01:40 PM",
       "durationMin": 15,
-      "completed": true,
+      "completed": false,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -1252,6 +1252,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:53.468Z",
-  "_updatedTimestamp": 1795527293468
+  "_updatedAt": "2026-11-24T13:34:56.856Z",
+  "_updatedTimestamp": 1795527296856
 }
