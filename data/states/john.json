@@ -119,30 +119,8 @@
   "tasks": [
     {
       "domain": "CHESS",
-      "title": "Puzzle training",
-      "startTime": "01:00 AM",
-      "durationMin": 30,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794607192262-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794607192262-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794607192262"
-    },
-    {
-      "domain": "CHESS",
       "title": "Aagard book",
-      "startTime": "01:30 AM",
+      "startTime": "01:00 AM",
       "durationMin": 45,
       "completed": false,
       "color": "#8b5cf6",
@@ -160,6 +138,28 @@
         }
       ],
       "id": "task-1794607215060"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:45 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607192262-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607192262-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607192262"
     },
     {
       "domain": "CHESS",
@@ -787,9 +787,21 @@
       "dayOfWeek": 2
     },
     {
+      "id": "inst-2026-11-24-task-1794647533131",
+      "originalId": "task-1794647533131",
+      "title": "Warmup exercise",
+      "date": "2026-11-24",
+      "completed": true,
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "color": "#ec4899",
+      "badge": "Music",
+      "domain": "GUITAR"
+    },
+    {
       "domain": "GUITAR",
       "title": "Warmup exercise",
-      "startTime": "12:00 PM",
+      "startTime": "12:20 PM",
       "durationMin": 20,
       "completed": true,
       "color": "#ec4899",
@@ -813,7 +825,7 @@
     {
       "domain": "GUITAR",
       "title": "Lick of the day",
-      "startTime": "12:20 PM",
+      "startTime": "12:40 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -837,7 +849,7 @@
     {
       "domain": "GUITAR",
       "title": "Song practice",
-      "startTime": "12:35 PM",
+      "startTime": "12:55 PM",
       "durationMin": 45,
       "completed": true,
       "color": "#ec4899",
@@ -861,7 +873,7 @@
     {
       "domain": "GUITAR",
       "title": "Freeplay",
-      "startTime": "01:20 PM",
+      "startTime": "01:40 PM",
       "durationMin": 15,
       "completed": true,
       "color": "#ec4899",
@@ -918,18 +930,6 @@
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
       "dayOfWeek": 2
-    },
-    {
-      "id": "inst-2026-11-24-task-1794647533131",
-      "originalId": "task-1794647533131",
-      "title": "Warmup exercise",
-      "date": "2026-11-24",
-      "completed": true,
-      "startTime": "12:00 PM",
-      "durationMin": 20,
-      "color": "#ec4899",
-      "badge": "Music",
-      "domain": "GUITAR"
     }
   ],
   "workouts": [
@@ -1252,6 +1252,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:33:23.349Z",
-  "_updatedTimestamp": 1795527203349
+  "_updatedAt": "2026-11-24T13:33:35.934Z",
+  "_updatedTimestamp": 1795527215934
 }
