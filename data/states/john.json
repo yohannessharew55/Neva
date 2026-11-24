@@ -638,6 +638,115 @@
       "id": "task-1795422048137-8-ft1e",
       "date": "2026-11-23",
       "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795512029344-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795512029344-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795512029344-0-pgzd",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795512029344-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795512029344-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795512029344-1-apch",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795512029344-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795512029344-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795512029344-2-dwu9",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1795512029344-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795512029344-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795512029344-3-sbf6",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1795512029344-4-bicx",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
     }
   ],
   "workouts": [
