@@ -713,6 +713,18 @@
       "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
       "dayOfWeek": 2
+    },
+    {
+      "id": "inst-2026-11-24-task-1794647533131",
+      "originalId": "task-1794647533131",
+      "title": "Warmup exercise",
+      "date": "2026-11-24",
+      "completed": true,
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "color": "#ec4899",
+      "badge": "Music",
+      "domain": "GUITAR"
     }
   ],
   "workouts": [
@@ -1034,5 +1046,7 @@
       "pinned": false,
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
-  ]
+  ],
+  "_updatedAt": "2026-11-24T13:30:20.146Z",
+  "_updatedTimestamp": 1795527020146
 }
