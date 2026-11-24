@@ -1360,20 +1360,9 @@ export const CategoryDetailView: React.FC = () => {
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                {getCategoryTitleTranslated(category.id, category.title)}
-              </h1>
-              <span 
-                className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider"
-                style={{ backgroundColor: `${category.color}15`, color: category.color }}
-              >
-                {t('categoryPillar')}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {language === 'am' ? 'የታቀደ ልህቀት፣ ሳምንታዊ የማስፈጸሚያ ሰዓታት እና የደረጃዎች እቅድ።' : 'Deliberate Mastery, execution cadence, and milestones roadmap.'}
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight drop-shadow-2xs">
+              {getCategoryTitleTranslated(category.id, category.title)}
+            </h1>
           </div>
         </div>
 
