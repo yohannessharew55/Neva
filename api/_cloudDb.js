@@ -300,9 +300,15 @@ export function mergeUserStates(existing, incoming) {
       }
     });
 
+    const deletedSet = new Set([
+      ...(Array.isArray(existing.deletedTaskIds) ? existing.deletedTaskIds : []),
+      ...(Array.isArray(incoming.deletedTaskIds) ? incoming.deletedTaskIds : [])
+    ]);
+
     const seenKeys = new Set();
     const finalTasks = [];
     for (const t of taskMap.values()) {
+      if (t.id && deletedSet.has(t.id)) continue;
       const uniqueKey = t.id || getTaskKey(t);
       const titleDateKey = getTaskKey(t);
       if (titleDateKey !== '::') {
@@ -316,6 +322,7 @@ export function mergeUserStates(existing, incoming) {
       }
     }
     merged.tasks = finalTasks;
+    merged.deletedTaskIds = Array.from(deletedSet);
   }
 
   // 2. Merge categoryPlans
@@ -464,9 +471,11 @@ export async function saveUserState(username, payload) {
     } catch (e) {}
   }
 
-  // Smart server-side merge so completions from other devices are NEVER overwritten
+  // Smart server-side merge so completions from other devices are NEVER overwritten,
+  // EXCEPT when an explicit full reset / scratch wipe is requested by the user
   let finalPayload = payload;
-  if (existingPayload) {
+  const isFullReset = payload && (payload._isFullReset === true || payload.reset === true);
+  if (existingPayload && !isFullReset) {
     finalPayload = mergeUserStates(existingPayload, payload);
   }
 

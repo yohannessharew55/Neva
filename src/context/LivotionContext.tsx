@@ -470,11 +470,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [tasks, setTasks] = useState<ScheduleTask[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_tasks`);
-    if (saved) {
+    const isCleared = typeof window !== 'undefined' && localStorage.getItem('neva_is_cleared_scratch') === 'true';
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(`${STORAGE_KEY}_tasks`) : null;
+    if (saved !== null) {
       try {
         const parsed: ScheduleTask[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
+          if (parsed.length === 0 && isCleared) {
+            return [];
+          }
           const sanitized = parsed
             .map((t) => {
               // Self-heal any tasks saved with 2025-11- date due to previous calendar year calculation offset
@@ -492,9 +496,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return autoResolveOverlappingTasks(sanitized);
         }
       } catch (e) {
-        return autoResolveOverlappingTasks(initialTasks);
+        return isCleared ? [] : autoResolveOverlappingTasks(initialTasks);
       }
     }
+    if (isCleared) return [];
     return autoResolveOverlappingTasks(initialTasks);
   });
 
@@ -1963,6 +1968,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const addTask = (newTask: Omit<ScheduleTask, 'id'>) => {
+    try { localStorage.removeItem('neva_is_cleared_scratch'); } catch {}
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const id = `task-${Date.now()}`;
@@ -3417,22 +3423,24 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const nowIso = new Date().toISOString();
     try {
-      localStorage.removeItem('neva_deleted_task_ids_v1');
-      Object.keys(localStorage).forEach((key) => {
-        if ((key.startsWith('livotion_') || key.startsWith('neva_')) && 
-            !key.includes('theme') && 
-            !key.includes('language') && 
-            !key.includes('sync_key') && 
-            !key.includes('user_account') && 
-            !key.includes('pwd_sha')) {
-          localStorage.removeItem(key);
-        }
-      });
-      // Mark local edit time so local state is authoritative over old cloud snapshots
+      localStorage.setItem('neva_is_cleared_scratch', 'true');
+      localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_workouts`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_meals`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_goals`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_sessions`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_reviews`, JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_daily_sticky_notes`, JSON.stringify([]));
+      localStorage.setItem('livotion_apple_notes_v1', JSON.stringify([]));
+      localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(INITIAL_CATEGORY_PLANS));
+      localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify([]));
       localStorage.setItem('neva_last_local_edit_time', nowIso);
     } catch (e) {}
 
-    // Synchronize the fresh reset state with cloud if authenticated or using custom key
+    // Lock incoming cloud hydration temporarily so it doesn't pull old state before push completes
+    hydrationLockUntilRef.current = Date.now() + 3000;
+
+    // Synchronize the fresh reset state with cloud if authenticated or using custom key with _isFullReset flag
     if (currentUser || (syncKey && syncKey.trim() !== 'default_user')) {
       syncStateToCloud({
         user: initialUser,
@@ -3447,6 +3455,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dailyStickyNotes: [],
         dailyStickyColor: 'canary',
         iosNotes: DEFAULT_IOS_NOTES,
+        deletedTaskIds: [],
+        _isFullReset: true,
       }, syncKey);
     }
   };
