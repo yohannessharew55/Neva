@@ -913,7 +913,7 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795526022615-8-osu6",
       "date": "2026-11-24",
