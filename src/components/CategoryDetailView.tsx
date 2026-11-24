@@ -1338,10 +1338,10 @@ export const CategoryDetailView: React.FC = () => {
         <img
           src={bannerImageUrl}
           alt={category.title}
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-35 dark:opacity-30 pointer-events-none select-none transition-opacity duration-300"
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-90 dark:opacity-80 pointer-events-none select-none transition-opacity duration-300"
         />
         {/* Smooth Readability Gradient Scrim */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-white/45 dark:from-[#121927]/95 dark:via-[#121927]/85 dark:to-[#121927]/45 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/45 to-white/10 dark:from-[#121927]/88 dark:via-[#121927]/50 dark:to-[#121927]/15 pointer-events-none" />
         <div 
           className="absolute -right-16 -top-16 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
           style={{ backgroundColor: category.color }}
