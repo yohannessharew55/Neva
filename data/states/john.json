@@ -902,7 +902,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
@@ -928,11 +928,12 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "completedAt": "2026-11-24T13:34:34.620Z"
     }
   ],
   "workouts": [
@@ -1255,6 +1256,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:35.530Z",
-  "_updatedTimestamp": 1795527275530
+  "_updatedAt": "2026-11-24T13:34:37.392Z",
+  "_updatedTimestamp": 1795527277392
 }
