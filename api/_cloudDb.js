@@ -221,7 +221,13 @@ export async function getUserState(username) {
   if (res.status === 200 && res.data && res.data.content) {
     try {
       const content = Buffer.from(res.data.content, 'base64').toString('utf-8');
-      return { payload: JSON.parse(content), sha: res.data.sha, updatedAt: res.data.updated_at || new Date().toISOString() };
+      const payload = JSON.parse(content);
+      const savedUpdatedAt = payload._updatedAt || payload._metadata?.updatedAt || null;
+      return { 
+        payload, 
+        sha: res.data.sha, 
+        updatedAt: savedUpdatedAt || new Date().toISOString() 
+      };
     } catch (e) {}
   }
   return { payload: null, sha: null, updatedAt: null };
@@ -231,9 +237,32 @@ export async function getUserState(username) {
 export async function saveUserState(username, payload) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   
+  // Ensure timestamp is stamped inside the payload
+  const nowIso = new Date().toISOString();
+  if (typeof payload === 'object' && payload !== null) {
+    payload._updatedAt = nowIso;
+    payload._updatedTimestamp = Date.now();
+  }
+
   // Get current sha from data-sync branch if exists
   const existing = await githubRequest(`/contents/data/states/${cleanUser}.json?ref=data-sync`);
   const sha = existing.status === 200 ? existing.data.sha : undefined;
+
+  // Deduplicate redundant identical commits to save GitHub API quota and prevent commit spamming
+  if (existing.status === 200 && existing.data && existing.data.content) {
+    try {
+      const existingStr = Buffer.from(existing.data.content, 'base64').toString('utf-8');
+      const existingPayload = JSON.parse(existingStr);
+      
+      // Compare core payload content ignoring transient timestamps
+      const cleanExisting = { ...existingPayload, _updatedAt: undefined, _updatedTimestamp: undefined, _metadata: undefined };
+      const cleanNew = { ...payload, _updatedAt: undefined, _updatedTimestamp: undefined, _metadata: undefined };
+      if (JSON.stringify(cleanExisting) === JSON.stringify(cleanNew)) {
+        // Data is identical! No need to create a redundant commit
+        return true;
+      }
+    } catch (e) {}
+  }
 
   const putData = {
     message: `Sync state for ${cleanUser} [skip ci]`,

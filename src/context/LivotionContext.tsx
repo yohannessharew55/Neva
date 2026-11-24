@@ -1138,8 +1138,185 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const isFirstMount = useRef(true);
+  const isHydratingFromCloudRef = useRef(false);
+  const fastSyncTimeoutRef = useRef<any>(null);
 
-  // Pull latest updates from server and seamlessly hydrate the app UI
+  // Helper to trigger fast cloud push on user actions (e.g. checking tasks or plans)
+  const triggerFastCloudPush = (delayMs: number = 250) => {
+    if (isDeviceOffline()) return;
+    if (fastSyncTimeoutRef.current) clearTimeout(fastSyncTimeoutRef.current);
+    markPendingSync(syncKey);
+    localStorage.setItem('neva_last_local_edit_time', new Date().toISOString());
+
+    fastSyncTimeoutRef.current = setTimeout(async () => {
+      await pushStateToCloudImmediate();
+    }, delayMs);
+  };
+
+  // Bidirectional smart task merger: preserves completions across both mobile and PC without overwrites
+  const mergeTasksFromRemote = (currentTasks: ScheduleTask[], remoteTasks: ScheduleTask[]): ScheduleTask[] => {
+    if (!remoteTasks || !Array.isArray(remoteTasks) || remoteTasks.length === 0) return currentTasks;
+    if (!currentTasks || currentTasks.length === 0) return remoteTasks;
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    const taskMap = new Map<string, ScheduleTask>();
+
+    const getTaskKey = (t: ScheduleTask): string => {
+      const origId = (t as any).originalId || '';
+      const datePart = t.date || '';
+      const titlePart = (t.title || '').trim().toLowerCase();
+      return `${titlePart}::${datePart}::${origId}`;
+    };
+
+    currentTasks.forEach((lt) => {
+      taskMap.set(lt.id, lt);
+    });
+
+    remoteTasks.forEach((rt) => {
+      let match = taskMap.get(rt.id);
+
+      if (!match) {
+        const rKey = getTaskKey(rt);
+        for (const lt of taskMap.values()) {
+          if (getTaskKey(lt) === rKey) {
+            match = lt;
+            break;
+          }
+        }
+      }
+
+      if (match) {
+        // Completed state rule: If a task is completed on either device, it stays completed!
+        const isCompleted = rt.completed || match.completed;
+
+        // Merge checklist items
+        let mergedChecklist = match.checklist;
+        if (rt.checklist && match.checklist) {
+          mergedChecklist = match.checklist.map((lc) => {
+            const rc = rt.checklist?.find(
+              (c) => c.id === lc.id || c.text.trim().toLowerCase() === lc.text.trim().toLowerCase()
+            );
+            return {
+              ...lc,
+              done: lc.done || (rc ? rc.done : false),
+            };
+          });
+          rt.checklist.forEach((rc) => {
+            if (!mergedChecklist?.some((c) => c.id === rc.id || c.text.trim().toLowerCase() === rc.text.trim().toLowerCase())) {
+              mergedChecklist?.push(rc);
+            }
+          });
+        } else if (rt.checklist) {
+          mergedChecklist = rt.checklist;
+        }
+
+        taskMap.set(match.id, {
+          ...rt,
+          ...match,
+          completed: isCompleted,
+          checklist: mergedChecklist,
+        });
+      } else {
+        // Remote task is new: add to local map
+        taskMap.set(rt.id, rt);
+      }
+    });
+
+    return Array.from(taskMap.values());
+  };
+
+  // Merge category plans across devices
+  const mergeCategoryPlansFromRemote = (
+    local: Record<string, CategoryPlan>,
+    remote: Record<string, CategoryPlan>
+  ): Record<string, CategoryPlan> => {
+    if (!remote || typeof remote !== 'object') return local;
+    if (!local || typeof local !== 'object') return remote;
+
+    const merged = { ...local };
+    for (const [catId, rPlan] of Object.entries(remote)) {
+      if (!merged[catId]) {
+        merged[catId] = rPlan;
+      } else {
+        const lPlan = merged[catId];
+        // Merge dailyPlans
+        const dailyPlansMap = new Map<string, CategoryDailyPlanItem>();
+        (lPlan.dailyPlans || []).forEach((dp) => dailyPlansMap.set(dp.id || `${dp.text}_${(dp as any).date || ''}`, dp));
+        (rPlan.dailyPlans || []).forEach((dp) => {
+          const key = dp.id || `${dp.text}_${(dp as any).date || ''}`;
+          const existing = dailyPlansMap.get(key);
+          if (existing) {
+            dailyPlansMap.set(key, {
+              ...dp,
+              ...existing,
+              completed: existing.completed || dp.completed,
+            });
+          } else {
+            dailyPlansMap.set(key, dp);
+          }
+        });
+
+        const achievedSet = new Set<string>([...(lPlan.achievedItems || []), ...(rPlan.achievedItems || [])]);
+        const inProgressSet = new Set<string>([...(lPlan.inProgressItems || []), ...(rPlan.inProgressItems || [])]);
+        achievedSet.forEach((item) => inProgressSet.delete(item));
+
+        merged[catId] = {
+          ...rPlan,
+          ...lPlan,
+          dailyPlans: Array.from(dailyPlansMap.values()),
+          achievedItems: Array.from(achievedSet),
+          inProgressItems: Array.from(inProgressSet),
+        };
+      }
+    }
+    return merged;
+  };
+
+  // Merge iOS notes across devices
+  const mergeIosNotesFromRemote = (local: IosNoteItem[], remote: IosNoteItem[]): IosNoteItem[] => {
+    if (!remote || !Array.isArray(remote)) return local;
+    if (!local || !Array.isArray(local)) return remote;
+    const noteMap = new Map<string, IosNoteItem>();
+    local.forEach((n) => noteMap.set(n.id, n));
+    remote.forEach((rn) => {
+      const ln = noteMap.get(rn.id);
+      if (!ln) {
+        noteMap.set(rn.id, rn);
+      } else {
+        const rTime = rn.updatedAt ? new Date(rn.updatedAt).getTime() : 0;
+        const lTime = ln.updatedAt ? new Date(ln.updatedAt).getTime() : 0;
+        if (rTime > lTime) {
+          noteMap.set(rn.id, rn);
+        }
+      }
+    });
+    return Array.from(noteMap.values());
+  };
+
+  // Merge daily sticky notes across devices
+  const mergeDailyStickyNotesFromRemote = (local: DailyStickyNote[], remote: DailyStickyNote[]): DailyStickyNote[] => {
+    if (!remote || !Array.isArray(remote)) return local;
+    if (!local || !Array.isArray(local)) return remote;
+    const noteMap = new Map<string, DailyStickyNote>();
+    local.forEach((n) => noteMap.set(n.id, n));
+    remote.forEach((rn) => {
+      const ln = noteMap.get(rn.id);
+      if (!ln) {
+        noteMap.set(rn.id, rn);
+      } else {
+        const rTime = rn.updatedAt ? new Date(rn.updatedAt).getTime() : 0;
+        const lTime = ln.updatedAt ? new Date(ln.updatedAt).getTime() : 0;
+        if (rTime > lTime) {
+          noteMap.set(rn.id, rn);
+        }
+      }
+    });
+    return Array.from(noteMap.values());
+  };
+
+  // Pull latest updates from server and seamlessly hydrate the app UI with bidirectional merging
   const pullLatestStateFromCloud = async (force: boolean = false): Promise<boolean> => {
     if (isDeviceOffline()) return false;
     const keyToUse = syncKey.trim() || 'default_user';
@@ -1152,40 +1329,58 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const remote = await fetchStateFromCloud(keyToUse);
       if (remote && remote.data) {
+        const d = remote.data;
         const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
-        const lastLocalEdit = localStorage.getItem('neva_last_local_edit_time');
-        const localEditTime = lastLocalEdit ? new Date(lastLocalEdit).getTime() : 0;
+        const lastSyncTime = lastSyncedAt ? new Date(lastSyncedAt).getTime() : 0;
 
-        const isRemoteNewer = remoteTime > localEditTime;
+        // Perform bidirectional smart merge:
+        isHydratingFromCloudRef.current = true;
 
-        // Only hydrate if forced AND remote has data, or if remote is strictly newer than our local edits and no pending unsaved edits exist
-        if ((force && remote.data) || (!hasPendingSync(keyToUse) && isRemoteNewer)) {
-          const d = remote.data;
-          if (d.user) setUser(d.user);
-          if (d.domains) setDomains(d.domains);
-          if (d.tasks) setTasks(d.tasks);
-          if (d.workouts) setWorkouts(d.workouts);
-          if (d.meals) setMeals(d.meals);
-          if (d.goals) setGoals(d.goals);
-          if (d.sessions) setSessions(d.sessions);
-          if (d.reviews) setReviews(d.reviews);
-          if (d.categoryPlans) setCategoryPlans(d.categoryPlans);
-          if (d.dailyStickyNotes) setDailyStickyNotes(d.dailyStickyNotes);
-          if (d.iosNotes && Array.isArray(d.iosNotes)) {
-            setIosNotes(d.iosNotes);
-            try {
-              localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes));
-            } catch {}
-          }
-          if (remote.database) setCloudDatabase(remote.database);
-          setLastSyncedAt(remote.updatedAt || new Date().toISOString());
-          clearPendingSync(keyToUse);
-          setCloudSyncStatus('synced');
-          return true;
-        } else if (localEditTime > remoteTime || hasPendingSync(keyToUse)) {
-          // Local has newer edits, push to cloud to keep cloud updated
-          await pushStateToCloudImmediate(keyToUse);
+        if (d.tasks && Array.isArray(d.tasks)) {
+          setTasks((prev) => mergeTasksFromRemote(prev, d.tasks));
         }
+        if (d.categoryPlans && typeof d.categoryPlans === 'object') {
+          setCategoryPlans((prev) => mergeCategoryPlansFromRemote(prev, d.categoryPlans));
+        }
+        if (d.dailyStickyNotes && Array.isArray(d.dailyStickyNotes)) {
+          setDailyStickyNotes((prev) => mergeDailyStickyNotesFromRemote(prev, d.dailyStickyNotes));
+        }
+        if (d.iosNotes && Array.isArray(d.iosNotes)) {
+          setIosNotes((prev) => mergeIosNotesFromRemote(prev, d.iosNotes));
+          try {
+            localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(d.iosNotes));
+          } catch {}
+        }
+        if (d.user && !currentUser) {
+          setUser(d.user);
+        }
+        if (d.domains && Array.isArray(d.domains)) {
+          setDomains(d.domains);
+        }
+        if (d.workouts && Array.isArray(d.workouts)) {
+          setWorkouts(d.workouts);
+        }
+        if (d.meals && Array.isArray(d.meals)) {
+          setMeals(d.meals);
+        }
+        if (d.goals && Array.isArray(d.goals)) {
+          setGoals(d.goals);
+        }
+        if (d.sessions && Array.isArray(d.sessions)) {
+          setSessions(d.sessions);
+        }
+        if (d.reviews && Array.isArray(d.reviews)) {
+          setReviews(d.reviews);
+        }
+        if (d.dailyStickyColor) {
+          setDailyStickyColorState(d.dailyStickyColor);
+        }
+
+        if (remote.database) setCloudDatabase(remote.database);
+        setLastSyncedAt(remote.updatedAt || new Date().toISOString());
+        clearPendingSync(keyToUse);
+        setCloudSyncStatus('synced');
+        return true;
       }
     } catch (e) {
       console.warn('Realtime cloud pull notice:', e);
@@ -1220,7 +1415,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => { isMounted = false; };
   }, [syncKey, currentUser]);
 
-  // Persist locally immediately & debounced push to Cloud
+  // Persist locally immediately & debounced push to Cloud on USER edits
   useEffect(() => {
     // 1. Synchronously save all state locally on device
     localStorage.setItem(`${STORAGE_KEY}_user`, JSON.stringify(user));
@@ -1234,6 +1429,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(categoryPlans));
     localStorage.setItem(`${STORAGE_KEY}_daily_sticky_notes`, JSON.stringify(dailyStickyNotes));
     localStorage.setItem('livotion_apple_notes_v1', JSON.stringify(iosNotes));
+
+    // If this state update was triggered by incoming cloud hydration, DO NOT push back to cloud!
+    if (isHydratingFromCloudRef.current) {
+      isHydratingFromCloudRef.current = false;
+      return;
+    }
 
     // Skip marking pending and pushing to cloud on initial mount
     if (isFirstMount.current) {
@@ -1276,12 +1477,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } else {
         setCloudSyncStatus('offline');
       }
-    }, 1200);
+    }, 1000);
 
     return () => clearTimeout(syncTimer);
   }, [user, domains, tasks, workouts, meals, goals, sessions, reviews, categoryPlans, dailyStickyNotes, dailyStickyColor, iosNotes, syncKey]);
 
-  // 3. Automatic Realtime Sync: Pull updates when opening app, on focus, on reconnect, or on 10s heartbeat
+  // 3. Automatic Realtime Sync: Pull updates on focus, on reconnect, or on 4s heartbeat while active
   useEffect(() => {
     // Only execute background auto-sync if user has an account or custom sync key
     if (!currentUser && (!syncKey || syncKey.trim() === 'default_user')) {
@@ -1293,9 +1494,8 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (hasPendingSync(syncKey)) {
         await pushStateToCloudImmediate(syncKey);
-      } else {
-        await pullLatestStateFromCloud();
       }
+      await pullLatestStateFromCloud();
     };
 
     const handleOffline = () => {
@@ -1309,23 +1509,40 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const handleForeground = () => {
       if (document.visibilityState === 'visible' && !isDeviceOffline()) {
         pullLatestStateFromCloud();
+      } else if (document.visibilityState === 'hidden' && !isDeviceOffline()) {
+        // App is minimized or switched away: flush pending edits immediately!
+        if (hasPendingSync(syncKey)) {
+          pushStateToCloudImmediate(syncKey);
+        }
       }
     };
+
+    // Also handle beforeunload / pagehide for mobile Safari & desktop browsers
+    const handlePageHide = () => {
+      if (hasPendingSync(syncKey) && !isDeviceOffline()) {
+        pushStateToCloudImmediate(syncKey);
+      }
+    };
+
     document.addEventListener('visibilitychange', handleForeground);
     window.addEventListener('focus', handleForeground);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handlePageHide);
 
-    // Heartbeat auto-sync check every 10 seconds while app is active
+    // Heartbeat auto-sync check every 4 seconds while app is active & visible
     const heartbeat = setInterval(() => {
-      if (!isDeviceOffline() && document.visibilityState === 'visible' && !hasPendingSync(syncKey)) {
+      if (!isDeviceOffline() && document.visibilityState === 'visible') {
         pullLatestStateFromCloud();
       }
-    }, 10000);
+    }, 4000);
 
     return () => {
       window.removeEventListener('online', handleAutoSync);
       window.removeEventListener('offline', handleOffline);
       document.removeEventListener('visibilitychange', handleForeground);
       window.removeEventListener('focus', handleForeground);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handlePageHide);
       clearInterval(heartbeat);
     };
   }, [syncKey, currentUser]);
@@ -1579,17 +1796,36 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return prev;
         }
 
-        // If template task without date, instantiate it specifically for today so future days don't inherit completion
+        // If template task without date, check if today already has an instantiated task for it
         if (!match.date) {
+          const instId = `inst-${todayStr}-${match.id}`;
+          const existingInst = prev.find(
+            (t) => t.id === instId || ((t as any).originalId === match.id && t.date === todayStr)
+          );
+
+          if (existingInst) {
+            const nextCompleted = !existingInst.completed;
+            if (nextCompleted) {
+              soundEngine.playCompletionSound();
+            }
+            return prev.map((t) =>
+              t.id === existingInst.id
+                ? { ...t, completed: nextCompleted, completedAt: nextCompleted ? new Date().toISOString() : undefined }
+                : t
+            );
+          }
+
           const nextCompleted = !match.completed;
           if (nextCompleted) {
             soundEngine.playCompletionSound();
           }
           const instantiated: ScheduleTask = {
             ...match,
-            id: `task-${Date.now()}`,
+            id: instId,
+            originalId: match.id,
             date: todayStr,
             completed: nextCompleted,
+            completedAt: nextCompleted ? new Date().toISOString() : undefined,
           };
           return [...prev, instantiated];
         }
@@ -1600,7 +1836,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (nextCompleted) {
               soundEngine.playCompletionSound();
             }
-            return { ...t, completed: nextCompleted };
+            return {
+              ...t,
+              completed: nextCompleted,
+              completedAt: nextCompleted ? new Date().toISOString() : undefined,
+            };
           }
           return t;
         });
@@ -1611,18 +1851,37 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const dynamicTask = sched.tasks.find((t) => t.id === taskId);
       if (dynamicTask) {
         soundEngine.playCompletionSound();
+        const instId = `inst-${todayStr}-${dynamicTask.id}`;
+        const existingInst = prev.find(
+          (t) => t.id === instId || ((t as any).originalId === dynamicTask.id && t.date === todayStr)
+        );
+
+        if (existingInst) {
+          const nextCompleted = !existingInst.completed;
+          return prev.map((t) =>
+            t.id === existingInst.id
+              ? { ...t, completed: nextCompleted, completedAt: nextCompleted ? new Date().toISOString() : undefined }
+              : t
+          );
+        }
+
         return [
           ...prev,
           {
             ...dynamicTask,
-            id: taskId,
+            id: instId,
+            originalId: dynamicTask.id,
             date: todayStr,
             completed: !dynamicTask.completed,
+            completedAt: !dynamicTask.completed ? new Date().toISOString() : undefined,
           },
         ];
       }
       return prev;
     });
+
+    // Fast cloud push within 250ms so other devices receive completion instantly!
+    triggerFastCloudPush(250);
   };
 
   const toggleChecklistItem = (taskId: string, checklistId: string) => {
@@ -1639,6 +1898,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return t;
       })
     );
+
+    // Fast cloud push within 250ms so checklist completion syncs across devices
+    triggerFastCloudPush(250);
 
     // Bidirectional sync with Category dailyPlans if this item originated from a Main Stream plan
     setCategoryPlans((prev) => {
@@ -1671,6 +1933,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       completed: newTask.date && newTask.date > todayStr ? false : (newTask.completed ?? false),
     };
     setTasks((prev) => autoResolveOverlappingTasks([...prev, taskToAdd], timeFormat));
+    triggerFastCloudPush(250);
   };
 
   const updateTask = (taskId: string, updates: Partial<ScheduleTask>) => {
@@ -1731,6 +1994,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (activeTask?.id === taskId) {
       setActiveTask((prev) => (prev ? { ...prev, ...updates } : null));
     }
+    if (updates.completed !== undefined) {
+      triggerFastCloudPush(250);
+    }
   };
 
   const deleteTask = (taskId: string) => {
@@ -1739,6 +2005,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (activeTask?.id === taskId) {
       stopTimer();
     }
+    triggerFastCloudPush(250);
   };
 
   // Standard Default Devotion and Exercise Tasks
@@ -2797,6 +3064,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return t;
       })
     );
+    triggerFastCloudPush(250);
   };
 
   const deleteCategoryDailyPlan = (categoryId: string, planId: string) => {
