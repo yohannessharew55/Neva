@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 10,
+      "weeklyTargetHours": 5,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -1018,61 +1018,6 @@
   "meals": [],
   "goals": [
     {
-      "title": "Ship N e v a Architecture & Core Modules",
-      "horizon": "QUARTERLY",
-      "quarter": "Q4",
-      "year": 2026,
-      "category": "architecture",
-      "targetMetric": "100% Core Modules",
-      "startDate": "2026-10-01",
-      "endDate": "2026-12-31",
-      "progressPercentage": 75,
-      "isCompleted": false,
-      "milestones": [
-        {
-          "id": "m1",
-          "title": "Mobile Navigation Refactor",
-          "isCompleted": true
-        },
-        {
-          "id": "m2",
-          "title": "Devotion & Focus Systems",
-          "isCompleted": true
-        },
-        {
-          "id": "m3",
-          "title": "Real-time schedule based horizons",
-          "isCompleted": false
-        }
-      ],
-      "id": "goal-1794592578664"
-    },
-    {
-      "title": "50h Deep Focus Practice in Q4",
-      "horizon": "QUARTERLY",
-      "quarter": "Q4",
-      "year": 2026,
-      "category": "devotion",
-      "targetMetric": "50h Practice Logged",
-      "startDate": "2026-10-01",
-      "endDate": "2026-12-31",
-      "progressPercentage": 60,
-      "isCompleted": false,
-      "id": "goal-1794592578664"
-    },
-    {
-      "title": "Master Forex & Algorithmic Trading Execution",
-      "horizon": "YEARLY",
-      "year": 2026,
-      "category": "trading",
-      "targetMetric": "15% Alpha",
-      "startDate": "2026-01-01",
-      "endDate": "2026-12-31",
-      "progressPercentage": 70,
-      "isCompleted": false,
-      "id": "goal-1794592578664"
-    },
-    {
       "title": "10 Master Oil Paintings & Studio Portfolio",
       "horizon": "YEARLY",
       "year": 2026,
@@ -1112,7 +1057,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 10,
+      "weeklyTargetHours": 5,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
@@ -1250,7 +1195,7 @@
     }
   },
   "dailyStickyNotes": [],
-  "dailyStickyColor": "sky",
+  "dailyStickyColor": "canary",
   "iosNotes": [
     {
       "id": "note-1",
@@ -1258,7 +1203,7 @@
       "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
       "folder": "Work",
       "pinned": true,
-      "updatedAt": "2026-11-16T18:53:25.570Z"
+      "updatedAt": "2026-11-24T15:58:42.669Z"
     },
     {
       "id": "note-2",
@@ -1266,7 +1211,7 @@
       "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
       "folder": "Ideas",
       "pinned": false,
-      "updatedAt": "2026-11-15T19:53:25.571Z"
+      "updatedAt": "2026-11-23T16:58:42.669Z"
     },
     {
       "id": "note-3",
@@ -1274,9 +1219,9 @@
       "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
       "folder": "Work",
       "pinned": false,
-      "updatedAt": "2026-11-14T19:53:25.571Z"
+      "updatedAt": "2026-11-22T16:58:42.669Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:52:09.771Z",
-  "_updatedTimestamp": 1795528329771
+  "_updatedAt": "2026-11-24T16:59:30.099Z",
+  "_updatedTimestamp": 1795539570099
 }
