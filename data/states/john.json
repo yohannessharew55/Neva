@@ -116,7 +116,117 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "title": "Ty",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "domain": "CHESS",
+      "checklist": [],
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "id": "task-1795557024851"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-29",
+      "dayOfWeek": 7,
+      "id": "task-1795557041458",
+      "updatedAt": "2026-11-24T21:50:43.195Z"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-23",
+      "dayOfWeek": 1,
+      "id": "task-1795557041457"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-24",
+      "dayOfWeek": 2,
+      "id": "task-1795557041458",
+      "updatedAt": "2026-11-24T21:50:43.195Z"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-26",
+      "dayOfWeek": 4,
+      "id": "task-1795557041458",
+      "updatedAt": "2026-11-24T21:50:43.195Z"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-27",
+      "dayOfWeek": 5,
+      "id": "task-1795557041458",
+      "updatedAt": "2026-11-24T21:50:43.195Z"
+    },
+    {
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ef4444",
+      "badge": "Exercise & Fitness",
+      "domain": "PHYSICAL_FITNESS",
+      "checklist": [],
+      "date": "2026-11-28",
+      "dayOfWeek": 6,
+      "id": "task-1795557041458",
+      "updatedAt": "2026-11-24T21:50:43.195Z"
+    },
+    {
+      "id": "stream-slot-exercise-1-0",
+      "title": "Bb",
+      "startTime": "08:45 AM",
+      "durationMin": 45,
+      "completed": false,
+      "domain": "PHYSICAL_FITNESS",
+      "badge": "Exercise",
+      "color": "#ef4444",
+      "dayOfWeek": 1,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": []
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
@@ -188,7 +298,15 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Mon 08:45 AM: Bb (45m)",
+        "Tue 08:45 AM: Bb (45m)",
+        "Wed 08:45 AM: Bb (45m)",
+        "Thu 08:45 AM: Bb (45m)",
+        "Fri 08:45 AM: Bb (45m)",
+        "Sat 08:45 AM: Bb (45m)",
+        "Sun 08:45 AM: Bb (45m)"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -371,6 +489,6 @@
   ],
   "deletedTaskIds": [],
   "_isFullReset": true,
-  "_updatedAt": "2026-11-24T21:47:44.051Z",
-  "_updatedTimestamp": 1795556864051
+  "_updatedAt": "2026-11-24T21:50:43.195Z",
+  "_updatedTimestamp": 1795557043195
 }
