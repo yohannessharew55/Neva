@@ -719,7 +719,7 @@
       "title": "Puzzle training",
       "startTime": "01:00 AM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -743,7 +743,7 @@
       "title": "Aagard book",
       "startTime": "01:30 AM",
       "durationMin": 45,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -767,7 +767,7 @@
       "title": "15+10 game and analysis",
       "startTime": "02:15 AM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -791,7 +791,7 @@
       "title": "Warmup exercise",
       "startTime": "12:00 PM",
       "durationMin": 20,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -815,7 +815,7 @@
       "title": "Lick of the day",
       "startTime": "12:20 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -839,7 +839,7 @@
       "title": "Song practice",
       "startTime": "12:35 PM",
       "durationMin": 45,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -863,7 +863,7 @@
       "title": "Freeplay",
       "startTime": "01:20 PM",
       "durationMin": 15,
-      "completed": false,
+      "completed": true,
       "color": "#ec4899",
       "badge": "Music",
       "checklist": [
@@ -887,7 +887,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
