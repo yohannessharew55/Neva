@@ -1,4 +1,4 @@
-const CACHE_NAME = 'neva-cache-v1.0.25-offline';
+const CACHE_NAME = 'neva-cache-v1.0.29-offline';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -14,11 +14,19 @@ const PRECACHE_ASSETS = [
   '/sounds/gentle_harp.wav',
   '/sounds/digital_alert.wav',
   '/sounds/timer_start_music.wav',
+  '/sounds/celestial_harp.wav',
+  '/sounds/mindful_chime.wav',
+  '/sounds/pulse_alert.wav',
+  '/sounds/morning_dew.wav',
   '/sounds/touch_pencil.wav',
   '/sounds/touch_pop.wav',
   '/sounds/touch_click.wav',
   '/sounds/touch_chime.wav',
   '/sounds/touch_wood.wav',
+  '/sounds/touch_droplet.wav',
+  '/sounds/touch_haptic.wav',
+  '/sounds/touch_paper.wav',
+  '/sounds/touch_marimba.wav',
   '/sounds/ambience_432hz.wav',
   '/sounds/ambience_rain.wav',
   '/sounds/ambience_stream.wav',

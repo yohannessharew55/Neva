@@ -58,6 +58,38 @@ const TOUCH_SOUND_OPTIONS: Array<{
     icon: '✏️'
   },
   {
+    id: 'droplet',
+    nameEn: 'Water Droplet',
+    nameAm: 'የውሃ ጠብታ',
+    descEn: 'Pure, crisp gentle aquatic droplet',
+    descAm: 'ጥርት ያለና ጸጥተኛ የውሃ ጠብታ ቅላጼ',
+    icon: '💧'
+  },
+  {
+    id: 'haptic',
+    nameEn: 'Soft Haptic Tap',
+    nameAm: 'ለስላሳ ስሜታዊ ንክኪ',
+    descEn: 'Muffled, modern mechanical tick',
+    descAm: 'ለስላሳና ዘመናዊ የጣት ንክኪ ስሜት',
+    icon: '⚡'
+  },
+  {
+    id: 'paper',
+    nameEn: 'Notebook Page Turn',
+    nameAm: 'የማስታወሻ ደብተር ወረቀት',
+    descEn: 'Crisp, tactile notebook paper rustle',
+    descAm: 'የመጽሐፍ ወይም ደብተር ገጽ ማገላበጥ ድምፅ',
+    icon: '📄'
+  },
+  {
+    id: 'marimba',
+    nameEn: 'Wooden Marimba',
+    nameAm: 'የማሪምባ ዜማ',
+    descEn: 'Melodic, warm resonant wooden key',
+    descAm: 'ሙዚቃዊና ሞቅ ያለ የእንጨት ማሪምባ ምት',
+    icon: '🪵'
+  },
+  {
     id: 'pop',
     nameEn: 'Bubble Pop',
     nameAm: 'የአረፋ ድምፅ (ፖፕ)',
@@ -104,6 +136,9 @@ const START_SOUND_OPTIONS: Array<{ id: StartSoundType; nameEn: string; nameAm: s
   { id: 'tibetan_bowl', nameEn: 'Tibetan Singing Bowl', nameAm: 'ቲቤታን ቦውል' },
   { id: 'zen_gong', nameEn: 'Zen Bronze Gong', nameAm: 'የዜን ጎንግ' },
   { id: 'crystal_chime', nameEn: 'Crystal Chimes', nameAm: 'ክሪስታል ቻይምስ' },
+  { id: 'celestial_harp', nameEn: 'Celestial Arpeggio', nameAm: 'ሰማያዊ በገና ዜማ' },
+  { id: 'mindful_chime', nameEn: 'Mindful 528Hz Chime', nameAm: '528Hz የሰላም ቻይም' },
+  { id: 'morning_dew', nameEn: 'Sunrise Awakening', nameAm: 'የንጋት ዜማ' },
   { id: 'none', nameEn: 'Silent', nameAm: 'ጸጥታ' }
 ];
 
@@ -114,6 +149,10 @@ const ALARM_SOUND_OPTIONS: Array<{ id: AlarmSoundType; nameEn: string; nameAm: s
   { id: 'sacred_chimes', nameEn: 'Sacred Chimes', nameAm: 'ቅዱስ ቻይምስ' },
   { id: 'gentle_harp', nameEn: 'Gentle Harp', nameAm: 'የበገና ቅኝት' },
   { id: 'digital_alert', nameEn: 'Digital Alert', nameAm: 'ዲጂታል አለርት' },
+  { id: 'celestial_harp', nameEn: 'Celestial Arpeggio', nameAm: 'ሰማያዊ በገና ዜማ' },
+  { id: 'mindful_chime', nameEn: 'Mindful 528Hz Chime', nameAm: '528Hz የሰላም ቻይም' },
+  { id: 'pulse_alert', nameEn: 'Modern Radar Pulse', nameAm: 'ዘመናዊ የራዳር አለርት' },
+  { id: 'morning_dew', nameEn: 'Sunrise Awakening', nameAm: 'የንጋት ዜማ' },
   { id: 'none', nameEn: 'Silent', nameAm: 'ጸጥታ' }
 ];
 

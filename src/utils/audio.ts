@@ -2,10 +2,10 @@
 // Pristine sampled bells, singing bowls, zen gongs, tactile clicks, and loopable ambient soundscapes.
 // Routed through a hardware dynamics compressor limiter with smooth ramps to eliminate mobile speaker crackle.
 
-export type StartSoundType = 'none' | 'gentle_bell' | 'tibetan_bowl' | 'zen_gong' | 'crystal_chime';
-export type AlarmSoundType = 'none' | 'tibetan_bowl' | 'temple_bell' | 'zen_gong' | 'sacred_chimes' | 'digital_alert' | 'gentle_harp';
+export type StartSoundType = 'none' | 'gentle_bell' | 'tibetan_bowl' | 'zen_gong' | 'crystal_chime' | 'celestial_harp' | 'mindful_chime' | 'morning_dew';
+export type AlarmSoundType = 'none' | 'tibetan_bowl' | 'temple_bell' | 'zen_gong' | 'sacred_chimes' | 'digital_alert' | 'gentle_harp' | 'celestial_harp' | 'mindful_chime' | 'pulse_alert' | 'morning_dew';
 export type AmbienceType = 'none' | 'alpha432' | 'rain' | 'forest_stream' | 'white_noise';
-export type TouchSoundType = 'pencil' | 'pop' | 'click' | 'chime' | 'wood' | 'none';
+export type TouchSoundType = 'pencil' | 'pop' | 'click' | 'chime' | 'wood' | 'droplet' | 'haptic' | 'paper' | 'marimba' | 'none';
 
 export interface FocusSoundSettings {
   startSound: StartSoundType;
@@ -43,6 +43,10 @@ const SOUND_FILES: Record<string, string> = {
   gentle_harp: '/sounds/gentle_harp.wav',
   digital_alert: '/sounds/digital_alert.wav',
   timer_start_music: '/sounds/timer_start_music.wav',
+  celestial_harp: '/sounds/celestial_harp.wav',
+  mindful_chime: '/sounds/mindful_chime.wav',
+  pulse_alert: '/sounds/pulse_alert.wav',
+  morning_dew: '/sounds/morning_dew.wav',
 
   // Tactile touch clicks
   touch_pencil: '/sounds/touch_pencil.wav',
@@ -50,6 +54,10 @@ const SOUND_FILES: Record<string, string> = {
   touch_click: '/sounds/touch_click.wav',
   touch_chime: '/sounds/touch_chime.wav',
   touch_wood: '/sounds/touch_wood.wav',
+  touch_droplet: '/sounds/touch_droplet.wav',
+  touch_haptic: '/sounds/touch_haptic.wav',
+  touch_paper: '/sounds/touch_paper.wav',
+  touch_marimba: '/sounds/touch_marimba.wav',
 
   // Ambience loops
   ambience_432hz: '/sounds/ambience_432hz.wav',
@@ -70,10 +78,16 @@ class SoundEngine {
 
   constructor() {
     if (typeof window !== 'undefined') {
+      // Background offline caching of all sound assets for 0ms latency
+      setTimeout(() => {
+        this.downloadAndCacheAllSoundsOffline();
+      }, 500);
+
       const warmUp = () => {
         try {
           this.getAudioContext();
           this.preloadCommonSounds();
+          this.downloadAndCacheAllSoundsOffline();
         } catch {}
         window.removeEventListener('pointerdown', warmUp);
         window.removeEventListener('touchstart', warmUp);
@@ -103,15 +117,15 @@ class SoundEngine {
     }
   }
 
-  // Master brickwall limiter: prevents mobile DAC clipping & crackling
+  // Master smooth transparent limiter: prevents mobile DAC clipping & inter-sample crackling
   private getLimiter(ctx: AudioContext): DynamicsCompressorNode {
     if (!this.limiter || this.limiter.context !== ctx) {
       const comp = ctx.createDynamicsCompressor();
-      comp.threshold.setValueAtTime(-2.0, ctx.currentTime);
-      comp.knee.setValueAtTime(0.0, ctx.currentTime);
-      comp.ratio.setValueAtTime(20.0, ctx.currentTime);
-      comp.attack.setValueAtTime(0.003, ctx.currentTime);
-      comp.release.setValueAtTime(0.05, ctx.currentTime);
+      comp.threshold.setValueAtTime(-6.0, ctx.currentTime);
+      comp.knee.setValueAtTime(14.0, ctx.currentTime);
+      comp.ratio.setValueAtTime(3.5, ctx.currentTime);
+      comp.attack.setValueAtTime(0.008, ctx.currentTime);
+      comp.release.setValueAtTime(0.20, ctx.currentTime);
       comp.connect(ctx.destination);
       this.limiter = comp;
     }
@@ -126,12 +140,37 @@ class SoundEngine {
       'touch_click',
       'touch_wood',
       'touch_chime',
+      'touch_droplet',
+      'touch_haptic',
+      'touch_paper',
+      'touch_marimba',
       'gentle_bell',
       'tibetan_bowl',
+      'celestial_harp',
+      'mindful_chime',
+      'pulse_alert',
+      'morning_dew',
       'timer_start_music'
     ];
     for (const key of keys) {
       this.loadAudio(key).catch(() => {});
+    }
+  }
+
+  // Pre-download all sound assets into persistent CacheStorage & memory AudioBuffers for 100% offline studio playback
+  public async downloadAndCacheAllSoundsOffline(): Promise<void> {
+    try {
+      const soundKeys = Object.keys(SOUND_FILES);
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        try {
+          const cache = await caches.open('neva-sounds-v1');
+          await cache.addAll(Object.values(SOUND_FILES)).catch(() => {});
+        } catch {}
+      }
+      // Decode into memory AudioBuffers
+      await Promise.all(soundKeys.map((k) => this.loadAudio(k).catch(() => null)));
+    } catch (e) {
+      console.warn('[SoundEngine] Background offline caching notice:', e);
     }
   }
 
@@ -284,6 +323,26 @@ class SoundEngine {
     this.playSoundFile('digital_alert', volume * 0.7);
   }
 
+  // 10. Celestial Arpeggio Harp
+  playCelestialHarp(volume = 0.8): void {
+    this.playSoundFile('celestial_harp', volume * 0.85);
+  }
+
+  // 11. Mindful 528Hz Solfeggio Chime
+  playMindfulChime(volume = 0.8): void {
+    this.playSoundFile('mindful_chime', volume * 0.9);
+  }
+
+  // 12. Modern Radar Pulse
+  playPulseAlert(volume = 0.8): void {
+    this.playSoundFile('pulse_alert', volume * 0.8);
+  }
+
+  // 13. Sunrise Morning Dew
+  playMorningDew(volume = 0.8): void {
+    this.playSoundFile('morning_dew', volume * 0.85);
+  }
+
   // Tactile touch feedback sounds
   playPencilRaw(vol = 0.7): void {
     this.playSoundFile('touch_pencil', vol * 0.4);
@@ -303,6 +362,22 @@ class SoundEngine {
 
   playWood(vol = 0.7): void {
     this.playSoundFile('touch_wood', vol * 0.5);
+  }
+
+  playDroplet(vol = 0.7): void {
+    this.playSoundFile('touch_droplet', vol * 0.55);
+  }
+
+  playHaptic(vol = 0.7): void {
+    this.playSoundFile('touch_haptic', vol * 0.6);
+  }
+
+  playPaper(vol = 0.7): void {
+    this.playSoundFile('touch_paper', vol * 0.45);
+  }
+
+  playMarimba(vol = 0.7): void {
+    this.playSoundFile('touch_marimba', vol * 0.5);
   }
 
   // Unified Touch / Tap sound dispatcher
@@ -335,6 +410,18 @@ class SoundEngine {
       case 'wood':
         this.playWood(effectiveVol);
         break;
+      case 'droplet':
+        this.playDroplet(effectiveVol);
+        break;
+      case 'haptic':
+        this.playHaptic(effectiveVol);
+        break;
+      case 'paper':
+        this.playPaper(effectiveVol);
+        break;
+      case 'marimba':
+        this.playMarimba(effectiveVol);
+        break;
       case 'pencil':
       default:
         this.playPencilRaw(effectiveVol);
@@ -365,6 +452,15 @@ class SoundEngine {
         break;
       case 'crystal_chime':
         this.playCrystalChime(vol);
+        break;
+      case 'celestial_harp':
+        this.playCelestialHarp(vol);
+        break;
+      case 'mindful_chime':
+        this.playMindfulChime(vol);
+        break;
+      case 'morning_dew':
+        this.playMorningDew(vol);
         break;
       case 'none':
       default:
@@ -397,6 +493,18 @@ class SoundEngine {
         break;
       case 'digital_alert':
         this.playDigitalAlert(vol);
+        break;
+      case 'celestial_harp':
+        this.playCelestialHarp(vol);
+        break;
+      case 'mindful_chime':
+        this.playMindfulChime(vol);
+        break;
+      case 'pulse_alert':
+        this.playPulseAlert(vol);
+        break;
+      case 'morning_dew':
+        this.playMorningDew(vol);
         break;
       case 'none':
       default:
