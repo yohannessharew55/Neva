@@ -719,7 +719,7 @@
       "title": "Puzzle training",
       "startTime": "01:00 AM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -743,7 +743,7 @@
       "title": "Aagard book",
       "startTime": "01:30 AM",
       "durationMin": 45,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -767,7 +767,7 @@
       "title": "15+10 game and analysis",
       "startTime": "02:15 AM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#8b5cf6",
       "badge": "Chess",
       "checklist": [
@@ -887,7 +887,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
@@ -913,7 +913,7 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
