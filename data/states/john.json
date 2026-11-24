@@ -116,117 +116,7 @@
       }
     }
   ],
-  "tasks": [
-    {
-      "title": "Ty",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "domain": "CHESS",
-      "checklist": [],
-      "date": "2026-11-25",
-      "dayOfWeek": 3,
-      "id": "task-1795557024851"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-29",
-      "dayOfWeek": 7,
-      "id": "task-1795557041458",
-      "updatedAt": "2026-11-24T21:50:43.195Z"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-23",
-      "dayOfWeek": 1,
-      "id": "task-1795557041457"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "id": "task-1795557041458-2026-11-24",
-      "updatedAt": "2026-11-24T21:50:43.195Z"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-26",
-      "dayOfWeek": 4,
-      "id": "task-1795557041458-2026-11-26",
-      "updatedAt": "2026-11-24T21:50:43.195Z"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-27",
-      "dayOfWeek": 5,
-      "id": "task-1795557041458-2026-11-27",
-      "updatedAt": "2026-11-24T21:50:43.195Z"
-    },
-    {
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#ef4444",
-      "badge": "Exercise & Fitness",
-      "domain": "PHYSICAL_FITNESS",
-      "checklist": [],
-      "date": "2026-11-28",
-      "dayOfWeek": 6,
-      "id": "task-1795557041458-2026-11-28",
-      "updatedAt": "2026-11-24T21:50:43.195Z"
-    },
-    {
-      "id": "stream-slot-exercise-1-0",
-      "title": "Bb",
-      "startTime": "08:45 AM",
-      "durationMin": 45,
-      "completed": false,
-      "domain": "PHYSICAL_FITNESS",
-      "badge": "Exercise",
-      "color": "#ef4444",
-      "dayOfWeek": 1,
-      "soundProfile": "SOLFEGGIO_432",
-      "checklist": []
-    }
-  ],
+  "tasks": [],
   "workouts": [
     {
       "id": "wo-1",
@@ -298,15 +188,7 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [
-        "Mon 08:45 AM: Bb (45m)",
-        "Tue 08:45 AM: Bb (45m)",
-        "Wed 08:45 AM: Bb (45m)",
-        "Thu 08:45 AM: Bb (45m)",
-        "Fri 08:45 AM: Bb (45m)",
-        "Sat 08:45 AM: Bb (45m)",
-        "Sun 08:45 AM: Bb (45m)"
-      ],
+      "weeklyScheduleSummary": [],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -468,7 +350,7 @@
       "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
       "folder": "Work",
       "pinned": true,
-      "updatedAt": "2026-11-24T20:47:28.081Z"
+      "updatedAt": "2026-11-24T20:46:19.444Z"
     },
     {
       "id": "note-2",
@@ -476,7 +358,7 @@
       "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
       "folder": "Ideas",
       "pinned": false,
-      "updatedAt": "2026-11-23T21:47:28.081Z"
+      "updatedAt": "2026-11-23T21:46:19.444Z"
     },
     {
       "id": "note-3",
@@ -484,11 +366,11 @@
       "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
       "folder": "Work",
       "pinned": false,
-      "updatedAt": "2026-11-22T21:47:28.081Z"
+      "updatedAt": "2026-11-22T21:46:19.444Z"
     }
   ],
   "deletedTaskIds": [],
   "_isFullReset": true,
-  "_updatedAt": "2026-11-24T21:55:11.516Z",
-  "_updatedTimestamp": 1795557311516
+  "_updatedAt": "2026-11-24T21:56:06.804Z",
+  "_updatedTimestamp": 1795557366804
 }
