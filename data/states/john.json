@@ -928,12 +928,11 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": true,
+      "completed": false,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "completedAt": "2026-11-24T13:33:40.960Z"
+      "dayOfWeek": 2
     }
   ],
   "workouts": [
@@ -1256,6 +1255,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:19.241Z",
-  "_updatedTimestamp": 1795527259241
+  "_updatedAt": "2026-11-24T13:34:20.133Z",
+  "_updatedTimestamp": 1795527260133
 }
