@@ -82,6 +82,7 @@ export interface CategoryPlan {
   title: string;
   color: string;
   icon?: string;
+  bannerImage?: string;
   weeklyTargetHours: number;
   currentWeeklyHours: number;
   baseWeeklyHours?: number;

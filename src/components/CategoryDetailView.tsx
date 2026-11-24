@@ -5,7 +5,7 @@ import {
   Square, Sparkles, TrendingUp, ChevronRight,
   Flame, Swords, ChessKnight, Palette, Music, Dumbbell,
   Building2, BookOpen, Shield, Edit3, Trash2, 
-  ChevronDown, ChevronUp, Layers, Check, Save, X, MoreVertical
+  ChevronDown, ChevronUp, Layers, Check, Save, X, MoreVertical, Image as ImageIcon, Upload, Link2
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import { DomainType, ScheduleTask } from '../types';
@@ -24,7 +24,7 @@ import {
   formatMinutesToTime 
 } from '../utils/scheduleConflictDetector';
 import { ScheduleConflictNotificationModal } from './ScheduleConflictNotificationModal';
-import { resolveCategoryIcon } from '../utils/categoryIcons';
+import { resolveCategoryIcon, compressImageFileToDataUrl } from '../utils/categoryIcons';
 
 export const CategoryDetailView: React.FC = () => {
   const { 
@@ -65,6 +65,8 @@ export const CategoryDetailView: React.FC = () => {
   const [stickyTaskDayAlerts, setStickyTaskDayAlerts] = useState<Record<string, string>>({});
   const [sheetTranslateY, setSheetTranslateY] = useState(0);
   const sheetDragStartY = useRef<number | null>(null);
+  const [showBannerModal, setShowBannerModal] = useState(false);
+  const [bannerUrlInput, setBannerUrlInput] = useState('');
 
   const isStickyDayPast = useMemo(() => {
     if (!stickyNoteDay) return false;
@@ -321,6 +323,7 @@ export const CategoryDetailView: React.FC = () => {
   const Icon = resolveCategoryIcon(category.id, category.icon);
 
   const getCategoryBannerImage = (id: string, title?: string): string => {
+    if (category.bannerImage) return category.bannerImage;
     const key = `${id} ${title || ''}`.toLowerCase();
     if (key.includes('exercise') || key.includes('fitness') || key.includes('workout') || key.includes('gym') || key.includes('run')) {
       return '/images/pillars/exercise.jpg';
@@ -1329,11 +1332,117 @@ export const CategoryDetailView: React.FC = () => {
           >
             <Edit3 size={12} /> <span>{language === 'am' ? 'ወርሃዊ' : 'Monthly'}</span>
           </button>
+          <button
+            onClick={() => {
+              setBannerUrlInput(category.bannerImage && !category.bannerImage.startsWith('data:') ? category.bannerImage : '');
+              setShowBannerModal(true);
+            }}
+            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-slate-200/80 dark:border-slate-700 shrink-0"
+            title={language === 'am' ? 'የዳራ ምስል ቀይር' : 'Change Banner Photo'}
+          >
+            <ImageIcon size={12} /> <span>{language === 'am' ? 'ምስል' : 'Banner'}</span>
+          </button>
         </div>
       </div>
 
       {/* Hero Category Banner */}
       <div className="p-6 sm:p-8 bg-white dark:bg-[#121927] border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        {/* Banner Modal */}
+        {showBannerModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+            onClick={() => setShowBannerModal(false)}
+          >
+            <div
+              className="w-full max-w-md bg-white dark:bg-[#121927] border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#0082ff]/10 text-[#0082ff] flex items-center justify-center">
+                    <ImageIcon size={16} />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    {language === 'am' ? 'የዳራ ምስል ቀይር' : 'Change Banner Image'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBannerModal(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="relative h-28 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                <img src={bannerImageUrl} alt={category.title} className="w-full h-full object-cover" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block">
+                  {language === 'am' ? 'የUnsplash ወይም የምስል ሊንክ ያስገቡ' : 'Paste Unsplash or Image URL'}
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Link2 size={14} className="absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={bannerUrlInput}
+                      onChange={(e) => setBannerUrlInput(e.target.value)}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateCategoryPlan(category.id, { bannerImage: bannerUrlInput.trim() || undefined });
+                      setShowBannerModal(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#0082ff] hover:bg-blue-600 text-white text-xs font-bold cursor-pointer transition shrink-0"
+                  >
+                    {language === 'am' ? 'አስቀምጥ' : 'Apply'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
+                <label className="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition">
+                  <Upload size={14} />
+                  <span>{language === 'am' ? 'ከስልክ/ኮምፒውተር ጫን' : 'Upload from Device'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const dataUrl = await compressImageFileToDataUrl(file);
+                        updateCategoryPlan(category.id, { bannerImage: dataUrl });
+                        setShowBannerModal(false);
+                      } catch {}
+                    }}
+                  />
+                </label>
+                {category.bannerImage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateCategoryPlan(category.id, { bannerImage: undefined });
+                      setBannerUrlInput('');
+                      setShowBannerModal(false);
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-bold cursor-pointer transition"
+                  >
+                    {language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset Default'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {/* Atmospheric Pillar Background Photo */}
         <img
           src={bannerImageUrl}

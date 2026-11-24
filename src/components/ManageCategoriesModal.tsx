@@ -3,14 +3,15 @@ import {
   X, Trash2, Plus, ArrowUp, ArrowDown, Palette,
   AlertTriangle, RotateCcw, 
   SlidersHorizontal, CheckCircle2, ChevronRight, Layers,
-  Edit3, Check, Settings, Briefcase, Heart, Sparkles
+  Edit3, Check, Settings, Briefcase, Heart, Sparkles, Image as ImageIcon, Upload, Link2
 } from 'lucide-react';
 import { useLivotion, CategoryPlan } from '../context/LivotionContext';
 import {
   CATEGORY_PRESET_COLORS as PRESET_COLORS,
   CATEGORY_ICON_OPTIONS,
   getDefaultCategoryIconId,
-  resolveCategoryIcon
+  resolveCategoryIcon,
+  compressImageFileToDataUrl
 } from '../utils/categoryIcons';
 
 interface ManageCategoriesModalProps {
@@ -46,6 +47,7 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
   const [editTitle, setEditTitle] = useState('');
   const [editColor, setEditColor] = useState('#0082ff');
   const [editIcon, setEditIcon] = useState('Shield');
+  const [editBannerImage, setEditBannerImage] = useState('');
   const [editWeeklyHours, setEditWeeklyHours] = useState<number>(5);
   const [editMonthlyGoal, setEditMonthlyGoal] = useState('');
   const [editMonthlyMetric, setEditMonthlyMetric] = useState('');
@@ -84,6 +86,7 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
     setEditTitle(cat.title);
     setEditColor(cat.color || PRESET_COLORS[0]);
     setEditIcon(cat.icon || getDefaultCategoryIconId(cat.id));
+    setEditBannerImage(cat.bannerImage || '');
     setEditWeeklyHours(cat.weeklyTargetHours || 5);
     setEditMonthlyGoal(cat.monthlyGoalTitle || '');
     setEditMonthlyMetric(cat.monthlyTargetMetric || '');
@@ -111,6 +114,7 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
       title: editTitle.trim(),
       color: editColor,
       icon: editIcon,
+      bannerImage: editBannerImage.trim() || undefined,
       weeklyTargetHours: Math.max(0.5, Number(editWeeklyHours) || 1),
       monthlyGoalTitle: editMonthlyGoal.trim(),
       monthlyTargetMetric: editMonthlyMetric.trim(),
@@ -527,6 +531,59 @@ export const ManageCategoriesModal: React.FC<ManageCategoriesModalProps> = ({
                             );
                           })}
                         </div>
+                      </div>
+
+                      {/* Banner Image (Unsplash Link or Local Upload) */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <ImageIcon size={12} className="text-[#0082ff]" />
+                            <span>{language === 'am' ? 'የዳራ ምስል (Banner Photo)' : 'Banner Image (Unsplash Link or Local)'}</span>
+                          </span>
+                          {editBannerImage && (
+                            <button
+                              type="button"
+                              onClick={() => setEditBannerImage('')}
+                              className="text-[10px] text-rose-500 hover:underline font-bold cursor-pointer"
+                            >
+                              {language === 'am' ? 'ወደ ነባሪ መልስ' : 'Reset Default'}
+                            </button>
+                          )}
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Link2 size={13} className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={editBannerImage.startsWith('data:') ? '' : editBannerImage}
+                              onChange={(e) => setEditBannerImage(e.target.value)}
+                              placeholder={editBannerImage.startsWith('data:') ? 'Local photo uploaded ✓' : 'https://images.unsplash.com/...'}
+                              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0082ff]"
+                            />
+                          </div>
+                          <label className="px-3 py-2 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition">
+                            <Upload size={13} />
+                            <span>{language === 'am' ? 'ጫን' : 'Upload'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  const dataUrl = await compressImageFileToDataUrl(file);
+                                  setEditBannerImage(dataUrl);
+                                } catch {}
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {editBannerImage && (
+                          <div className="relative h-14 w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <img src={editBannerImage} alt="Banner preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
                       </div>
 
                       {/* Cadence Targets Grid */}
