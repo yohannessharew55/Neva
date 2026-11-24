@@ -119,30 +119,8 @@
   "tasks": [
     {
       "domain": "CHESS",
-      "title": "Aagard book",
-      "startTime": "01:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1794607215059-1",
-          "text": "Warm-up & mental setup",
-          "done": false
-        },
-        {
-          "id": "c-1794607215060-2",
-          "text": "Core deliberate execution",
-          "done": false
-        }
-      ],
-      "id": "task-1794607215060"
-    },
-    {
-      "domain": "CHESS",
       "title": "Puzzle training",
-      "startTime": "01:45 AM",
+      "startTime": "01:00 AM",
       "durationMin": 30,
       "completed": false,
       "color": "#8b5cf6",
@@ -160,6 +138,28 @@
         }
       ],
       "id": "task-1794607192262"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607215059-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607215060-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607215060"
     },
     {
       "domain": "CHESS",
@@ -790,21 +790,9 @@
       "completedAt": "2026-11-24T13:34:05.477Z"
     },
     {
-      "id": "inst-2026-11-24-task-1794647533131",
-      "originalId": "task-1794647533131",
-      "title": "Warmup exercise",
-      "date": "2026-11-24",
-      "completed": true,
-      "startTime": "12:00 PM",
-      "durationMin": 20,
-      "color": "#ec4899",
-      "badge": "Music",
-      "domain": "GUITAR"
-    },
-    {
       "domain": "GUITAR",
       "title": "Warmup exercise",
-      "startTime": "12:20 PM",
+      "startTime": "12:00 PM",
       "durationMin": 20,
       "completed": true,
       "color": "#ec4899",
@@ -824,6 +812,18 @@
       "id": "task-1795516638284-3-zv5n",
       "date": "2026-11-24",
       "dayOfWeek": 2
+    },
+    {
+      "id": "inst-2026-11-24-task-1794647533131",
+      "originalId": "task-1794647533131",
+      "title": "Warmup exercise",
+      "date": "2026-11-24",
+      "completed": true,
+      "startTime": "12:20 PM",
+      "durationMin": 20,
+      "color": "#ec4899",
+      "badge": "Music",
+      "domain": "GUITAR"
     },
     {
       "domain": "GUITAR",
@@ -902,7 +902,7 @@
       "title": "Pray",
       "startTime": "11:00 PM",
       "durationMin": 30,
-      "completed": false,
+      "completed": true,
       "color": "#a855f7",
       "badge": "Devotion",
       "checklist": [
@@ -919,7 +919,8 @@
       ],
       "id": "task-1795516638284-7-l0ik",
       "date": "2026-11-24",
-      "dayOfWeek": 2
+      "dayOfWeek": 2,
+      "completedAt": "2026-11-24T13:33:23.028Z"
     },
     {
       "title": "Et",
@@ -928,7 +929,7 @@
       "domain": "FOREX_TRADING",
       "badge": "Trading",
       "color": "#10b981",
-      "completed": false,
+      "completed": true,
       "soundProfile": "SOLFEGGIO_432",
       "id": "task-1795516638284-8-koib",
       "date": "2026-11-24",
@@ -1255,6 +1256,6 @@
       "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-24T13:34:20.133Z",
-  "_updatedTimestamp": 1795527260133
+  "_updatedAt": "2026-11-24T13:34:31.378Z",
+  "_updatedTimestamp": 1795527271378
 }
