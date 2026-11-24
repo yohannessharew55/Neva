@@ -110,7 +110,7 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for cold starts / large states
 
     const response = await fetch(`${baseUrl}/api/sync`, {
       method: 'POST',
@@ -180,7 +180,7 @@ export const fetchStateFromCloud = async (syncId: string = 'default_user'): Prom
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500); // Fast 3.5s timeout for snappy startup
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for cloud fetch
 
     const response = await fetch(`${baseUrl}/api/sync?syncId=${encodeURIComponent(cleanSyncId)}&_t=${Date.now()}`, {
       method: 'GET',
@@ -237,8 +237,9 @@ export const authenticateUserAccount = async (
     email?: string;
     avatarColor?: string;
     initialPayload?: any;
+    verifyOnly?: boolean;
   }
-): Promise<{ success: boolean; user?: UserAccountProfile; state?: any; message?: string }> => {
+): Promise<{ success: boolean; user?: UserAccountProfile; state?: any; message?: string; isNetworkError?: boolean }> => {
   const baseUrl = getApiBaseUrl();
   const cleanUsername = params.username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   const displayName = params.name?.trim() || cleanUsername;
@@ -265,7 +266,7 @@ export const authenticateUserAccount = async (
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     const response = await fetch(`${baseUrl}/api/auth`, {
       method: 'POST',
@@ -277,7 +278,8 @@ export const authenticateUserAccount = async (
         email: params.email?.trim() || undefined,
         password: params.password,
         avatarColor: params.avatarColor || '#0082ff',
-        initialPayload: params.initialPayload
+        initialPayload: params.initialPayload,
+        verifyOnly: params.verifyOnly
       }),
       signal: controller.signal
     });
@@ -294,6 +296,15 @@ export const authenticateUserAccount = async (
     }
 
     if (data.user) {
+      if (params.password) {
+        await cacheAccountPasswordVerifier(cleanUsername, params.password);
+      }
+      if (params.verifyOnly) {
+        return {
+          success: true,
+          message: 'Password verified.'
+        };
+      }
       const profile: UserAccountProfile = {
         id: data.user.id || cleanUsername,
         username: data.user.username || cleanUsername,
@@ -322,9 +333,13 @@ export const authenticateUserAccount = async (
       message: data.error || 'Authentication failed.'
     };
   } catch (err: any) {
+    const isAbort = err?.name === 'AbortError' || String(err?.message || '').toLowerCase().includes('abort');
     return {
       success: false,
-      message: err.message || 'Network error during authentication.'
+      isNetworkError: true,
+      message: isAbort
+        ? 'Connection timed out while contacting server. Please try again.'
+        : err?.message || 'Network error during authentication.'
     };
   }
 };
@@ -537,12 +552,13 @@ export const verifyMainAccountPassword = async (
     try {
       const res = await authenticateUserAccount('login', {
         username: cleanUsername,
-        password: password
+        password: password,
+        verifyOnly: true
       });
       if (res.success) {
         await cacheAccountPasswordVerifier(cleanUsername, password);
         return { success: true };
-      } else {
+      } else if (!res.isNetworkError) {
         return { success: false, message: res.message || 'Incorrect password.' };
       }
     } catch (err: any) {

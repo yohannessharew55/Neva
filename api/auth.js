@@ -88,6 +88,18 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Incorrect password. Please verify and try again.' });
       }
 
+      if (body.verifyOnly) {
+        return res.status(200).json({
+          status: 'success',
+          verified: true,
+          user: {
+            id: userRecord.id,
+            username: userRecord.username,
+            name: userRecord.name
+          }
+        });
+      }
+
       // Fetch user's saved cloud state
       const { payload, updatedAt } = await getUserState(userRecord.username);
 
