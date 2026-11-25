@@ -346,7 +346,7 @@
       "title": "Hsb",
       "startTime": "02:00 PM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "date": "2026-11-25",
       "color": "#8b5cf6",
       "badge": "Chess",
@@ -363,8 +363,7 @@
         }
       ],
       "id": "task-1795589511887-g4wni",
-      "updatedAt": "2026-11-25T06:51:54.225Z",
-      "completedAt": "2026-11-25T06:51:54.225Z"
+      "updatedAt": "2026-11-25T06:51:57.120Z"
     }
   ],
   "workouts": [
@@ -620,7 +619,7 @@
     }
   ],
   "deletedTaskIds": [],
-  "_updatedAt": "2026-11-25T06:51:55.205Z",
-  "_updatedTimestamp": 1795589515205,
+  "_updatedAt": "2026-11-25T06:51:57.699Z",
+  "_updatedTimestamp": 1795589517699,
   "categoryOrder": []
 }
