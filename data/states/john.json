@@ -340,6 +340,30 @@
       "notes": "Week 4 Routine",
       "id": "task-1795589464077-3cg87",
       "updatedAt": "2026-11-25T06:51:04.077Z"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Hsb",
+      "startTime": "02:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "date": "2026-11-25",
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795589511887-1",
+          "text": "Initial set up",
+          "done": false
+        },
+        {
+          "id": "c-1795589511887-2",
+          "text": "Execute deliberate focus",
+          "done": false
+        }
+      ],
+      "id": "task-1795589511887-g4wni",
+      "updatedAt": "2026-11-25T06:51:51.887Z"
     }
   ],
   "workouts": [
@@ -595,7 +619,7 @@
     }
   ],
   "deletedTaskIds": [],
-  "_updatedAt": "2026-11-25T06:51:04.844Z",
-  "_updatedTimestamp": 1795589464844,
+  "_updatedAt": "2026-11-25T06:51:52.594Z",
+  "_updatedTimestamp": 1795589512594,
   "categoryOrder": []
 }
