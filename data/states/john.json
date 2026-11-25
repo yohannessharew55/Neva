@@ -149,7 +149,7 @@
       "title": "Hwhw",
       "startTime": "08:00 AM",
       "durationMin": 45,
-      "completed": true,
+      "completed": false,
       "color": "#0082ff",
       "badge": "Architecture & Design",
       "domain": "ARCHITECTURE_DESIGN",
@@ -157,8 +157,7 @@
       "date": "2026-11-25",
       "dayOfWeek": 3,
       "id": "task-1795557426703-08afu",
-      "updatedAt": "2026-11-25T20:03:44.590Z",
-      "completedAt": "2026-11-25T20:03:44.590Z"
+      "updatedAt": "2026-11-25T20:03:48.074Z"
     },
     {
       "title": "Hwhw",
@@ -493,6 +492,6 @@
       "updatedAt": "2026-11-23T20:03:04.778Z"
     }
   ],
-  "_updatedAt": "2026-11-25T20:03:46.311Z",
-  "_updatedTimestamp": 1795637026311
+  "_updatedAt": "2026-11-25T20:03:48.966Z",
+  "_updatedTimestamp": 1795637028966
 }
