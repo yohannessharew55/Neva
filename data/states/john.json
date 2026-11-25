@@ -116,7 +116,131 @@
       }
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-23",
+      "dayOfWeek": 1,
+      "id": "task-1795557426702-kmfbr",
+      "updatedAt": "2026-11-24T21:57:06.702Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-24",
+      "dayOfWeek": 2,
+      "id": "task-1795557426703-ju6b8",
+      "updatedAt": "2026-11-24T21:57:06.703Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "id": "task-1795557426703-08afu",
+      "updatedAt": "2026-11-24T21:57:06.703Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-26",
+      "dayOfWeek": 4,
+      "id": "task-1795557426703-dd10s",
+      "updatedAt": "2026-11-24T21:57:06.703Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-27",
+      "dayOfWeek": 5,
+      "id": "task-1795557426704-2vgc9",
+      "updatedAt": "2026-11-24T21:57:06.704Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-28",
+      "dayOfWeek": 6,
+      "id": "task-1795557426704-cbzaw",
+      "updatedAt": "2026-11-24T21:57:06.704Z"
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "date": "2026-11-29",
+      "dayOfWeek": 7,
+      "id": "task-1795557426704-lfpoq",
+      "updatedAt": "2026-11-24T21:57:06.704Z"
+    },
+    {
+      "id": "stream-slot-architecture-1-0",
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "domain": "ARCHITECTURE_DESIGN",
+      "badge": "Architecture",
+      "color": "#0082ff",
+      "dayOfWeek": 1,
+      "soundProfile": "SOLFEGGIO_432",
+      "checklist": []
+    },
+    {
+      "title": "Hwhw",
+      "startTime": "08:00 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#0082ff",
+      "badge": "Architecture & Design",
+      "domain": "ARCHITECTURE_DESIGN",
+      "checklist": [],
+      "id": "promoted-global-1795636977462-0",
+      "updatedAt": "2026-11-24T21:57:06.702Z"
+    }
+  ],
   "workouts": [
     {
       "id": "wo-1",
@@ -268,7 +392,15 @@
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
-      "weeklyScheduleSummary": [],
+      "weeklyScheduleSummary": [
+        "Mon 08:00 AM: Hwhw (45m)",
+        "Tue 08:00 AM: Hwhw (45m)",
+        "Wed 08:00 AM: Hwhw (45m)",
+        "Thu 08:00 AM: Hwhw (45m)",
+        "Fri 08:00 AM: Hwhw (45m)",
+        "Sat 08:00 AM: Hwhw (45m)",
+        "Sun 08:00 AM: Hwhw (45m)"
+      ],
       "monthlyGoalTitle": "",
       "monthlyTargetMetric": "",
       "monthlyProgress": 0,
@@ -276,7 +408,7 @@
       "inProgressItems": [],
       "achievedItems": [],
       "upcomingItems": [],
-      "stickyNoteColor": "charcoal",
+      "stickyNoteColor": "cyan",
       "dailyPlans": [],
       "triple8Type": "career"
     },
@@ -341,6 +473,17 @@
       "triple8Type": "living"
     }
   },
+  "categoryOrder": [
+    "art",
+    "chess",
+    "exercise",
+    "trading",
+    "music",
+    "architecture",
+    "devotion",
+    "buffer"
+  ],
+  "deletedTaskIds": [],
   "dailyStickyNotes": [],
   "dailyStickyColor": "canary",
   "iosNotes": [
@@ -369,8 +512,6 @@
       "updatedAt": "2026-11-23T06:33:26.895Z"
     }
   ],
-  "deletedTaskIds": [],
-  "_updatedAt": "2026-11-25T06:55:24.338Z",
-  "_updatedTimestamp": 1795589724338,
-  "categoryOrder": []
+  "_updatedAt": "2026-11-25T20:03:06.524Z",
+  "_updatedTimestamp": 1795636986524
 }
