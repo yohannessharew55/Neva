@@ -461,6 +461,8 @@
       "triple8Type": "living"
     }
   },
+  "categoryOrder": [],
+  "deletedTaskIds": [],
   "dailyStickyNotes": [],
   "dailyStickyColor": "canary",
   "iosNotes": [
@@ -489,9 +491,6 @@
       "updatedAt": "2026-11-22T21:47:28.081Z"
     }
   ],
-  "deletedTaskIds": [],
-  "_isFullReset": true,
-  "_updatedAt": "2026-11-24T21:57:08.569Z",
-  "_updatedTimestamp": 1795557428569,
-  "categoryOrder": []
+  "_updatedAt": "2026-11-25T06:34:30.658Z",
+  "_updatedTimestamp": 1795588470658
 }
