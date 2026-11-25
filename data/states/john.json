@@ -228,18 +228,6 @@
       "dayOfWeek": 1,
       "soundProfile": "SOLFEGGIO_432",
       "checklist": []
-    },
-    {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "id": "promoted-global-1795636977462-0",
-      "updatedAt": "2026-11-24T21:57:06.702Z"
     }
   ],
   "workouts": [
@@ -505,6 +493,6 @@
       "updatedAt": "2026-11-23T20:03:04.778Z"
     }
   ],
-  "_updatedAt": "2026-11-25T20:03:45.509Z",
-  "_updatedTimestamp": 1795637025509
+  "_updatedAt": "2026-11-25T20:03:46.311Z",
+  "_updatedTimestamp": 1795637026311
 }
