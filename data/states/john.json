@@ -82,7 +82,7 @@
       "domainType": "CHESS",
       "title": "Chess Mastery",
       "currentTier": "Starting Tier",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentHours": 0,
       "accentColor": "#8B5CF6",
       "config": {
@@ -118,115 +118,1020 @@
   ],
   "tasks": [
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "date": "2026-11-23",
-      "dayOfWeek": 1,
-      "id": "task-1795557426702-kmfbr",
-      "updatedAt": "2026-11-24T21:57:06.702Z"
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607192262-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607192262-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607192262"
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
       "durationMin": 45,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607215059-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607215060-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607215060"
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794607244907-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794607244907-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794607244907"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647533131-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647533131-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647533131"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:20 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647582698-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647582698-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647582698"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:35 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647598186-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647598186-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647598186"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "01:20 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794647622674-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794647622674-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794647622674"
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794858942586-1",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794858942586-2",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794858942586"
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859007649"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-0-lc3x",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-1-vnmx",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794859102709-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-2-qjrq",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-3-hfor",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:20 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-4-4ob8",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:35 PM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-5-zi6k",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "01:20 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794859102709-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-6-2bib",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794859102709-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794859102709-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794859102709-7-32x0",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794859102709-8-b65w",
+      "date": "2026-11-16",
+      "dayOfWeek": 1
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-0-cdyc",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375660-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375660-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375660-1-hlh7",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1794895375661-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-2-vg2z",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-3-j6md",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:20 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-4-f5sj",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:35 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-5-fovr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "01:20 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1794895375661-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-6-nktw",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1794895375661-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1794895375661-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1794895375661-7-qcrr",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1794895375661-8-vjdf",
+      "date": "2026-11-17",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795526022615-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-0-ns8c",
       "date": "2026-11-24",
-      "dayOfWeek": 2,
-      "id": "task-1795557426703-ju6b8",
-      "updatedAt": "2026-11-24T21:57:06.703Z"
+      "dayOfWeek": 2
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
       "durationMin": 45,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795526022615-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-1-tdpb",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795526022615-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-2-lwok",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795526022615-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-3-je2a",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:20 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795526022615-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-4-1pun",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:35 PM",
+      "durationMin": 45,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795526022615-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-5-72nc",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "01:20 PM",
+      "durationMin": 15,
+      "completed": true,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-1795526022615-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-6-v2oa",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": true,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-1795526022615-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-1795526022615-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-1795526022615-7-tfsj",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": true,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "task-1795526022615-8-osu6",
+      "date": "2026-11-24",
+      "dayOfWeek": 2
+    },
+    {
+      "domain": "CHESS",
+      "title": "Puzzle training",
+      "startTime": "01:00 AM",
+      "durationMin": 30,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-puzzle-training-0-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-puzzle-training-0-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-puzzle-training-0",
       "date": "2026-11-25",
       "dayOfWeek": 3,
-      "id": "task-1795557426703-08afu",
-      "updatedAt": "2026-11-25T20:03:48.074Z"
+      "updatedAt": "2026-11-25T18:33:37.651Z"
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
+      "domain": "CHESS",
+      "title": "Aagard book",
+      "startTime": "01:30 AM",
       "durationMin": 45,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "date": "2026-11-26",
-      "dayOfWeek": 4,
-      "id": "task-1795557426703-dd10s",
-      "updatedAt": "2026-11-24T21:57:06.703Z"
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-aagard-book-1-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-aagard-book-1-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-aagard-book-1",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:37.651Z"
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
+      "domain": "CHESS",
+      "title": "15+10 game and analysis",
+      "startTime": "02:15 AM",
+      "durationMin": 30,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "date": "2026-11-27",
-      "dayOfWeek": 5,
-      "id": "task-1795557426704-2vgc9",
-      "updatedAt": "2026-11-24T21:57:06.704Z"
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-15-10-game-and-analysis-2-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-15-10-game-and-analysis-2-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-15-10-game-and-analysis-2",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:37.651Z"
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
+      "domain": "GUITAR",
+      "title": "Warmup exercise",
+      "startTime": "12:00 PM",
+      "durationMin": 20,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "date": "2026-11-28",
-      "dayOfWeek": 6,
-      "id": "task-1795557426704-cbzaw",
-      "updatedAt": "2026-11-24T21:57:06.704Z"
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-warmup-exercise-3-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-warmup-exercise-3-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-warmup-exercise-3",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
     },
     {
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
-      "durationMin": 45,
+      "domain": "GUITAR",
+      "title": "Lick of the day",
+      "startTime": "12:20 PM",
+      "durationMin": 15,
       "completed": false,
-      "color": "#0082ff",
-      "badge": "Architecture & Design",
-      "domain": "ARCHITECTURE_DESIGN",
-      "checklist": [],
-      "date": "2026-11-29",
-      "dayOfWeek": 7,
-      "id": "task-1795557426704-lfpoq",
-      "updatedAt": "2026-11-24T21:57:06.704Z"
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-lick-of-the-day-4-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-lick-of-the-day-4-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-lick-of-the-day-4",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
     },
     {
-      "id": "stream-slot-architecture-1-0",
-      "title": "Hwhw",
-      "startTime": "08:00 AM",
+      "domain": "GUITAR",
+      "title": "Song practice",
+      "startTime": "12:35 PM",
       "durationMin": 45,
       "completed": false,
-      "domain": "ARCHITECTURE_DESIGN",
-      "badge": "Architecture",
-      "color": "#0082ff",
-      "dayOfWeek": 1,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-song-practice-5-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-song-practice-5-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-song-practice-5",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
+    },
+    {
+      "domain": "GUITAR",
+      "title": "Freeplay",
+      "startTime": "01:20 PM",
+      "durationMin": 15,
+      "completed": false,
+      "color": "#ec4899",
+      "badge": "Music",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-freeplay-6-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-freeplay-6-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-freeplay-6",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
+    },
+    {
+      "domain": "DEVOTION_PRAYER",
+      "title": "Pray",
+      "startTime": "11:00 PM",
+      "durationMin": 30,
+      "completed": false,
+      "color": "#a855f7",
+      "badge": "Devotion",
+      "checklist": [
+        {
+          "id": "c-2026-11-25-pray-7-0",
+          "text": "Warm-up & mental setup",
+          "done": false
+        },
+        {
+          "id": "c-2026-11-25-pray-7-1",
+          "text": "Core deliberate execution",
+          "done": false
+        }
+      ],
+      "id": "task-2026-11-25-pray-7",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
       "soundProfile": "SOLFEGGIO_432",
-      "checklist": []
+      "id": "task-2026-11-25-et-8",
+      "date": "2026-11-25",
+      "dayOfWeek": 3,
+      "updatedAt": "2026-11-25T18:33:36.768Z"
     }
   ],
   "workouts": [
@@ -288,7 +1193,75 @@
     }
   ],
   "meals": [],
-  "goals": [],
+  "goals": [
+    {
+      "title": "Ship N e v a Architecture & Core Modules",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "architecture",
+      "targetMetric": "100% Core Modules",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 75,
+      "isCompleted": false,
+      "milestones": [
+        {
+          "id": "m1",
+          "title": "Mobile Navigation Refactor",
+          "isCompleted": true
+        },
+        {
+          "id": "m2",
+          "title": "Devotion & Focus Systems",
+          "isCompleted": true
+        },
+        {
+          "id": "m3",
+          "title": "Real-time schedule based horizons",
+          "isCompleted": false
+        }
+      ],
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "50h Deep Focus Practice in Q4",
+      "horizon": "QUARTERLY",
+      "quarter": "Q4",
+      "year": 2026,
+      "category": "devotion",
+      "targetMetric": "50h Practice Logged",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 60,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "Master Forex & Algorithmic Trading Execution",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "trading",
+      "targetMetric": "15% Alpha",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 70,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    },
+    {
+      "title": "10 Master Oil Paintings & Studio Portfolio",
+      "horizon": "YEARLY",
+      "year": 2026,
+      "category": "art",
+      "targetMetric": "10 Canvases",
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "progressPercentage": 80,
+      "isCompleted": false,
+      "id": "goal-1794592578664"
+    }
+  ],
   "sessions": [],
   "reviews": [],
   "categoryPlans": {
@@ -316,7 +1289,7 @@
       "id": "chess",
       "title": "Chess",
       "color": "#8b5cf6",
-      "weeklyTargetHours": 5,
+      "weeklyTargetHours": 10,
       "currentWeeklyHours": 0,
       "baseWeeklyHours": 0,
       "baseMonthlyHours": 0,
@@ -388,7 +1361,7 @@
       "inProgressItems": [],
       "achievedItems": [],
       "upcomingItems": [],
-      "stickyNoteColor": "charcoal",
+      "stickyNoteColor": "cyan",
       "dailyPlans": [],
       "triple8Type": "career"
     },
@@ -454,20 +1427,18 @@
     }
   },
   "categoryOrder": [
-    "art",
-    "chess",
     "exercise",
-    "trading",
-    "music",
+    "art",
     "architecture",
+    "trading",
+    "chess",
+    "music",
     "devotion",
     "buffer"
   ],
-  "deletedTaskIds": [
-    "task-1795637034635-go6l0"
-  ],
+  "deletedTaskIds": [],
   "dailyStickyNotes": [],
-  "dailyStickyColor": "canary",
+  "dailyStickyColor": "mint",
   "iosNotes": [
     {
       "id": "note-1",
@@ -475,7 +1446,7 @@
       "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
       "folder": "Work",
       "pinned": true,
-      "updatedAt": "2026-11-25T19:03:04.778Z"
+      "updatedAt": "2026-11-16T18:53:25.570Z"
     },
     {
       "id": "note-2",
@@ -483,7 +1454,7 @@
       "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
       "folder": "Ideas",
       "pinned": false,
-      "updatedAt": "2026-11-24T20:03:04.778Z"
+      "updatedAt": "2026-11-15T19:53:25.571Z"
     },
     {
       "id": "note-3",
@@ -491,9 +1462,9 @@
       "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
       "folder": "Work",
       "pinned": false,
-      "updatedAt": "2026-11-23T20:03:04.778Z"
+      "updatedAt": "2026-11-14T19:53:25.571Z"
     }
   ],
-  "_updatedAt": "2026-11-25T20:04:20.611Z",
-  "_updatedTimestamp": 1795637060611
+  "_updatedAt": "2026-11-25T20:31:08.669Z",
+  "_updatedTimestamp": 1795638668670
 }
