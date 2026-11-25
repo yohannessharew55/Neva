@@ -276,7 +276,7 @@
       "inProgressItems": [],
       "achievedItems": [],
       "upcomingItems": [],
-      "stickyNoteColor": "cyan",
+      "stickyNoteColor": "charcoal",
       "dailyPlans": [],
       "triple8Type": "career"
     },
@@ -370,6 +370,7 @@
     }
   ],
   "deletedTaskIds": [],
-  "_updatedAt": "2026-11-25T06:52:35.242Z",
-  "_updatedTimestamp": 1795589555242
+  "_updatedAt": "2026-11-25T06:55:24.338Z",
+  "_updatedTimestamp": 1795589724338,
+  "categoryOrder": []
 }
