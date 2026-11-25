@@ -160,30 +160,6 @@
       "updatedAt": "2026-11-25T20:03:48.074Z"
     },
     {
-      "domain": "CHESS",
-      "title": "Bdbd",
-      "startTime": "02:00 PM",
-      "durationMin": 45,
-      "completed": false,
-      "date": "2026-11-25",
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1795637034634-1",
-          "text": "Initial set up",
-          "done": false
-        },
-        {
-          "id": "c-1795637034634-2",
-          "text": "Execute deliberate focus",
-          "done": false
-        }
-      ],
-      "id": "task-1795637034635-go6l0",
-      "updatedAt": "2026-11-25T20:03:54.635Z"
-    },
-    {
       "title": "Hwhw",
       "startTime": "08:00 AM",
       "durationMin": 45,
@@ -487,7 +463,9 @@
     "devotion",
     "buffer"
   ],
-  "deletedTaskIds": [],
+  "deletedTaskIds": [
+    "task-1795637034635-go6l0"
+  ],
   "dailyStickyNotes": [],
   "dailyStickyColor": "canary",
   "iosNotes": [
@@ -516,6 +494,6 @@
       "updatedAt": "2026-11-23T20:03:04.778Z"
     }
   ],
-  "_updatedAt": "2026-11-25T20:03:55.730Z",
-  "_updatedTimestamp": 1795637035730
+  "_updatedAt": "2026-11-25T20:04:20.611Z",
+  "_updatedTimestamp": 1795637060611
 }
