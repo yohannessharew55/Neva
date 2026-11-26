@@ -1243,6 +1243,20 @@
       "id": "task-1794895375661-8-vjdf",
       "date": "2026-11-17",
       "dayOfWeek": 2
+    },
+    {
+      "title": "Et",
+      "startTime": "Flexible",
+      "durationMin": 25,
+      "domain": "FOREX_TRADING",
+      "badge": "Trading",
+      "color": "#10b981",
+      "completed": false,
+      "soundProfile": "SOLFEGGIO_432",
+      "id": "inst-2026-11-26-task-1794859007649",
+      "originalId": "task-1794859007649",
+      "date": "2026-11-26",
+      "updatedAt": "2026-11-26T15:58:00.380Z"
     }
   ],
   "workouts": [
@@ -1541,6 +1555,6 @@
       "updatedAt": "2026-11-23T20:32:27.992Z"
     }
   ],
-  "_updatedAt": "2026-11-26T15:54:06.767Z",
-  "_updatedTimestamp": 1795708446767
+  "_updatedAt": "2026-11-26T15:58:04.011Z",
+  "_updatedTimestamp": 1795708684011
 }
