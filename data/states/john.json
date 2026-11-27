@@ -140,6 +140,29 @@
       ],
       "id": "task-1795708718570-llld1",
       "updatedAt": "2026-11-26T15:58:38.570Z"
+    },
+    {
+      "domain": "CHESS",
+      "title": "Fami",
+      "startTime": "02:00 PM",
+      "durationMin": 45,
+      "completed": false,
+      "color": "#8b5cf6",
+      "badge": "Chess",
+      "checklist": [
+        {
+          "id": "c-1795708718569-1",
+          "text": "Initial set up",
+          "done": false
+        },
+        {
+          "id": "c-1795708718569-2",
+          "text": "Execute deliberate focus",
+          "done": false
+        }
+      ],
+      "id": "promoted-global-1795815678602-0",
+      "updatedAt": "2026-11-26T15:58:38.570Z"
     }
   ],
   "workouts": [
@@ -405,7 +428,7 @@
       "updatedAt": "2026-11-24T11:07:07.015Z"
     }
   ],
-  "_updatedAt": "2026-11-27T21:29:07.355Z",
-  "_updatedTimestamp": 1795814947355,
+  "_updatedAt": "2026-11-27T21:42:26.659Z",
+  "_updatedTimestamp": 1795815746659,
   "_resetTimestamp": 1795708701789
 }
