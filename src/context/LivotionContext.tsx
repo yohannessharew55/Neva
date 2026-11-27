@@ -425,32 +425,7 @@ const LivotionContext = createContext<LivotionContextType | undefined>(undefined
 const OLD_STORAGE_KEY = 'livotion_mastery_state_v2';
 const STORAGE_KEY = 'neva_mastery_scratch_v1';
 
-export const DEFAULT_IOS_NOTES: IosNoteItem[] = [
-  {
-    id: 'note-1',
-    title: 'Neva Mastery OS • Core Directives',
-    body: '1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout',
-    folder: 'Work',
-    pinned: true,
-    updatedAt: new Date(Date.now() - 3600000).toISOString()
-  },
-  {
-    id: 'note-2',
-    title: 'Guitar Solo Phrasing & Dorian Scale',
-    body: 'Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.',
-    folder: 'Ideas',
-    pinned: false,
-    updatedAt: new Date(Date.now() - 86400000).toISOString()
-  },
-  {
-    id: 'note-3',
-    title: 'Architecture & Site Supervision Checkpoints',
-    body: 'Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage',
-    folder: 'Work',
-    pinned: false,
-    updatedAt: new Date(Date.now() - 172800000).toISOString()
-  }
-];
+export const DEFAULT_IOS_NOTES: IosNoteItem[] = [];
 
 export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(() => {
@@ -1138,7 +1113,12 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const isFirstMount = useRef(true);
   const hydrationLockUntilRef = useRef<number>(0);
   const fastSyncTimeoutRef = useRef<any>(null);
-  const lastServerTimestampRef = useRef<number>(0);
+  const lastServerTimestampRef = useRef<number>((() => {
+    try {
+      const savedTs = localStorage.getItem(`neva_last_server_ts_${syncKey.trim() || 'default_user'}`);
+      return savedTs ? Number(savedTs) || 0 : 0;
+    } catch { return 0; }
+  })());
 
   // Push all local state to cloud immediately using latest fresh state
   const pushStateToCloudImmediate = async (customSyncKey?: string): Promise<boolean> => {
@@ -1151,9 +1131,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setCloudSyncStatus('syncing');
     try {
+      const localEditTs = Number(localStorage.getItem(`neva_last_local_edit_${keyToUse}`) || Date.now());
       const payloadWithBase = {
         ...latestStateRef.current,
         _baseServerTimestamp: lastServerTimestampRef.current || 0,
+        _clientEditTimestamp: localEditTs,
       };
       const res = await syncStateToCloud(payloadWithBase, keyToUse);
 
@@ -1166,9 +1148,10 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const serverTs = Number(res.data?._updatedTimestamp || (res.updatedAt ? new Date(res.updatedAt).getTime() : Date.now()));
         if (serverTs > 0) {
           lastServerTimestampRef.current = serverTs;
+          try { localStorage.setItem(`neva_last_server_ts_${keyToUse}`, String(serverTs)); } catch {}
         }
 
-        // If server returned merged data from a concurrent edit, update local state without scheduling return push
+        // If server returned merged data (or rejected stale pre-reset push), update local state without scheduling return push
         if (res.data) {
           hydrationLockUntilRef.current = Date.now() + 1500;
           if (res.data.tasks && Array.isArray(res.data.tasks)) {
@@ -1417,7 +1400,17 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return true;
         }
 
-        const hasLocalPending = hasPendingSync(keyToUse);
+        const remoteResetTs = Number(d._resetTimestamp || 0);
+        const localEditTs = Number(localStorage.getItem(`neva_last_local_edit_${keyToUse}`) || 0);
+        const wasResetRemotelyAfterLocalEdit = remoteResetTs > 0 && (localEditTs === 0 || remoteResetTs > localEditTs);
+
+        const hasLocalPending = wasResetRemotelyAfterLocalEdit ? false : hasPendingSync(keyToUse);
+        if (wasResetRemotelyAfterLocalEdit) {
+          clearPendingSync(keyToUse);
+          try {
+            localStorage.setItem('neva_is_cleared_scratch', 'true');
+          } catch {}
+        }
 
         // Lock return pushes while applying cloud state
         hydrationLockUntilRef.current = Date.now() + 2000;
@@ -1501,6 +1494,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (remoteTs > 0) {
           lastServerTimestampRef.current = remoteTs;
+          try { localStorage.setItem(`neva_last_server_ts_${keyToUse}`, String(remoteTs)); } catch {}
         }
         if (remote.database) setCloudDatabase(remote.database);
         setLastSyncedAt(remote.updatedAt || new Date().toISOString());
@@ -1533,7 +1527,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       try {
         if (isMounted) setCloudSyncStatus('syncing');
-        await pullLatestStateFromCloud(false);
+        await pullLatestStateFromCloud(true);
       } catch (err) {
         if (isMounted) setCloudSyncStatus('offline');
       }
@@ -3489,7 +3483,9 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setDeletedTaskIds([]);
     stopTimer();
 
-    const nowIso = new Date().toISOString();
+    const nowTs = Date.now();
+    const nowIso = new Date(nowTs).toISOString();
+    const cleanKey = syncKey.trim() || 'default_user';
     try {
       localStorage.setItem('neva_is_cleared_scratch', 'true');
       localStorage.setItem(`${STORAGE_KEY}_tasks`, JSON.stringify([]));
@@ -3503,6 +3499,11 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(`${STORAGE_KEY}_category_plans`, JSON.stringify(INITIAL_CATEGORY_PLANS));
       localStorage.setItem('neva_deleted_task_ids_v1', JSON.stringify([]));
       localStorage.setItem('neva_last_local_edit_time', nowIso);
+      localStorage.setItem(`neva_last_local_edit_${cleanKey}`, String(nowTs));
+      localStorage.removeItem(`neva_local_mirror_${cleanKey}`);
+      localStorage.removeItem(`neva_pending_sync_${cleanKey}`);
+      localStorage.removeItem(`neva_last_server_ts_${cleanKey}`);
+      lastServerTimestampRef.current = 0;
     } catch (e) {}
 
     // Lock incoming cloud hydration temporarily so it doesn't pull old state before push completes
@@ -3514,7 +3515,7 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         user: initialUser,
         domains: initialDomains,
         tasks: [],
-        workouts: initialWorkouts,
+        workouts: [],
         meals: [],
         goals: [],
         sessions: [],
@@ -3522,10 +3523,17 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         categoryPlans: INITIAL_CATEGORY_PLANS,
         dailyStickyNotes: [],
         dailyStickyColor: 'canary',
-        iosNotes: DEFAULT_IOS_NOTES,
+        iosNotes: [],
         deletedTaskIds: [],
         _isFullReset: true,
-      }, syncKey);
+        _clientEditTimestamp: nowTs,
+      }, syncKey).then((res) => {
+        if (res?.success) {
+          const ts = Number(res.data?._updatedTimestamp || Date.now());
+          lastServerTimestampRef.current = ts;
+          try { localStorage.setItem(`neva_last_server_ts_${cleanKey}`, String(ts)); } catch {}
+        }
+      });
     }
   };
 

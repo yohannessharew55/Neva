@@ -466,20 +466,34 @@ export async function saveUserState(username, payload) {
     } catch (e) {}
   }
 
-  // Authoritative vs Concurrent Merge:
-  // If the pushing device was already synced with the latest server state (baseServerTs >= existingServerTs - 1500)
-  // or requested a full reset, accept its edits & deletions authoritatively!
-  // Only merge if another device updated the server AFTER this device's last pull (concurrent offline/simultaneous edit).
+  // Authoritative vs Concurrent Merge vs Stale Pre-Reset Protection:
   let finalPayload = { ...payload };
   const isFullReset = payload && (payload._isFullReset === true || payload.reset === true);
   const baseServerTs = Number(payload?._baseServerTimestamp || 0);
+  const clientEditTs = Number(payload?._clientEditTimestamp || 0);
   const existingServerTs = Number(existingPayload?._updatedTimestamp || 0);
-  const isConcurrentConflict = existingPayload && !isFullReset && baseServerTs > 0 && existingServerTs > baseServerTs + 1500;
+  const existingResetTs = Number(existingPayload?._resetTimestamp || 0);
 
-  if (isConcurrentConflict) {
-    finalPayload = mergeUserStates(existingPayload, payload);
-  } else if (Array.isArray(finalPayload.tasks)) {
-    // Disambiguate any duplicate task IDs on authoritative save
+  if (existingPayload && !isFullReset) {
+    // 1. If the server was reset from scratch AFTER this device's last local edit, reject stale pre-reset push!
+    if (existingResetTs > 0 && (clientEditTs === 0 || clientEditTs < existingResetTs)) {
+      return { success: true, payload: existingPayload, updatedAt: existingPayload._updatedAt };
+    }
+
+    // 2. If this device has never pulled from the server yet (baseServerTs === 0) and is NOT newer than the server,
+    // do not let stale localStorage overwrite the cloud! Return the latest server state so the device hydrates first.
+    if (baseServerTs === 0 && existingServerTs > 0 && clientEditTs <= existingServerTs) {
+      return { success: true, payload: existingPayload, updatedAt: existingPayload._updatedAt };
+    }
+
+    const isConcurrentConflict = (baseServerTs > 0 && existingServerTs > baseServerTs + 1500) || (baseServerTs === 0 && existingServerTs > 0);
+    if (isConcurrentConflict) {
+      finalPayload = mergeUserStates(existingPayload, payload);
+    }
+  }
+
+  if (Array.isArray(finalPayload.tasks)) {
+    // Disambiguate any duplicate task IDs
     const seenIds = new Set();
     finalPayload.tasks = finalPayload.tasks.map((t) => {
       if (t && t.id && seenIds.has(t.id)) {
@@ -493,13 +507,20 @@ export async function saveUserState(username, payload) {
   }
 
   delete finalPayload._baseServerTimestamp;
+  delete finalPayload._clientEditTimestamp;
   delete finalPayload._isFullReset;
   delete finalPayload.reset;
 
-  const nowIso = new Date().toISOString();
+  const nowTs = Date.now();
+  const nowIso = new Date(nowTs).toISOString();
   if (typeof finalPayload === 'object' && finalPayload !== null) {
     finalPayload._updatedAt = nowIso;
-    finalPayload._updatedTimestamp = Date.now();
+    finalPayload._updatedTimestamp = nowTs;
+    if (isFullReset) {
+      finalPayload._resetTimestamp = nowTs;
+    } else if (existingResetTs > 0) {
+      finalPayload._resetTimestamp = existingResetTs;
+    }
   }
 
   // Deduplicate redundant identical commits to save GitHub API quota and prevent commit spamming

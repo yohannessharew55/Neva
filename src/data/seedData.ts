@@ -107,65 +107,8 @@ export const initialDomains: SkillDomain[] = [
 // Clean scratch state: Zero pre-filled tasks so the user can start from scratch
 export const initialTasks: ScheduleTask[] = [];
 
-// Clean workout templates: 7 days with zero pre-filled exercises
-export const initialWorkouts: WorkoutProtocol[] = [
-  {
-    id: 'wo-1',
-    dayOfWeek: 1,
-    workoutName: 'Monday: Workout Routine',
-    exerciseType: 'STRENGTH_COMPOUND',
-    targetDurationMinutes: 60,
-    movementList: [],
-  },
-  {
-    id: 'wo-2',
-    dayOfWeek: 2,
-    workoutName: 'Tuesday: Workout Routine',
-    exerciseType: 'STRENGTH_COMPOUND',
-    targetDurationMinutes: 60,
-    movementList: [],
-  },
-  {
-    id: 'wo-3',
-    dayOfWeek: 3,
-    workoutName: 'Wednesday: Cardio & Mobility',
-    exerciseType: 'ZONE_2_CARDIO',
-    targetDurationMinutes: 45,
-    movementList: [],
-  },
-  {
-    id: 'wo-4',
-    dayOfWeek: 4,
-    workoutName: 'Thursday: Workout Routine',
-    exerciseType: 'HYPERTROPHY',
-    targetDurationMinutes: 60,
-    movementList: [],
-  },
-  {
-    id: 'wo-5',
-    dayOfWeek: 5,
-    workoutName: 'Friday: Workout Routine',
-    exerciseType: 'HYPERTROPHY',
-    targetDurationMinutes: 60,
-    movementList: [],
-  },
-  {
-    id: 'wo-6',
-    dayOfWeek: 6,
-    workoutName: 'Saturday: Conditioning & Active',
-    exerciseType: 'HIIT',
-    targetDurationMinutes: 45,
-    movementList: [],
-  },
-  {
-    id: 'wo-7',
-    dayOfWeek: 7,
-    workoutName: 'Sunday: Rest & Recovery',
-    exerciseType: 'ACTIVE_RECOVERY',
-    targetDurationMinutes: 30,
-    movementList: [],
-  },
-];
+// Clean scratch state: Zero pre-filled workouts so offline starts completely clean
+export const initialWorkouts: WorkoutProtocol[] = [];
 
 // Clean scratch state: Zero pre-filled meals
 export const initialMeals: MealPlan[] = [];
