@@ -1629,10 +1629,15 @@ export const LivotionProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handlePageHide);
 
-    // Heartbeat auto-sync check every 3 seconds while app is active & visible
-    const heartbeat = setInterval(() => {
+    // Heartbeat auto-sync check every 3 seconds while app is active & visible:
+    // Automatically flushes offline-queued edits as soon as connection returns, otherwise pulls latest updates.
+    const heartbeat = setInterval(async () => {
       if (!isDeviceOffline() && document.visibilityState === 'visible') {
-        pullLatestStateFromCloud();
+        if (hasPendingSync(syncKey)) {
+          await pushStateToCloudImmediate(syncKey);
+        } else {
+          await pullLatestStateFromCloud();
+        }
       }
     }, 3000);
 

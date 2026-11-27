@@ -5,9 +5,7 @@ const config: CapacitorConfig = {
   appName: 'NEVA',
   webDir: 'dist',
   server: {
-    url: 'https://neva-os.vercel.app/',
     cleartext: true,
-    errorPath: 'index.html',
     androidScheme: 'https',
     iosScheme: 'capacitor',
     allowNavigation: [

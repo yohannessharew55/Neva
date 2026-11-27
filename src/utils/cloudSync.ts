@@ -133,6 +133,11 @@ export const syncStateToCloud = async (stateData: any, syncId: string = 'default
     const result = await response.json();
     if (result.status === 'success') {
       clearPendingSync(cleanSyncId);
+      if (result.data) {
+        try {
+          localStorage.setItem(`neva_local_mirror_${cleanSyncId}`, JSON.stringify(result.data));
+        } catch (e) {}
+      }
       return {
         success: true,
         database: result.database || 'NEVA Cloud Storage',
