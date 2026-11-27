@@ -116,113 +116,8 @@
       }
     }
   ],
-  "tasks": [
-    {
-      "domain": "CHESS",
-      "title": "Fami",
-      "startTime": "02:00 PM",
-      "durationMin": 45,
-      "completed": false,
-      "date": "2026-11-26",
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1795708718569-1",
-          "text": "Initial set up",
-          "done": false
-        },
-        {
-          "id": "c-1795708718569-2",
-          "text": "Execute deliberate focus",
-          "done": false
-        }
-      ],
-      "id": "task-1795708718570-llld1",
-      "updatedAt": "2026-11-26T15:58:38.570Z"
-    },
-    {
-      "domain": "CHESS",
-      "title": "Fami",
-      "startTime": "02:00 PM",
-      "durationMin": 45,
-      "completed": false,
-      "color": "#8b5cf6",
-      "badge": "Chess",
-      "checklist": [
-        {
-          "id": "c-1795708718569-1",
-          "text": "Initial set up",
-          "done": false
-        },
-        {
-          "id": "c-1795708718569-2",
-          "text": "Execute deliberate focus",
-          "done": false
-        }
-      ],
-      "id": "promoted-global-1795815760840-0",
-      "updatedAt": "2026-11-26T15:58:38.570Z"
-    }
-  ],
-  "workouts": [
-    {
-      "id": "wo-1",
-      "dayOfWeek": 1,
-      "workoutName": "Monday: Workout Routine",
-      "exerciseType": "STRENGTH_COMPOUND",
-      "targetDurationMinutes": 60,
-      "movementList": []
-    },
-    {
-      "id": "wo-2",
-      "dayOfWeek": 2,
-      "workoutName": "Tuesday: Workout Routine",
-      "exerciseType": "STRENGTH_COMPOUND",
-      "targetDurationMinutes": 60,
-      "movementList": []
-    },
-    {
-      "id": "wo-3",
-      "dayOfWeek": 3,
-      "workoutName": "Wednesday: Cardio & Mobility",
-      "exerciseType": "ZONE_2_CARDIO",
-      "targetDurationMinutes": 45,
-      "movementList": []
-    },
-    {
-      "id": "wo-4",
-      "dayOfWeek": 4,
-      "workoutName": "Thursday: Workout Routine",
-      "exerciseType": "HYPERTROPHY",
-      "targetDurationMinutes": 60,
-      "movementList": []
-    },
-    {
-      "id": "wo-5",
-      "dayOfWeek": 5,
-      "workoutName": "Friday: Workout Routine",
-      "exerciseType": "HYPERTROPHY",
-      "targetDurationMinutes": 60,
-      "movementList": []
-    },
-    {
-      "id": "wo-6",
-      "dayOfWeek": 6,
-      "workoutName": "Saturday: Conditioning & Active",
-      "exerciseType": "HIIT",
-      "targetDurationMinutes": 45,
-      "movementList": []
-    },
-    {
-      "id": "wo-7",
-      "dayOfWeek": 7,
-      "workoutName": "Sunday: Rest & Recovery",
-      "exerciseType": "ACTIVE_RECOVERY",
-      "targetDurationMinutes": 30,
-      "movementList": []
-    }
-  ],
+  "tasks": [],
+  "workouts": [],
   "meals": [],
   "goals": [],
   "sessions": [],
@@ -389,46 +284,11 @@
       "triple8Type": "living"
     }
   },
-  "categoryOrder": [
-    "exercise",
-    "art",
-    "architecture",
-    "trading",
-    "chess",
-    "music",
-    "devotion",
-    "buffer"
-  ],
-  "deletedTaskIds": [],
   "dailyStickyNotes": [],
-  "dailyStickyColor": "mint",
-  "iosNotes": [
-    {
-      "id": "note-1",
-      "title": "Neva Mastery OS • Core Directives",
-      "body": "1. Relentless daily execution beats erratic bursts.\n2. 90-minute Ultradian blocks for deep cognitive architecture.\n3. Keep the schedule clean, minimalist, and truthful.\n\n- [x] Morning devotional reading\n- [x] Strength training compound lift\n- [ ] Evening review & day closeout",
-      "folder": "Work",
-      "pinned": true,
-      "updatedAt": "2026-11-26T10:07:07.015Z"
-    },
-    {
-      "id": "note-2",
-      "title": "Guitar Solo Phrasing & Dorian Scale",
-      "body": "Focus on hitting the 6th degree on the resolution chord.\nUse subtle vibrato on whole-tone bends at 12th fret.\n\nKey practice chords:\n- Dm7 -> G7 -> Cmaj7\n- Target tempo: 110 BPM with clean articulation.",
-      "folder": "Ideas",
-      "pinned": false,
-      "updatedAt": "2026-11-25T11:07:07.015Z"
-    },
-    {
-      "id": "note-3",
-      "title": "Architecture & Site Supervision Checkpoints",
-      "body": "Foundation pour verification:\n- Check rebar spacing on grid B-4\n- Verify concrete slump test before pour\n- Confirm curing compound spray coverage",
-      "folder": "Work",
-      "pinned": false,
-      "updatedAt": "2026-11-24T11:07:07.015Z"
-    }
-  ],
-  "_updatedAt": "2026-11-27T21:43:02.998Z",
-  "_updatedTimestamp": 1795815782998,
-  "_resetTimestamp": 1795708701789
+  "dailyStickyColor": "canary",
+  "iosNotes": [],
+  "deletedTaskIds": [],
+  "_updatedAt": "2026-11-27T21:46:51.180Z",
+  "_updatedTimestamp": 1795816011180,
+  "_resetTimestamp": 1795816011180
 }
